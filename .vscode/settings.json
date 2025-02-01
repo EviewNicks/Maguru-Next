@@ -1,0 +1,49 @@
+{
+  "cSpell.words": [
+    "aplikasi",
+    "Aset",
+    "autentikasi",
+    "dapat",
+    "Deklarasi",
+    "digunakan",
+    "diperlukan",
+    "Fira",
+    "fitur",
+    "Fungsi",
+    "gambar",
+    "Halaman",
+    "jika",
+    "kecil",
+    "kembali",
+    "khusus",
+    "komponen",
+    "konfigurasi",
+    "kursus",
+    "mahasiswa",
+    "menggunakan",
+    "migrasi",
+    "misalnya",
+    "Playfair",
+    "publik",
+    "Semua",
+    "Skema",
+    "spesifik",
+    "tambahan",
+    "tipe",
+    "untuk",
+    "utama",
+    "utilitas",
+    "Validasi"
+  ],
+"editor.formatOnSave": true,
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "prettier.requireConfig": true // Prettier hanya bekerja jika ada file konfigurasi
+}

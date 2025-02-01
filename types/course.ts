@@ -1,0 +1,1 @@
+// type untuk model kursus

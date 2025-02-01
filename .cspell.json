@@ -1,0 +1,24 @@
+{
+  "version": "0.2",
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/*.min.js",
+    "eslint.config.js",
+    "tailwind.config.js",
+    "package.json",
+    "style.css",
+    "settings.json",
+    ".cspell.json"
+  ],
+  "language": "en, id",
+  "files": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"],
+  "ignoreRegExpList": [
+    "//.*",
+    "/\\*[\\s\\S]*?\\*/",
+    "<[^>]*>[^<]*<\\/[^>]*>",
+    "\".*?\"",
+    "'.*?'"
+  ],
+  "words": ["fira", "hoverable", "playfair"]
+}

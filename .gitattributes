@@ -1,0 +1,12 @@
+# Normalisasi line endings
+* text=auto
+
+# File biner
+*.jpg binary
+*.png binary
+
+# Strategi merge
+*.json merge=ours
+
+# File lock tetap asli
+*.lock -text
