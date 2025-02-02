@@ -1,5 +1,9 @@
-function layout() {
-  return <div>layout</div>
+function layout({
+  children,
+}: Readonly<{
+  children: React.ReactNode
+}>) {
+  return <>{children}</>
 }
 
 export default layout
