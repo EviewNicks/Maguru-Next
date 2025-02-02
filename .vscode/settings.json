@@ -35,7 +35,7 @@
     "utilitas",
     "Validasi"
   ],
-"editor.formatOnSave": true,
+  "editor.formatOnSave": true,
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
