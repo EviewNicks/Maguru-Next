@@ -38,7 +38,4 @@ export const dropdownLinks: DropdownGroup[] = [
     ],
     separator: true,
   },
-  {
-    links: [{ label: 'Log out', onClick: () => console.log('Logging out...') }],
-  },
 ]
