@@ -4,7 +4,7 @@ import '@/styles/globals.css'
 import Navbar from '@/components/layouts/Navbar'
 import Container from '@/components/layouts/Container'
 import Providers from '@/config/providers'
-import { ClerkProvider, SignInButton, SignedOut } from '@clerk/nextjs'
+import { ClerkProvider } from '@clerk/nextjs'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const playfair = Playfair_Display({
@@ -34,9 +34,6 @@ export default function RootLayout({
         >
           <Providers>
             <Navbar />
-            <SignedOut>
-              <SignInButton />
-            </SignedOut>
             <Container className="py-20">{children}</Container>
           </Providers>
         </body>
