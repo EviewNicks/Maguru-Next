@@ -15,9 +15,9 @@ type DropdownGroup = {
 export const dropdownLinks: DropdownGroup[] = [
   {
     links: [
+      { label: 'Dashboard', href: '/stats', shortcut: '⌘S' },
       { label: 'Profile', href: '/profile', shortcut: '⇧⌘P' },
       { label: 'courses', href: '/courses', shortcut: '⌘B' },
-      { label: 'Settings', href: '/settings', shortcut: '⌘S' },
       { label: 'Keyboard shortcuts', href: '/shortcuts', shortcut: '⌘K' },
     ],
     separator: true,

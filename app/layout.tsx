@@ -1,10 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter, Playfair_Display, Fira_Code } from 'next/font/google'
 import '@/styles/globals.css'
-import Navbar from '@/components/layouts/Navbar'
 import Container from '@/components/layouts/Container'
 import Providers from '@/config/providers'
-import { ClerkProvider } from '@clerk/nextjs'
+import Navbar from '@/components/layouts/Navbar'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const playfair = Playfair_Display({
@@ -27,17 +26,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body
           className={`${inter.variable} ${playfair.variable} ${firaCode.variable} antialiased`}
         >
           <Providers>
             <Navbar />
-            <Container className="py-20">{children}</Container>
+            {/* className="py-20" */}
+            <Container>{children}</Container>
           </Providers>
         </body>
       </html>
-    </ClerkProvider>
   )
 }
