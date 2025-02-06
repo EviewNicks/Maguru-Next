@@ -26,7 +26,6 @@ function layout({ children }: PropsWithChildren) {
               {children}
             </div>
           </ResizablePanel>{' '}
-          py-8
         </ResizablePanelGroup>
       </div>
 
