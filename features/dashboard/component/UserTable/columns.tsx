@@ -1,9 +1,9 @@
 'use client'
 
 import { ColumnDef } from '@tanstack/react-table'
-import { Button } from '@/components/ui/button'
 import { User } from '@/types/user'
 import UserRoleCell from './UserRoleCell'
+import UserActionCell from './UserActionCell'
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -64,15 +64,6 @@ export const columns: ColumnDef<User>[] = [
   {
     id: 'actions',
     header: () => <div className="text-center">Aksi</div>,
-    cell: () => (
-      <div className="text-center space-x-2">
-        {/* <Button variant="outline" size="sm">
-          Edit
-        </Button> */}
-        <Button variant="destructive" size="sm">
-          Delete
-        </Button>
-      </div>
-    ),
+    cell: ({ row }) => <UserActionCell user={row.original} />,
   },
 ]

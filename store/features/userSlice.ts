@@ -2,15 +2,17 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { User, UpdateUserPayload } from '@/types/user'
 
 interface UserState {
-  users: User[];
-  isLoading: boolean;
-  error: string | null;
+  users: User[]
+  isLoading: boolean
+  error: string | null
 }
 
 const initialState: UserState = {
-  users: [/* your mock data */],
+  users: [
+    /* your mock data */
+  ],
   isLoading: false,
-  error: null
+  error: null,
 }
 
 const userSlice = createSlice({
@@ -18,14 +20,17 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     updateUser: (state, action: PayloadAction<UpdateUserPayload>) => {
-      const { id, ...updates } = action.payload;
-      const userIndex = state.users.findIndex(user => user.id === id);
+      const { id, ...updates } = action.payload
+      const userIndex = state.users.findIndex((user) => user.id === id)
       if (userIndex !== -1) {
-        state.users[userIndex] = { ...state.users[userIndex], ...updates };
+        state.users[userIndex] = { ...state.users[userIndex], ...updates }
       }
-    }
-  }
+    },
+    deleteUser: (state, action: PayloadAction<string>) => {
+      state.users = state.users.filter((user) => user.id !== action.payload)
+    },
+  },
 })
 
-export const { updateUser } = userSlice.actions;
-export default userSlice.reducer;
+export const { updateUser, deleteUser } = userSlice.actions
+export default userSlice.reducer
