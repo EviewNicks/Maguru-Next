@@ -3,6 +3,7 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import { User } from '@/types/user'
+import UserRoleCell from './UserRoleCell'
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -20,6 +21,7 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'role',
     header: 'Role',
+    cell: ({ row }) => <UserRoleCell user={row.original} />,
   },
   {
     accessorKey: 'status',
@@ -64,9 +66,9 @@ export const columns: ColumnDef<User>[] = [
     header: () => <div className="text-center">Aksi</div>,
     cell: () => (
       <div className="text-center space-x-2">
-        <Button variant="outline" size="sm">
+        {/* <Button variant="outline" size="sm">
           Edit
-        </Button>
+        </Button> */}
         <Button variant="destructive" size="sm">
           Delete
         </Button>
