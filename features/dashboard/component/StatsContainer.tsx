@@ -9,7 +9,7 @@ const statsData = [
 
 function StatsContainer() {
   return (
-    <div className="grid md:grid-cols-2 gap-4 lg:grid-cols-3 border border-red-500  min-h-screen">
+    <div className="grid md:grid-cols-2 gap-4 lg:grid-cols-3 ">
       {statsData.map((stat, index) => (
         <StatsCard key={index} title={stat.title} value={stat.value} />
       ))}

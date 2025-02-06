@@ -6,17 +6,20 @@ import {
   HydrationBoundary,
   QueryClient,
 } from '@tanstack/react-query'
+// import {
+//   ResizableHandle,
+//   ResizablePanel,
+//   ResizablePanelGroup,
+// } from '@/components/ui/resizable'
 
 async function StatsPage() {
   const queryClient = new QueryClient()
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <div className="flex flex-col gap-12 max-w-full">
-        <StatsContainer />
-        <ChartsContainer />
-        <UserTable />
-      </div>
+      <StatsContainer />
+      <ChartsContainer />
+      <UserTable />
     </HydrationBoundary>
   )
 }

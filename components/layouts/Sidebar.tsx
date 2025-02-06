@@ -1,4 +1,5 @@
 'use client'
+
 import linksSidebar from '@/config/linksSidebar'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'

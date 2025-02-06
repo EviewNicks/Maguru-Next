@@ -9,26 +9,24 @@ import { PropsWithChildren } from 'react'
 
 function layout({ children }: PropsWithChildren) {
   return (
-    <main className="h-screen w-full">
+    <main className=" w-full">
       {/* TAMPILKAN HANYA UNTUK LG KE ATAS */}
       <div className="hidden lg:flex h-full w-full">
-        <ResizablePanelGroup
-          direction="horizontal"
-          className="h-full w-full rounded-lg border"
-        >
+        <ResizablePanelGroup direction="horizontal" className="h-full w-full ">
           {/* Sidebar */}
           <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
             <div className="h-full">
               <Sidebar />
             </div>
           </ResizablePanel>
-
           <ResizableHandle withHandle />
-
           {/* Main Content */}
           <ResizablePanel defaultSize={80} minSize={70}>
-            <div className="h-full w-full p-4 sm:p-8 lg:p-16">{children}</div>
-          </ResizablePanel>
+            <div className="h-full w-full p-4 sm:p-8 lg:px-4 py-8">
+              {children}
+            </div>
+          </ResizablePanel>{' '}
+          py-8
         </ResizablePanelGroup>
       </div>
 
