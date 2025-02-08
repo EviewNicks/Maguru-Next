@@ -1,7 +1,8 @@
 // lib/validations/user.ts
+import { z } from 'zod'
 
-export const UserRoleEnum = z.enum(["admin", "mahasiswa", "dosen"])
-export const UserStatusEnum = z.enum(["active", "inactive", "pending"])
+export const UserRoleEnum = z.enum(['admin', 'mahasiswa', 'dosen'])
+export const UserStatusEnum = z.enum(['active', 'inactive', 'pending'])
 
 export const updateUserSchema = z.object({
   role: UserRoleEnum.optional(),

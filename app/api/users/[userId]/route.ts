@@ -1,7 +1,8 @@
 // app/api/users/[userId]/route.ts
 import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import prisma from '@/lib/prisma'
-import auth from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 import { updateUserSchema } from '@/lib/validations/user'
 
 export async function PATCH(
@@ -9,7 +10,7 @@ export async function PATCH(
   { params }: { params: { userId: string } }
 ) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -31,9 +32,12 @@ export async function PATCH(
 
     return NextResponse.json(updatedUser)
   } catch (error) {
-    if (error.code === 'P2025') {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2025') {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      }
     }
+
     console.error('PATCH user error:', error)
     return NextResponse.json(
       { error: 'Internal Server Error' },
@@ -47,7 +51,7 @@ export async function DELETE(
   { params }: { params: { userId: string } }
 ) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -58,10 +62,13 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'User deleted successfully' })
   } catch (error) {
-    if (error.code === 'P2025') {
+    const prismaError = error as { code?: string }
+
+    if (prismaError.code === 'P2025') {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
-    console.error('DELETE user error:', error)
+
+    console.error('PATCH user error:', error)
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }

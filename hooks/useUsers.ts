@@ -1,11 +1,10 @@
-import { metadata } from './../app/layout'
 // hooks/useUsers.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import axios, { AxiosError } from 'axios'
 import { User, UpdateUserPayload } from '@/types/user'
 import { GetUsersQuery } from '@/lib/validations/user'
 
-interface UserResponse {
+interface UsersResponse {
   users: User[]
   metadata: {
     total: number

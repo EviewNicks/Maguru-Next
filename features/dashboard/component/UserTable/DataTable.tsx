@@ -15,17 +15,50 @@ import {
 } from '@tanstack/react-table'
 import { User } from '@/types/user'
 import { columns } from './columns'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface DataTableProps {
   data: User[]
+  isLoading?: boolean
 }
 
-export function DataTable({ data }: DataTableProps) {
+export function DataTable({ data, isLoading = false }: DataTableProps) {
   const table = useReactTable({
     data,
     columns, // Changed to lowercase
     getCoreRowModel: getCoreRowModel(),
   })
+
+  if (isLoading) {
+    return (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    <Skeleton className="h-4 w-[100px]" />
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <TableRow key={idx}>
+                {Array.from({ length: columns.length }).map((_, cellIdx) => (
+                  <TableCell key={cellIdx}>
+                    <Skeleton className="h-4 w-[100px]" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-md border">

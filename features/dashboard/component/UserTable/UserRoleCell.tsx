@@ -10,26 +10,40 @@ import {
 } from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import { EditUserDialog } from './EditUserDialog'
-// import { CheckBadgeIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import { Check, ChevronDown } from 'lucide-react'
+import { toast } from '@/components/ui/use-toast'
 
 // Komponen baru untuk menangani state dan dispatch
 const UserRoleCell = ({ user }: { user: User }) => {
   const [dialogOpen, setDialogOpen] = useState(false)
   const dispatch = useDispatch()
 
-  const handleUpdateUser = (
+  const handleUpdateUser = async (
     userId: string,
     newRole: string,
     newStatus: string
   ) => {
-    dispatch(
-      updateUser({
-        id: userId,
-        role: newRole as User['role'],
-        status: newStatus as User['status'],
+    try {
+      await dispatch(
+        updateUser({
+          id: userId,
+          role: newRole as User['role'],
+          status: newStatus as User['status'],
+        })
+      ).unwrap()
+
+      toast({
+        title: 'Success',
+        description: 'User role updated successfully',
       })
-    )
+      setDialogOpen(false)
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update user role',
+        variant: 'destructive',
+      })
+    }
   }
 
   return (
