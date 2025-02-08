@@ -1,4 +1,3 @@
-// UserTable.tsx
 'use client'
 
 import { useEffect } from 'react'
@@ -11,7 +10,7 @@ function UsersPage() {
   const { data: users, loading, error } = useAppSelector((state) => state.users)
 
   useEffect(() => {
-  dispatch(fetchUsers()
+    void dispatch(fetchUsers())
   }, [dispatch])
 
   console.log('Users dari Redux:', users)
