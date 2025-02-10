@@ -8,6 +8,8 @@ import {
 import { PropsWithChildren } from 'react'
 
 function layout({ children }: PropsWithChildren) {
+  console.log('🔥 layout dashboard dirender ulang')
+  
   return (
     <main className=" w-full">
       {/* TAMPILKAN HANYA UNTUK LG KE ATAS */}

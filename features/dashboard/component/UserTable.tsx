@@ -1,32 +1,35 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { fetchUsers } from '@/store/features/userSlice'
+import { useQuery } from '@tanstack/react-query'
 import { DataTable } from './UserTable/DataTable'
 
 function UsersPage() {
-  const dispatch = useAppDispatch()
-  const { data: users, loading, error } = useAppSelector((state) => state.users)
+  console.log('UsersPage dirender ulang')
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const response = await fetch('/api/users')
+      const data = await response.json()
+      return data.users
+    },
+  })
 
-  useEffect(() => {
-    void dispatch(fetchUsers())
-  }, [dispatch])
-
-  console.log('Users dari Redux:', users)
-
-  if (loading) {
+  if (isLoading) {
     return <div>Loading...</div>
   }
 
   if (error) {
-    return <div>Error: {error}</div>
+    return (
+      <div>
+        Error: {error instanceof Error ? error.message : 'Unknown error'}
+      </div>
+    )
   }
 
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">Daftar Pengguna</h1>
-      <DataTable data={users} isLoading={loading} />
+      <DataTable data={data || []} isLoading={isLoading} />
     </div>
   )
 }
