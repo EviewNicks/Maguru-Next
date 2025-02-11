@@ -84,3 +84,64 @@ export async function GET(req: Request) {
     )
   }
 }
+
+
+export async function POST(req: Request) {
+  try {
+    // Verify authentication
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Get user data from request body
+    const data = await req.json()
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { clerkUserId: data.clerkUserId },
+          { email: data.email }
+        ]
+      }
+    })
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'User already exists' },
+        { status: 409 }
+      )
+    }
+
+    // Create new user
+    const user = await prisma.user.create({
+      data: {
+        clerkUserId: data.clerkUserId,
+        email: data.email,
+        name: data.name || '',
+        role: data.role || 'mahasiswa',
+        status: data.status || 'active'
+      }
+    })
+
+    return NextResponse.json(user, { status: 201 })
+  } catch (error) {
+    console.error('POST user error:', error)
+    
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      // Handle unique constraint violations
+      if (error.code === 'P2002') {
+        return NextResponse.json(
+          { error: 'User with this email or clerkUserId already exists' },
+          { status: 409 }
+        )
+      }
+    }
+
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    )
+  }
+}

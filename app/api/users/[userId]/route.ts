@@ -10,7 +10,10 @@ export async function PATCH(
   { params }: { params: { userId: string } }
 ) {
   try {
+    // Await params di awal
+    const { userId: paramsUserId } = await Promise.resolve(params)
     const { userId } = await auth()
+
     if (!userId) {
       return NextResponse.json(
         { error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } },
@@ -34,9 +37,9 @@ export async function PATCH(
       )
     }
 
-    // Get current user state
+    // Gunakan paramsUserId yang sudah di-await
     const currentUser = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: paramsUserId },
     })
 
     if (!currentUser) {
@@ -63,8 +66,9 @@ export async function PATCH(
       )
     }
 
+    // Gunakan paramsUserId yang sudah di-await
     const updatedUser = await prisma.user.update({
-      where: { id: params.userId },
+      where: { id: paramsUserId },
       data: parsed.data,
     })
 
@@ -92,12 +96,18 @@ export async function DELETE(
   { params }: { params: { userId: string } }
 ) {
   try {
+    // Await params di awal
+    const { userId: paramsUserId } = await Promise.resolve(params)
     const { userId } = await auth()
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await prisma.user.delete({ where: { id: params.userId } })
+    // Gunakan paramsUserId yang sudah di-await
+    await prisma.user.delete({
+      where: { id: paramsUserId },
+    })
 
     return NextResponse.json({ message: 'User deleted successfully' })
   } catch (error) {
