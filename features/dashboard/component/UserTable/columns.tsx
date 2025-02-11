@@ -1,5 +1,4 @@
 'use client'
-
 import { ColumnDef } from '@tanstack/react-table'
 import { User } from '@/types/user'
 import UserRoleCell from './UserRoleCell'

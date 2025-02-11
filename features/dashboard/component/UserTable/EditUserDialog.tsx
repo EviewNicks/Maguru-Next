@@ -19,29 +19,37 @@ import {
 } from '@/components/ui/select'
 import { useState } from 'react'
 import { User } from '@/types/user'
+import { useUserActions } from '@/hooks/useUserActions'
 
 interface EditUserDialogProps {
   user: User
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSave: (userId: string, role: string, status: string) => void
 }
 
 export function EditUserDialog({
   user,
   open,
   onOpenChange,
-  onSave,
 }: EditUserDialogProps) {
   const [role, setRole] = useState<User['role']>(user.role)
   const [status, setStatus] = useState<User['status']>(
     user.status ?? 'active' // Gunakan nullish coalescing untuk mencegah undefined
   )
+  const { updateUser } = useUserActions()
 
-  const handleSave = () => {
-    if (!['active', 'inactive', 'pending'].includes(status)) return
-    onSave(user.id, role, status)
-    onOpenChange(false)
+  const handleSave = async () => {
+    try {
+      await updateUser.mutateAsync({
+        id: user.id,
+        role,
+        status,
+        lastKnownUpdate: user.updatedAt, // Add this
+      })
+      onOpenChange(false)
+    } catch (error) {
+      console.error('Failed to update user:', error)
+    }
   }
 
   return (
@@ -87,10 +95,16 @@ export function EditUserDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={updateUser.isPending}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save changes</Button>
+          <Button onClick={handleSave} disabled={updateUser.isPending}>
+            {updateUser.isPending ? 'Saving...' : 'Save changes'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
