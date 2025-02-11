@@ -1,4 +1,6 @@
 // hooks/useAuth.ts
+'use client'
+
 import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { getCurrentUser } from '@/lib/auth'

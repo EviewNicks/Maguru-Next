@@ -4,12 +4,14 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
-
+import { createUserIfNotExists } from '@/lib/auth'
 import { PropsWithChildren } from 'react'
 
-function layout({ children }: PropsWithChildren) {
+async function layout({ children }: PropsWithChildren) {
   console.log('🔥 layout dashboard dirender ulang')
-  
+
+  await createUserIfNotExists()
+
   return (
     <main className=" w-full">
       {/* TAMPILKAN HANYA UNTUK LG KE ATAS */}

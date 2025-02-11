@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import prisma from '@/lib/prisma'
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { getUsersQuerySchema } from '@/lib/validations/user'
 
 export async function GET(req: Request) {
@@ -85,60 +85,64 @@ export async function GET(req: Request) {
   }
 }
 
-
-export async function POST(req: Request) {
+export async function POST() {
   try {
-    // Verify authentication
+    console.log('POST /api/users called')
+
     const { userId } = await auth()
     if (!userId) {
+      console.log('No userId found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user data from request body
-    const data = await req.json()
-
-    // Check if user already exists
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { clerkUserId: data.clerkUserId },
-          { email: data.email }
-        ]
-      }
-    })
-
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'User already exists' },
-        { status: 409 }
-      )
+    console.log('Clerk userId:', userId)
+    // Get Clerk user data
+    const clerkUser = await currentUser()
+    if (!clerkUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
-
-    // Create new user
-    const user = await prisma.user.create({
-      data: {
-        clerkUserId: data.clerkUserId,
-        email: data.email,
-        name: data.name || '',
-        role: data.role || 'mahasiswa',
-        status: data.status || 'active'
-      }
-    })
-
-    return NextResponse.json(user, { status: 201 })
-  } catch (error) {
-    console.error('POST user error:', error)
     
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      // Handle unique constraint violations
-      if (error.code === 'P2002') {
-        return NextResponse.json(
-          { error: 'User with this email or clerkUserId already exists' },
-          { status: 409 }
-        )
-      }
+    console.log('Clerk user data:', {
+      email: clerkUser.emailAddresses[0].emailAddress,
+      firstName: clerkUser.firstName,
+      lastName: clerkUser.lastName
+    })
+
+
+    // Check if user exists in our database
+    let user = await prisma.user.findUnique({
+      where: { clerkUserId: userId },
+    })
+
+    if (user) {
+      console.log('Existing user found:', user.id)
+      // Update existing user if needed
+      user = await prisma.user.update({
+        where: { clerkUserId: userId },
+        data: {
+          email: clerkUser.emailAddresses[0].emailAddress,
+          name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
+        },
+      })
+      console.log('User updated')
+    } else {
+      console.log('Creating new user')
+      // Create new user
+      user = await prisma.user.create({
+        data: {
+          clerkUserId: userId,
+          email: clerkUser.emailAddresses[0].emailAddress,
+          name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
+          role: 'mahasiswa',
+          status: 'active',
+        },
+      })
+      console.log('New user created:', user.id)
     }
 
+    return NextResponse.json(user)
+  } catch (error) {
+    console.error('Error in user sync:', error)
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }

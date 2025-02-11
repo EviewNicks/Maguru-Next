@@ -7,6 +7,7 @@ import Navbar from '@/components/layouts/Navbar'
 import GlobalModal from '@/components/layouts/GlobalModal'
 import GlobalToast from '@/components/layouts/GlobalToast'
 
+
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const playfair = Playfair_Display({
   subsets: ['latin'],
