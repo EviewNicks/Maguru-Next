@@ -25,14 +25,12 @@ interface EditUserDialogProps {
   user: User
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSave: (userId: string, role: string, status: string) => void
 }
 
 export function EditUserDialog({
   user,
   open,
   onOpenChange,
-  onSave,
 }: EditUserDialogProps) {
   const [role, setRole] = useState<User['role']>(user.role)
   const [status, setStatus] = useState<User['status']>(
@@ -41,14 +39,12 @@ export function EditUserDialog({
   const { updateUser } = useUserActions()
 
   const handleSave = async () => {
-    // if (!['active', 'inactive', 'pending'].includes(status)) return
-    // onSave(user.id, role, status)
-    // onOpenChange(false)
     try {
       await updateUser.mutateAsync({
         id: user.id,
         role,
         status,
+        lastKnownUpdate: user.updatedAt, // Add this
       })
       onOpenChange(false)
     } catch (error) {

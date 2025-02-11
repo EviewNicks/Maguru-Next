@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { User, UpdateUserPayload } from '@/types/user'
 import { RootState } from '../store'
 
@@ -6,18 +6,19 @@ interface UserState {
   data: User[]
   loading: boolean
   error: string | null
+  previousStates: Record<string, User | null>
+  optimisticUpdates: Record<string, UpdateUserPayload>
 }
 
 // Definisikan tipe untuk thunk
-type FetchUsersThunkConfig = {
-  state: RootState
-  rejectValue: string
-}
+type FetchUsersThunkConfig = { state: RootState; rejectValue: string }
 
 const initialState: UserState = {
   data: [],
   loading: false,
   error: null,
+  previousStates: {},
+  optimisticUpdates: {},
 }
 
 export const fetchUsers = createAsyncThunk<User[], void, FetchUsersThunkConfig>(
@@ -47,9 +48,13 @@ export const updateUser = createAsyncThunk<
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
-    if (!response.ok) throw new Error('Failed to update user')
-    const data = await response.json()
-    return data
+    const result = await response.json()
+
+    if (!response.ok) {
+      return rejectWithValue(result.error?.message || 'Failed to update user')
+    }
+
+    return result.data
   } catch (error) {
     return rejectWithValue(
       error instanceof Error ? error.message : 'Failed to update user'
@@ -63,11 +68,12 @@ export const deleteUser = createAsyncThunk<
   { rejectValue: string }
 >('users/deleteUser', async (userId, { rejectWithValue }) => {
   try {
-    const response = await fetch(`/api/users/${userId}`, {
-      method: 'DELETE',
-    })
-    if (!response.ok) throw new Error('Failed to delete user')
-    return userId
+    const response = await fetch(`/api/users/${userId}`, { method: 'DELETE' })
+    const data = await response.json()
+    if (!response.ok) {
+      return { error: { message: data.error || 'Failed to delete user' } }
+    }
+    return data
   } catch (error) {
     return rejectWithValue(
       error instanceof Error ? error.message : 'Failed to delete user'
@@ -78,7 +84,32 @@ export const deleteUser = createAsyncThunk<
 const userSlice = createSlice({
   name: 'users',
   initialState,
-  reducers: {},
+  reducers: {
+    startOptimisticUpdate: (
+      state,
+      action: PayloadAction<UpdateUserPayload>
+    ) => {
+      const { id, ...updates } = action.payload
+      const targetUser = state.data.find((user) => user.id === id)
+      if (targetUser) {
+        state.previousStates[id] = { ...targetUser }
+        state.optimisticUpdates[id] = action.payload
+        state.data = state.data.map((user) =>
+          user.id === id ? { ...user, ...updates } : user
+        )
+      }
+    },
+    revertOptimisticUpdate: (state, action: PayloadAction<string>) => {
+      const id = action.payload
+      if (state.previousStates[id]) {
+        state.data = state.data.map((user) =>
+          user.id === id ? state.previousStates[id]! : user
+        )
+        delete state.previousStates[id]
+        delete state.optimisticUpdates[id]
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchUsers.pending, (state) => {
@@ -111,6 +142,15 @@ const userSlice = createSlice({
       .addCase(updateUser.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload ?? 'Failed to update user'
+        // Revert optimistic update if it exists
+        const id = action.meta.arg.id
+        if (state.previousStates[id]) {
+          state.data = state.data.map((user) =>
+            user.id === id ? state.previousStates[id]! : user
+          )
+          delete state.previousStates[id]
+          delete state.optimisticUpdates[id]
+        }
       })
       .addCase(deleteUser.pending, (state) => {
         state.loading = true

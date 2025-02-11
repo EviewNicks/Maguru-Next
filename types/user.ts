@@ -14,5 +14,6 @@ export type User = {
 export type UpdateUserPayload = {
   id: string
   role?: 'admin' | 'mahasiswa' | 'dosen'
-  status: 'active' | 'inactive' | 'pending' // Pastikan nilai valid
+  status?: 'active' | 'inactive' | 'pending'
+  lastKnownUpdate?: Date // Add this for version control
 }

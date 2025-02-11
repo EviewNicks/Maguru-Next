@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { EditUserDialog } from './EditUserDialog'
 import { Check, ChevronDown } from 'lucide-react'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/hooks/use-toast'
 
 // Komponen baru untuk menangani state dan dispatch
 const UserRoleCell = ({ user }: { user: User }) => {
@@ -32,10 +32,7 @@ const UserRoleCell = ({ user }: { user: User }) => {
         })
       ).unwrap()
 
-      toast({
-        title: 'Success',
-        description: 'User role updated successfully',
-      })
+      toast({ title: 'Success', description: 'User role updated successfully' })
       setDialogOpen(false)
     } catch (error) {
       toast({

@@ -5,8 +5,7 @@ import { useAppDispatch } from '@/store/hooks'
 import { openModal } from '@/store/features/modalSlice'
 import { deleteUser } from '@/store/features/userSlice'
 import { User } from '@/types/user'
-import { toast } from '@/components/ui/use-toast'
-
+import { toast } from '@/hooks/use-toast'
 
 interface UserActionCellProps {
   user: User

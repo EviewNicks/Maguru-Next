@@ -2,7 +2,7 @@
 'use client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from '@/components/ui/use-toast'
+import { toast } from '@/hooks/use-toast'
 import { UpdateUserPayload } from '@/types/user'
 
 export function useUserActions() {
@@ -36,9 +36,7 @@ export function useUserActions() {
 
   const deleteUser = useMutation({
     mutationFn: async (userId: string) => {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE',
-      })
+      const response = await fetch(`/api/users/${userId}`, { method: 'DELETE' })
       if (!response.ok) throw new Error('Failed to delete user')
     },
     onSuccess: () => {
