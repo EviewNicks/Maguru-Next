@@ -96,10 +96,9 @@ export async function DELETE(
   { params }: { params: { userId: string } }
 ) {
   try {
-    // Await params di awal
-    const { userId: paramsUserId } = await Promise.resolve(params)
+    // Hapus await untuk params karena sudah berupa object
+    const { userId: paramsUserId } = params
     const { userId } = await auth()
-
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

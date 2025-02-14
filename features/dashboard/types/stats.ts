@@ -1,5 +1,6 @@
 // types/stats.ts
 export type StatsData = {
-    title: string
-    value: number
-  }
+  // Representasi data statistik dengan atribut `title` (judul statistik) dan `value` (nilai statistik).  //
+  title: string
+  value: number
+}
