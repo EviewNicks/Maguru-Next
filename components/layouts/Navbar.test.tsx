@@ -3,35 +3,35 @@ import '@testing-library/jest-dom'
 import Navbar from '@/components/layouts/Navbar'
 
 // Mock all child components
-jest.mock('@/components/Navbar/Logo', () => {
+jest.mock('./Navbar/Logo', () => {
   return function MockLogo() {
     return <div data-testid="mock-logo">Logo</div>
   }
 })
 
-jest.mock('@/components/Navbar/DarkMode', () => {
+jest.mock('./Navbar/DarkMode', () => {
   return function MockDarkMode() {
     return <div data-testid="mock-dark-mode">DarkMode</div>
   }
 })
 
-jest.mock('@/components/Navbar/CartButton', () => {
+jest.mock('./Navbar/CartButton', () => {
   return function MockCartButton() {
     return <div data-testid="mock-cart-button">CartButton</div>
   }
 })
 
-jest.mock('@/components/Navbar/NavSearch', () => {
+jest.mock('./Navbar/NavSearch', () => {
   return function MockNavSearch() {
     return <div data-testid="mock-nav-search">NavSearch</div>
   }
 })
 
-jest.mock('@/components/Navbar/LinksDropdown', () => {
+jest.mock('./Navbar/LinksDropdown', () => {
   return {
     LinksDropdown: function MockLinksDropdown() {
       return <div data-testid="mock-links-dropdown">LinksDropdown</div>
-    }
+    },
   }
 })
 
@@ -61,8 +61,54 @@ describe('Navbar Component', () => {
     render(<Navbar />)
     const nav = screen.getByRole('navigation')
     expect(nav).toHaveClass('border-b')
-    
+
     const container = screen.getByTestId('mock-container')
-    expect(container).toHaveClass('flex', 'flex-col', 'sm:flex-row', 'sm:justify-between', 'sm:items-center', 'flex-wrap', 'gap-4', 'py-6')
+    expect(container).toHaveClass(
+      'flex',
+      'flex-col',
+      'sm:flex-row',
+      'sm:justify-between',
+      'sm:items-center',
+      'flex-wrap',
+      'gap-4',
+      'py-6'
+    )
+  })
+
+  it('maintains responsive layout classes', () => {
+    render(<Navbar />)
+    const container = screen.getByTestId('mock-container')
+
+    // Test mobile layout
+    expect(container).toHaveClass('flex-col')
+
+    // Test desktop layout
+    expect(container).toHaveClass('sm:flex-row')
+  })
+
+  it('groups action items correctly', () => {
+    render(<Navbar />)
+    const actionGroup = screen
+      .getByTestId('mock-container')
+      .querySelector('.flex.gap-4')
+    expect(actionGroup).toBeInTheDocument()
+    expect(actionGroup).toContainElement(screen.getByTestId('mock-cart-button'))
+    expect(actionGroup).toContainElement(screen.getByTestId('mock-dark-mode'))
+    expect(actionGroup).toContainElement(
+      screen.getByTestId('mock-links-dropdown')
+    )
+  })
+
+  // Test for proper component order
+  it('renders components in correct order', () => {
+    render(<Navbar />)
+    const container = screen.getByTestId('mock-container')
+    const childNodes = container.childNodes
+
+    expect(childNodes[0]).toHaveTextContent('Logo')
+    expect(childNodes[1]).toHaveTextContent('NavSearch')
+    expect(childNodes[2]).toContainElement(
+      screen.getByTestId('mock-cart-button')
+    )
   })
 })
