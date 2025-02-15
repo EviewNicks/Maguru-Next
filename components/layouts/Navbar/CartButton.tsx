@@ -1,8 +1,9 @@
+'use client'
 import { Button } from '@/components/ui/button'
 import { AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 
-async function CartButton() {
+function CartButton() {
   // temp
   const numItemsInCart = 9
   return (

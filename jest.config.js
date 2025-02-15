@@ -4,13 +4,24 @@ const config = {
   testEnvironment: 'jsdom',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   transform: {
-    '^.+\\.(ts|tsx)$': [
-      'ts-jest',
-      {
-        tsconfig: 'tsconfig.json',
-        jsx: 'react-jsx',
-      },
-    ],
+    // '^.+\\.(ts|tsx)$': [
+    //   'ts-jest',
+    //   {
+    //     tsconfig: 'tsconfig.json',
+    //     jsx: 'react-jsx',
+    //     diagnostics: {
+    //       ignoreCodes: [1343]
+    //     },
+    //     astTransformers: {
+    //       before: [
+    //         {
+    //           path: 'node_modules/ts-jest-mock-import-meta',  // optional
+    //           options: { metaObjectReplacement: { url: 'https://www.url.com' } }
+    //         }
+    //       ]
+    //     }
+    //   },
+    // ],
     '^.+\\.(ts|tsx)$': ['babel-jest'],
   },
 
@@ -29,6 +40,7 @@ const config = {
   transformIgnorePatterns: [
     '/node_modules/',
     '^.+\\.module\\.(css|sass|scss)$',
+    'node_modules/(?!(lucide-react|@radix-ui|@heroicons)/)',
   ],
 }
 

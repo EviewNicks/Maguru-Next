@@ -1,54 +1,67 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import ModeToggle from '@/components/layouts/Navbar/DarkMode'
-import { ThemeProvider } from 'next-themes'
 
+// Mock useTheme dengan fungsi yang bisa dikontrol
+const mockSetTheme = jest.fn()
 jest.mock('next-themes', () => ({
-  useTheme: jest.fn(() => ({ setTheme: jest.fn() })),
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="theme-provider">{children}</div>
+  ),
+  useTheme: () => ({
+    theme: 'light',
+    setTheme: mockSetTheme,
+  }),
 }))
 
 describe('DarkMode Component', () => {
-  it('renders the toggle button', () => {
-    render(
-      <ThemeProvider>
-        <ModeToggle />
-      </ThemeProvider>
-    )
-    expect(
-      screen.getByRole('button', { name: /toggle theme/i })
-    ).toBeInTheDocument()
+  beforeEach(() => {
+    jest.clearAllMocks()
   })
 
-  it('opens the dropdown menu on button click', () => {
-    render(
-      <ThemeProvider>
-        <ModeToggle />
-      </ThemeProvider>
-    )
+  it('renders toggle button with theme icons', () => {
+    render(<ModeToggle />)
 
-    const button = screen.getByRole('button', { name: /toggle theme/i })
-    fireEvent.click(button)
+    // Cek button toggle theme menggunakan testid
+    const toggleButton = screen.getByTestId('mock-Button')
+    expect(toggleButton).toBeInTheDocument()
 
+    // Cek keberadaan icons
+    expect(screen.getByTestId('hero-icon-SunIcon')).toBeInTheDocument()
+    expect(screen.getByTestId('hero-icon-MoonIcon')).toBeInTheDocument()
+  })
+
+  it('shows dropdown menu with theme options when clicked', () => {
+    render(<ModeToggle />)
+
+    // Klik button toggle menggunakan testid
+    const toggleButton = screen.getByTestId('mock-Button')
+    fireEvent.click(toggleButton)
+
+    // Cek menu dropdown dan opsinya
+    expect(screen.getByTestId('mock-DropdownMenuContent')).toBeInTheDocument()
     expect(screen.getByText('Light')).toBeInTheDocument()
     expect(screen.getByText('Dark')).toBeInTheDocument()
     expect(screen.getByText('System')).toBeInTheDocument()
   })
 
-  it('calls setTheme when selecting an option', () => {
-    const mockSetTheme = jest.fn()
-    jest.mock('next-themes', () => ({
-      useTheme: () => ({ setTheme: mockSetTheme }),
-    }))
+  it('calls setTheme with correct theme when selecting options', () => {
+    render(<ModeToggle />)
 
-    render(
-      <ThemeProvider>
-        <ModeToggle />
-      </ThemeProvider>
-    )
+    // Buka dropdown
+    const toggleButton = screen.getByTestId('mock-Button')
+    fireEvent.click(toggleButton)
 
-    fireEvent.click(screen.getByRole('button', { name: /toggle theme/i }))
-    fireEvent.click(screen.getByText('Dark'))
+    // Test tiap opsi theme
+    const themeOptions = [
+      { text: 'Light', value: 'light' },
+      { text: 'Dark', value: 'dark' },
+      { text: 'System', value: 'system' },
+    ]
 
-    expect(mockSetTheme).toHaveBeenCalledWith('dark')
+    themeOptions.forEach(({ text, value }) => {
+      fireEvent.click(screen.getByText(text))
+      expect(mockSetTheme).toHaveBeenCalledWith(value)
+    })
   })
 })
