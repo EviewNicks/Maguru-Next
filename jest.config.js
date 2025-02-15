@@ -1,5 +1,4 @@
 /** @type {import('jest').Config} */
-
 const config = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
@@ -9,33 +8,28 @@ const config = {
       'ts-jest',
       {
         tsconfig: 'tsconfig.json',
-        jsx: 'react-jsx', // Tambahkan ini
+        jsx: 'react-jsx',
       },
     ],
+    '^.+\\.(ts|tsx)$': ['babel-jest'],
   },
+
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/(.*)$': '<rootDir>/src/$1', // Jika komponen ada di folder src
+    // atau
+    '^@/(.*)$': '<rootDir>/$1', // Jika komponen langsung di root
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
-    '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
-      '<rootDir>/__mocks__/fileMock.js',
-    '^@/components/ui/(.*)$': '<rootDir>/src/components/ui/$1',
-    '@clerk/nextjs': '<rootDir>/__mocks__/clerk-mock.js',
+    '\\.(jpg|jpeg|png|gif|svg)$': '<rootDir>/__tests__/__mocks__/fileMock.js',
+    '@clerk/nextjs': '<rootDir>/__tests__/__mocks__/clerk-mock.tsx',
   },
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.tsx'],
   testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
-  testPathIgnorePatterns: ['/node_modules/', '/.next/', '/coverage/'],
-  collectCoverage: true,
-  collectCoverageFrom: [
-    'src/**/*.{js,jsx,ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/*.stories.{js,jsx,ts,tsx}',
-    '!src/pages/_app.tsx',
-    '!src/pages/_document.tsx',
+  moduleDirectories: ['node_modules', '<rootDir>'],
+  testPathIgnorePatterns: ['/node_modules/', '/.next/'],
+  transformIgnorePatterns: [
+    '/node_modules/',
+    '^.+\\.module\\.(css|sass|scss)$',
   ],
-  testEnvironmentOptions: {
-    url: 'http://localhost',
-  },
-  verbose: true,
 }
 
 export default config
