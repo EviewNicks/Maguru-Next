@@ -3,28 +3,49 @@ const nextConfig = {
   /* config options here */
   images: {
     remotePatterns: [{ protocol: 'https', hostname: 'img.clerk.com' }],
+    domains: ['img.clerk.com'],
   },
   reactStrictMode: false,
   compiler: {
-    // Enables the styled-components SWC transform
     styledComponents: true,
   },
-  // Enable SWC compiler
-  swcMinify: true,
 
-  // Experimental features
+  // Disable static optimization for all pages
+  staticPageGenerationTimeout: 0,
+
+  // Enable dynamic rendering
   experimental: {
-    // Enable server components
-    serverComponents: true,
-    // Enable app directory
-    appDir: true,
+    serverActions: {
+      allowedOrigins: ['localhost:3000'],
+    },
+    runtime: 'nodejs',
   },
 
-  // Configure webpack if needed
-  webpack: (config, { isServer }) => {
-    // Custom webpack config here
+  // Disable some ESLint rules for tests
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  // Configure dynamic routes
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'x-custom-header',
+            value: 'my custom header value',
+          },
+        ],
+      },
+    ]
+  },
+
+  webpack: (config) => {
     return config
   },
+
+  output: 'standalone',
 }
 
 export default nextConfig

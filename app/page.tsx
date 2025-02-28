@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 const Homepage = () => {
   console.log('🔥 page home dirender ulang')
 

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { fetchStatsData } from '@/features/dashboard/service/stats'
 import ChartsContainer from '@/features/dashboard/component/ChartContainer'
 import StatsContainer from '@/features/dashboard/component/StatsContainer'
