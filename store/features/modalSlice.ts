@@ -6,6 +6,7 @@ interface ModalState {
   title?: string
   message?: string
   userId?: string // Tambahkan userId di sini
+  onConfirm?: () => void | Promise<void>
 }
 
 const initialState: ModalState = {
@@ -13,6 +14,7 @@ const initialState: ModalState = {
   title: '',
   message: '',
   userId: undefined, // Default undefined
+  onConfirm: undefined,
 }
 
 const modalSlice = createSlice({

@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux'
+import { useAppDispatch } from '@/store/hooks'
 import { useState } from 'react'
 import { updateUser } from '../../../../store/features/userSlice'
 import { User } from '@/types/user'
@@ -16,7 +16,7 @@ import { toast } from '@/hooks/use-toast'
 // Komponen baru untuk menangani state dan dispatch
 const UserRoleCell = ({ user }: { user: User }) => {
   const [dialogOpen, setDialogOpen] = useState(false)
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
 
   const handleUpdateUser = async (
     userId: string,
@@ -70,7 +70,6 @@ const UserRoleCell = ({ user }: { user: User }) => {
         user={user}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onSave={handleUpdateUser}
       />
     </>
   )

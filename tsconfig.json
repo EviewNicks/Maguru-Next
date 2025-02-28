@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "es2017",
     "lib": [
       "dom",
       "dom.iterable",
@@ -16,10 +16,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "types": [
-      "jest",
-      "@testing-library/jest-dom"
-    ],
     "incremental": true,
     "plugins": [
       {
@@ -37,7 +33,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "../next.config.ts"
+    "jest.setup.tsx"
   ],
   "exclude": [
     "node_modules"

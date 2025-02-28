@@ -10,8 +10,18 @@ export const updateUserSchema = z.object({
 })
 
 export const getUsersQuerySchema = z.object({
-  page: z.string().optional(),
-  limit: z.string().optional(),
+  page: z
+    .string()
+    .optional()
+    .refine((val) => !val || !isNaN(Number(val)), {
+      message: 'Page must be a valid number',
+    }),
+  limit: z
+    .string()
+    .optional()
+    .refine((val) => !val || !isNaN(Number(val)), {
+      message: 'Limit must be a valid number',
+    }),
   search: z.string().optional(),
   role: UserRoleEnum.optional(),
   status: UserStatusEnum.optional(),

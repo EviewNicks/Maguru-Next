@@ -3,12 +3,10 @@
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { closeModal } from '@/store/features/modalSlice'
 import { Button } from '@/components/ui/button'
-import { addToast } from '@/store/features/toastSlice'
-import { deleteUser } from '@/store/features/userSlice'
 
 export default function GlobalModal() {
   const dispatch = useAppDispatch()
-  const { isOpen, title, message, userId } = useAppSelector(
+  const { isOpen, title, message, onConfirm } = useAppSelector(
     (state) => state.modal
   )
 
@@ -16,7 +14,14 @@ export default function GlobalModal() {
     console.log('Modal tidak muncul karena isOpen:', isOpen)
     return null
   }
-  console.log('Modal muncul:', { isOpen, title, message, userId })
+  console.log('Modal muncul:', { isOpen, title, message, onConfirm })
+
+  const handleConfirm = async () => {
+    if (onConfirm) {
+      await onConfirm()
+    }
+    dispatch(closeModal())
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -27,21 +32,7 @@ export default function GlobalModal() {
           <Button variant="outline" onClick={() => dispatch(closeModal())}>
             Cancel
           </Button>
-          <Button
-            variant="destructive"
-            onClick={() => {
-              if (userId) {
-                dispatch(deleteUser(userId))
-                dispatch(
-                  addToast({
-                    message: `User berhasil dihapus`,
-                    type: 'success',
-                  })
-                )
-              }
-              dispatch(closeModal())
-            }}
-          >
+          <Button variant="destructive" onClick={handleConfirm}>
             Delete
           </Button>
         </div>

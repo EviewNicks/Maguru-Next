@@ -1,17 +1,24 @@
 // app/api/users/[userId]/route.ts
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { auth } from '@clerk/nextjs/server'
 import { updateUserSchema } from '@/lib/validations/user'
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: { userId: string } }
-) {
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+type RouteParams = {
+  userId: string
+}
+
+type RouteContext = {
+  params: Promise<RouteParams>
+}
+
+export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
-    // Await params di awal
-    const { userId: paramsUserId } = await Promise.resolve(params)
+    const { userId: paramsUserId } = await context.params
     const { userId } = await auth()
 
     if (!userId) {
@@ -37,7 +44,6 @@ export async function PATCH(
       )
     }
 
-    // Gunakan paramsUserId yang sudah di-await
     const currentUser = await prisma.user.findUnique({
       where: { id: paramsUserId },
     })
@@ -49,7 +55,6 @@ export async function PATCH(
       )
     }
 
-    // Check if the record has been modified since last fetch
     if (
       body.lastKnownUpdate &&
       new Date(body.lastKnownUpdate) < currentUser.updatedAt
@@ -66,7 +71,6 @@ export async function PATCH(
       )
     }
 
-    // Gunakan paramsUserId yang sudah di-await
     const updatedUser = await prisma.user.update({
       where: { id: paramsUserId },
       data: parsed.data,
@@ -91,19 +95,14 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { userId: string } }
-) {
+export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    // Hapus await untuk params karena sudah berupa object
-    const { userId: paramsUserId } = params
+    const { userId: paramsUserId } = await context.params
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Gunakan paramsUserId yang sudah di-await
     await prisma.user.delete({
       where: { id: paramsUserId },
     })
@@ -116,7 +115,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    console.error('PATCH user error:', error)
+    console.error('DELETE user error:', error)
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
