@@ -1,0 +1,21 @@
+# Menggunakan image node.js sebagai base
+FROM node:16
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy rest of the application
+COPY . .
+
+# Set environment variable untuk testing
+ENV NODE_ENV=test
+ENV USE_BABEL=true
+
+# Command untuk menjalankan test
+CMD ["npm", "test"]

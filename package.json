@@ -9,8 +9,8 @@
     "lint": "next lint",
     "format": "prettier --write .",
     "seed": "tsx prisma/seed.ts",
-    "test": "jest",
-    "test:watch": "jest --watch",
+    "test": "cross-env USE_BABEL=true jest",
+    "test:watch": "cross-env USE_BABEL=true jest --watch",
     "test:coverage": "jest --coverage"
   },
   "prisma": {
@@ -66,6 +66,7 @@
     "@types/supertest": "^6.0.2",
     "autoprefixer": "^10.4.20",
     "babel-jest": "^29.7.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
     "eslint-config-prettier": "^10.0.1",
