@@ -18,38 +18,15 @@ export async function getCurrentUser() {
   }
 }
 
-export async function createOrGetUser() {
+// Function for client components
+export async function fetchUser() {
   try {
-    console.log('createOrGetUser dipanggil')
-    const { userId } = await auth()
-    if (!userId) return null
-    console.log('userId dari Clerk:', userId)
-
-    // Check if user exists in database
-    let user = await prisma.user.findUnique({
-      where: { clerkUserId: userId },
-    })
-
-    console.log('User dari database:', user)
-
-    // If user doesn't exist, create new user directly with Prisma
-    if (!user) {
-      const clerkUser = await currentUser()
-      console.log('Data dari Clerk:', clerkUser)
-      if (!clerkUser) return null
-
-      user = await prisma.user.create({
-        data: {
-          clerkUserId: userId,
-          email: clerkUser.emailAddresses[0].emailAddress,
-          name: `${clerkUser.firstName} ${clerkUser.lastName}`.trim(),
-          role: 'mahasiswa',
-          status: 'active',
-        },
-      })
-      console.log('User baru dibuat:', user)
+    const response = await fetch('/api/auth/user')
+    if (!response.ok) {
+      throw new Error('Failed to fetch user')
     }
-    return user
+    const data = await response.json()
+    return data.user
   } catch (error) {
     console.error('Error in createOrGetUser:', error)
     return null

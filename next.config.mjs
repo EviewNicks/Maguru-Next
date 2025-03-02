@@ -18,7 +18,6 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: ['localhost:3000'],
     },
-    runtime: 'nodejs',
   },
 
   // Disable some ESLint rules for tests
@@ -39,10 +38,6 @@ const nextConfig = {
         ],
       },
     ]
-  },
-
-  webpack: (config) => {
-    return config
   },
 
   output: 'standalone',
