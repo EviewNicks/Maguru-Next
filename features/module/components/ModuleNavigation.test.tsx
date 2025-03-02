@@ -5,7 +5,19 @@ import ModuleNavigation from './ModuleNavigation';
 
 // Mock the Button component from shadcn/ui
 jest.mock('@/components/ui/button', () => ({
-  Button: ({ children, onClick, disabled, className, variant }: any) => (
+  Button: ({
+    children,
+    onClick,
+    disabled,
+    className,
+    variant,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+    className?: string;
+    variant?: string;
+  }) => (
     <button
       onClick={onClick}
       disabled={disabled}

@@ -1,19 +1,19 @@
 // features/module/components/ModulePage.tsx
-import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { selectUserId } from '../../../store/features/userSlice';
-import useModuleProgress from '../hooks/useModuleProgress';
-import ModuleContent from './ModuleContent';
-import ModuleNavigation from './ModuleNavigation';
-import ModuleProgress from './ModuleProgress';
-import { Card } from '@/components/ui/card';
+import React, { useEffect } from 'react'
+import { useSelector } from 'react-redux'
+import { selectUserId } from '@/store/features/userSlice'
+import useModuleProgress from '@/features/module/hooks/useModuleProgress'
+import ModuleContent from '@/features/module/components/ModuleContent'
+import ModuleNavigation from '@/features/module/components/ModuleNavigation'
+import ModuleProgress from '@/features/module/components/ModuleProgress'
+import { Card } from '@/components/ui/card'
 
 interface ModulePageProps {
-  moduleId: string;
+  moduleId: string
 }
 
 const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
-  const userId = useSelector(selectUserId);
+  const userId = useSelector(selectUserId)
   const {
     currentPage,
     progressPercentage,
@@ -22,19 +22,19 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
     goToNextPage,
     goToPrevPage,
     goToPage,
-  } = useModuleProgress({ moduleId, userId });
+  } = useModuleProgress({ moduleId, userId: userId || 'default-user' })
 
   useEffect(() => {
     // Scroll to top when page changes
-    window.scrollTo(0, 0);
-  }, [currentPage]);
+    window.scrollTo(0, 0)
+  }, [currentPage])
 
   if (!currentModule || !currentPageData) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <p>Modul tidak ditemukan atau sedang dimuat...</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -68,7 +68,7 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
         <Card className="mt-8 p-4">
           <div className="flex flex-wrap gap-2 justify-center">
             {Array.from({ length: currentModule.totalPages }).map((_, index) => {
-              const pageNum = index + 1;
+              const pageNum = index + 1
               return (
                 <button
                   key={pageNum}
@@ -81,13 +81,13 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
                 >
                   {pageNum}
                 </button>
-              );
+              )
             })}
           </div>
         </Card>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ModulePage;
+export default ModulePage

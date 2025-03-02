@@ -169,3 +169,10 @@ const userSlice = createSlice({
 })
 
 export default userSlice.reducer
+
+// Selectors
+export const selectUsers = (state: RootState) => state.users.data
+export const selectUserId = (state: RootState) =>
+  state.users.data.length > 0 ? state.users.data[0]?.id : undefined
+export const selectUserLoading = (state: RootState) => state.users.loading
+export const selectUserError = (state: RootState) => state.users.error

@@ -1,5 +1,4 @@
 // features/module/components/ModuleProgress.tsx
-import React from 'react';
 import { Progress } from '@/components/ui/progress';
 
 interface ModuleProgressProps {

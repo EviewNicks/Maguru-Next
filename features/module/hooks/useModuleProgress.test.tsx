@@ -1,5 +1,5 @@
 // features/module/hooks/useModuleProgress.test.tsx
-import { renderHook, act } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import progressReducer from '../../../store/features/progressSlice';
