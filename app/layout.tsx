@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter, Playfair_Display, Fira_Code } from 'next/font/google'
 import '@/styles/globals.css'
-import Navbar from '@/components/layouts/Navbar'
 import Container from '@/components/layouts/Container'
 import Providers from '@/config/providers'
-import { ClerkProvider, SignInButton, SignedOut } from '@clerk/nextjs'
+import Navbar from '@/components/layouts/Navbar'
+import GlobalModal from '@/components/layouts/GlobalModal'
+import GlobalToast from '@/components/layouts/GlobalToast'
+
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const playfair = Playfair_Display({
@@ -25,22 +27,25 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>) {
+}>)
+
+{
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <body
-          className={`${inter.variable} ${playfair.variable} ${firaCode.variable} antialiased`}
-        >
-          <Providers>
-            <Navbar />
-            <SignedOut>
-              <SignInButton />
-            </SignedOut>
-            <Container className="py-20">{children}</Container>
-          </Providers>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${inter.variable} ${playfair.variable} ${firaCode.variable} antialiased`}
+      >
+        <Providers>
+          <Navbar />
+          {/* className="py-20" */}
+          <Container>
+            {children}
+
+            <GlobalModal />
+            <GlobalToast />
+          </Container>
+        </Providers>
+      </body>
+    </html>
   )
 }

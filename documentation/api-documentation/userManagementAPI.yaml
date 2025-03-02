@@ -1,0 +1,187 @@
+openapi: 3.0.0
+info:
+  title: User Management API
+  version: 1.0.0
+  description: API untuk mengelola data user termasuk autentikasi, pendaftaran, dan CRUD operasi.
+servers:
+  - url: http://localhost:3000
+paths:
+  /api/users:
+    get:
+      summary: Mengambil daftar user
+      description: Mengembalikan daftar user dan metadata pagination.
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Filter pencarian berdasarkan nama atau email.
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [admin, mahasiswa, dosen]
+          description: Filter berdasarkan role.
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, inactive, pending]
+          description: Filter berdasarkan status.
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Daftar user berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  metadata:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+        '401':
+          description: Unauthorized - Token tidak valid atau tidak diberikan.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        '500':
+          description: Internal Server Error.
+    post:
+      summary: Sinkronisasi User (Create/Update)
+      description: Membuat user baru atau mengupdate user yang sudah ada berdasarkan Clerk authentication.
+      responses:
+        '200':
+          description: User berhasil dibuat atau diupdate.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized.
+        '404':
+          description: User tidak ditemukan.
+        '500':
+          description: Internal Server Error.
+  /api/users/{userId}:
+    patch:
+      summary: Update user details
+      description: Update user information based on user ID.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                role:
+                  type: string
+                lastKnownUpdate:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                  message:
+                    type: string
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+        '409':
+          description: Concurrent modification error
+        '500':
+          description: Internal Server Error
+    delete:
+      summary: Delete user
+      description: Delete a user based on user ID.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User berhasil dihapus.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+        '500':
+          description: Internal Server Error
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        clerkUserId:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, mahasiswa, dosen]
+        status:
+          type: string
+          enum: [active, inactive, pending]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time

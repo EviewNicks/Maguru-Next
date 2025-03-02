@@ -1,1 +1,0 @@
-// type untuk autentikasi NextAuth
