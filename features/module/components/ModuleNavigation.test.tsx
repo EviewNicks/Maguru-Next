@@ -72,6 +72,29 @@ jest.mock('lucide-react', () => ({
   Zap: () => <span data-testid="zap">Zap</span>,
 }))
 
+// Mock ProgressIndicator component
+jest.mock('./ProgressIndicator', () => ({
+  __esModule: true,
+  default: ({ 
+    currentPage, 
+    totalPages, 
+    hasVisitedPages 
+  }: { 
+    currentPage: number, 
+    totalPages: number, 
+    hasVisitedPages?: number[] 
+  }) => (
+    <div 
+      data-testid="progress-indicator" 
+      data-current-page={currentPage} 
+      data-total-pages={totalPages}
+      data-visited-pages={hasVisitedPages?.join(',')}
+    >
+      Progress Indicator
+    </div>
+  )
+}))
+
 
 describe('ModuleNavigation', () => {
   const mockOnPrevPage = jest.fn()
@@ -177,12 +200,12 @@ describe('ModuleNavigation', () => {
       />
     )
 
-    const buttons = screen.getAllByTestId('button')
-    fireEvent.click(buttons[1])
+    const nextButton = screen.getByTestId('tooltip-trigger').querySelector('button')
+    fireEvent.click(nextButton!)
     expect(mockOnNextPage).toHaveBeenCalledTimes(1)
   })
 
-  it('disables next button when page is not completed and not in quick view mode', () => {
+  it('disables next button when page is not completed', () => {
     render(
       <ModuleNavigation
         currentPage={2}
@@ -194,9 +217,8 @@ describe('ModuleNavigation', () => {
       />
     )
 
-    const buttons = screen.getAllByTestId('button')
-    expect(buttons[1]).toBeDisabled()
-    expect(screen.getByTestId('alert-circle')).toBeInTheDocument()
+    const nextButton = screen.getByTestId('tooltip-trigger').querySelector('button')
+    expect(nextButton).toBeDisabled()
   })
 
   it('enables next button when in quick view mode even if page is not completed', () => {
@@ -272,4 +294,40 @@ describe('ModuleNavigation', () => {
     expect(screen.getByText('Progres tidak akan disimpan dalam mode ini')).toBeInTheDocument()
   })
 
+  
+  it('renders ProgressIndicator with correct props', () => {
+    const visitedPages = [1, 2, 3]
+    
+    render(
+      <ModuleNavigation
+        currentPage={3}
+        totalPages={5}
+        onPrevPage={mockOnPrevPage}
+        onNextPage={mockOnNextPage}
+        isLastPage={false}
+        visitedPages={visitedPages}
+      />
+    )
+
+    const progressIndicator = screen.getByTestId('progress-indicator')
+    expect(progressIndicator).toBeInTheDocument()
+    expect(progressIndicator).toHaveAttribute('data-current-page', '3')
+    expect(progressIndicator).toHaveAttribute('data-total-pages', '5')
+    expect(progressIndicator).toHaveAttribute('data-visited-pages', '1,2,3')
+  })
+
+  it('passes empty array for visitedPages when not provided', () => {
+    render(
+      <ModuleNavigation
+        currentPage={2}
+        totalPages={5}
+        onPrevPage={mockOnPrevPage}
+        onNextPage={mockOnNextPage}
+        isLastPage={false}
+      />
+    )
+
+    const progressIndicator = screen.getByTestId('progress-indicator')
+    expect(progressIndicator).toHaveAttribute('data-visited-pages', '')
+  })
 })

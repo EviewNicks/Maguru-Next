@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Badge } from '@/components/ui/badge'
-
+import ProgressIndicator from './ProgressIndicator'
 interface ModuleNavigationProps {
   currentPage: number
   totalPages: number
@@ -20,6 +20,7 @@ interface ModuleNavigationProps {
   quickViewMode?: boolean
   onToggleQuickViewMode?: () => void
   incompleteSections?: string[]
+  visitedPages?: number[]
 }
 
 const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
@@ -32,6 +33,7 @@ const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
   quickViewMode = false,
   onToggleQuickViewMode,
   incompleteSections = [],
+  visitedPages = [],
 }) => {
   // Menentukan apakah tombol Next harus dinonaktifkan
   const isNextDisabled = !quickViewMode && !isPageCompleted && currentPage < totalPages
@@ -48,6 +50,16 @@ const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
 
   return (
     <div className="flex flex-col w-full mt-8 gap-4">
+            {/* Progress Indicator */}
+            <div className="mb-4">
+        <ProgressIndicator 
+          currentPage={currentPage} 
+          totalPages={totalPages} 
+          hasVisitedPages={visitedPages}
+        />
+      </div>
+      
+      
       <div className="flex justify-between items-center w-full">
         <Button
           variant="outline"
@@ -108,12 +120,6 @@ const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
         </div>
       )}
       
-      {/* Page Indicator */}
-      <div className="flex justify-center mt-2">
-        <p className="text-sm text-muted-foreground">
-          Halaman {currentPage} dari {totalPages}
-        </p>
-      </div>
     </div>
   )
 }
