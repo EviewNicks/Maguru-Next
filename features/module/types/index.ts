@@ -9,6 +9,7 @@ export interface ModuleData {
   progressPercentage: number;
   isCompleted: boolean;
   quickViewModeAvailable?: boolean;
+  estimatedTime: number; // Waktu estimasi dalam menit
 }
 
 export interface ModulePage {

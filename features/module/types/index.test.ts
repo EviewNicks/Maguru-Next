@@ -11,6 +11,8 @@ describe('Module Types', () => {
       totalPages: 5,
       progressPercentage: 0,
       isCompleted: false,
+      estimatedTime: 30, // Waktu estimasi dalam menit
+      quickViewModeAvailable: true // Mode quick view tersedia
     };
 
     expect(moduleData).toHaveProperty('id');
@@ -20,6 +22,8 @@ describe('Module Types', () => {
     expect(moduleData).toHaveProperty('totalPages');
     expect(moduleData).toHaveProperty('progressPercentage');
     expect(moduleData).toHaveProperty('isCompleted');
+    expect(moduleData).toHaveProperty('estimatedTime');
+    expect(moduleData).toHaveProperty('quickViewModeAvailable');
   });
 
   it('should create a valid ModulePage object', () => {
