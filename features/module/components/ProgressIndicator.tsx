@@ -1,7 +1,7 @@
 // features/module/components/ProgressIndicator.tsx
 "use client"
 
-import React, { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { 
   selectProgressPercentage, 
@@ -22,15 +22,23 @@ interface ProgressIndicatorProps {
   currentPage: number
   totalPages: number
   hasVisitedPages?: number[]
+  progressPercentage?: number
+  pagesInteractionStatus?: Array<{ 
+    pageNumber: number
+    completed: boolean
+    interactive: boolean
+  }>
 }
 
 const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   currentPage,
   totalPages,
-  hasVisitedPages = []
+  hasVisitedPages = [],
+  progressPercentage: externalProgressPercentage,
+  pagesInteractionStatus = []
 }) => {
   const dispatch = useDispatch()
-  const progressPercentage = useSelector(selectProgressPercentage)
+  const storeProgressPercentage = useSelector(selectProgressPercentage)
   const isModuleCompleted = useSelector(selectIsModuleCompleted)
   const moduleId = useSelector(selectModuleId)
   
@@ -39,6 +47,11 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   
   // Hitung persentase progres berdasarkan halaman yang telah dikunjungi
   const calculateProgress = useCallback(() => {
+    if (externalProgressPercentage !== undefined) {
+      // Jika progressPercentage diberikan dari luar, gunakan itu
+      return Math.max(0, Math.min(100, externalProgressPercentage))
+    }
+    
     if (hasVisitedPages.length > 0) {
       // Jika ada data halaman yang telah dikunjungi, gunakan itu
       const uniqueVisitedPages = [...new Set(hasVisitedPages)]
@@ -47,7 +60,12 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
     
     // Jika tidak ada data halaman yang dikunjungi, gunakan halaman saat ini
     return Math.round((currentPage / totalPages) * 100)
-  }, [hasVisitedPages, totalPages, currentPage])
+  }, [hasVisitedPages, totalPages, currentPage, externalProgressPercentage])
+  
+  // Gunakan progress dari store atau hitung sendiri
+  const progress = externalProgressPercentage !== undefined 
+    ? calculateProgress() 
+    : storeProgressPercentage
   
   // Tentukan warna berdasarkan progres
   const calculateColorClass = (progress: number): string => {
@@ -61,7 +79,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
     const newProgress = calculateProgress()
     
     // Hanya perbarui jika berbeda dari nilai sebelumnya
-    if (newProgress !== progressPercentage) {
+    if (newProgress !== storeProgressPercentage) {
       dispatch(SET_PROGRESS_PERCENTAGE(newProgress))
       
       // Tambahkan animasi pulsasi saat progres berubah
@@ -70,14 +88,14 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
       
       return () => clearTimeout(timer)
     }
-  }, [currentPage, hasVisitedPages, totalPages, progressPercentage, dispatch, calculateProgress])
+  }, [currentPage, hasVisitedPages, totalPages, storeProgressPercentage, dispatch, calculateProgress])
   
   // Efek untuk menyimpan progres ke localStorage
   useEffect(() => {
     if (moduleId) {
       const progressData = {
         currentPage,
-        progressPercentage,
+        progressPercentage: progress,
         isModuleCompleted,
         lastUpdated: new Date().toISOString(),
         visitedPages: hasVisitedPages
@@ -85,7 +103,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
       
       localStorage.setItem(`module_progress_${moduleId}`, JSON.stringify(progressData))
     }
-  }, [progressPercentage, currentPage, isModuleCompleted, moduleId, hasVisitedPages])
+  }, [progress, currentPage, isModuleCompleted, moduleId, hasVisitedPages])
   
   // Fungsi untuk mengambil data dari localStorage
   const getProgressFromLocalStorage = useCallback(() => {
@@ -112,56 +130,62 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
         (storedProgress.visitedPages.length / totalPages) * 100
       )
       
-      if (calculatedProgress !== progressPercentage) {
+      if (calculatedProgress !== storeProgressPercentage) {
         dispatch(SET_PROGRESS_PERCENTAGE(calculatedProgress))
       }
     }
-  }, [moduleId, totalPages, progressPercentage, dispatch, getProgressFromLocalStorage])
+  }, [moduleId, totalPages, storeProgressPercentage, dispatch, getProgressFromLocalStorage])
   
-  const colorClass = calculateColorClass(progressPercentage)
+  const colorClass = calculateColorClass(progress)
   
   return (
     <div className="w-full space-y-2">
-      <div className="flex justify-between items-center text-sm text-muted-foreground mb-1">
-        <span>Halaman {currentPage} dari {totalPages}</span>
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-muted-foreground">
+          Halaman {currentPage} dari {totalPages}
+        </div>
         
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="flex items-center gap-1 cursor-help">
-                {isModuleCompleted ? (
-                  <>
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span className="text-green-500 font-medium">Modul Selesai!</span>
-                  </>
-                ) : (
-                  <span>{progressPercentage}% selesai</span>
-                )}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="top">
-              <p>
-                {isModuleCompleted 
-                  ? 'Anda telah menyelesaikan modul ini!' 
-                  : `Anda telah menyelesaikan ${progressPercentage}% dari modul ini.`
-                }
-              </p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger data-testid="progress-tooltip-trigger">
+                <span className="text-sm flex items-center gap-1">
+                  {isModuleCompleted ? (
+                    <>
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-green-500 font-medium">Modul Selesai!</span>
+                    </>
+                  ) : (
+                    <span data-testid="percentage-text">{progress}% selesai</span>
+                  )}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent data-testid="progress-tooltip">
+                <p>
+                  {isModuleCompleted 
+                    ? 'Anda telah menyelesaikan modul ini!' 
+                    : `Anda telah menyelesaikan ${progress}% dari modul ini.`
+                  }
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
       
       <Progress 
-        value={progressPercentage} 
+        value={progress} 
         className={`h-2 ${colorClass} ${isPulsing ? 'animate-pulse' : ''}`}
       />
       
-      {/* Indikator halaman (dots) */}
-      <div className="flex justify-between mt-1">
+      <div className="flex justify-between items-center" data-testid="progress-indicator" data-visited-pages={hasVisitedPages.join(',')}>
         {Array.from({ length: totalPages }).map((_, index) => {
           const pageNumber = index + 1
           const isVisited = hasVisitedPages.includes(pageNumber)
           const isCurrent = pageNumber === currentPage
+          const pageStatus = pagesInteractionStatus.find(
+            (status) => status.pageNumber === pageNumber
+          )
           
           return (
             <div 
@@ -171,6 +195,8 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
                 ${isCurrent ? 'scale-150 bg-primary' : ''}
                 ${isVisited && !isCurrent ? 'bg-primary/70' : ''}
                 ${!isVisited && !isCurrent ? 'bg-muted' : ''}
+                ${pageStatus?.completed ? 'bg-green-500' : ''}
+                ${pageStatus?.interactive ? 'cursor-pointer' : ''}
               `}
               title={`Halaman ${pageNumber}`}
             />

@@ -9,17 +9,21 @@ import { CheckCircle, Circle } from 'lucide-react'
 import Image from 'next/image'
 import type { Components } from 'react-markdown'
 interface ModuleContentProps {
-  title: string
+  title?: string
   content: string
   media?: string
+  pageNumber?: number
   onInteraction?: (interactionId: string) => void
+  onScroll?: (scrollData: { pageNumber: number, scrollPercentage: number }) => void
 }
 
 const ModuleContent: React.FC<ModuleContentProps> = ({
   title,
   content,
   media,
+  pageNumber = 1,
   onInteraction,
+  onScroll,
 }) => {
   // Referensi untuk elemen konten
   const contentRef = useRef<HTMLDivElement>(null)
@@ -37,6 +41,15 @@ const ModuleContent: React.FC<ModuleContentProps> = ({
       if (scrollTop + clientHeight >= scrollHeight - 50) {
         onInteraction('scroll-to-bottom')
       }
+      
+      // Panggil onScroll callback jika tersedia
+      if (onScroll) {
+        const scrollPercentage = Math.min(
+          100,
+          Math.round((scrollTop / (scrollHeight - clientHeight)) * 100) || 0
+        )
+        onScroll({ pageNumber, scrollPercentage })
+      }
     }
 
     const contentElement = contentRef.current
@@ -45,7 +58,7 @@ const ModuleContent: React.FC<ModuleContentProps> = ({
     return () => {
       contentElement.removeEventListener('scroll', handleScroll)
     }
-  }, [onInteraction])
+  }, [onInteraction, onScroll, pageNumber])
 
   // Fungsi untuk menangani interaksi dengan elemen tertentu
   const handleInteraction = (interactionId: string) => {
@@ -168,8 +181,8 @@ const ModuleContent: React.FC<ModuleContentProps> = ({
         {media && (
           <div className="mb-6 relative h-[300px] w-full">
             <Image 
-              src={media} 
-              alt={title} 
+              src={media || ''}
+              alt={title || 'Module content image'}
               className="rounded-md object-cover"
               fill
               sizes="(max-width: 768px) 100vw, 700px"

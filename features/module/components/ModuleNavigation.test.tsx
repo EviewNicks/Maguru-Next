@@ -330,4 +330,152 @@ describe('ModuleNavigation', () => {
     const progressIndicator = screen.getByTestId('progress-indicator')
     expect(progressIndicator).toHaveAttribute('data-visited-pages', '')
   })
+
+  // Edge Case Tests untuk ModuleNavigation
+
+  it('handles navigation with strict page completion requirements', () => {
+    const strictModule = {
+      totalPages: 5,
+      currentPage: 2,
+      pagesCompletionStatus: {
+        1: true,   // Halaman 1 selesai
+        2: false,  // Halaman 2 belum selesai
+        3: false,  // Halaman 3 belum terbuka
+        4: false,
+        5: false
+      }
+    }
+
+    const mockOnNextPage = jest.fn()
+    const mockOnPrevPage = jest.fn()
+
+    render(
+      <ModuleNavigation 
+        totalPages={strictModule.totalPages}
+        currentPage={strictModule.currentPage}
+        pagesCompletionStatus={strictModule.pagesCompletionStatus}
+        onNextPage={mockOnNextPage}
+        onPrevPage={mockOnPrevPage}
+      />
+    )
+
+    // Coba navigasi ke halaman selanjutnya
+    const nextButton = screen.getByText('Selanjutnya')
+    fireEvent.click(nextButton)
+
+    // Pastikan navigasi ditolak karena halaman belum selesai
+    expect(mockOnNextPage).not.toHaveBeenCalled()
+    expect(screen.getByText('Selesaikan halaman saat ini')).toBeInTheDocument()
+  })
+
+  it('handles extreme page count scenarios', () => {
+    const extremeModule = {
+      totalPages: 50,  // Modul dengan sangat banyak halaman
+      currentPage: 25, // Berada di tengah modul
+      pagesCompletionStatus: {}
+    }
+
+    // Inisialisasi status penyelesaian untuk semua halaman
+    extremeModule.pagesCompletionStatus = Array.from({length: 50}, (_, i) => i + 1)
+      .reduce((acc, page) => ({...acc, [page]: page <= 25}), {})
+
+    const mockOnNextPage = jest.fn()
+    const mockOnPrevPage = jest.fn()
+
+    render(
+      <ModuleNavigation 
+        totalPages={extremeModule.totalPages}
+        currentPage={extremeModule.currentPage}
+        pagesCompletionStatus={extremeModule.pagesCompletionStatus}
+        onNextPage={mockOnNextPage}
+        onPrevPage={mockOnPrevPage}
+      />
+    )
+
+    // Periksa rendering tombol navigasi
+    expect(screen.getByText('Sebelumnya')).toBeInTheDocument()
+    expect(screen.getByText('Selanjutnya')).toBeInTheDocument()
+
+    // Pastikan indikator halaman dapat di-render
+    const pageIndicators = screen.getAllByTestId('page-indicator')
+    expect(pageIndicators.length).toBe(50)
+  })
+
+  it('handles disabled navigation at module boundaries', () => {
+    const boundaryScenarios = [
+      { 
+        currentPage: 1,  // Halaman pertama
+        totalPages: 5,
+        expectedPrevDisabled: true,
+        expectedNextEnabled: true
+      },
+      { 
+        currentPage: 5,  // Halaman terakhir
+        totalPages: 5,
+        expectedPrevDisabled: false,
+        expectedNextEnabled: false
+      }
+    ]
+
+    boundaryScenarios.forEach(scenario => {
+      const mockOnNextPage = jest.fn()
+      const mockOnPrevPage = jest.fn()
+
+      render(
+        <ModuleNavigation 
+          totalPages={scenario.totalPages}
+          currentPage={scenario.currentPage}
+          pagesCompletionStatus={{}}
+          onNextPage={mockOnNextPage}
+          onPrevPage={mockOnPrevPage}
+        />
+      )
+
+      const prevButton = screen.getByText('Sebelumnya')
+      const nextButton = screen.getByText('Selanjutnya')
+
+      if (scenario.expectedPrevDisabled) {
+        expect(prevButton).toBeDisabled()
+      } else {
+        expect(prevButton).not.toBeDisabled()
+      }
+
+      if (scenario.expectedNextEnabled) {
+        expect(nextButton).not.toBeDisabled()
+      } else {
+        expect(nextButton).toBeDisabled()
+      }
+    })
+  })
+
+  it('handles rapid navigation attempts', () => {
+    const rapidNavigationModule = {
+      totalPages: 10,
+      currentPage: 5,
+      pagesCompletionStatus: {}
+    }
+
+    const mockOnNextPage = jest.fn()
+    const mockOnPrevPage = jest.fn()
+
+    render(
+      <ModuleNavigation 
+        totalPages={rapidNavigationModule.totalPages}
+        currentPage={rapidNavigationModule.currentPage}
+        pagesCompletionStatus={rapidNavigationModule.pagesCompletionStatus}
+        onNextPage={mockOnNextPage}
+        onPrevPage={mockOnPrevPage}
+      />
+    )
+
+    const nextButton = screen.getByText('Selanjutnya')
+
+    // Simulasi klik berulang dengan cepat
+    fireEvent.click(nextButton)
+    fireEvent.click(nextButton)
+    fireEvent.click(nextButton)
+
+    // Pastikan hanya satu kali navigasi yang diproses
+    expect(mockOnNextPage).toHaveBeenCalledTimes(1)
+  })
 })

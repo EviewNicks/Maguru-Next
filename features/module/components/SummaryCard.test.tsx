@@ -204,4 +204,149 @@ describe('SummaryCard Component', () => {
       })
     )
   })
+
+  // Edge Case Tests untuk SummaryCard
+
+  it('handles module with empty description', () => {
+    const emptyDescriptionModule: ModuleData = {
+      ...mockModuleData,
+      description: '',
+    }
+
+    const emptyDescProps = {
+      ...mockProps,
+      moduleData: emptyDescriptionModule,
+    }
+
+    render(<SummaryCard {...emptyDescProps} />)
+    
+    // Pastikan komponen masih dapat dirender tanpa error
+    expect(screen.getByText('Ringkasan Modul')).toBeInTheDocument()
+    expect(screen.getByText('Siap untuk Quiz')).toBeInTheDocument()
+  })
+
+  it('handles module with many pages', () => {
+    const manyPagesModule: ModuleData = {
+      ...mockModuleData,
+      pages: Array.from({ length: 20 }, (_, index) => ({
+        id: `page-${index + 1}`,
+        title: `Page ${index + 1}`,
+        content: `Content for page ${index + 1}`,
+        pageNumber: index + 1,
+        isLastPage: index === 19
+      })),
+      totalPages: 20,
+    }
+
+    const manyPagesProps = {
+      ...mockProps,
+      moduleData: manyPagesModule,
+      visitedPages: Array.from({ length: 20 }, (_, i) => i + 1),
+      totalPages: 20,
+    }
+
+    render(<SummaryCard {...manyPagesProps} />)
+    
+    // Pastikan semua halaman dapat ditampilkan
+    expect(screen.getByText('Siap untuk Quiz')).toBeInTheDocument()
+    expect(screen.getByText('Lanjut ke Quiz')).not.toBeDisabled()
+  })
+
+  it('handles module with interactive pages not completed', () => {
+    const incompleteInteractiveModule: ModuleData = {
+      ...mockModuleData,
+      pages: [
+        {
+          id: 'page-1',
+          title: 'Interactive Page',
+          content: 'Page with required interactions',
+          pageNumber: 1,
+          isLastPage: false,
+          interactiveElements: [
+            {
+              id: 'interactive-1',
+              type: 'button',
+              content: 'Required Button',
+              required: true
+            }
+          ]
+        },
+        ...mockModuleData.pages.slice(1)
+      ]
+    }
+
+    const incompleteProps = {
+      ...mockProps,
+      moduleData: incompleteInteractiveModule,
+      visitedPages: [1, 2],
+      progressPercentage: 66,
+    }
+
+    render(<SummaryCard {...incompleteProps} />)
+    
+    // Pastikan tombol quiz dinonaktifkan
+    expect(screen.getByText('66% Selesai')).toBeInTheDocument()
+    expect(screen.getByText('Lanjut ke Quiz')).toBeDisabled()
+  })
+
+  it('handles localStorage storage limit error', () => {
+    // Mock localStorage untuk mensimulasikan storage penuh
+    const fullStorageMock = {
+      ...localStorageMock,
+      setItem: jest.fn(() => {
+        throw new Error('Storage quota exceeded')
+      })
+    }
+    Object.defineProperty(window, 'localStorage', { value: fullStorageMock })
+
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    render(<SummaryCard {...mockProps} />)
+    
+    // Klik tombol "Lanjut ke Quiz"
+    fireEvent.click(screen.getByText('Lanjut ke Quiz'))
+
+    // Pastikan error ditangani dengan baik
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Gagal menyimpan data penyelesaian modul')
+    )
+    expect(toast).toHaveBeenCalledWith({
+      title: 'Kesalahan Penyimpanan',
+      description: 'Tidak dapat menyimpan progres modul. Coba lagi nanti.',
+      variant: 'destructive'
+    })
+
+    // Restore console.error
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('handles module with minimal pages', () => {
+    const minimalPagesModule: ModuleData = {
+      ...mockModuleData,
+      pages: [
+        {
+          id: 'page-1',
+          title: 'Single Page',
+          content: 'Only one page in this module',
+          pageNumber: 1,
+          isLastPage: true
+        }
+      ],
+      totalPages: 1,
+    }
+
+    const minimalPagesProps = {
+      ...mockProps,
+      moduleData: minimalPagesModule,
+      visitedPages: [1],
+      totalPages: 1,
+      currentPage: 1,
+    }
+
+    render(<SummaryCard {...minimalPagesProps} />)
+    
+    // Pastikan komponen dapat merender dengan satu halaman
+    expect(screen.getByText('Ringkasan Modul')).toBeInTheDocument()
+    expect(screen.getByText('Siap untuk Quiz')).toBeInTheDocument()
+  })
 })

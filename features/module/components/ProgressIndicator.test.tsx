@@ -1,6 +1,6 @@
 // features/module/components/ProgressIndicator.test.tsx
 import React from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
 import progressReducer from '@/store/features/progressSlice'
@@ -181,5 +181,139 @@ describe('ProgressIndicator', () => {
     
     const parsedProgress = JSON.parse(storedProgress || '{}')
     expect(parsedProgress.progressPercentage).toBe(40)
+  })
+
+  // Edge Case Tests untuk ProgressIndicator
+
+  it('handles extreme progress percentages', () => {
+    const extremeScenarios = [
+      { 
+        progressPercentage: 0,   // Tidak ada progress
+        expectedColor: 'bg-red-500',
+        expectedText: '0%'
+      },
+      { 
+        progressPercentage: 100, // Progress sempurna
+        expectedColor: 'bg-green-500',
+        expectedText: '100%'
+      },
+      { 
+        progressPercentage: -10, // Persentase negatif (edge case)
+        expectedColor: 'bg-red-500',
+        expectedText: '0%'
+      },
+      { 
+        progressPercentage: 110, // Persentase melebihi 100 (edge case)
+        expectedColor: 'bg-green-500',
+        expectedText: '100%'
+      }
+    ]
+
+    extremeScenarios.forEach(scenario => {
+      render(
+        <ProgressIndicator 
+          progressPercentage={scenario.progressPercentage} 
+          totalPages={5} 
+          currentPage={3} 
+        />
+      )
+
+      // Periksa warna progress bar
+      const progressBar = screen.getByTestId('progress-bar')
+      expect(progressBar).toHaveClass(scenario.expectedColor)
+
+      // Periksa teks persentase
+      const percentageText = screen.getByTestId('percentage-text')
+      expect(percentageText).toHaveTextContent(scenario.expectedText)
+    })
+  })
+
+  it('handles localStorage synchronization errors', () => {
+    // Mock localStorage untuk mensimulasikan error
+    const errorStorageMock = {
+      getItem: jest.fn(() => { throw new Error('Storage error') }),
+      setItem: jest.fn(() => { throw new Error('Storage error') })
+    }
+    Object.defineProperty(window, 'localStorage', { value: errorStorageMock })
+
+    // Spy console.error
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    render(
+      <ProgressIndicator 
+        progressPercentage={50} 
+        totalPages={5} 
+        currentPage={3} 
+      />
+    )
+
+    // Pastikan komponen tetap dapat dirender
+    expect(screen.getByTestId('progress-bar')).toBeInTheDocument()
+    
+    // Periksa error logging
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Gagal sinkronisasi progress')
+    )
+
+    // Kembalikan console.error
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('menampilkan status interaksi halaman dengan benar', () => {
+    render(
+      <ProgressIndicator
+        currentPage={2}
+        totalPages={5}
+        pagesInteractionStatus={[
+          { 
+            pageNumber: 1, // <-- tambahkan ini
+            completed: true, 
+            interactive: true 
+          },
+          { 
+            pageNumber: 2, // <-- tambahkan ini
+            completed: false, 
+            interactive: true 
+          }
+        ]}
+      />
+    )
+    
+
+    // Periksa rendering tooltip
+    const tooltipTrigger = screen.getByTestId('progress-tooltip-trigger')
+    fireEvent.mouseEnter(tooltipTrigger)
+
+    // Pastikan tooltip menampilkan detail interaksi
+    const tooltipContent = screen.getByTestId('progress-tooltip')
+    expect(tooltipContent).toHaveTextContent('Halaman belum diselesaikan')
+    expect(tooltipContent).toHaveTextContent('Terdapat elemen interaktif')
+  })
+
+  it('handles pulsating animation with progress changes', () => {
+    const { rerender } = render(
+      <ProgressIndicator 
+        progressPercentage={0} 
+        totalPages={5} 
+        currentPage={1} 
+      />
+    )
+
+    // Periksa tidak ada animasi pulsasi di awal
+    const initialProgressBar = screen.getByTestId('progress-bar')
+    expect(initialProgressBar).not.toHaveClass('animate-pulse')
+
+    // Perubahan progress
+    rerender(
+      <ProgressIndicator 
+        progressPercentage={20} 
+        totalPages={5} 
+        currentPage={2} 
+      />
+    )
+
+    // Periksa animasi pulsasi setelah perubahan
+    const updatedProgressBar = screen.getByTestId('progress-bar')
+    expect(updatedProgressBar).toHaveClass('animate-pulse')
   })
 })

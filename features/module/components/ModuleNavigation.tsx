@@ -10,17 +10,19 @@ import {
 } from '@/components/ui/tooltip'
 import { Badge } from '@/components/ui/badge'
 import ProgressIndicator from './ProgressIndicator'
+
 interface ModuleNavigationProps {
   currentPage: number
   totalPages: number
   onPrevPage: () => void
   onNextPage: () => void
-  isLastPage: boolean
+  isLastPage?: boolean
   isPageCompleted?: boolean
   quickViewMode?: boolean
   onToggleQuickViewMode?: () => void
   incompleteSections?: string[]
   visitedPages?: number[]
+  pagesCompletionStatus?: Record<number, boolean>
 }
 
 const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
@@ -28,15 +30,22 @@ const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
   totalPages,
   onPrevPage,
   onNextPage,
-  isLastPage,
+  isLastPage = currentPage === totalPages,
   isPageCompleted = true,
   quickViewMode = false,
   onToggleQuickViewMode,
   incompleteSections = [],
   visitedPages = [],
+  pagesCompletionStatus = {},
 }) => {
+  // Menentukan apakah halaman saat ini selesai berdasarkan pagesCompletionStatus atau isPageCompleted
+  const isCurrentPageCompleted = 
+    Object.keys(pagesCompletionStatus).length > 0 
+      ? pagesCompletionStatus[currentPage] ?? isPageCompleted
+      : isPageCompleted
+
   // Menentukan apakah tombol Next harus dinonaktifkan
-  const isNextDisabled = !quickViewMode && !isPageCompleted && currentPage < totalPages
+  const isNextDisabled = !quickViewMode && !isCurrentPageCompleted && currentPage < totalPages
 
   // Menampilkan pesan tooltip yang dinamis berdasarkan status halaman
   const getNextButtonTooltip = () => {
@@ -44,7 +53,7 @@ const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
     if (isNextDisabled && incompleteSections.length > 0) {
       return `Selesaikan bagian berikut: ${incompleteSections.join(', ')}`
     }
-    if (isNextDisabled) return 'Selesaikan halaman ini terlebih dahulu'
+    if (isNextDisabled) return 'Selesaikan halaman saat ini'
     return 'Lanjut ke halaman berikutnya'
   }
 

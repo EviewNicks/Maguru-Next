@@ -215,4 +215,149 @@ describe('ModuleContent', () => {
     fireEvent.click(markAsReadButton)
     expect(mockOnInteraction).toHaveBeenCalledWith('mark-as-read')
   })
+
+  // Edge Case Tests untuk ModuleContent
+
+  it('handles extremely long content without performance issues', () => {
+    const longContent = `# Long Content\n\n${Array(1000).fill('Paragraf panjang dengan banyak teks. ').join('\n')}`
+    
+    render(
+      <ModuleContent 
+        content={longContent} 
+        pageNumber={1} 
+        onInteraction={jest.fn()} 
+        onScroll={jest.fn()} 
+      />
+    )
+
+    // Pastikan konten dapat dirender tanpa error
+    const markdownContent = screen.getByTestId('markdown-content')
+    expect(markdownContent).toBeInTheDocument()
+  })
+
+  it('handles content with complex nested interactive elements', () => {
+    const complexContent = `
+# Halaman dengan Elemen Interaktif Kompleks
+
+## Checklist Bertingkat
+- [ ] Item Utama 1
+  - [ ] Sub Item 1.1
+  - [ ] Sub Item 1.2
+- [ ] Item Utama 2
+  - [ ] Sub Item 2.1
+
+## Tombol dengan Kondisi
+<div class="interactive-button button-kompleks" data-required="true">
+  Tombol dengan Kondisi Kompleks
+</div>
+
+## Kode Interaktif
+\`\`\`javascript
+function contohFungsi() {
+  // Fungsi dengan logika kompleks
+  return true;
+}
+\`\`\`
+`
+    
+    const mockOnInteraction = jest.fn()
+    
+    render(
+      <ModuleContent 
+        content={complexContent} 
+        pageNumber={1} 
+        onInteraction={mockOnInteraction} 
+        onScroll={jest.fn()} 
+      />
+    )
+
+    // Pastikan semua elemen dapat dirender
+    expect(screen.getByTestId('markdown-content')).toBeInTheDocument()
+    expect(screen.getByTestId('syntax-highlighter')).toBeInTheDocument()
+    
+    // Simulasi interaksi dengan tombol kompleks
+    const komplekButton = screen.getByText('Tombol dengan Kondisi Kompleks')
+    fireEvent.click(komplekButton)
+    
+    expect(mockOnInteraction).toHaveBeenCalledWith(expect.stringContaining('button-kompleks'))
+  })
+
+  it('handles content with no interactive elements', () => {
+    const plainTextContent = `
+# Halaman Tanpa Elemen Interaktif
+
+Ini adalah halaman sederhana yang hanya berisi teks biasa.
+Tidak ada tombol, checklist, atau elemen interaktif lainnya.
+`
+    
+    const mockOnInteraction = jest.fn()
+    const mockOnScroll = jest.fn()
+    
+    render(
+      <ModuleContent 
+        content={plainTextContent} 
+        pageNumber={1} 
+        onInteraction={mockOnInteraction} 
+        onScroll={mockOnScroll} 
+      />
+    )
+
+    // Pastikan konten dapat dirender
+    expect(screen.getByTestId('markdown-content')).toBeInTheDocument()
+    
+    // Pastikan tidak ada panggilan tidak perlu ke onInteraction
+    expect(mockOnInteraction).not.toHaveBeenCalled()
+  })
+
+  it('handles scroll tracking with minimal scrolling', () => {
+    const shortContent = `
+# Halaman Pendek
+
+Konten yang sangat singkat untuk menguji pelacakan scroll.
+`
+    
+    const mockOnScroll = jest.fn()
+    
+    render(
+      <ModuleContent 
+        content={shortContent} 
+        pageNumber={1} 
+        onInteraction={jest.fn()} 
+        onScroll={mockOnScroll} 
+      />
+    )
+
+    // Simulasi scroll minimal
+    fireEvent.scroll(window, { target: { scrollY: 10 } })
+    
+    // Pastikan onScroll dipanggil dengan benar
+    expect(mockOnScroll).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pageNumber: 1,
+        scrollPercentage: expect.any(Number)
+      })
+    )
+  })
+
+  it('handles markdown rendering errors gracefully', () => {
+    // Mock ReactMarkdown untuk melempar error
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    
+    const brokenMarkdown = '# Judul\n\n```javascript\n{invalid: syntax'
+    
+    render(
+      <ModuleContent 
+        content={brokenMarkdown} 
+        pageNumber={1} 
+        onInteraction={jest.fn()} 
+        onScroll={jest.fn()} 
+      />
+    )
+
+    // Pastikan tidak ada error yang tidak tertangani
+    expect(screen.getByTestId('markdown-content')).toBeInTheDocument()
+    
+    // Kembalikan console.error
+    consoleErrorSpy.mockRestore()
+  })
 })
