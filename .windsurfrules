@@ -101,6 +101,13 @@ src/
 - Gunakan **mocking** untuk API dan data eksternal.
 - Run unit tests automatically after each file change.
 - Show warnings if test files are missing or failing.
+- Unit Test: Menguji fungsi-fungsi utama (UI, API handler, validasi input).
+- Integration Test: Menguji integrasi antar fitur (misal: login → akses modul → submit quiz).
+- E2E Test: Menguji keseluruhan user flow (Cypress digunakan untuk simulasi interaksi pengguna).
+- Unit Test: Jest.
+- Integration Test: Supertest.
+- E2E Test: Cypress.
+ 
 
 ## 4. Commit Message Standards
 - Use **Conventional Commits** format for clear, consistent commit history:

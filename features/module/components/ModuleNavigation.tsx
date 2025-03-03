@@ -1,14 +1,25 @@
 // features/module/components/ModuleNavigation.tsx
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React from 'react'
+import { Button } from '@/components/ui/button'
+import { ChevronLeft, ChevronRight, AlertCircle, Zap } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Badge } from '@/components/ui/badge'
 
 interface ModuleNavigationProps {
-  currentPage: number;
-  totalPages: number;
-  onPrevPage: () => void;
-  onNextPage: () => void;
-  isLastPage: boolean;
+  currentPage: number
+  totalPages: number
+  onPrevPage: () => void
+  onNextPage: () => void
+  isLastPage: boolean
+  isPageCompleted?: boolean
+  quickViewMode?: boolean
+  onToggleQuickViewMode?: () => void
+  incompleteSections?: string[]
 }
 
 const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
@@ -17,29 +28,94 @@ const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
   onPrevPage,
   onNextPage,
   isLastPage,
+  isPageCompleted = true,
+  quickViewMode = false,
+  onToggleQuickViewMode,
+  incompleteSections = [],
 }) => {
-  return (
-    <div className="flex justify-between items-center w-full mt-8">
-      <Button
-        variant="outline"
-        onClick={onPrevPage}
-        disabled={currentPage <= 1}
-        className="flex items-center gap-2"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Sebelumnya
-      </Button>
+  // Menentukan apakah tombol Next harus dinonaktifkan
+  const isNextDisabled = !quickViewMode && !isPageCompleted && currentPage < totalPages
 
-      <Button
-        onClick={onNextPage}
-        disabled={currentPage >= totalPages}
-        className="flex items-center gap-2"
-      >
-        {isLastPage ? 'Selesai' : 'Selanjutnya'}
-        {!isLastPage && <ChevronRight className="h-4 w-4" />}
-      </Button>
+  // Menampilkan pesan tooltip yang dinamis berdasarkan status halaman
+  const getNextButtonTooltip = () => {
+    if (isLastPage) return 'Selesaikan modul ini'
+    if (isNextDisabled && incompleteSections.length > 0) {
+      return `Selesaikan bagian berikut: ${incompleteSections.join(', ')}`
+    }
+    if (isNextDisabled) return 'Selesaikan halaman ini terlebih dahulu'
+    return 'Lanjut ke halaman berikutnya'
+  }
+
+  return (
+    <div className="flex flex-col w-full mt-8 gap-4">
+      <div className="flex justify-between items-center w-full">
+        <Button
+          variant="outline"
+          onClick={onPrevPage}
+          disabled={currentPage <= 1}
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Sebelumnya
+        </Button>
+
+        <div className="flex items-center">
+          {quickViewMode && (
+            <Badge variant="outline" className="mr-4 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
+              <Zap className="h-3 w-3 mr-1" />
+              Mode Eksplorasi Cepat
+            </Badge>
+          )}
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={onNextPage}
+                  disabled={currentPage >= totalPages || isNextDisabled}
+                  className="flex items-center gap-2"
+                >
+                  {isLastPage ? 'Selesai' : 'Selanjutnya'}
+                  {!isLastPage && <ChevronRight className="h-4 w-4" />}
+                  {isNextDisabled && <AlertCircle className="h-4 w-4 ml-1 text-yellow-500" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{getNextButtonTooltip()}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+
+      {/* Quick View Mode Toggle */}
+      {onToggleQuickViewMode && (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleQuickViewMode}
+            className="text-xs flex items-center gap-1"
+          >
+            <Zap className="h-3 w-3" />
+            {quickViewMode ? 'Nonaktifkan Mode Eksplorasi' : 'Aktifkan Mode Eksplorasi Cepat'}
+          </Button>
+          {quickViewMode && (
+            <p className="text-xs text-muted-foreground ml-2">
+              Progres tidak akan disimpan dalam mode ini
+            </p>
+          )}
+        </div>
+      )}
+      
+      {/* Page Indicator */}
+      <div className="flex justify-center mt-2">
+        <p className="text-sm text-muted-foreground">
+          Halaman {currentPage} dari {totalPages}
+        </p>
+      </div>
     </div>
-  );
-};
+  )
+}
 
 export default ModuleNavigation;
