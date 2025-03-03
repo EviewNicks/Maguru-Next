@@ -1,11 +1,12 @@
 // features/module/components/ModulePage.tsx
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { selectUserId } from '@/store/features/userSlice'
 import useModuleProgress from '@/features/module/hooks/useModuleProgress'
 import ModuleContent from '@/features/module/components/ModuleContent'
 import ModuleNavigation from '@/features/module/components/ModuleNavigation'
 import ModuleProgress from '@/features/module/components/ModuleProgress'
+import SummaryCard from '@/features/module/components/SummaryCard'
 import { Card } from '@/components/ui/card'
 import { toast } from '@/hooks/use-toast'
 
@@ -23,6 +24,7 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
     isPageCompleted,
     quickViewMode,
     incompleteSections,
+    navigationHistory,
     goToNextPage,
     goToPrevPage,
     navigateToPage,
@@ -107,6 +109,29 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
     window.scrollTo(0, 0)
   }, [currentPage])
 
+  // Efek untuk logging saat pengguna membuka halaman terakhir
+  useEffect(() => {
+    if (currentPageData?.isLastPage) {
+      console.log('Pengguna membuka halaman terakhir modul', {
+        moduleId,
+        userId,
+        timestamp: new Date().toISOString(),
+        navigationHistory
+      })
+      
+      // Simpan status ke localStorage
+      const moduleCompletion = {
+        moduleId,
+        userId,
+        lastVisitedPage: currentPage,
+        visitedPages: navigationHistory,
+        timestamp: new Date().toISOString()
+      }
+      
+      localStorage.setItem(`module_last_page_${moduleId}`, JSON.stringify(moduleCompletion))
+    }
+  }, [currentPageData?.isLastPage, moduleId, userId, currentPage, navigationHistory])
+
   if (!currentModule || !currentPageData) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -127,12 +152,23 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
       />
       
       <div className="my-6">
-        <ModuleContent
-          title={currentPageData.title}
-          content={currentPageData.content}
-          media={currentPageData.media}
-          onInteraction={recordInteraction}
-        />
+        {currentPageData.isLastPage ? (
+          <SummaryCard
+            moduleData={currentModule}
+            visitedPages={navigationHistory}
+            currentPage={currentPage}
+            totalPages={currentModule.totalPages}
+            onNavigateToPage={handleNavigateToPage}
+            progressPercentage={progressPercentage}
+          />
+        ) : (
+          <ModuleContent
+            title={currentPageData.title}
+            content={currentPageData.content}
+            media={currentPageData.media}
+            onInteraction={recordInteraction}
+          />
+        )}
       </div>
       
       <ModuleNavigation
@@ -145,6 +181,7 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
         quickViewMode={quickViewMode}
         onToggleQuickViewMode={toggleQuickViewMode}
         incompleteSections={incompleteSections}
+        visitedPages={navigationHistory}
       />
       
       {currentModule.totalPages > 3 && (
