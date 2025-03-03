@@ -1,14 +1,14 @@
 // features/module/components/SummaryCard.tsx
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, AlertCircle, BookOpen, ArrowRight, RefreshCw } from 'lucide-react'
+import { CheckCircle,  BookOpen, ArrowRight, RefreshCw } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from '@/hooks/use-toast'
-import { ModuleData, ModulePage } from '@/features/module/types'
+import { ModuleData} from '@/features/module/types'
 
 interface SummaryCardProps {
   moduleData: ModuleData
@@ -33,17 +33,17 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   const [isQuizReady, setIsQuizReady] = useState(false)
 
   // Fungsi untuk mengevaluasi kesiapan quiz
-  const calculateQuizReadiness = () => {
+  const calculateQuizReadiness = useCallback(() => {
     // Modul dianggap siap untuk quiz jika semua halaman telah dikunjungi
     const uniqueVisitedPages = new Set(visitedPages)
     const allPagesVisited = uniqueVisitedPages.size >= totalPages
     
     setIsQuizReady(allPagesVisited)
     return allPagesVisited
-  }
+  }, [visitedPages, totalPages])
 
   // Fungsi untuk menghasilkan rekomendasi halaman yang perlu diulang
-  const generateRecommendations = () => {
+  const generateRecommendations = useCallback(() => {
     const uniqueVisitedPages = new Set(visitedPages)
     const recommendations = []
 
@@ -79,7 +79,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
 
     setRecommendations(recommendations)
     return recommendations
-  }
+  }, [visitedPages, totalPages, moduleData.pages])
 
   // Fungsi untuk menangani navigasi ke quiz
   const handleNavigateToQuiz = () => {
@@ -128,7 +128,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
   useEffect(() => {
     calculateQuizReadiness()
     generateRecommendations()
-  }, [visitedPages, totalPages])
+  }, [visitedPages, totalPages, calculateQuizReadiness, generateRecommendations])
 
   return (
     <Card className="w-full shadow-md">

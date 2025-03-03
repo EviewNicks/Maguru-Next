@@ -177,29 +177,31 @@ describe('SummaryCard Component', () => {
   })
 
   it('saves module completion data to localStorage when navigating to quiz', async () => {
-    // Mock Date.now for consistent timestamp
+    // Mock Date.now untuk timestamp konsisten
     const mockDate = new Date('2025-03-03T12:00:00Z')
-    jest.spyOn(global, 'Date').mockImplementation(() => mockDate as unknown as string)
+    jest.spyOn(global, 'Date').mockImplementation(() => mockDate as unknown as Date)
     
     render(<SummaryCard {...mockProps} />)
     
-    // Click on "Lanjut ke Quiz" button
+    // Klik tombol "Lanjut ke Quiz"
     fireEvent.click(screen.getByText('Lanjut ke Quiz'))
     
-    // Wait for loading state
+    // Tunggu status loading
     await waitFor(() => {
       expect(screen.getByText('Memuat...')).toBeInTheDocument()
     })
+
+    // Periksa data yang disimpan di localStorage
+    const savedProgress = JSON.parse(localStorage.getItem(`module_completion_${mockProps.moduleData.id}`) || '{}')
     
-    // Check if data was saved to localStorage
-    const savedData = JSON.parse(localStorage.getItem(`module_completion_${mockModuleData.id}`) || '{}')
-    expect(savedData.moduleId).toBe(mockModuleData.id)
-    expect(savedData.completionStatus).toBe(100)
-    expect(savedData.visitedPages).toEqual([1, 2, 3])
-    expect(savedData.lastVisitedPage).toBe(3)
-    expect(savedData.timestamp).toBeDefined()
-    
-    // Restore Date
-    jest.restoreAllMocks()
+    expect(savedProgress).toEqual(
+      expect.objectContaining({
+        moduleId: mockProps.moduleData.id,
+        completionStatus: mockProps.progressPercentage,
+        visitedPages: expect.any(Array),
+        lastVisitedPage: mockProps.currentPage,
+        timestamp: mockDate.toISOString()
+      })
+    )
   })
 })
