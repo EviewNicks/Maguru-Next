@@ -19,6 +19,8 @@ export interface ModulePage {
   media?: string
   hasInteractiveElements: boolean
   requiredInteractions?: string[]
+  pageNumber?: number
+  isLastPage?: boolean
 }
 
 // Data dummy untuk modul

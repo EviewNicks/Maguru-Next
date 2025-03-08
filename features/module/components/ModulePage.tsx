@@ -12,9 +12,10 @@ import { toast } from '@/hooks/use-toast'
 
 interface ModulePageProps {
   moduleId: string
+  quickViewMode?: boolean
 }
 
-const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
+const ModulePage: React.FC<ModulePageProps> = ({ moduleId, quickViewMode: initialQuickViewMode = false }) => {
   const userId = useSelector(selectUserId)
   const {
     currentPage,
@@ -30,29 +31,33 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
     navigateToPage,
     setPageCompletionStatus,
     toggleQuickViewMode,
-  } = useModuleProgress({ moduleId, userId: userId || 'default-user' })
+  } = useModuleProgress({ 
+    moduleId, 
+    userId: userId || 'default-user',
+    initialQuickViewMode
+  })
 
   // State untuk melacak interaksi pengguna dengan halaman
   const [userInteractions, setUserInteractions] = useState<Set<string>>(new Set())
 
   // Efek untuk memperbarui status penyelesaian halaman berdasarkan interaksi pengguna
   useEffect(() => {
-    // Contoh logika: halaman dianggap selesai jika pengguna telah berinteraksi dengan semua bagian yang diperlukan
-    // Dalam implementasi nyata, ini akan bergantung pada jenis konten halaman
     const requiredInteractions = currentPageData?.requiredInteractions || []
     
     if (requiredInteractions.length === 0) {
-      // Jika tidak ada interaksi yang diperlukan, halaman dianggap selesai
       setPageCompletionStatus(true, [])
     } else {
-      // Periksa apakah semua interaksi yang diperlukan telah dilakukan
       const missingInteractions = requiredInteractions.filter(
         interaction => !userInteractions.has(interaction)
       )
       
-      setPageCompletionStatus(missingInteractions.length === 0, missingInteractions)
+      const isCompleted = missingInteractions.length === 0
+      if (isCompleted !== isPageCompleted) {
+        setPageCompletionStatus(isCompleted, missingInteractions)
+      }
     }
-  }, [currentPageData, userInteractions, setPageCompletionStatus])
+  }, [currentPageData, userInteractions, isPageCompleted, setPageCompletionStatus])
+
 
   // Fungsi untuk mencatat interaksi pengguna
   const recordInteraction = (interactionId: string) => {
