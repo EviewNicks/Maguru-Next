@@ -1,6 +1,6 @@
 // app/module/page.test.tsx
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+// import userEvent from '@testing-library/user-event';
 import ModulesPage from './page';
 import { fetchModules } from '@/features/module/services/moduleService';
 

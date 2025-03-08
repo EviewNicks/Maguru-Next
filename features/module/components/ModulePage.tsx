@@ -1,5 +1,5 @@
 // features/module/components/ModulePage.tsx
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { selectUserId } from '@/store/features/userSlice'
 import useModuleProgress from '@/features/module/hooks/useModuleProgress'
@@ -12,9 +12,10 @@ import { toast } from '@/hooks/use-toast'
 
 interface ModulePageProps {
   moduleId: string
+  quickViewMode?: boolean
 }
 
-const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
+const ModulePage: React.FC<ModulePageProps> = ({ moduleId, quickViewMode: initialQuickViewMode = false }) => {
   const userId = useSelector(selectUserId)
   const {
     currentPage,
@@ -30,41 +31,50 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
     navigateToPage,
     setPageCompletionStatus,
     toggleQuickViewMode,
-  } = useModuleProgress({ moduleId, userId: userId || 'default-user' })
+  } = useModuleProgress({ 
+    moduleId, 
+    userId: userId || 'default-user',
+    initialQuickViewMode
+  })
 
   // State untuk melacak interaksi pengguna dengan halaman
   const [userInteractions, setUserInteractions] = useState<Set<string>>(new Set())
-
-  // Efek untuk memperbarui status penyelesaian halaman berdasarkan interaksi pengguna
-  useEffect(() => {
-    // Contoh logika: halaman dianggap selesai jika pengguna telah berinteraksi dengan semua bagian yang diperlukan
-    // Dalam implementasi nyata, ini akan bergantung pada jenis konten halaman
-    const requiredInteractions = currentPageData?.requiredInteractions || []
-    
-    if (requiredInteractions.length === 0) {
-      // Jika tidak ada interaksi yang diperlukan, halaman dianggap selesai
-      setPageCompletionStatus(true, [])
-    } else {
-      // Periksa apakah semua interaksi yang diperlukan telah dilakukan
-      const missingInteractions = requiredInteractions.filter(
-        interaction => !userInteractions.has(interaction)
-      )
-      
-      setPageCompletionStatus(missingInteractions.length === 0, missingInteractions)
-    }
-  }, [currentPageData, userInteractions, setPageCompletionStatus])
+  
+  // Ref untuk melacak interaksi yang hilang dan status penyelesaian
+  const prevMissingInteractionsRef = useRef<string[]>([])
+  const prevIsPageCompletedRef = useRef<boolean>(isPageCompleted)
 
   // Fungsi untuk mencatat interaksi pengguna
-  const recordInteraction = (interactionId: string) => {
+  const recordInteraction = useCallback((interactionId: string) => {
     setUserInteractions(prev => {
       const newInteractions = new Set(prev)
       newInteractions.add(interactionId)
       return newInteractions
     })
-  }
+  }, [setUserInteractions])
+
+  // Fungsi untuk menyorot bagian yang belum selesai
+  const highlightIncompleteSections = useCallback(() => {
+    // Implementasi nyata akan menambahkan kelas CSS atau efek visual ke elemen yang belum selesai
+    console.log('Menyorot bagian yang belum selesai:', incompleteSections)
+    
+    // Contoh: tambahkan kelas CSS ke elemen dengan ID yang sesuai
+    incompleteSections.forEach(sectionId => {
+      const element = document.getElementById(sectionId)
+      if (element) {
+        element.classList.add('highlight-incomplete')
+        // Tambahkan kelas untuk animasi perhatian
+        element.classList.add('pulse-attention')
+        // Hapus kelas animasi setelah beberapa saat
+        setTimeout(() => {
+          element.classList.remove('pulse-attention')
+        }, 2000)
+      }
+    })
+  }, [incompleteSections])
 
   // Fungsi untuk menangani navigasi dengan validasi
-  const handleNavigateToPage = (pageNumber: number, force: boolean = false) => {
+  const handleNavigateToPage = useCallback((pageNumber: number, force: boolean = false) => {
     const success = navigateToPage(pageNumber, force)
     
     if (!success && !force && !quickViewMode && pageNumber > currentPage) {
@@ -82,27 +92,35 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId }) => {
     }
     
     return success
-  }
+  }, [navigateToPage, quickViewMode, currentPage, incompleteSections, highlightIncompleteSections])
 
-  // Fungsi untuk menyorot bagian yang belum selesai
-  const highlightIncompleteSections = () => {
-    // Implementasi nyata akan menambahkan kelas CSS atau efek visual ke elemen yang belum selesai
-    console.log('Menyorot bagian yang belum selesai:', incompleteSections)
+  // Efek untuk memperbarui status penyelesaian halaman berdasarkan interaksi pengguna
+  useEffect(() => {
+    if (!currentPageData) return;
     
-    // Contoh: tambahkan kelas CSS ke elemen dengan ID yang sesuai
-    incompleteSections.forEach(sectionId => {
-      const element = document.getElementById(sectionId)
-      if (element) {
-        element.classList.add('highlight-incomplete')
-        // Tambahkan kelas untuk animasi perhatian
-        element.classList.add('pulse-attention')
-        // Hapus kelas animasi setelah beberapa saat
-        setTimeout(() => {
-          element.classList.remove('pulse-attention')
-        }, 2000)
+    const requiredInteractions = currentPageData.requiredInteractions || [];
+    
+    // Jika tidak ada interaksi yang diperlukan, halaman dianggap selesai
+    if (requiredInteractions.length === 0) {
+      if (!isPageCompleted && !prevIsPageCompletedRef.current) {
+        setPageCompletionStatus(true, []);
+        prevIsPageCompletedRef.current = true;
       }
-    })
-  }
+    } else {
+      const missingInteractions = requiredInteractions.filter(
+        interaction => !userInteractions.has(interaction)
+      );
+      
+      // Bandingkan dengan nilai sebelumnya
+      const isCompleted = missingInteractions.length === 0;
+      if (isCompleted !== prevIsPageCompletedRef.current) {
+        setPageCompletionStatus(isCompleted, missingInteractions);
+        prevIsPageCompletedRef.current = isCompleted;
+      }
+      
+      prevMissingInteractionsRef.current = missingInteractions;
+    }
+  }, [userInteractions, currentPageData, isPageCompleted, setPageCompletionStatus]) // Menambahkan dependensi yang hilang
 
   useEffect(() => {
     // Scroll to top when page changes

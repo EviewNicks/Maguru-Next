@@ -19,11 +19,13 @@ import { ModuleData } from '@/features/module/types'
 interface UseModuleProgressProps {
   moduleId?: string
   userId?: string
+  initialQuickViewMode?: boolean
 }
 
 const useModuleProgress = ({
   moduleId,
   userId,
+  initialQuickViewMode = false,
 }: UseModuleProgressProps = {}) => {
   const dispatch = useDispatch()
   const currentPage = useSelector(selectCurrentPage)
@@ -32,7 +34,7 @@ const useModuleProgress = ({
   const progressPercentage = useSelector(selectProgressPercentage)
 
   // State untuk mode eksplorasi cepat
-  const [quickViewMode, setQuickViewMode] = useState(false)
+  const [quickViewMode, setQuickViewMode] = useState(initialQuickViewMode)
   // State untuk menandai apakah halaman saat ini sudah selesai
   const [isPageCompleted, setIsPageCompleted] = useState(true)
   // State untuk menyimpan bagian yang belum selesai

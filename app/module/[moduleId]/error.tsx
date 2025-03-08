@@ -37,7 +37,7 @@ export default function ModuleError({
             </div>
           </CardContent>
           <CardFooter className="flex justify-center gap-4">
-            <Button variant="outline" onClick={() => window.location.href = "/dashboard"}>
+            <Button variant="outline" onClick={() => window.location.href = "/stats"}>
               Kembali ke Dashboard
             </Button>
             <Button onClick={() => reset()}>

@@ -17,8 +17,8 @@ export interface ModulePage {
   title: string;
   content: string;
   media?: string;
-  isLastPage: boolean;
   pageNumber: number;
+  isLastPage: boolean;
   requiredInteractions?: string[];
   interactiveElements?: InteractiveElement[];
 }

@@ -107,7 +107,7 @@ src/
 - Unit Test: Jest.
 - Integration Test: Supertest.
 - E2E Test: Cypress.
- 
+
 
 ## 4. Commit Message Standards
 - Use **Conventional Commits** format for clear, consistent commit history:
@@ -164,35 +164,77 @@ src/
 - Deteksi kode duplikat dan beri saran refactor.
 
 ## 9.Documentation & Guidelines
-- Reference project documents during development:
-  - **PRD** for feature scope and requirements.
-  - **App Flow Document** for user journeys and interactions.
-  - **Tech Stack Document** for technology decisions.
-  - **Frontend Guidelines** and **Backend Structure Document** for coding standards.
-- Simpan dokumentasi dalam format **Markdown**.
-- setelah menyelesaikan subtask dalam file  maka tulis langkah yang telah di selesaikan di .md sesuai dengan task yang dikerjakan di folder task/task-name
-documentation/
-├── task/
-│   ├── dashboard/
-│   │   ├── t1-auth-flow.md          # Algoritma untuk fitur autentikasi
-│   │   └── t2-user-management.md    # Langkah-langkah untuk manajemen pengguna
-│   ├── course/
-│   │   ├── t1-course-creation.md    # Proses pembuatan course
-│   │   └── t2-course-enrollment.md  # Langkah pendaftaran kursus
-  > **Manfaat:** Konsistensi dokumentasi dan mempermudah review proses pengembangan.
-- **3. Checklist Otomatis untuk Subtask**
-Kalau kita integrasi ini ke **CI/CD pipeline** atau pakai **GitHub Actions**, bisa bikin otomatisasi kecil yang mengingatkan developer untuk update dokumentasi! Misalnya:
-  - ✅ Setelah **pull request** diterima, pastikan ada file `.md` terkait task.
-  - 🔔 Beri notifikasi kalau ada subtask yang belum didokumentasikan.
-  > 🎯 **Manfaat:** Mengurangi risiko ada langkah yang terlewat atau nggak terdokumentasi.
 
-- Contoh anotasi komentar kode:
+### 9.1 Documentation Overview
+
+#### Referensi Utama:
+- **PRD (Project Requirements Document):** [/documentation/PRD.md](documentation/PRD.md)
+- **App Flow Document:** [/documentation/app-flow-documentation.md](documentation/app-flow-documentation.md)
+- **Tech Stack Document:** [/documentation/tech-stack-documentation.md](documentation/tech-stack-documentation.md)
+- **Frontend Guidelines:** [/documentation/frontend-guidelines.md](documentation/frontend-guidelines.md)
+- **Backend Structure Document:** [/documentation/backend-structure.md](documentation/backend-structure.md)
+
+#### Tujuan:
+- Menjamin bahwa setiap fitur dan perubahan kode sejalan dengan visi dan persyaratan proyek.
+- Memastikan konsistensi dan kompatibilitas antara bagian frontend dan backend.
+
+### 9.2 Task-based Documentation
+
+#### Dasar Penulisan:
+- Sebelum menulis atau mengupdate dokumentasi untuk task-based modul, pastikan membaca file `module-docs.md` yang berisi fundamental penulisan dokumen.
+- File ini menjadi acuan utama dalam menulis dokumentasi untuk setiap modul.
+
+#### Update Dokumentasi Task-based:
+- Setiap update pada dokumentasi modul harus disertai dengan tanda pembaruan dalam format `[update+YYYY-MM-DD]` (contoh: `[update+2025-03-08]`) pada modul docs yang di kerjakan contohnya @/documentation/task/module/t1-module-learning.md.
+- Pastikan bahwa setiap langkah atau perubahan yang dilakukan pada task-based modul terdokumentasi dengan jelas dan konsisten.
+
+#### Struktur Folder Dokumentasi Modul:
+```
+/documentation/
+└── task/
+    ├── dashboard/
+    │   └── t1-dashboard.md
+    └── module/
+        ├── t1-module-learning.md
+        └── t2-manage-module.md
+```
+
+- Pastikan untuk menempatkan file dokumentasi yang relevan di dalam folder `module/` sesuai dengan konteks task yang sedang dikerjakan.
+
+#### Tujuan:
+- Memastikan semua task dan subtask terdokumentasi dengan baik untuk memudahkan review dan onboarding anggota tim baru.
+- Menjaga konsistensi dalam dokumentasi dan meminimalisir risiko langkah pengembangan yang terlewat.
+- Memberikan catatan perubahan yang transparan melalui tanda pembaruan `[update+YYYY-MM-DD]`.
+
+### 9.3 Code Comments & Annotations
+
+#### Komentar Kode:
+- Sertakan komentar pada bagian kode yang kompleks dengan referensi ke dokumentasi terkait.
+
+##### Contoh:
 ```typescript
-// Fungsi ini menangani autentikasi pengguna dengan JWT tokens
+// Fungsi ini menangani autentikasi pengguna dengan JWT tokens.
+// Detail algoritma: lihat /documentation/PRD.md dan /documentation/app-flow-documentation.md
 const authenticateUser = async () => { ... };
+```
 
-'untuk detail lebih lanjut mengenai Documetation PRD, AppFlow Document, Tech Stack Document, Frontend Guidelines, Backend Structure Document,
-silahkan cek di folder documentation/'
+#### Tujuan:
+- Memudahkan pemahaman kode oleh anggota tim lain.
+- Memastikan bahwa logika kompleks memiliki penjelasan pendukung yang terperinci.
+
+### 9.4 Documentation Automation & Review
+
+#### Otomasi Dokumen:
+- Integrasikan CI/CD (misalnya, melalui GitHub Actions) untuk memeriksa apakah setiap pull request disertai dengan pembaruan dokumentasi jika ada perubahan pada task.
+- Notifikasi otomatis jika ada subtask yang belum terdokumentasi.
+
+#### Review Dokumentasi:
+- Pastikan dokumentasi di-review bersamaan dengan code review untuk menjaga akurasi dan relevansi informasi.
+
+#### Tujuan:
+- Mengurangi risiko langkah pengembangan yang tidak terdokumentasi.
+- Memastikan transparansi dan kontinuitas informasi antar anggota tim.
+
 
 ## 10. Development Workflow
 - Break down features into smaller, incremental tasks.

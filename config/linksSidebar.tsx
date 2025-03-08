@@ -9,8 +9,8 @@ type NavLink = {
 
 const links: NavLink[] = [
   {
-    href: "/add-job",
-    label: "add job",
+    href: "/module",
+    label: "modul Pembelajaran",
     icon: <ArrowsPointingInIcon/>,
   },
   {

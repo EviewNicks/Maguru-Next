@@ -61,7 +61,12 @@ function Providers({ children }: { children: React.ReactNode }) {
 )
 
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      signInUrl="/auth/sign-in"
+      signUpUrl="/auth/sign-up"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+    >
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider
