@@ -120,7 +120,7 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId, quickViewMode: initia
       
       prevMissingInteractionsRef.current = missingInteractions;
     }
-  }, [userInteractions, currentPageData]) // Menambahkan dependensi yang hilang
+  }, [userInteractions, currentPageData, isPageCompleted, setPageCompletionStatus]) // Menambahkan dependensi yang hilang
 
   useEffect(() => {
     // Scroll to top when page changes
