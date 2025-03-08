@@ -22,6 +22,7 @@ Modul ini bertanggung jawab untuk mengelola autentikasi pengguna menggunakan lay
 ### Login/Registrasi:
 1. Pengguna memasukkan kredensial melalui UI Clerk.
 2. Clerk memverifikasi dan mengembalikan token sesi.
+3. Pengguna diarahkan ke halaman yang ditentukan menggunakan `signInFallbackRedirectUrl` atau `signUpFallbackRedirectUrl`.
 
 ### Validasi Token:
 1. Token sesi dikirim ke backend melalui middleware.
@@ -31,6 +32,29 @@ Modul ini bertanggung jawab untuk mengelola autentikasi pengguna menggunakan lay
 1. Clerk mengirimkan data user ke backend melalui webhook.
 2. Backend menyimpan atau memperbarui data user di database menggunakan Prisma.
 
+## Konfigurasi ClerkProvider
+
+Untuk mengonfigurasi ClerkProvider dengan benar, gunakan properti berikut:
+
+```tsx
+<ClerkProvider
+  signInUrl="/auth/sign-in"
+  signUpUrl="/auth/sign-up"
+  signInFallbackRedirectUrl="/dashboard"
+  signUpFallbackRedirectUrl="/dashboard"
+>
+  {/* Konten aplikasi */}
+</ClerkProvider>
+```
+
+### Properti Penting:
+- **signInUrl**: URL halaman login
+- **signUpUrl**: URL halaman pendaftaran
+- **signInFallbackRedirectUrl**: URL redirect setelah login berhasil
+- **signUpFallbackRedirectUrl**: URL redirect setelah pendaftaran berhasil
+
+> **Catatan Penting**: Properti `,` sudah tidak digunakan lagi (deprecated) dan harus diganti dengan `signInFallbackRedirectUrl` atau `forceRedirectUrl`.
+
 ## Dependensi
 - Clerk (untuk autentikasi)
 - Prisma (untuk ORM dan koneksi database)
@@ -38,4 +62,11 @@ Modul ini bertanggung jawab untuk mengelola autentikasi pengguna menggunakan lay
 
 ## Error Handling
 - **Kredensial Salah:** Tampilkan pesan error ke pengguna.
-- **Token
+- **Token Tidak Valid:** Redirect ke halaman login.
+- **Kegagalan Sinkronisasi:** Log error dan tampilkan pesan yang sesuai.
+
+## Praktik Terbaik
+1. Selalu gunakan properti terbaru dari Clerk untuk menghindari peringatan deprecated.
+2. Pastikan untuk menangani error dengan baik dan memberikan umpan balik yang jelas kepada pengguna.
+3. Gunakan webhook untuk menjaga sinkronisasi data antara Clerk dan database internal.
+4. Implementasikan middleware untuk melindungi rute yang memerlukan autentikasi.

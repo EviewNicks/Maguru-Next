@@ -28,14 +28,14 @@ export function LinksDropdown() {
       <DropdownMenuContent align="end">
         <SignedOut>
           <DropdownMenuItem>
-            <SignInButton>
-              <button className="w-full text-center">Login</button>
+            <SignInButton mode="modal">
+            <button className="w-full text-center">Login</button>
             </SignInButton>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem>
-            <SignUpButton>
-              <button className="w-full text-center">register</button>
+            <SignUpButton mode="modal">
+            <button className="w-full text-center">register</button>
             </SignUpButton>
           </DropdownMenuItem>
         </SignedOut>
