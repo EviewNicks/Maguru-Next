@@ -26,7 +26,7 @@ export interface ModulePage {
 // Data dummy untuk modul
 const DUMMY_MODULES: Module[] = [
   {
-    id: "modul-1",
+    id: "module-1",
     title: "Pengantar Pemrograman Web",
     description: "Mempelajari dasar-dasar pemrograman web, HTML, CSS, dan JavaScript.",
     totalPages: 5,
@@ -245,7 +245,7 @@ Sekarang Anda siap untuk mengambil quiz untuk menguji pemahaman Anda tentang mat
     ]
   },
   {
-    id: "modul-2",
+    id: "module-2",
     title: "Dasar-dasar React",
     description: "Mempelajari konsep dasar React, komponen, props, dan state.",
     totalPages: 4,

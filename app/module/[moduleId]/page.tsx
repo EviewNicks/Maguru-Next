@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect } from 'react'
+import React, { Suspense, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import ModulePage from '@/features/module/components/ModulePage'
 import { Skeleton } from '@/components/ui/skeleton'
