@@ -377,3 +377,4 @@ export const getModuleProgress = (moduleId: string): {
     return null;
   }
 };
+
