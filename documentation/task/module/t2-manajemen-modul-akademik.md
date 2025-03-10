@@ -15,9 +15,9 @@ Modul ini memungkinkan admin untuk mengelola materi pembelajaran secara dinamis 
 
 | Fitur                   | Sprint   | Tanggal Implementasi | Update Terakhir                                     |
 | ----------------------- | -------- | -------------------- | --------------------------------------------------- |
-| Backend API CRUD Modul  | Sprint 2 | 2025-03-10           | 2025-03-10 – Implementasi API CRUD dan Middleware   |
-| Frontend Modul Manager  | Sprint 2 | 2025-03-11           | Belum dimulai                                       |
-| Versioning & Audit Trail| Sprint 2 | 2025-03-12           | Belum dimulai                                       |
+| Backend API CRUD Modul  | Sprint 2 | 2025-03-10           | 2025-03-11 – Perbaikan Type Error & Testing         |
+| Frontend Modul Manager  | Sprint 2 | 2025-03-12           | Belum dimulai                                       |
+| Versioning & Audit Trail| Sprint 2 | 2025-03-13           | Belum dimulai                                       |
 
 ---
 
@@ -197,7 +197,64 @@ model Module {
 }
 ```
 
----
+#### GET /api/modules/:id
+**Response:**
+```json
+{
+  "id": "uuid-1",
+  "title": "Modul Matematika",
+  "description": "Pengenalan matematika dasar",
+  "status": "ACTIVE",
+  "createdAt": "2025-03-10T10:00:00Z",
+  "updatedAt": "2025-03-10T10:00:00Z",
+  "createdBy": "user-id-1",
+  "updatedBy": "user-id-1"
+}
+```
+
+#### PUT /api/modules/:id
+**Request Body:**
+```json
+{
+  "title": "Modul Matematika (Updated)",
+  "description": "Pengenalan matematika dasar yang diperbarui",
+  "status": "ACTIVE"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "uuid-1",
+  "title": "Modul Matematika (Updated)",
+  "description": "Pengenalan matematika dasar yang diperbarui",
+  "status": "ACTIVE",
+  "createdAt": "2025-03-10T10:00:00Z",
+  "updatedAt": "2025-03-10T13:00:00Z",
+  "createdBy": "user-id-1",
+  "updatedBy": "admin-id"
+}
+```
+
+#### DELETE /api/modules/:id
+**Response:**
+```json
+{
+  "id": "uuid-1",
+  "title": "Modul Matematika",
+  "description": "Pengenalan matematika dasar",
+  "status": "ACTIVE",
+  "createdAt": "2025-03-10T10:00:00Z",
+  "updatedAt": "2025-03-10T10:00:00Z",
+  "createdBy": "user-id-1",
+  "updatedBy": "user-id-1"
+}
+```
+
+### 🔗 Integrasi Layanan Eksternal
+
+- **Clerk**: Digunakan untuk autentikasi dan otorisasi pengguna
+- **Prisma**: ORM untuk interaksi dengan database PostgreSQL
 
 ## 🅵️ UI/UX & Komponen
 
@@ -246,18 +303,43 @@ Komponen yang akan diimplementasikan:
 - **Integration Testing**: Menguji endpoint API dengan Supertest
 - **E2E Testing**: Menguji alur pengguna lengkap dengan Cypress
 
-### 📊 Skema Pengujian
+### 📊 Implementasi Pengujian
 
-#### Unit Testing
-- Menguji fungsi CRUD di `moduleService.ts`
-- Menguji validasi input dengan Zod
+#### Unit Testing untuk moduleService.ts
+Berikut adalah hasil pengujian untuk `moduleService.ts`:
+
+```
+PASS  features/manage-module/services/moduleService.test.ts
+  Module Service
+    createModule
+      √ should create a new module
+      √ should throw an error if creation fails
+    getModules
+      √ should return all modules
+      √ should support filtering by status
+      √ should support pagination
+    getModuleById
+      √ should return a module by id
+      √ should return null if module not found
+    updateModule
+      √ should update a module
+      √ should throw an error if update fails
+    deleteModule
+      √ should delete a module
+      √ should throw an error if delete fails
+      √ should return null if module not found
+```
+
+Pengujian ini memastikan bahwa semua fungsi CRUD di `moduleService.ts` berfungsi dengan baik, termasuk penanganan error dan kasus edge.
 
 #### Integration Testing
-- Menguji endpoint API dengan berbagai skenario
-- Menguji otorisasi dan validasi request
+Pengujian integrasi untuk endpoint API akan diimplementasikan pada langkah berikutnya, dengan fokus pada:
+- Validasi request
+- Otorisasi
+- Penanganan error
 
 #### E2E Testing
-- Menguji alur pengguna lengkap dari login hingga manajemen modul
+Pengujian E2E akan diimplementasikan setelah frontend selesai, dengan fokus pada alur pengguna lengkap dari login hingga manajemen modul.
 
 ---
 
@@ -281,3 +363,4 @@ Komponen yang akan diimplementasikan:
 🚀 **Dokumentasi ini akan terus diperbarui sesuai dengan perkembangan proyek!**
 
 [update+2025-03-10] Implementasi awal API CRUD dan Middleware
+[update+2025-03-11] Perbaikan Type Error dan Implementasi Testing

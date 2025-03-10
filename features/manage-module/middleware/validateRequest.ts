@@ -19,7 +19,7 @@ export function validateRequest<T>(
       if (source === 'body') {
         // Gunakan try-catch tanpa variabel error
         try {
-          data = await req.json() as Record<string, unknown>;
+          data = await req.json();
         } catch {
           return { 
             success: false, 
@@ -32,7 +32,7 @@ export function validateRequest<T>(
       } else if (source === 'searchParams') {
         // Konversi URLSearchParams ke object
         const searchParams = req.nextUrl.searchParams;
-        data = Object.fromEntries(searchParams.entries()) as Record<string, unknown>;
+        data = Object.fromEntries(searchParams.entries());
       }
       
       // Validasi data menggunakan schema

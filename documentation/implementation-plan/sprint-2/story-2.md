@@ -255,75 +255,94 @@ export const auditMiddleware = (req: any, res: any, next: () => void) => {
 
 ---
 
+# Dependencies & Prasyarat (Versi Singkat)
+
+## Backend
+
+- **Framework**: Next.js API Routes (Node.js)
+- **Database & ORM**: PostgreSQL dengan Prisma
+  - Konfigurasi `DATABASE_URL`
+  - Indeks pada `status` & `title`
+- **Validasi**:
+  - **Zod** (schema validasi shared)
+  - **Shared validation middleware**
+- **Otentikasi & Otorisasi**:
+  - JWT / Next-Auth untuk mengisi `req.user`
+  - Middleware custom (`isAdmin`)
+- **Logging & Audit**:
+  - Winston atau Pino untuk audit trail dasar
+- **Error Handling**:
+  - Standarisasi error response `{ error: { code, message, details } }`
+- **Pengujian**:
+  - Jest (unit testing)
+  - ESLint & Prettier untuk kualitas kode
+
+---
+
 # Acceptance Criteria
 
 ## Sub-Langkah & Kriteria Keberhasilan
 
-### **2.1. Halaman Admin Modul**
+### **1.1. Model Database**
 
-✅ Halaman `/admin/module` dapat diakses dan menampilkan tampilan **datatable** dengan layout yang rapi.
+✅ Model `Module` terdefinisi dengan:
 
-### **2.2. Komponen Datatable**
+- **Enum `ModuleStatus`**
+- **Field `createdBy` / `updatedBy`**
+- **Indeks pada `status` dan `title`**
 
-✅ Datatable menampilkan:
+### **1.2. Endpoint API**
 
-- **Judul**
-- **Deskripsi** (disanitasi)
-- **Status**
-- **Tanggal Dibuat**
-- **Aksi** (Edit, Hapus)  
-  ✅ **Dukungan virtual scrolling** untuk menangani data dalam jumlah besar.
+✅ Endpoint CRUD berfungsi dengan fitur:
 
-### **2.3. Pagination & Sorting**
+- Query untuk **pagination, filter, dan search**
+- Menggunakan **shared validation middleware**
 
-✅ Data modul di-fetch secara **server-side** dengan fitur:
+### **1.3. Validasi Input**
 
-- Pagination
-- Sorting (di backend)
-- Pencarian (dengan debounce)
-- Filter berdasarkan status
+✅ Input divalidasi dengan **Zod**:
 
-### **2.4. Form Modal CRUD**
+- **Judul**: 5-100 karakter
+- **Status** sesuai enum
 
-✅ Modal muncul saat tombol **"Tambah/Edit"** diklik.  
-✅ Validasi **real-time** menggunakan **schema Zod** berjalan.  
-✅ **Error message** tampil jika input tidak valid.
+### **1.4. Middleware**
 
-### **2.5. API Integration**
+✅ **Hanya admin** yang dapat mengakses **POST/PUT/DELETE** berdasarkan token otorisasi.
 
-✅ Data modul diintegrasikan melalui **React Query** dengan:
+### **1.5. Error Handling**
 
-- **Optimistic update**
-- **Refetch otomatis** setelah operasi CRUD
+✅ Error response terstandarisasi:
 
-### **2.6. Notifikasi & Error Notifier**
+- **Kode & pesan jelas**
+- **Fallback message** jika detail tidak tersedia
 
-✅ **Toast notifikasi** muncul sesuai operasi (contoh: "Modul berhasil dihapus").  
-✅ **ErrorNotifier** menampilkan error secara **konsisten** di seluruh UI.
+### **1.6. Audit Trail**
 
-### **2.7. Sanitasi Output**
+✅ Setiap operasi CRUD tercatat melalui middleware audit dengan:
 
-✅ Deskripsi modul ditampilkan **aman dari XSS** melalui penggunaan **DOMPurify**.
+- **Logging ke file**
+- **Informasi user, action, dan timestamp**
 
 ---
 
 # Catatan Tambahan
 
-### **Real-Time Propagation**
+### **Indeks Database**
 
-🚀 Untuk **update real-time** perubahan status modul, akan diintegrasikan dengan **WebSocket/SSE** (Langkah 4).  
-👉 **Admin dan mahasiswa tidak perlu merefresh halaman secara manual.**
+⚡ **Indeks pada `status` dan `title` sangat krusial** untuk performa query pada dataset besar.
 
-### **Virtual Scrolling & Debounce**
+### **Shared Validation Middleware**
 
-⚡ **Optimasi performa sangat penting!**
+✅ **Mengurangi duplikasi kode validasi** dan memastikan **konsistensi pemeriksaan input**.
 
-- **Virtual scrolling** memastikan tampilan tetap responsif saat data modul besar.
-- **Debounce** pada pencarian mengurangi request berlebih ke server.
+### **Audit Trail**
 
-### **Shared Validasi**
+📝 Untuk **MVP**, audit trail masih berupa **logging ke file**.  
+🔜 **Langkah 9** akan meningkatkan audit trail dengan **tabel queryable**.
 
-✅ **Pastikan schema Zod di frontend sama dengan di backend** untuk menjaga **konsistensi validasi**.
+### **Concurrency Control**
+
+🔄 **Pengendalian race condition** akan ditambahkan di langkah selanjutnya (misalnya, dengan **optimistic locking**).
 
 ---
 
