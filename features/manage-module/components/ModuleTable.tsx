@@ -20,12 +20,11 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Edit, Trash2, Plus, ArrowUpDown, Loader2, AlertCircle } from 'lucide-react'
+import { Edit, Trash2, ArrowUpDown, Loader2, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import DOMPurify from 'dompurify'
 import { Module, ModuleStatus,  FilterType, Pagination } from '../types'
-import { ModuleFilter } from './ModuleFilter'
 import { ModuleFormModal } from './ModuleFormModal'
 import { DeleteModuleDialog } from './DeleteModuleDialog'
 import { Badge } from '@/components/ui/badge'
@@ -218,16 +217,6 @@ export function ModuleTable({
     )
   }
   
-  // Handle filter changes
-  const handleFilterChange = (newFilter: FilterType) => {
-    // Pastikan status memiliki nilai yang valid
-    setFilter({
-      ...newFilter,
-      status: newFilter.status || ModuleStatus.ACTIVE, // Mengatur default jika status tidak ada
-      cursor: newFilter.cursor || undefined, // Mengatur cursor
-    });
-  }
-  
   // Handle load more
   const handleLoadMore = () => {
     if (pagination?.hasMore) {
@@ -242,20 +231,6 @@ export function ModuleTable({
   
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <ModuleFilter filter={filter} onFilterChange={handleFilterChange} />
-        
-        <Button
-          onClick={() => {
-            setSelectedModule(undefined)
-            setIsFormModalOpen(true)
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah Modul
-        </Button>
-      </div>
-      
       <div
         ref={tableContainerRef}
         className="rounded-md border h-[500px] overflow-auto"

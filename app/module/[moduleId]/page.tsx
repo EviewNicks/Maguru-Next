@@ -33,8 +33,6 @@ export default function ModuleRoute() {
       }
       
       localStorage.setItem('module_access_logs', JSON.stringify(logs))
-      
-      console.log(`Modul diakses: ${moduleId}, Mode: ${quickViewMode ? 'Eksplorasi Cepat' : 'Normal'}`)
     } catch (error) {
       console.error('Error menyimpan log akses:', error)
     }

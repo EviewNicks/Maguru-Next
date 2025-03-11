@@ -110,7 +110,6 @@ export default function QuizPage({ params }: QuizPageProps) {
       }))
       
       // Catat aktivitas pengguna
-      console.log('Pengguna memulai quiz untuk modul:', moduleId, 'dengan data:', moduleData)
       
       // Ubah state untuk menampilkan pertanyaan quiz
       setQuizStarted(true)

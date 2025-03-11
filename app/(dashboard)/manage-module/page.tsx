@@ -1,6 +1,3 @@
-// app/admin/module/page.tsx
-'use client'
-
 import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { ModuleManagement } from '@/features/manage-module/components/ModuleManagement'

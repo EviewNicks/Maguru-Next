@@ -8,7 +8,6 @@ import { createUserIfNotExists } from '@/lib/auth'
 import { PropsWithChildren } from 'react'
 
 async function layout({ children }: PropsWithChildren) {
-  console.log('🔥 layout dashboard dirender ulang')
 
   await createUserIfNotExists()
 

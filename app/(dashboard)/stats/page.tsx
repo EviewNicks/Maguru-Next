@@ -8,7 +8,6 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { getQueryClient } from '@/lib/getQueryClient'
 
 async function StatsPage() {
-  console.log('🔥 StatsPage dirender ulang')
   const queryClient = getQueryClient()
 
   // Prefetch all required data
@@ -23,8 +22,6 @@ async function StatsPage() {
       },
     }),
   ])
-
-  console.log('🔥 QueryClient dirender ulang')
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
