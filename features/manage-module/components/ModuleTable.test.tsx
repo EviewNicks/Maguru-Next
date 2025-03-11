@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { ModuleTable } from './ModuleTable'
-import { ModuleStatus } from '../types'
+import { ModuleStatus, type Module } from '../types'
 
 // Mock hooks dan komponen
 jest.mock('../hooks/useModules', () => ({
@@ -23,27 +23,17 @@ jest.mock('./DeleteModuleDialog', () => ({
 import { useModules } from '../hooks/useModules'
 
 describe('ModuleTable', () => {
-  const mockModules = [
+  const mockModules: Module[] = [
     {
       id: '1',
-      title: 'Modul Matematika',
-      description: 'Deskripsi modul matematika',
+      title: 'Module 1',
+      description: 'Deskripsi modul 1',
       status: ModuleStatus.ACTIVE,
-      createdAt: new Date('2023-01-01'),
-      updatedAt: new Date('2023-01-02'),
-      createdBy: 'user1',
-      updatedBy: 'user1',
-    },
-    {
-      id: '2',
-      title: 'Modul Bahasa Indonesia',
-      description: 'Deskripsi modul bahasa',
-      status: ModuleStatus.DRAFT,
-      createdAt: new Date('2023-01-03'),
-      updatedAt: new Date('2023-01-04'),
-      createdBy: 'user2',
-      updatedBy: 'user2',
-    },
+      createdBy: 'admin',
+      updatedBy: 'admin',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
   ]
 
   beforeEach(() => {
@@ -59,7 +49,14 @@ describe('ModuleTable', () => {
       error: null,
     })
 
-    render(<ModuleTable />)
+    render(
+      <ModuleTable 
+        modules={[]}
+        isLoading={true}
+        isError={false}
+        onLoadMore={() => {}}
+      />
+    )
 
     expect(screen.getByText('Memuat data modul...')).toBeInTheDocument()
   })
@@ -70,12 +67,19 @@ describe('ModuleTable', () => {
       data: null,
       isLoading: false,
       isError: true,
-      error: new Error('Test error'),
+      error: new Error('Terjadi kesalahan'),
     })
 
-    render(<ModuleTable />)
+    render(
+      <ModuleTable 
+        modules={[]}
+        isLoading={false}
+        isError={true}
+        onLoadMore={() => {}}
+      />
+    )
 
-    expect(screen.getByText(/error: test error/i)).toBeInTheDocument()
+    expect(screen.getByText('Terjadi kesalahan saat memuat data modul.')).toBeInTheDocument()
   })
 
   it('menampilkan data modul dalam tabel', () => {
@@ -84,7 +88,7 @@ describe('ModuleTable', () => {
       data: {
         modules: mockModules,
         pagination: {
-          count: 2,
+          count: 1,
           hasMore: false,
         },
       },
@@ -93,7 +97,14 @@ describe('ModuleTable', () => {
       error: null,
     })
 
-    render(<ModuleTable />)
+    render(
+      <ModuleTable 
+        modules={mockModules}
+        isLoading={false}
+        isError={false}
+        onLoadMore={() => {}}
+      />
+    )
 
     // Cek apakah filter komponen ditampilkan
     expect(screen.getByTestId('module-filter')).toBeInTheDocument()
@@ -104,8 +115,7 @@ describe('ModuleTable', () => {
     expect(screen.getByText('Terakhir Diperbarui')).toBeInTheDocument()
 
     // Cek apakah data modul ditampilkan
-    expect(screen.getByText('Modul Matematika')).toBeInTheDocument()
-    expect(screen.getByText('Modul Bahasa Indonesia')).toBeInTheDocument()
+    expect(screen.getByText('Module 1')).toBeInTheDocument()
   })
 
   it('menampilkan tombol "Muat Lebih Banyak" jika hasMore true', () => {
@@ -114,7 +124,7 @@ describe('ModuleTable', () => {
       data: {
         modules: mockModules,
         pagination: {
-          count: 2,
+          count: 1,
           hasMore: true,
           nextCursor: 'next-cursor',
         },
@@ -126,7 +136,14 @@ describe('ModuleTable', () => {
       isFetchingNextPage: false,
     })
 
-    render(<ModuleTable />)
+    render(
+      <ModuleTable 
+        modules={mockModules}
+        isLoading={false}
+        isError={false}
+        onLoadMore={() => {}}
+      />
+    )
 
     // Cek apakah tombol "Muat Lebih Banyak" ditampilkan
     expect(screen.getByText('Muat Lebih Banyak')).toBeInTheDocument()
@@ -138,7 +155,7 @@ describe('ModuleTable', () => {
       data: {
         modules: mockModules,
         pagination: {
-          count: 2,
+          count: 1,
           hasMore: false,
         },
       },
@@ -147,7 +164,14 @@ describe('ModuleTable', () => {
       error: null,
     })
 
-    render(<ModuleTable />)
+    render(
+      <ModuleTable 
+        modules={mockModules}
+        isLoading={false}
+        isError={false}
+        onLoadMore={() => {}}
+      />
+    )
 
     // Klik tombol "Tambah Modul"
     fireEvent.click(screen.getByText('Tambah Modul'))
@@ -155,4 +179,17 @@ describe('ModuleTable', () => {
     // Cek apakah form modal ditampilkan
     expect(screen.getByTestId('module-form-modal')).toBeInTheDocument()
   })
+
+  it('renders correctly', () => {
+    render(
+      <ModuleTable 
+        modules={mockModules}
+        isLoading={false}
+        isError={false}
+        onLoadMore={() => {}}
+      />
+    );
+    
+    expect(screen.getByRole('columnheader', { name: /nama modul/i })).toBeInTheDocument();
+  });
 })

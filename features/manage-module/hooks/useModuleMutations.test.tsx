@@ -1,9 +1,10 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook} from '@testing-library/react'
 import { useCreateModule, useUpdateModule, useDeleteModule } from './useModuleMutations'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import axios from 'axios'
 import { toast } from 'sonner'
 import { ModuleStatus } from '../types'
+import React from 'react'
 
 // Mock axios dan toast
 jest.mock('axios')
@@ -16,23 +17,6 @@ jest.mock('sonner', () => ({
 
 const mockedAxios = axios as jest.Mocked<typeof axios>
 const mockedToast = toast as jest.Mocked<typeof toast>
-
-// Setup wrapper dengan QueryClientProvider
-const createWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  })
-  
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  )
-}
 
 describe('useModuleMutations', () => {
   let queryClient: QueryClient
@@ -65,7 +49,11 @@ describe('useModuleMutations', () => {
       mockedAxios.post.mockResolvedValueOnce({ data: newModule })
       
       const { result } = renderHook(() => useCreateModule(), {
-        wrapper: createWrapper(),
+        wrapper: ({ children }) => (
+          <QueryClientProvider client={queryClient}>
+            {children}
+          </QueryClientProvider>
+        ),
       })
       
       // Call the mutation
@@ -96,7 +84,11 @@ describe('useModuleMutations', () => {
       mockedAxios.post.mockRejectedValueOnce(error)
       
       const { result } = renderHook(() => useCreateModule(), {
-        wrapper: createWrapper(),
+        wrapper: ({ children }) => (
+          <QueryClientProvider client={queryClient}>
+            {children}
+          </QueryClientProvider>
+        ),
       })
       
       // Call the mutation and expect it to throw
@@ -136,7 +128,11 @@ describe('useModuleMutations', () => {
       mockedAxios.put.mockResolvedValueOnce({ data: updatedModule })
       
       const { result } = renderHook(() => useUpdateModule(), {
-        wrapper: createWrapper(),
+        wrapper: ({ children }) => (
+          <QueryClientProvider client={queryClient}>
+            {children}
+          </QueryClientProvider>
+        ),
       })
       
       // Call the mutation
@@ -176,7 +172,11 @@ describe('useModuleMutations', () => {
       mockedAxios.put.mockRejectedValueOnce(error)
       
       const { result } = renderHook(() => useUpdateModule(), {
-        wrapper: createWrapper(),
+        wrapper: ({ children }) => (
+          <QueryClientProvider client={queryClient}>
+            {children}
+          </QueryClientProvider>
+        ),
       })
       
       // Call the mutation and expect it to throw
@@ -216,7 +216,11 @@ describe('useModuleMutations', () => {
       mockedAxios.delete.mockResolvedValueOnce({ data: deletedModule })
       
       const { result } = renderHook(() => useDeleteModule(), {
-        wrapper: createWrapper(),
+        wrapper: ({ children }) => (
+          <QueryClientProvider client={queryClient}>
+            {children}
+          </QueryClientProvider>
+        ),
       })
       
       // Call the mutation
@@ -238,7 +242,11 @@ describe('useModuleMutations', () => {
       mockedAxios.delete.mockRejectedValueOnce(error)
       
       const { result } = renderHook(() => useDeleteModule(), {
-        wrapper: createWrapper(),
+        wrapper: ({ children }) => (
+          <QueryClientProvider client={queryClient}>
+            {children}
+          </QueryClientProvider>
+        ),
       })
       
       // Call the mutation and expect it to throw

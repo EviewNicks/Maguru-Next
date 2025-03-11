@@ -11,6 +11,14 @@ export interface ModuleCreateInput {
   createdBy: string
 }
 
+export interface ModuleTableProps {
+  modules: Module[]
+  isLoading: boolean
+  isError: boolean
+  pagination?: Pagination
+  onLoadMore: () => void
+}
+
 export interface ModuleUpdateInput {
   title?: string
   description?: string
@@ -52,4 +60,8 @@ export interface Pagination {
   count: number
   hasMore: boolean
   nextCursor?: string
+}
+
+export interface ModuleData {
+  modules: Module[];
 }

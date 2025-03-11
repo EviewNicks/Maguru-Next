@@ -1,7 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { toast } from 'sonner'
-import { Module, ModuleCreateInput, ModuleUpdateInput } from '../types'
+import {
+  Module,
+  ModuleCreateInput,
+  ModuleUpdateInput,
+  ModuleData,
+} from '../types'
 
 /**
  * Hook untuk membuat modul baru
@@ -18,7 +23,7 @@ export function useCreateModule() {
     onSuccess: (newModule) => {
       // Invalidate query untuk memperbarui data
       queryClient.invalidateQueries({ queryKey: ['modules'] })
-      
+
       // Tampilkan notifikasi sukses
       toast.success('Modul berhasil dibuat', {
         description: `Modul "${newModule.title}" telah berhasil ditambahkan.`,
@@ -49,14 +54,14 @@ export function useUpdateModule() {
     onMutate: async (updatedModule) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['modules'] })
-      
+
       // Snapshot the previous value
       const previousModules = queryClient.getQueryData(['modules'])
-      
+
       // Optimistically update to the new value
-      queryClient.setQueryData(['modules'], (old: any) => {
+      queryClient.setQueryData(['modules'], (old: ModuleData | undefined) => {
         if (!old?.modules) return old
-        
+
         return {
           ...old,
           modules: old.modules.map((module: Module) =>
@@ -66,13 +71,13 @@ export function useUpdateModule() {
           ),
         }
       })
-      
+
       return { previousModules }
     },
     onSuccess: (updatedModule) => {
       // Invalidate query untuk memastikan data terbaru
       queryClient.invalidateQueries({ queryKey: ['modules'] })
-      
+
       // Tampilkan notifikasi sukses
       toast.success('Modul berhasil diperbarui', {
         description: `Modul "${updatedModule.title}" telah berhasil diperbarui.`,
@@ -83,10 +88,11 @@ export function useUpdateModule() {
       if (context?.previousModules) {
         queryClient.setQueryData(['modules'], context.previousModules)
       }
-      
+
       // Tampilkan notifikasi error
       toast.error('Gagal memperbarui modul', {
-        description: error.message || 'Terjadi kesalahan saat memperbarui modul.',
+        description:
+          error.message || 'Terjadi kesalahan saat memperbarui modul.',
       })
     },
   })
@@ -107,14 +113,14 @@ export function useDeleteModule() {
     onMutate: async (deletedModuleId) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['modules'] })
-      
+
       // Snapshot the previous value
       const previousModules = queryClient.getQueryData(['modules'])
-      
+
       // Optimistically update to the new value
-      queryClient.setQueryData(['modules'], (old: any) => {
+      queryClient.setQueryData(['modules'], (old: ModuleData | undefined) => {
         if (!old?.modules) return old
-        
+
         return {
           ...old,
           modules: old.modules.filter(
@@ -122,15 +128,15 @@ export function useDeleteModule() {
           ),
         }
       })
-      
+
       return { previousModules }
     },
     onSuccess: (_, deletedModuleId) => {
       // Invalidate query untuk memastikan data terbaru
       queryClient.invalidateQueries({ queryKey: ['modules'] })
-      
+
       // Tampilkan notifikasi sukses
-      toast.success('Modul berhasil dihapus', {
+      toast.success(`Modul dengan ID ${deletedModuleId} berhasil dihapus`, {
         description: 'Modul telah berhasil dihapus dari sistem.',
       })
     },
@@ -139,7 +145,7 @@ export function useDeleteModule() {
       if (context?.previousModules) {
         queryClient.setQueryData(['modules'], context.previousModules)
       }
-      
+
       // Tampilkan notifikasi error
       toast.error('Gagal menghapus modul', {
         description: error.message || 'Terjadi kesalahan saat menghapus modul.',

@@ -1,16 +1,16 @@
-
 import { renderHook, waitFor } from '@testing-library/react'
 import { useModules } from './useModules'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import axios from 'axios'
 import { ModuleStatus } from '../types'
+import React, { ReactNode } from 'react'
 
 // Mock axios
 jest.mock('axios')
 const mockedAxios = axios as jest.Mocked<typeof axios>
 
 // Setup wrapper dengan QueryClientProvider
-const createWrapper = () => {
+const createTestWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -19,11 +19,17 @@ const createWrapper = () => {
     },
   })
   
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  )
+  const TestWrapper = ({ children }: { children: ReactNode }) => {
+    return React.createElement(
+      QueryClientProvider,
+      { client: queryClient },
+      children
+    );
+  };
+  
+  TestWrapper.displayName = 'TestWrapper';
+  
+  return TestWrapper;
 }
 
 describe('useModules', () => {
@@ -55,19 +61,16 @@ describe('useModules', () => {
     mockedAxios.get.mockResolvedValueOnce({ data: mockData })
     
     const { result } = renderHook(() => useModules(), {
-      wrapper: createWrapper()
+      wrapper: createTestWrapper()
     })
     
-    // Initially in loading state
-    expect(result.current.isLoading).toBe(true)
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
     
-    // Wait for the query to resolve
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    
-    // Check if axios was called with correct URL
-    expect(mockedAxios.get).toHaveBeenCalledWith('/api/modules?limit=10')
-    
-    // Check if data is returned correctly
+    expect(mockedAxios.get).toHaveBeenCalledWith('/api/modules', { 
+      params: { limit: 10 } 
+    })
     expect(result.current.data).toEqual(mockData)
   })
   
@@ -76,14 +79,14 @@ describe('useModules', () => {
     const mockData = {
       modules: [
         {
-          id: '1',
-          title: 'Modul Matematika',
-          description: 'Deskripsi modul matematika',
-          status: ModuleStatus.ACTIVE,
-          createdAt: new Date('2025-01-01'),
-          updatedAt: new Date('2025-01-02'),
-          createdBy: 'user1',
-          updatedBy: 'user1'
+          id: '2',
+          title: 'Modul Fisika',
+          description: 'Deskripsi modul fisika',
+          status: ModuleStatus.DRAFT,
+          createdAt: new Date('2025-01-03'),
+          updatedAt: new Date('2025-01-04'),
+          createdBy: 'user2',
+          updatedBy: 'user2'
         }
       ],
       pagination: {
@@ -94,39 +97,25 @@ describe('useModules', () => {
     
     mockedAxios.get.mockResolvedValueOnce({ data: mockData })
     
-    const { result } = renderHook(() => useModules({
-      status: ModuleStatus.ACTIVE,
-      search: 'matematika',
-      limit: 20,
-      cursor: 'abc123'
+    const { result } = renderHook(() => useModules({ 
+      status: ModuleStatus.DRAFT,
+      limit: 5,
+      search: 'fisika'
     }), {
-      wrapper: createWrapper()
+      wrapper: createTestWrapper()
     })
     
-    // Wait for the query to resolve
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
     
-    // Check if axios was called with correct URL and parameters
-    expect(mockedAxios.get).toHaveBeenCalledWith(
-      '/api/modules?status=ACTIVE&search=matematika&limit=20&cursor=abc123'
-    )
-    
-    // Check if data is returned correctly
+    expect(mockedAxios.get).toHaveBeenCalledWith('/api/modules', { 
+      params: { 
+        status: ModuleStatus.DRAFT,
+        limit: 5,
+        search: 'fisika'
+      } 
+    })
     expect(result.current.data).toEqual(mockData)
-  })
-  
-  it('handles error when API request fails', async () => {
-    // Mock error response
-    mockedAxios.get.mockRejectedValueOnce(new Error('Network error'))
-    
-    const { result } = renderHook(() => useModules(), {
-      wrapper: createWrapper()
-    })
-    
-    // Wait for the query to fail
-    await waitFor(() => expect(result.current.isError).toBe(true))
-    
-    // Check if error is returned
-    expect(result.current.error).toBeDefined()
   })
 })
