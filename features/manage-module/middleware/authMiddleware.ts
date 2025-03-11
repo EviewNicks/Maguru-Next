@@ -36,7 +36,30 @@ export function isAdmin() {
           };
         }
         
-        const userData = await response.json();
+        // Tambahkan penanganan error untuk parsing JSON
+        let userData;
+        try {
+          userData = await response.json();
+        } catch (jsonError) {
+          console.error('Error parsing user data:', jsonError);
+          
+          // Untuk pengembangan, kita izinkan akses sementara jika terjadi error parsing
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️ Development mode: Bypassing admin check due to JSON parsing error');
+            return { 
+              success: true, 
+              user: { role: 'ADMIN', id: userId, name: 'Dev Admin' }
+            };
+          }
+          
+          return { 
+            success: false, 
+            error: { 
+              code: 'INVALID_RESPONSE', 
+              message: 'Format respons tidak valid' 
+            } 
+          };
+        }
         
         // Periksa jika user adalah admin
         if (userData.role !== 'ADMIN') {
@@ -59,29 +82,26 @@ export function isAdmin() {
           console.warn('⚠️ Development mode: Bypassing admin check');
           return { 
             success: true, 
-            user: { 
-              id: userId, 
-              role: 'ADMIN',
-              name: 'Development Admin'
-            } 
+            user: { role: 'ADMIN', id: userId, name: 'Dev Admin' }
           };
         }
         
         return { 
           success: false, 
           error: { 
-            code: 'AUTH_ERROR', 
+            code: 'SERVER_ERROR', 
             message: 'Gagal memverifikasi status admin' 
           } 
         };
       }
     } catch (error) {
       console.error('Auth middleware error:', error);
+      
       return { 
         success: false, 
         error: { 
-          code: 'AUTH_ERROR', 
-          message: 'Terjadi kesalahan dalam proses autentikasi' 
+          code: 'SERVER_ERROR', 
+          message: 'Terjadi kesalahan saat memproses permintaan' 
         } 
       };
     }

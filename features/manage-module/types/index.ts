@@ -1,37 +1,67 @@
 // features/manage-module/types/index.ts
 
-import { ModuleStatus } from '@prisma/client';
+import { ModuleStatus } from '@prisma/client'
 
-export { ModuleStatus };
+export { ModuleStatus }
 
 export interface ModuleCreateInput {
-  title: string;
-  description?: string;
-  status?: ModuleStatus;
-  createdBy: string;
+  title: string
+  description?: string
+  status?: ModuleStatus
+  createdBy: string
+}
+
+export interface ModuleTableProps {
+  modules: Module[]
+  isLoading: boolean
+  isError: boolean
+  pagination?: Pagination
+  onLoadMore: () => void
 }
 
 export interface ModuleUpdateInput {
-  title?: string;
-  description?: string;
-  status?: ModuleStatus;
-  updatedBy: string;
+  title?: string
+  description?: string
+  status?: ModuleStatus
+  updatedBy: string
 }
 
 export interface Module {
-  id: string;
-  title: string;
-  description: string | null;
-  status: ModuleStatus;
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy: string;
-  updatedBy: string;
+  id: string
+  title: string
+  description: string | null
+  status: ModuleStatus
+  createdAt: Date
+  updatedAt: Date
+  createdBy: string
+  updatedBy: string
 }
 
 export interface GetModulesOptions {
-  status?: ModuleStatus;
-  limit?: number;
-  cursor?: string;
-  search?: string;
+  status?: ModuleStatus
+  limit?: number
+  cursor?: string
+  search?: string
+}
+
+export interface FilterType {
+  status?: ModuleStatus | 'ALL' // Mengubah menjadi opsional
+  search: string
+  limit: number
+  cursor?: string // Mengubah menjadi opsional
+}
+
+export interface ModulesResponse {
+  modules: Module[]
+  pagination: Pagination
+}
+
+export interface Pagination {
+  count: number
+  hasMore: boolean
+  nextCursor?: string
+}
+
+export interface ModuleData {
+  modules: Module[]
 }

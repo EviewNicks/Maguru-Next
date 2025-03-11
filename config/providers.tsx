@@ -14,8 +14,6 @@ function InitUser() {
     async function syncUser() {
       if (!isLoaded || !userId) return
 
-      console.log('Attempting to sync user with ID:', userId)
-
       try {
         const response = await fetch('/api/users', {
           method: 'POST',
@@ -28,14 +26,12 @@ function InitUser() {
         })
 
         const data = await response.json()
-        console.log('Sync response:', data)
 
         if (!response.ok) {
           const error = await response.json()
           throw new Error(error.message || 'Failed to sync user')
         }
 
-        console.log('User synced successfully')
       } catch (error) {
         console.error('Error syncing user:', error)
       }

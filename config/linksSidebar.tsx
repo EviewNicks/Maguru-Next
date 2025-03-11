@@ -23,6 +23,11 @@ const links: NavLink[] = [
     label: "stats",
     icon: <ChartBarIcon />,
   },
+  {
+    href: "/manage-module",
+    label: "manage module",
+    icon: <ArrowTopRightOnSquareIcon />,
+  },
 ];
 
 export default links;

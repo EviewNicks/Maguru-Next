@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import { DataTable } from './UserTable/DataTable'
 
 function UsersPage() {
-  console.log('UsersPage dirender ulang')
   const { data, isLoading, error } = useQuery({
     queryKey: ['users'],
     queryFn: async () => {

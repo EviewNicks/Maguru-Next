@@ -127,6 +127,45 @@ src/
   - Linting fails (run `npm run lint`).
   - Tests fail (run `npm test`).
 
+# Format Commit Message
+
+```php-template
+<type>(<scope>/s<story>t<task>): <deskripsi singkat> (ISSUE_ID) v<versi>
+```
+
+## Contoh:
+
+```java
+feat(module/s2t1): implementasi halaman manajemen modul dengan CRUD (OPS-29) v1.0  
+fix(auth/s2t3): perbaiki validasi middleware untuk akses admin (OPS-30) v1.1  
+docs(api/s2t4): tambahkan dokumentasi CRUD modul akademik (OPS-29) v1.0
+```
+
+## Penjelasan Format:
+
+- **`type`**: Jenis perubahan, contoh:
+  - `feat` → Fitur baru
+  - `fix` → Perbaikan bug
+  - `docs` → Perubahan dokumentasi
+  - `refactor` → Perbaikan kode tanpa mengubah fungsionalitas
+  - `chore` → Perubahan kecil atau perawatan proyek
+  
+- **`scope`**: Area yang terpengaruh, contoh:
+  - `module` → Modul tertentu
+  - `auth` → Sistem autentikasi
+  - `api` → Endpoint backend
+  
+- **`s<story>t<task>`**: Nomor story dan task sesuai JIRA/GitHub.
+  - `s2t1` → Story 2, Task 1
+  - `s2t3` → Story 2, Task 3
+  
+- **`ISSUE_ID`**: Mengaitkan commit dengan task spesifik di sistem manajemen proyek.
+  - `(OPS-29)`, `(OPS-30)`, dll.
+  
+- **`versi`**: Menunjukkan versi perubahan.
+  - `v1.0`, `v1.1`, dll.
+
+
 ## 5. Dependency Management
 - All imported libraries must exist in `package.json`.
 - Raise warnings for unlisted or incompatible libraries.
