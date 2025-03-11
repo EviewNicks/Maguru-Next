@@ -14,14 +14,15 @@ import { Search } from 'lucide-react'
 import { useDebounce } from '../hooks/useDebounce'
 
 interface ModuleFilterProps {
+  
   filter: {
-    status?: ModuleStatus
+    status?: ModuleStatus | 'ALL'
     search: string
     limit: number
     cursor?: string
   }
   onFilterChange: (filter: {
-    status?: ModuleStatus
+    status?: ModuleStatus | 'ALL'
     search: string
     limit: number
     cursor?: string
@@ -47,7 +48,7 @@ export function ModuleFilter({ filter, onFilterChange }: ModuleFilterProps) {
   const handleStatusChange = (value: string) => {
     onFilterChange({
       ...filter,
-      status: value === 'ALL' ? undefined : (value as ModuleStatus),
+      status: value === 'ALL' ? 'ALL' : (value as ModuleStatus),
       cursor: undefined, // Reset cursor when status changes
     })
   }

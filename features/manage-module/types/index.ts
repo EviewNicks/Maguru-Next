@@ -45,7 +45,7 @@ export interface GetModulesOptions {
 }
 
 export interface FilterType {
-  status?: ModuleStatus // Mengubah menjadi opsional
+  status?: ModuleStatus | 'ALL' // Mengubah menjadi opsional
   search: string
   limit: number
   cursor?: string // Mengubah menjadi opsional
@@ -63,5 +63,5 @@ export interface Pagination {
 }
 
 export interface ModuleData {
-  modules: Module[];
+  modules: Module[]
 }

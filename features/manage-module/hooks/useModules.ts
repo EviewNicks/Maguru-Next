@@ -12,7 +12,7 @@ interface ModulesResponse {
 }
 
 interface UseModulesOptions {
-  status?: ModuleStatus
+  status?: ModuleStatus | 'ALL'
   search?: string
   limit?: number
   cursor?: string
@@ -26,7 +26,7 @@ interface UseModulesOptions {
  * @returns Data modul, status loading, dan error
  */
 export function useModules(options: UseModulesOptions = {}) {
-  const { status = ModuleStatus.ACTIVE, search, limit = 10, cursor } = options
+  const { status, search, limit = 10, cursor } = options
 
   return useInfiniteQuery<ModulesResponse>({
     queryKey: ['modules', { status, search, limit, cursor }],
@@ -34,7 +34,8 @@ export function useModules(options: UseModulesOptions = {}) {
       // Bangun URL dengan query params
       const params = new URLSearchParams()
 
-      if (status) {
+      // Hanya tambahkan parameter status jika bukan 'ALL'
+      if (status && status !== 'ALL') {
         params.append('status', status)
       }
 

@@ -64,7 +64,7 @@ export function DataTable({
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 50, // estimasi tinggi baris
+    estimateSize: () => 10, // estimasi tinggi baris
     overscan: 10,
   })
 
@@ -130,62 +130,42 @@ export function DataTable({
   }
 
   return (
-    <div className="space-y-4">
-      <div
-        ref={tableContainerRef}
-        className="rounded-md border h-[500px] overflow-auto"
-      >
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const row = rows[virtualRow.index]
-              return (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  style={{
-                    height: `${virtualRow.size}px`,
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
+    <div
+      ref={tableContainerRef}
+      className="rounded-md border"
+    >
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
                       )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              )
-            })}
-            {rows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Tidak ada data modul.
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => (
+            <TableRow
+              key={virtualRow.index}
+              data-state={table.getRowModel().rows[virtualRow.index].getIsSelected() && 'selected'}
+            >
+              {table.getRowModel().rows[virtualRow.index].getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
       {pagination?.hasMore && (
         <div className="flex justify-center mt-4">
           <Button
