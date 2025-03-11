@@ -4,8 +4,8 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { ModuleManagement } from '@/features/manage-module/components/ModuleManagement'
-import { PageHeader } from '@/components/ui/page-header'
 import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/ui/page-header'
 
 export const metadata: Metadata = {
   title: 'Manajemen Modul Akademik | Maguru',
