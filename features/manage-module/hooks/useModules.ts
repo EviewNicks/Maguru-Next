@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { Module, ModuleStatus } from '../types'
 
@@ -21,39 +21,40 @@ interface UseModulesOptions {
 /**
  * Hook untuk mengambil data modul dari API
  * Mendukung pagination, filtering, dan pencarian
- * 
+ *
  * @param options - Opsi untuk query modules
  * @returns Data modul, status loading, dan error
  */
 export function useModules(options: UseModulesOptions = {}) {
-  const { status, search, limit = 10, cursor } = options
+  const { status = ModuleStatus.ACTIVE, search, limit = 10, cursor } = options
 
-  return useQuery<ModulesResponse>({
+  return useInfiniteQuery<ModulesResponse>({
     queryKey: ['modules', { status, search, limit, cursor }],
-    queryFn: async () => {
+    queryFn: async ({ pageParam }: { pageParam?: unknown }) => {
       // Bangun URL dengan query params
       const params = new URLSearchParams()
-      
+
       if (status) {
         params.append('status', status)
       }
-      
+
       if (search) {
         params.append('search', search)
       }
-      
+
       if (limit) {
         params.append('limit', limit.toString())
       }
-      
-      if (cursor) {
-        params.append('cursor', cursor)
+
+      if (typeof pageParam === 'string') {
+        params.append('cursor', pageParam)
       }
-      
+
       const response = await axios.get(`/api/modules?${params.toString()}`)
       return response.data
     },
     staleTime: 1000 * 60 * 5, // Data dianggap fresh selama 5 menit
-    keepPreviousData: true, // Simpan data sebelumnya saat loading data baru
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
+    initialPageParam: cursor || undefined, // Menangani nilai cursor yang mungkin tidak ada
   })
 }

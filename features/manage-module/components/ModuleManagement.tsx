@@ -7,15 +7,14 @@ import { Button } from '@/components/ui/button'
 import { PlusIcon } from 'lucide-react'
 import { ModuleFormModal } from './ModuleFormModal'
 import { useModules } from '../hooks/useModules'
-import { ModuleStatus } from '../types'
+// import { ModuleStatus } from '../types'
+import {FilterType} from '../types'
 
 export function ModuleManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [filter, setFilter] = useState({
-    status: undefined as ModuleStatus | undefined,
+  const [filter, setFilter] = useState<FilterType>({
     search: '',
     limit: 10,
-    cursor: undefined as string | undefined,
   })
   
   const { data, isLoading, isError } = useModules(filter)
@@ -38,15 +37,15 @@ export function ModuleManagement() {
       </div>
       
       <ModuleTable 
-        modules={data?.modules || []} 
+        modules={data?.pages.flatMap(page => page.modules) || []}
         isLoading={isLoading}
         isError={isError}
-        pagination={data?.pagination}
+        pagination={data?.pages[data.pages.length - 1]?.pagination}
         onLoadMore={() => {
-          if (data?.pagination?.nextCursor) {
+          if (data?.pages[data.pages.length - 1]?.pagination?.nextCursor) {
             setFilter(prev => ({
               ...prev,
-              cursor: data.pagination.nextCursor
+              cursor: data?.pages[data.pages.length - 1]?.pagination?.nextCursor
             }))
           }
         }}

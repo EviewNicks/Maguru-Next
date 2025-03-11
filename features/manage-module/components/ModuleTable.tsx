@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
   SortingState,
   getSortedRowModel,
+  Row,
+  Column,
 } from '@tanstack/react-table'
 import {
   Table,
@@ -18,24 +20,37 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Edit, Trash2, Plus, ArrowUpDown, Loader2 } from 'lucide-react'
+import { Edit, Trash2, Plus, ArrowUpDown, Loader2, AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import DOMPurify from 'dompurify'
-import { Module, ModuleStatus } from '../types'
+import { Module, ModuleStatus,  FilterType, Pagination } from '../types'
 import { ModuleFilter } from './ModuleFilter'
-import { useModules } from '../hooks/useModules'
 import { ModuleFormModal } from './ModuleFormModal'
 import { DeleteModuleDialog } from './DeleteModuleDialog'
 import { Badge } from '@/components/ui/badge'
 
-export function ModuleTable() {
+interface ModuleTableProps {
+  modules: Module[]
+  isLoading: boolean
+  isError: boolean
+  pagination?: Pagination
+  onLoadMore: () => void
+}
+
+export function ModuleTable({
+  modules,
+  isLoading,
+  isError,
+  pagination,
+  onLoadMore,
+}: ModuleTableProps) {
   // State untuk filter, sorting, dan pagination
-  const [filter, setFilter] = useState({
-    status: undefined as ModuleStatus | undefined,
+  const [filter, setFilter] = useState<FilterType>({
+    status: undefined,
     search: '',
     limit: 10,
-    cursor: undefined as string | undefined,
+    cursor: undefined,
   })
   
   const [sorting, setSorting] = useState<SortingState>([])
@@ -45,9 +60,6 @@ export function ModuleTable() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   
-  // Fetch data menggunakan React Query
-  const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } = useModules(filter)
-  
   // Referensi untuk virtual scrolling
   const tableContainerRef = React.useRef<HTMLDivElement>(null)
   
@@ -55,7 +67,7 @@ export function ModuleTable() {
   const columns = [
     {
       accessorKey: 'title',
-      header: ({ column }) => {
+      header: ({ column }: { column: Column<Module> }) => {
         return (
           <Button
             variant="ghost"
@@ -66,7 +78,7 @@ export function ModuleTable() {
           </Button>
         )
       },
-      cell: ({ row }) => {
+      cell: ({ row }: { row: Row<Module> }) => {
         const title = row.getValue('title') as string
         const sanitizedTitle = DOMPurify.sanitize(title)
         return <div dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
@@ -75,7 +87,7 @@ export function ModuleTable() {
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => {
+      cell: ({ row }: { row: Row<Module> }) => {
         const status = row.getValue('status') as ModuleStatus
         
         let badgeVariant: 'default' | 'secondary' | 'outline'
@@ -104,7 +116,7 @@ export function ModuleTable() {
     },
     {
       accessorKey: 'updatedAt',
-      header: ({ column }) => {
+      header: ({ column }: { column: Column<Module> }) => {
         return (
           <Button
             variant="ghost"
@@ -115,15 +127,15 @@ export function ModuleTable() {
           </Button>
         )
       },
-      cell: ({ row }) => {
+      cell: ({ row }: { row: Row<Module> }) => {
         const date = new Date(row.getValue('updatedAt'))
         return format(date, 'PPpp', { locale: id })
       },
     },
     {
       id: 'actions',
-      cell: ({ row }) => {
-        const module = row.original
+      cell: ({ row }: { row: Row<Module> }) => {
+        const currentModule = row.original
         
         return (
           <div className="flex items-center gap-2">
@@ -131,7 +143,7 @@ export function ModuleTable() {
               variant="ghost"
               size="icon"
               onClick={() => {
-                setSelectedModule(module)
+                setSelectedModule(currentModule)
                 setIsFormModalOpen(true)
               }}
             >
@@ -142,7 +154,7 @@ export function ModuleTable() {
               variant="ghost"
               size="icon"
               onClick={() => {
-                setSelectedModule(module)
+                setSelectedModule(currentModule)
                 setIsDeleteDialogOpen(true)
               }}
             >
@@ -157,7 +169,7 @@ export function ModuleTable() {
   
   // Setup tabel dengan tanstack/react-table
   const table = useReactTable({
-    data: data?.modules || [],
+    data: modules,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -190,26 +202,41 @@ export function ModuleTable() {
   // Render error state
   if (isError) {
     return (
-      <div className="flex justify-center items-center h-64 text-destructive">
-        <p>Error: {error?.message || 'Terjadi kesalahan saat memuat data'}</p>
+      <div className="flex flex-col justify-center items-center h-64">
+        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+        <p className="text-destructive text-center">
+          Terjadi kesalahan saat memuat data modul. Silakan coba lagi nanti.
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => window.location.reload()}
+        >
+          Muat Ulang
+        </Button>
       </div>
     )
   }
   
   // Handle filter changes
-  const handleFilterChange = (newFilter) => {
-    setFilter(newFilter)
+  const handleFilterChange = (newFilter: FilterType) => {
+    // Pastikan status memiliki nilai yang valid
+    setFilter({
+      ...newFilter,
+      status: newFilter.status || ModuleStatus.ACTIVE, // Mengatur default jika status tidak ada
+      cursor: newFilter.cursor || undefined, // Mengatur cursor
+    });
   }
   
   // Handle load more
   const handleLoadMore = () => {
-    if (data?.pagination.hasMore) {
+    if (pagination?.hasMore) {
       const newFilter = {
         ...filter,
-        cursor: data.pagination.nextCursor,
+        cursor: pagination.nextCursor,
       }
       setFilter(newFilter)
-      fetchNextPage()
+      onLoadMore()
     }
   }
   
@@ -277,16 +304,13 @@ export function ModuleTable() {
         </Table>
       </div>
       
-      {data?.pagination.hasMore && (
+      {pagination?.hasMore && (
         <div className="flex justify-center mt-4">
           <Button
             onClick={handleLoadMore}
-            disabled={isFetchingNextPage}
+            disabled={false}
             variant="outline"
           >
-            {isFetchingNextPage && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
             Muat Lebih Banyak
           </Button>
         </div>
