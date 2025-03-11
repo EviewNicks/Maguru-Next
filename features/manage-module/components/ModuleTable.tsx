@@ -1,86 +1,76 @@
 'use client'
 
 import { useState } from 'react'
-import { 
-  useReactTable, 
-  getCoreRowModel, 
+import {
   flexRender,
-  ColumnDef,
-  SortingState
+  getCoreRowModel,
+  useReactTable,
+  SortingState,
+  getSortedRowModel,
 } from '@tanstack/react-table'
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { 
-  Edit2Icon, 
-  Trash2Icon, 
-  ChevronDownIcon,
-  AlertCircleIcon,
-  Loader2Icon
-} from 'lucide-react'
+import { useVirtualizer } from '@tanstack/react-virtual'
+import { Edit, Trash2, Plus, ArrowUpDown, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
-import { useVirtualizer } from '@tanstack/react-virtual'
-import { useRef } from 'react'
+import DOMPurify from 'dompurify'
 import { Module, ModuleStatus } from '../types'
-import DOMPurify from 'isomorphic-dompurify'
+import { ModuleFilter } from './ModuleFilter'
+import { useModules } from '../hooks/useModules'
+import { ModuleFormModal } from './ModuleFormModal'
+import { DeleteModuleDialog } from './DeleteModuleDialog'
+import { Badge } from '@/components/ui/badge'
 
-interface ModuleTableProps {
-  modules: Module[]
-  isLoading: boolean
-  isError: boolean
-  pagination?: {
-    count: number
-    hasMore: boolean
-    nextCursor?: string
-  }
-  onLoadMore: () => void
-  onEdit?: (module: Module) => void
-  onDelete?: (module: Module) => void
-}
-
-export function ModuleTable({ 
-  modules, 
-  isLoading, 
-  isError, 
-  pagination, 
-  onLoadMore,
-  onEdit,
-  onDelete
-}: ModuleTableProps) {
+export function ModuleTable() {
+  // State untuk filter, sorting, dan pagination
+  const [filter, setFilter] = useState({
+    status: undefined as ModuleStatus | undefined,
+    search: '',
+    limit: 10,
+    cursor: undefined as string | undefined,
+  })
+  
   const [sorting, setSorting] = useState<SortingState>([])
-  const tableContainerRef = useRef<HTMLDivElement>(null)
-
-  const columns: ColumnDef<Module>[] = [
+  
+  // State untuk modal dan dialog
+  const [selectedModule, setSelectedModule] = useState<Module | undefined>(undefined)
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  
+  // Fetch data menggunakan React Query
+  const { data, isLoading, isError, error, fetchNextPage, isFetchingNextPage } = useModules(filter)
+  
+  // Referensi untuk virtual scrolling
+  const tableContainerRef = React.useRef<HTMLDivElement>(null)
+  
+  // Definisi kolom tabel
+  const columns = [
     {
       accessorKey: 'title',
-      header: 'Judul',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Judul
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => {
         const title = row.getValue('title') as string
-        return <span className="font-medium">{DOMPurify.sanitize(title)}</span>
-      }
-    },
-    {
-      accessorKey: 'description',
-      header: 'Deskripsi',
-      cell: ({ row }) => {
-        const description = row.getValue('description') as string | null
-        if (!description) return <span className="text-muted-foreground italic">Tidak ada deskripsi</span>
-        
-        // Truncate description to 100 characters
-        const truncated = description.length > 100 
-          ? `${description.substring(0, 100)}...` 
-          : description
-        
-        return <span>{DOMPurify.sanitize(truncated)}</span>
-      }
+        const sanitizedTitle = DOMPurify.sanitize(title)
+        return <div dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
+      },
     },
     {
       accessorKey: 'status',
@@ -88,129 +78,160 @@ export function ModuleTable({
       cell: ({ row }) => {
         const status = row.getValue('status') as ModuleStatus
         
-        return (
-          <Badge variant={
-            status === ModuleStatus.ACTIVE ? 'success' : 
-            status === ModuleStatus.DRAFT ? 'default' : 'destructive'
-          }>
-            {status === ModuleStatus.ACTIVE ? 'Aktif' : 
-             status === ModuleStatus.DRAFT ? 'Draft' : 'Diarsipkan'}
-          </Badge>
-        )
-      }
+        let badgeVariant: 'default' | 'secondary' | 'outline'
+        let badgeText: string
+        
+        switch (status) {
+          case ModuleStatus.ACTIVE:
+            badgeVariant = 'default'
+            badgeText = 'Aktif'
+            break
+          case ModuleStatus.DRAFT:
+            badgeVariant = 'secondary'
+            badgeText = 'Draft'
+            break
+          case ModuleStatus.ARCHIVED:
+            badgeVariant = 'outline'
+            badgeText = 'Diarsipkan'
+            break
+          default:
+            badgeVariant = 'outline'
+            badgeText = 'Unknown'
+        }
+        
+        return <Badge variant={badgeVariant}>{badgeText}</Badge>
+      },
     },
     {
-      accessorKey: 'createdAt',
-      header: 'Tanggal Dibuat',
+      accessorKey: 'updatedAt',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            Terakhir Diperbarui
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
       cell: ({ row }) => {
-        const date = row.getValue('createdAt') as Date
-        return format(new Date(date), 'dd MMMM yyyy', { locale: id })
-      }
+        const date = new Date(row.getValue('updatedAt'))
+        return format(date, 'PPpp', { locale: id })
+      },
     },
     {
       id: 'actions',
-      header: 'Aksi',
       cell: ({ row }) => {
         const module = row.original
         
         return (
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => onEdit?.(module)}
-              className="h-8 w-8"
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setSelectedModule(module)
+                setIsFormModalOpen(true)
+              }}
             >
-              <Edit2Icon className="h-4 w-4" />
+              <Edit className="h-4 w-4" />
               <span className="sr-only">Edit</span>
             </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => onDelete?.(module)}
-              className="h-8 w-8 text-destructive hover:text-destructive"
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setSelectedModule(module)
+                setIsDeleteDialogOpen(true)
+              }}
             >
-              <Trash2Icon className="h-4 w-4" />
-              <span className="sr-only">Hapus</span>
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Delete</span>
             </Button>
           </div>
         )
-      }
-    }
+      },
+    },
   ]
-
+  
+  // Setup tabel dengan tanstack/react-table
   const table = useReactTable({
-    data: modules,
+    data: data?.modules || [],
     columns,
+    getCoreRowModel: getCoreRowModel(),
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
     state: {
       sorting,
     },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
   })
-
-  // Virtualisasi untuk performa dengan dataset besar
+  
+  // Setup virtual scrolling dengan tanstack/react-virtual
   const { rows } = table.getRowModel()
+  
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 50, // perkiraan tinggi baris
+    estimateSize: () => 50, // estimasi tinggi baris
     overscan: 10,
   })
-
+  
+  // Render loading state
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg">Memuat data modul...</span>
+      </div>
+    )
+  }
+  
+  // Render error state
   if (isError) {
     return (
-      <div className="border rounded-lg p-8 text-center">
-        <div className="flex flex-col items-center justify-center gap-2">
-          <AlertCircleIcon className="h-10 w-10 text-destructive" />
-          <h3 className="text-lg font-semibold">Gagal memuat data</h3>
-          <p className="text-muted-foreground">
-            Terjadi kesalahan saat memuat data modul. Silakan coba lagi nanti.
-          </p>
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.reload()}
-            className="mt-2"
-          >
-            Coba Lagi
-          </Button>
-        </div>
+      <div className="flex justify-center items-center h-64 text-destructive">
+        <p>Error: {error?.message || 'Terjadi kesalahan saat memuat data'}</p>
       </div>
     )
   }
-
-  if (isLoading && modules.length === 0) {
-    return (
-      <div className="border rounded-lg p-8 text-center">
-        <div className="flex flex-col items-center justify-center gap-2">
-          <Loader2Icon className="h-10 w-10 animate-spin text-primary" />
-          <h3 className="text-lg font-semibold">Memuat data...</h3>
-          <p className="text-muted-foreground">
-            Mohon tunggu sebentar...
-          </p>
-        </div>
-      </div>
-    )
+  
+  // Handle filter changes
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter)
   }
-
-  if (modules.length === 0) {
-    return (
-      <div className="border rounded-lg p-8 text-center">
-        <div className="flex flex-col items-center justify-center gap-2">
-          <h3 className="text-lg font-semibold">Tidak ada modul</h3>
-          <p className="text-muted-foreground">
-            Belum ada modul yang tersedia. Silakan tambahkan modul baru.
-          </p>
-        </div>
-      </div>
-    )
+  
+  // Handle load more
+  const handleLoadMore = () => {
+    if (data?.pagination.hasMore) {
+      const newFilter = {
+        ...filter,
+        cursor: data.pagination.nextCursor,
+      }
+      setFilter(newFilter)
+      fetchNextPage()
+    }
   }
-
+  
   return (
-    <div className="border rounded-lg">
-      <div 
-        ref={tableContainerRef} 
-        className="relative overflow-auto max-h-[600px]"
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <ModuleFilter filter={filter} onFilterChange={handleFilterChange} />
+        
+        <Button
+          onClick={() => {
+            setSelectedModule(undefined)
+            setIsFormModalOpen(true)
+          }}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Tambah Modul
+        </Button>
+      </div>
+      
+      <div
+        ref={tableContainerRef}
+        className="rounded-md border h-[500px] overflow-auto"
       >
         <Table>
           <TableHeader>
@@ -235,12 +256,11 @@ export function ModuleTable({
               return (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
+                  data-state={row.getIsSelected() && 'selected'}
                   style={{
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
-                  className="absolute w-full"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -257,22 +277,37 @@ export function ModuleTable({
         </Table>
       </div>
       
-      {pagination?.hasMore && (
-        <div className="p-4 border-t flex justify-center">
+      {data?.pagination.hasMore && (
+        <div className="flex justify-center mt-4">
           <Button
+            onClick={handleLoadMore}
+            disabled={isFetchingNextPage}
             variant="outline"
-            onClick={onLoadMore}
-            disabled={isLoading}
-            className="flex items-center gap-2"
           >
-            {isLoading ? (
-              <Loader2Icon className="h-4 w-4 animate-spin" />
-            ) : (
-              <ChevronDownIcon className="h-4 w-4" />
+            {isFetchingNextPage && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
             Muat Lebih Banyak
           </Button>
         </div>
+      )}
+      
+      {/* Modal untuk tambah/edit modul */}
+      {isFormModalOpen && (
+        <ModuleFormModal
+          isOpen={isFormModalOpen}
+          onClose={() => setIsFormModalOpen(false)}
+          module={selectedModule}
+        />
+      )}
+      
+      {/* Dialog konfirmasi hapus */}
+      {isDeleteDialogOpen && selectedModule && (
+        <DeleteModuleDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          module={selectedModule}
+        />
       )}
     </div>
   )

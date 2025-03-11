@@ -1,6 +1,5 @@
 // features/manage-module/components/ModuleManagement.tsx
 'use client'
-
 import { useState } from 'react'
 import { ModuleTable } from './ModuleTable'
 import { ModuleFilter } from './ModuleFilter'
