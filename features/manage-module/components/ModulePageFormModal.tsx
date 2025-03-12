@@ -31,13 +31,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TheoryEditor } from './editors/TheoryEditor'
 import { CodeEditor } from './editors/CodeEditor'
-import { ModulePage } from '../types'
+import { ModulePage, ModulePageType, ProgrammingLanguage } from '../types'
 import { ModulePageCreateSchema, ModulePageUpdateSchema } from '../schemas/modulePageSchema'
 
 interface ModulePageFormModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: any) => void
+  onSubmit: (data: ModulePage) => void
   initialData?: ModulePage
   isLoading?: boolean
 }
@@ -59,9 +59,9 @@ export function ModulePageFormModal({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: initialData?.type || 'theory',
+      type: initialData?.type || 'theory' as ModulePageType,
       content: initialData?.content || '',
-      language: initialData?.language || 'javascript',
+      language: initialData?.language || 'javascript' as ProgrammingLanguage,
     },
   })
 
@@ -69,9 +69,9 @@ export function ModulePageFormModal({
   useEffect(() => {
     if (open) {
       form.reset({
-        type: initialData?.type || 'theory',
+        type: initialData?.type || 'theory' as ModulePageType,
         content: initialData?.content || '',
-        language: initialData?.language || 'javascript',
+        language: initialData?.language || 'javascript' as ProgrammingLanguage,
       })
     }
   }, [form, initialData, open])

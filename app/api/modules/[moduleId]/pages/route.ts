@@ -25,8 +25,8 @@ export async function GET(
     }
 
     // Periksa apakah modul ada
-    const module = await getModuleById(moduleId)
-    if (!module) {
+    const currentModule = await getModuleById(moduleId)
+    if (!currentModule) {
       return NextResponse.json(
         { error: 'Modul tidak ditemukan' },
         { status: 404 }
@@ -63,8 +63,8 @@ export async function POST(
     }
 
     // Periksa apakah modul ada
-    const module = await getModuleById(moduleId)
-    if (!module) {
+    const currentModule = await getModuleById(moduleId)
+    if (!currentModule) {
       return NextResponse.json(
         { error: 'Modul tidak ditemukan' },
         { status: 404 }

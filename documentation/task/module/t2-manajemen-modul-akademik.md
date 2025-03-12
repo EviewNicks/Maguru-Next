@@ -17,7 +17,8 @@ Modul ini memungkinkan admin untuk mengelola materi pembelajaran secara dinamis 
 | ----------------------- | -------- | -------------------- | --------------------------------------------------- |
 | Backend API CRUD Modul  | Sprint 2 | 2025-03-10           | 2025-03-11 – Perbaikan Type Error & Testing         |
 | Frontend Modul Manager  | Sprint 2 | 2025-03-12           | 2025-03-12 – Implementasi Selesai                   |
-| Versioning & Audit Trail| Sprint 2 | 2025-03-13           | Belum dimulai                                       |
+| Manajemen Konten Multi-Page | Sprint 2 | 2025-03-13      | 2025-03-13 – Implementasi Selesai                   |
+| Versioning & Audit Trail| Sprint 2 | 2025-03-14           | Belum dimulai                                       |
 
 ---
 
@@ -38,19 +39,27 @@ features/
     │   ├── ModuleTable.tsx
     │   ├── ModuleFilter.tsx
     │   ├── ModuleFormModal.tsx
-    │   └── DeleteModuleDialog.tsx
+    │   ├── DeleteModuleDialog.tsx
+    │   ├── ModulePageList.tsx
+    │   ├── ModulePageListItem.tsx
+    │   └── ModulePageFormModal.tsx
     ├── hooks/
     │   ├── useModules.ts
     │   ├── useModuleMutations.ts
+    │   ├── useModulePages.ts
+    │   ├── useModulePageMutations.ts
     │   └── useDebounce.ts
     ├── middleware/
     │   ├── authMiddleware.ts
     │   └── validateRequest.ts
     ├── schemas/
-    │   └── moduleSchema.ts
+    │   ├── moduleSchema.ts
+    │   └── modulePageSchema.ts
     ├── services/
     │   ├── moduleService.ts
-    │   └── moduleService.test.ts
+    │   ├── moduleService.test.ts
+    │   ├── modulePageService.ts
+    │   └── modulePageService.test.ts
     └── types/
         └── index.ts
 
@@ -58,11 +67,18 @@ app/
 └── api/
     └── modules/
         ├── route.ts
-        └── [id]/
-            └── route.ts
+        ├── [id]/
+        │   └── route.ts
+        └── [moduleId]/
+            └── pages/
+                ├── route.ts
+                ├── [id]/
+                │   └── route.ts
+                └── reorder/
+                    └── route.ts
 
 prisma/
-└── schema.prisma (ditambahkan model Module)
+└── schema.prisma (ditambahkan model Module dan ModulePage)
 ```
 
 ### ✅ Manfaat
@@ -77,6 +93,7 @@ Struktur ini memastikan pemisahan yang jelas antara logika bisnis, validasi, dan
 
 - [x] CRUD API untuk Modul Akademik
 - [x] Frontend Manajemen Modul
+- [x] Manajemen Konten Multi-Page
 - [ ] Versioning dan Audit Trail
 - [ ] Filter dan Pencarian Modul
 
@@ -93,6 +110,12 @@ Struktur ini memastikan pemisahan yang jelas antara logika bisnis, validasi, dan
 - **ModuleFilter**: Komponen filter untuk status dan pencarian modul dengan debounce
 - **ModuleFormModal**: Form modal untuk menambah dan mengedit modul dengan validasi real-time
 - **DeleteModuleDialog**: Dialog konfirmasi untuk menghapus modul
+
+#### Manajemen Konten Multi-Page
+- **ModulePageList**: Menampilkan daftar halaman dalam modul dengan dukungan drag-and-drop untuk pengurutan
+- **ModulePageFormModal**: Form modal untuk menambah dan mengedit halaman modul dengan validasi berdasarkan tipe konten
+- **Sanitasi Konten**: Implementasi DOMPurify untuk mencegah XSS pada konten tipe "teori"
+- **Optimistic Updates**: Implementasi optimistic updates untuk operasi CRUD dan reordering halaman
 
 #### Middleware
 - **Validasi Request**: Memastikan data yang dikirim sesuai dengan skema yang ditentukan
@@ -122,15 +145,42 @@ model Module {
   updatedAt   DateTime     @updatedAt
   createdBy   String
   updatedBy   String
+  pages       ModulePage[]
 
   @@index([status])
   @@index([title])
   @@map("modules")
 }
+
+enum ContentType {
+  THEORY
+  CODE
+}
+
+model ModulePage {
+  id          String      @id @default(uuid())
+  title       String
+  type        ContentType
+  content     String
+  language    String?
+  order       Int
+  version     Int         @default(1)
+  moduleId    String
+  module      Module      @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  createdBy   String
+  updatedBy   String
+
+  @@unique([moduleId, order])
+  @@index([moduleId])
+  @@map("module_pages")
+}
 ```
 
 ### 🏗️ Definisi Model
 
+#### Module
 - **id**: Identifier unik untuk modul (UUID)
 - **title**: Judul modul (wajib)
 - **description**: Deskripsi modul (opsional)
@@ -139,6 +189,21 @@ model Module {
 - **updatedAt**: Waktu pembaruan terakhir
 - **createdBy**: ID pengguna yang membuat modul
 - **updatedBy**: ID pengguna yang terakhir memperbarui modul
+- **pages**: Relasi one-to-many dengan ModulePage
+
+#### ModulePage
+- **id**: Identifier unik untuk halaman modul (UUID)
+- **title**: Judul halaman (wajib)
+- **type**: Tipe konten (THEORY atau CODE)
+- **content**: Konten halaman (HTML untuk THEORY, kode untuk CODE)
+- **language**: Bahasa pemrograman untuk tipe CODE (opsional untuk THEORY)
+- **order**: Urutan halaman dalam modul
+- **version**: Versi halaman untuk optimistic locking
+- **moduleId**: ID modul yang terkait
+- **createdAt**: Waktu pembuatan halaman
+- **updatedAt**: Waktu pembaruan terakhir
+- **createdBy**: ID pengguna yang membuat halaman
+- **updatedBy**: ID pengguna yang terakhir memperbarui halaman
 
 ---
 
@@ -153,6 +218,12 @@ model Module {
 | `/api/modules/:id`      | GET    | Mengambil detail modul berdasarkan ID  | Semua     |
 | `/api/modules/:id`      | PUT    | Memperbarui modul                      | Admin     |
 | `/api/modules/:id`      | DELETE | Menghapus modul                        | Admin     |
+| `/api/modules/:moduleId/pages`          | GET    | Mengambil daftar halaman modul     | Semua     |
+| `/api/modules/:moduleId/pages`          | POST   | Membuat halaman modul baru         | Admin     |
+| `/api/modules/:moduleId/pages/:id`      | GET    | Mengambil detail halaman modul     | Semua     |
+| `/api/modules/:moduleId/pages/:id`      | PUT    | Memperbarui halaman modul          | Admin     |
+| `/api/modules/:moduleId/pages/:id`      | DELETE | Menghapus halaman modul            | Admin     |
+| `/api/modules/:moduleId/pages/reorder`  | PUT    | Mengubah urutan halaman modul      | Admin     |
 
 ### 🔍 Metode dan Parameter
 
@@ -289,6 +360,9 @@ Komponen yang telah diimplementasikan:
 - `ModuleFormModal`: Form modal untuk membuat dan mengedit modul dengan validasi real-time
 - `DeleteModuleDialog`: Dialog konfirmasi untuk menghapus modul
 - `ModuleStatusBadge`: Menampilkan status modul dengan warna yang sesuai
+- `ModulePageList`: Menampilkan daftar halaman dalam modul dengan dukungan drag-and-drop untuk pengurutan
+- `ModulePageListItem`: Item halaman modul dengan aksi edit dan hapus
+- `ModulePageFormModal`: Form modal untuk membuat dan mengedit halaman modul dengan validasi berdasarkan tipe konten
 
 ---
 
@@ -307,6 +381,9 @@ Komponen yang telah diimplementasikan:
 - **@tanstack/react-virtual**: Untuk virtual scrolling
 - **DOMPurify**: Untuk sanitasi HTML untuk mencegah XSS
 - **Sonner**: Untuk notifikasi toast
+- **@dnd-kit/core**: Untuk drag-and-drop pengurutan halaman
+- **TipTap**: Editor teks kaya untuk konten teori
+- **Monaco Editor**: Editor kode untuk konten kode
 
 ---
 
@@ -422,6 +499,14 @@ Pengujian E2E akan diimplementasikan setelah frontend selesai, dengan fokus pada
 - Filter untuk status dan pencarian modul dengan debounce
 - Optimistic updates untuk meningkatkan UX
 - Sanitasi HTML untuk mencegah XSS
+[update+2025-03-13] Implementasi Manajemen Konten Multi-Page dengan fitur:
+- CRUD API untuk halaman modul
+- Endpoint untuk mengubah urutan halaman
+- Validasi tipe konten (teori dan kode)
+- Sanitasi konten untuk mencegah XSS
+- Optimistic updates untuk operasi CRUD dan reordering
+- Komponen UI untuk mengelola halaman modul
+- Drag-and-drop untuk pengurutan halaman
 
 ---
 

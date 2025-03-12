@@ -24,8 +24,8 @@ export async function PATCH(
     }
 
     // Periksa apakah modul ada
-    const module = await getModuleById(moduleId)
-    if (!module) {
+    const currentModule = await getModuleById(moduleId)
+    if (!currentModule) {
       return NextResponse.json(
         { error: 'Modul tidak ditemukan' },
         { status: 404 }
