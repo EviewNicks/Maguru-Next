@@ -5,6 +5,7 @@ import React, { useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
+import { Editor } from '@tiptap/core'
 import { Button } from '@/components/ui/button'
 import { Toggle } from '@/components/ui/toggle'
 import {
@@ -60,7 +61,7 @@ export function TheoryEditor({
   // Batasi panjang konten
   useEffect(() => {
     if (editor) {
-      const handleUpdate = ({ editor }: { editor: any }) => {
+      const handleUpdate = ({ editor }: { editor: Editor }) => {
         const html = editor.getHTML()
         if (html.length > maxLength) {
           editor.commands.undo()

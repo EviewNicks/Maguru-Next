@@ -14,6 +14,13 @@
 9. Documentation & Guidelines
 10. Development Workflow
 
+**`TypeScript menganggap penggunaan any sebagai praktik yang tidak baik karena:**
+`!important : jangan menggunaakan any, jika tidak ada apilihan lain maka silahkan menggunakan any`
+
+- Menghilangkan keuntungan dari type-checking
+- Dapat menyebabkan bug yang sulit dilacak
+- Mengurangi kemampuan IDE untuk memberikan saran kode yang akurat\*\*
+
 ## 0. Read Documentation Before Coding
 
 AI **harus membaca dokumentasi proyek** sebelum menulis atau mengedit kode.  
@@ -136,8 +143,8 @@ src/
 ## Contoh:
 
 ```java
-feat(module/s2t1): implementasi halaman manajemen modul dengan CRUD (OPS-29) v1.0  
-fix(auth/s2t3): perbaiki validasi middleware untuk akses admin (OPS-30) v1.1  
+feat(module/s2t1): implementasi halaman manajemen modul dengan CRUD (OPS-29) v1.0
+fix(auth/s2t3): perbaiki validasi middleware untuk akses admin (OPS-30) v1.1
 docs(api/s2t4): tambahkan dokumentasi CRUD modul akademik (OPS-29) v1.0
 ```
 
@@ -149,19 +156,19 @@ docs(api/s2t4): tambahkan dokumentasi CRUD modul akademik (OPS-29) v1.0
   - `docs` → Perubahan dokumentasi
   - `refactor` → Perbaikan kode tanpa mengubah fungsionalitas
   - `chore` → Perubahan kecil atau perawatan proyek
-  
+
 - **`scope`**: Area yang terpengaruh, contoh:
   - `module` → Modul tertentu
   - `auth` → Sistem autentikasi
   - `api` → Endpoint backend
-  
+
 - **`s<story>t<task>`**: Nomor story dan task sesuai JIRA/GitHub.
   - `s2t1` → Story 2, Task 1
   - `s2t3` → Story 2, Task 3
-  
+
 - **`ISSUE_ID`**: Mengaitkan commit dengan task spesifik di sistem manajemen proyek.
   - `(OPS-29)`, `(OPS-30)`, dll.
-  
+
 - **`versi`**: Menunjukkan versi perubahan.
   - `v1.0`, `v1.1`, dll.
 
