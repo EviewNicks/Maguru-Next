@@ -1,8 +1,9 @@
 // features/manage-module/types/index.ts
 
 import { ModuleStatus } from '@prisma/client'
+import { ModulePageType, ProgrammingLanguage } from '../schemas/modulePageSchema'
 
-export { ModuleStatus }
+export { ModuleStatus, ModulePageType, ProgrammingLanguage }
 
 export interface ModuleCreateInput {
   title: string
@@ -45,10 +46,10 @@ export interface GetModulesOptions {
 }
 
 export interface FilterType {
-  status?: ModuleStatus | 'ALL' // Mengubah menjadi opsional
+  status?: ModuleStatus | 'ALL' 
   search: string
   limit: number
-  cursor?: string // Mengubah menjadi opsional
+  cursor?: string 
 }
 
 export interface ModulesResponse {
@@ -64,4 +65,47 @@ export interface Pagination {
 
 export interface ModuleData {
   modules: Module[]
+}
+
+// Tipe untuk ModulePage
+export interface ModulePage {
+  id: string
+  moduleId: string
+  order: number
+  type: ModulePageType
+  content: string
+  language?: string
+  createdAt: Date
+  updatedAt: Date
+  version: number
+}
+
+// Tipe untuk respons daftar halaman modul
+export interface ModulePagesResponse {
+  pages: ModulePage[]
+}
+
+// Tipe untuk input pembuatan halaman modul
+export interface ModulePageCreateInput {
+  moduleId: string
+  order: number
+  type: ModulePageType
+  content: string
+  language?: string
+}
+
+// Tipe untuk input pembaruan halaman modul
+export interface ModulePageUpdateInput {
+  order?: number
+  type?: ModulePageType
+  content?: string
+  language?: string
+}
+
+// Tipe untuk input pengurutan ulang halaman
+export interface ModulePageReorderInput {
+  updates: {
+    pageId: string
+    order: number
+  }[]
 }

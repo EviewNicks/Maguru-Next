@@ -364,7 +364,25 @@ Membangun halaman admin untuk manajemen modul dengan **datatable** yang mendukun
 
 ---
 
-## **Langkah 3: Pengelolaan Status Modul**
+# Langkah 3: Manajemen Konten Multi-Page
+
+**OPS-140: Manajemen Konten Multi-Page**  
+_In Progress_
+
+Memungkinkan admin untuk menambahkan, mengedit, menghapus, dan mengelola halaman konten (teori dan kode) sebagai bagian dari modul. Fokus saat ini adalah pada dua tipe konten—teori dan kode—dengan struktur yang berbeda dari metadata modul.
+
+---
+
+# Langkah 4: Enhanced Metadata Management
+
+**OPS-141: Enhanced Metadata Management**  
+_In Progress_
+
+Memperkaya metadata modul dengan field tambahan—seperti prasyarat, acceptance criteria, dan referensi—untuk mendukung evaluasi konten dan proses pembelajaran yang lebih mendalam. Fitur ini memastikan data tersimpan dalam format yang konsisten (menggunakan array JSON) dan tervalidasi secara menyeluruh, serta memudahkan pengembangan fitur pencarian, filter, dan analitik di masa depan.
+
+---
+
+## **Langkah 5: Pengelolaan Status Modul**
 
 🔗 [OPS-133](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-133)
 
@@ -380,7 +398,7 @@ Memungkinkan **admin** untuk mengubah status modul melalui UI, serta memastikan 
 
 ---
 
-## **Langkah 4: Implementasi Version Control untuk Modul**
+## **Langkah 6: Implementasi Version Control untuk Modul**
 
 🔗 [OPS-134](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-134)
 
@@ -394,7 +412,7 @@ Menerapkan mekanisme **versioning** untuk mendukung **rollback** dan **audit tra
 
 ---
 
-## **Langkah 5: Real-Time Status Propagation**
+## **Langkah 7: Real-Time Status Propagation**
 
 🔗 [OPS-135](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-135)
 
@@ -404,7 +422,7 @@ Menerapkan mekanisme **versioning** untuk mendukung **rollback** dan **audit tra
 
 ---
 
-## **Langkah 6: Enhanced Security**
+## **Langkah 8: Enhanced Security**
 
 🔗 [OPS-136](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-136)
 
@@ -414,7 +432,7 @@ Menerapkan mekanisme **versioning** untuk mendukung **rollback** dan **audit tra
 
 ---
 
-## **Langkah 7: Optimasi Performa**
+## **Langkah 9: Optimasi Performa**
 
 🔗 [OPS-137](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-137)
 
@@ -424,7 +442,7 @@ Menerapkan mekanisme **versioning** untuk mendukung **rollback** dan **audit tra
 
 ---
 
-## **Langkah 8: Testing & Debugging**
+## **Langkah 10: Testing & Debugging**
 
 🔗 [OPS-139](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-139)
 
@@ -436,7 +454,7 @@ Menerapkan mekanisme **versioning** untuk mendukung **rollback** dan **audit tra
 
 ---
 
-## **Langkah 9: Audit Trail Queryable**
+## **Langkah 11: Audit Trail Queryable**
 
 🔗 [OPS-134](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-134)
 
