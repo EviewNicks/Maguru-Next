@@ -33,6 +33,9 @@ export function TheoryEditor({
   maxLength = 5000,
   className,
 }: TheoryEditorProps) {
+  // Pastikan content selalu string valid
+  const safeContent = typeof content === 'string' ? content : '';
+  
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -44,7 +47,7 @@ export function TheoryEditor({
         },
       }),
     ],
-    content,
+    content: safeContent,
     onUpdate: ({ editor }) => {
       const html = editor.getHTML()
       onChange(html)
@@ -53,7 +56,7 @@ export function TheoryEditor({
 
   // Perbarui konten editor ketika prop content berubah
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
+    if (editor && typeof content === 'string' && content !== editor.getHTML()) {
       editor.commands.setContent(content)
     }
   }, [content, editor])

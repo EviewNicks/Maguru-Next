@@ -13,14 +13,15 @@ import { ModuleStatus } from '@/features/manage-module/types'
 import { ModuleUpdateInput } from '@/features/manage-module/schemas/moduleSchema'
 
 /**
- * GET /api/modules/[id] - Mengambil modul berdasarkan ID
+ * GET /api/modules/[moduleId] - Mengambil modul berdasarkan ID
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { moduleId: string } }
+  context: { params: { moduleId: string } }
 ) {
   try {
-    const moduleId = params.moduleId
+    // Pastikan params.moduleId diakses dengan benar
+    const moduleId = context.params.moduleId
 
     if (!moduleId) {
       return NextResponse.json(
@@ -50,7 +51,7 @@ export async function GET(
 
     return NextResponse.json(moduleData)
   } catch (error) {
-    console.error(`Error in GET /api/modules/${params.moduleId}:`, error)
+    console.error(`Error in GET /api/modules/${context.params.moduleId}:`, error)
 
     return NextResponse.json(
       {
@@ -65,15 +66,16 @@ export async function GET(
 }
 
 /**
- * PUT /api/modules/[id] - Memperbarui modul berdasarkan ID
+ * PUT /api/modules/[moduleId] - Memperbarui modul berdasarkan ID
  * Hanya admin yang diizinkan
  */
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { moduleId: string } }
+  context: { params: { moduleId: string } }
 ) {
   try {
-    const moduleId = params.moduleId
+    // Pastikan params.moduleId diakses dengan benar
+    const moduleId = context.params.moduleId
 
     if (!moduleId) {
       return NextResponse.json(
@@ -141,7 +143,7 @@ export async function PUT(
     // Return response
     return NextResponse.json(updatedModule)
   } catch (error) {
-    console.error(`Error in PUT /api/modules/${params.moduleId}:`, error)
+    console.error(`Error in PUT /api/modules/${context.params.moduleId}:`, error)
 
     if (error instanceof ZodError) {
       return NextResponse.json(
@@ -169,15 +171,16 @@ export async function PUT(
 }
 
 /**
- * DELETE /api/modules/[id] - Menghapus modul berdasarkan ID
+ * DELETE /api/modules/[moduleId] - Menghapus modul berdasarkan ID
  * Hanya admin yang diizinkan
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { moduleId: string } }
+  context: { params: { moduleId: string } }
 ) {
   try {
-    const moduleId = params.moduleId
+    // Pastikan params.moduleId diakses dengan benar
+    const moduleId = context.params.moduleId
 
     if (!moduleId) {
       return NextResponse.json(
@@ -227,7 +230,7 @@ export async function DELETE(
     // Return response
     return new NextResponse(null, { status: 204 })
   } catch (error) {
-    console.error(`Error in DELETE /api/modules/${params.moduleId}:`, error)
+    console.error(`Error in DELETE /api/modules/${context.params.moduleId}:`, error)
 
     return NextResponse.json(
       {

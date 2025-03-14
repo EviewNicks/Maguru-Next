@@ -11,10 +11,10 @@ import { ModulePageCreateSchema } from '@/features/manage-module/schemas/moduleP
 // GET /api/modules/:moduleId/pages
 export async function GET(
   request: NextRequest,
-  { params }: { params: { moduleId: string } }
+  context: { params: { moduleId: string } }
 ) {
   try {
-    const moduleId = params.moduleId
+    const moduleId = context.params.moduleId
 
     // Validasi moduleId
     if (!moduleId || !z.string().uuid().safeParse(moduleId).success) {
@@ -49,10 +49,10 @@ export async function GET(
 // POST /api/modules/:moduleId/pages
 export async function POST(
   request: NextRequest,
-  { params }: { params: { moduleId: string } }
+  context: { params: { moduleId: string } }
 ) {
   try {
-    const moduleId = params.moduleId
+    const moduleId = context.params.moduleId
 
     // Validasi moduleId
     if (!moduleId || !z.string().uuid().safeParse(moduleId).success) {

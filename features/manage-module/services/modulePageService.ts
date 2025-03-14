@@ -7,8 +7,8 @@ import {
   ModulePageCreateInput,
   ModulePageUpdateInput,
   ModulePageReorderInput,
-  ModulePageType,
 } from '../types'
+import { ModulePageType } from '../schemas/modulePageSchema'
 
 /**
  * Membuat halaman modul baru

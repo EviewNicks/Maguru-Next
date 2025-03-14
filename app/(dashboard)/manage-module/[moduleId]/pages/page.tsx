@@ -15,7 +15,7 @@ interface ModulePageManagementPageProps {
 export async function generateMetadata({
   params,
 }: ModulePageManagementPageProps): Promise<Metadata> {
-  const moduleId = params.moduleId
+  const { moduleId } = params
   const moduleData = await getModuleById(moduleId)
 
   if (!moduleData) {
@@ -34,7 +34,7 @@ export async function generateMetadata({
 export default async function ModulePageManagementPage({
   params,
 }: ModulePageManagementPageProps) {
-  const moduleId = params.moduleId
+  const { moduleId } = params
   const moduleData = await getModuleById(moduleId)
 
   if (!moduleData) {

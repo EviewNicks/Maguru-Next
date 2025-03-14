@@ -213,19 +213,24 @@ export function ModulePageFormModal({
                   <FormField
                     control={form.control}
                     name="content"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Konten Teori</FormLabel>
-                        <FormControl>
-                          <TheoryEditor
-                            content={field.value || ''}
-                            onChange={field.onChange}
-                            maxLength={5000}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      // Pastikan nilai content selalu string valid
+                      const safeContent = typeof field.value === 'string' ? field.value : '';
+                      
+                      return (
+                        <FormItem>
+                          <FormLabel>Konten Teori</FormLabel>
+                          <FormControl>
+                            <TheoryEditor
+                              content={safeContent}
+                              onChange={field.onChange}
+                              maxLength={5000}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 ) : (
                   <>
@@ -263,21 +268,26 @@ export function ModulePageFormModal({
                     <FormField
                       control={form.control}
                       name="content"
-                      render={({ field }) => (
-                        <FormItem className="mt-4">
-                          <FormLabel>Konten Kode</FormLabel>
-                          <FormControl>
-                            <CodeEditor
-                              content={field.value || ''}
-                              language={form.getValues('language') as string || ProgrammingLanguage.JAVASCRIPT}
-                              onChange={field.onChange}
-                              onLanguageChange={(lang: string) => form.setValue('language', lang as ProgrammingLanguage)}
-                              maxLength={2000}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        // Pastikan nilai content selalu string valid
+                        const safeContent = typeof field.value === 'string' ? field.value : '';
+                        
+                        return (
+                          <FormItem className="mt-4">
+                            <FormLabel>Konten Kode</FormLabel>
+                            <FormControl>
+                              <CodeEditor
+                                content={safeContent}
+                                language={form.getValues('language') as string || ProgrammingLanguage.JAVASCRIPT}
+                                onChange={field.onChange}
+                                onLanguageChange={(lang: string) => form.setValue('language', lang as ProgrammingLanguage)}
+                                maxLength={2000}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        );
+                      }}
                     />
                   </>
                 )}
@@ -318,6 +328,6 @@ export function ModulePageFormModal({
   )
 }
 
-function isModulePageTypeKode(type: ModulePageType): type is ModulePageType.KODE {
+function isModulePageTypeKode(type: ModulePageType | string): boolean {
   return type === ModulePageType.KODE;
 }
