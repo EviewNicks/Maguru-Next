@@ -19,7 +19,7 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
 
   // Handler untuk navigasi ke halaman manajemen konten
   const handleNavigateToContent = () => {
-    router.push(`/admin/modules/${module.id}/pages`)
+    router.push(`/manage-module/${module.id}/pages`)
   }
 
   return (

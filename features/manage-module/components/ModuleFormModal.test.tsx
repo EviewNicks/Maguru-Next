@@ -39,8 +39,8 @@ describe('ModuleFormModal', () => {
   it('renders form for creating new module when no module is provided', () => {
     render(
       <ModuleFormModal 
-        open={true} 
-        onOpenChange={mockOnOpenChange} 
+        isOpen={true} 
+        onClose={mockOnOpenChange} 
       />
     )
 
@@ -54,8 +54,8 @@ describe('ModuleFormModal', () => {
   it('renders form for editing module when module is provided', () => {
     render(
       <ModuleFormModal 
-        open={true} 
-        onOpenChange={mockOnOpenChange} 
+        isOpen={true} 
+        onClose={mockOnOpenChange} 
         module={mockModule}
       />
     )
@@ -67,11 +67,11 @@ describe('ModuleFormModal', () => {
     expect(screen.getByLabelText('Deskripsi')).toHaveValue('Deskripsi modul matematika')
   })
 
-  it('calls onOpenChange when cancel button is clicked', async () => {
+  it('calls onClose when cancel button is clicked', async () => {
     render(
       <ModuleFormModal 
-        open={true} 
-        onOpenChange={mockOnOpenChange} 
+        isOpen={true} 
+        onClose={mockOnOpenChange} 
       />
     )
 
@@ -90,8 +90,8 @@ describe('ModuleFormModal', () => {
 
     render(
       <ModuleFormModal 
-        open={true} 
-        onOpenChange={mockOnOpenChange} 
+        isOpen={true} 
+        onClose={mockOnOpenChange} 
       />
     )
 
@@ -124,8 +124,8 @@ describe('ModuleFormModal', () => {
 
     render(
       <ModuleFormModal 
-        open={true} 
-        onOpenChange={mockOnOpenChange} 
+        isOpen={true} 
+        onClose={mockOnOpenChange} 
         module={mockModule}
       />
     )
@@ -154,8 +154,8 @@ describe('ModuleFormModal', () => {
   it('shows validation error for title with less than 5 characters', async () => {
     render(
       <ModuleFormModal 
-        open={true} 
-        onOpenChange={mockOnOpenChange} 
+        isOpen={true} 
+        onClose={mockOnOpenChange} 
       />
     )
 

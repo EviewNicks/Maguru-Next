@@ -23,6 +23,15 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { ModulePageFormModal } from './ModulePageFormModal'
 import { useCreateModulePage, useReorderModulePages } from '../hooks/useModulePageMutations'
+import { ModulePageCreateSchema, ModulePageUpdateSchema, ModulePageType } from '../schemas/modulePageSchema'
+import { z } from 'zod'
+import { Skeleton } from '@/components/ui/skeleton'
+
+// Enum untuk tipe konten halaman modul
+enum ContentType {
+  THEORY = 'teori',
+  CODE = 'kode',
+}
 
 interface ModulePageListProps {
   moduleId: string
@@ -52,16 +61,22 @@ export function ModulePageList({ moduleId, pages, isLoading }: ModulePageListPro
   const reorderMutation = useReorderModulePages(moduleId)
 
   // Handler untuk menambah halaman baru
-  const handleAddPage = (data: any) => {
+  const handleAddPage = (data: z.infer<typeof ModulePageCreateSchema> | z.infer<typeof ModulePageUpdateSchema>) => {
     // Hitung order tertinggi + 1
     const highestOrder = pages.length > 0 
       ? Math.max(...pages.map(page => page.order)) 
       : -1
     
-    createMutation.mutate({
-      ...data,
+    // Buat objek baru tanpa moduleId
+    const dataForMutation = {
+      type: data.type,
+      content: data.content || '', // Pastikan content tidak undefined
       order: highestOrder + 1,
-    }, {
+      moduleId,
+      ...(data.type === ModulePageType.KODE && 'language' in data && { language: data.language }),
+    };
+    
+    createMutation.mutate(dataForMutation, {
       onSuccess: () => {
         setIsFormOpen(false)
       }
@@ -91,6 +106,16 @@ export function ModulePageList({ moduleId, pages, isLoading }: ModulePageListPro
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map(i => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -100,12 +125,10 @@ export function ModulePageList({ moduleId, pages, isLoading }: ModulePageListPro
         </Button>
       </div>
 
-      {isLoading ? (
-        <div className="text-center py-8">Memuat...</div>
-      ) : sortedPages.length === 0 ? (
+      {sortedPages.length === 0 ? (
         <div className="text-center py-8 border rounded-md bg-muted/20">
           <p className="text-muted-foreground">
-            Belum ada halaman. Klik tombol "Tambah Halaman" untuk membuat halaman baru.
+            Belum ada halaman. Klik tombol &ldquo;Tambah Halaman&rdquo; untuk membuat halaman baru.
           </p>
         </div>
       ) : (
@@ -134,6 +157,8 @@ export function ModulePageList({ moduleId, pages, isLoading }: ModulePageListPro
       <ModulePageFormModal
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
+        moduleId={moduleId}
+        contentType={ContentType.THEORY}
         onSubmit={handleAddPage}
         isLoading={createMutation.isPending}
       />

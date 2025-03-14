@@ -1,6 +1,6 @@
 // features/manage-module/services/modulePageService.ts
 import prisma from '@/lib/prisma'
-import { PrismaClient, Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import DOMPurify from 'isomorphic-dompurify'
 import {
   ModulePage,
@@ -23,7 +23,25 @@ export async function createModulePage(
     let sanitizedContent = data.content
     if (data.type === ModulePageType.TEORI) {
       sanitizedContent = DOMPurify.sanitize(data.content, {
-        ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+        ALLOWED_TAGS: [
+          'p',
+          'b',
+          'i',
+          'em',
+          'strong',
+          'a',
+          'ul',
+          'ol',
+          'li',
+          'code',
+          'pre',
+          'h1',
+          'h2',
+          'h3',
+          'h4',
+          'h5',
+          'h6',
+        ],
         ALLOWED_ATTR: ['href', 'target', 'rel'],
       })
     }
@@ -85,7 +103,9 @@ export async function getModulePages(moduleId: string): Promise<ModulePage[]> {
  * @param id - ID halaman modul
  * @returns Halaman modul yang ditemukan atau null jika tidak ada
  */
-export async function getModulePageById(id: string): Promise<ModulePage | null> {
+export async function getModulePageById(
+  id: string
+): Promise<ModulePage | null> {
   try {
     return (await prisma.modulePage.findUnique({
       where: { id },
@@ -129,7 +149,25 @@ export async function updateModulePage(
     let sanitizedContent = data.content
     if (data.type === ModulePageType.TEORI && data.content) {
       sanitizedContent = DOMPurify.sanitize(data.content, {
-        ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+        ALLOWED_TAGS: [
+          'p',
+          'b',
+          'i',
+          'em',
+          'strong',
+          'a',
+          'ul',
+          'ol',
+          'li',
+          'code',
+          'pre',
+          'h1',
+          'h2',
+          'h3',
+          'h4',
+          'h5',
+          'h6',
+        ],
         ALLOWED_ATTR: ['href', 'target', 'rel'],
       })
     }
@@ -153,8 +191,13 @@ export async function updateModulePage(
   } catch (error) {
     if (error instanceof Error) {
       // Cek jika error adalah dari Prisma dengan kode P2025
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
-        throw new Error(`Versi halaman tidak sesuai. Halaman telah diubah oleh pengguna lain: ${error.message}`)
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new Error(
+          `Versi halaman tidak sesuai. Halaman telah diubah oleh pengguna lain: ${error.message}`
+        )
       } else {
         console.error('Error updating module page:', error)
         throw new Error(`Gagal memperbarui halaman modul: ${error.message}`)
@@ -233,7 +276,9 @@ export async function reorderModulePages(
       })
 
       if (existingPages.length !== pageIds.length) {
-        throw new Error('Beberapa halaman tidak ditemukan atau bukan bagian dari modul ini')
+        throw new Error(
+          'Beberapa halaman tidak ditemukan atau bukan bagian dari modul ini'
+        )
       }
 
       // Perbarui urutan untuk setiap halaman

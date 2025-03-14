@@ -31,58 +31,131 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TheoryEditor } from './editors/TheoryEditor'
 import { CodeEditor } from './editors/CodeEditor'
-import { ModulePage, ModulePageType, ProgrammingLanguage } from '../types'
-import { ModulePageCreateSchema, ModulePageUpdateSchema } from '../schemas/modulePageSchema'
-
-interface ModulePageFormModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSubmit: (data: ModulePage) => void
-  initialData?: ModulePage
-  isLoading?: boolean
-}
+import { ContentType, ModulePageFormModalProps } from '../types'
+import { ModulePageCreateSchema, ModulePageUpdateSchema, ModulePageType, ProgrammingLanguage } from '../schemas/modulePageSchema'
+import { useCreateModulePage, useUpdateModulePage } from '../hooks/useModulePageMutations'
 
 export function ModulePageFormModal({
   open,
   onOpenChange,
+  moduleId,
+  contentType: initialContentType,
   onSubmit,
   initialData,
   isLoading = false,
 }: ModulePageFormModalProps) {
   const [activeTab, setActiveTab] = useState<string>('edit')
   const isEditing = !!initialData
-
+  
+  const createMutation = useCreateModulePage(moduleId)
+  const updateMutation = useUpdateModulePage(moduleId)
+  
   // Buat schema berdasarkan apakah ini form edit atau tambah
   const formSchema = isEditing ? ModulePageUpdateSchema : ModulePageCreateSchema
-
+  
   // Setup form dengan react-hook-form dan zod
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      type: initialData?.type || 'theory' as ModulePageType,
-      content: initialData?.content || '',
-      language: initialData?.language || 'javascript' as ProgrammingLanguage,
-    },
+    defaultValues: isEditing && initialData
+      ? {
+          // Untuk form edit, gunakan nilai dari initialData
+          type: initialData.type,
+          content: initialData.content || '',
+          ...(isModulePageTypeKode(initialData.type) && 'language' in initialData ? { 
+            language: initialData.language as ProgrammingLanguage 
+          } : {})
+        }
+      : {
+          // Untuk form tambah, gunakan nilai default berdasarkan initialContentType
+          type: initialContentType === ContentType.THEORY ? ModulePageType.TEORI : ModulePageType.KODE,
+          content: '',
+          ...(initialContentType === ContentType.CODE ? { 
+            language: ProgrammingLanguage.JAVASCRIPT 
+          } : {})
+        },
   })
 
-  // Reset form ketika initialData berubah
+  // Reset form ketika modal dibuka/ditutup atau initialData berubah
   useEffect(() => {
     if (open) {
-      form.reset({
-        type: initialData?.type || 'theory' as ModulePageType,
-        content: initialData?.content || '',
-        language: initialData?.language || 'javascript' as ProgrammingLanguage,
-      })
+      if (isEditing && initialData) {
+        // Reset form untuk edit
+        form.reset({
+          type: initialData.type,
+          content: initialData.content || '',
+          ...(isModulePageTypeKode(initialData.type) && 'language' in initialData ? { 
+            language: initialData.language 
+          } : {})
+        })
+      } else {
+        // Reset form untuk tambah
+        const defaultType = initialContentType === ContentType.CODE 
+          ? ModulePageType.KODE 
+          : ModulePageType.TEORI;
+          
+        if (defaultType === ModulePageType.KODE) {
+          form.reset({
+            type: ModulePageType.KODE,
+            content: '',
+            language: ProgrammingLanguage.JAVASCRIPT
+          });
+        } else {
+          form.reset({
+            type: ModulePageType.TEORI,
+            content: ''
+          });
+        }
+      }
     }
-  }, [form, initialData, open])
+  }, [form, initialData, open, initialContentType, isEditing])
 
   // Ambil nilai tipe konten saat ini
-  const contentType = form.watch('type')
+  const contentTypeValue = form.watch('type')
 
   // Handler untuk submit form
-  const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    onSubmit(values)
-  }
+  const handleSubmit = form.handleSubmit((values) => {
+    if (onSubmit) {
+      onSubmit(values);
+      return;
+    }
+    
+    if (isEditing && initialData) {
+      // Update halaman yang sudah ada
+      updateMutation.mutate({
+        id: initialData.id,
+        data: {
+          content: values.content || '',
+          ...(isModulePageTypeKode(values.type) && 'language' in values ? { 
+            language: values.language 
+          } : {})
+        },
+        version: initialData.version || 1
+      }, {
+        onSuccess: () => {
+          onOpenChange(false)
+        }
+      })
+    } else {
+      // Buat halaman baru
+      const createData = {
+        moduleId,
+        type: values.type,
+        content: values.content || '',
+        order: 0, // Default order untuk halaman baru
+        ...(isModulePageTypeKode(values.type) && 'language' in values ? { 
+          language: values.language 
+        } : {})
+      };
+      
+      createMutation.mutate(createData, {
+        onSuccess: () => {
+          onOpenChange(false)
+        }
+      })
+    }
+  })
+
+  const isPending = createMutation.isPending || updateMutation.isPending || isLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,7 +167,7 @@ export function ModulePageFormModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <FormField
               control={form.control}
               name="type"
@@ -102,13 +175,13 @@ export function ModulePageFormModal({
                 <FormItem>
                   <FormLabel>Tipe Konten</FormLabel>
                   <Select
-                    onValueChange={(value) => {
-                      field.onChange(value)
-                      // Reset language jika tipe berubah ke theory
-                      if (value === 'theory') {
-                        form.setValue('language', undefined)
+                    onValueChange={(value: ModulePageType) => {
+                      field.onChange(value);
+                      // Reset language jika tipe berubah ke teori
+                      if (value === ModulePageType.TEORI) {
+                        form.setValue('language', undefined);
                       } else {
-                        form.setValue('language', 'javascript')
+                        form.setValue('language', ProgrammingLanguage.JAVASCRIPT);
                       }
                     }}
                     defaultValue={field.value}
@@ -120,8 +193,8 @@ export function ModulePageFormModal({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="theory">Teori</SelectItem>
-                      <SelectItem value="code">Kode</SelectItem>
+                      <SelectItem value={ModulePageType.TEORI}>Teori</SelectItem>
+                      <SelectItem value={ModulePageType.KODE}>Kode</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -136,7 +209,7 @@ export function ModulePageFormModal({
               </TabsList>
 
               <TabsContent value="edit" className="pt-4">
-                {contentType === 'theory' ? (
+                {contentTypeValue === ModulePageType.TEORI ? (
                   <FormField
                     control={form.control}
                     name="content"
@@ -145,7 +218,7 @@ export function ModulePageFormModal({
                         <FormLabel>Konten Teori</FormLabel>
                         <FormControl>
                           <TheoryEditor
-                            content={field.value}
+                            content={field.value || ''}
                             onChange={field.onChange}
                             maxLength={5000}
                           />
@@ -171,15 +244,14 @@ export function ModulePageFormModal({
                                 <SelectValue placeholder="Pilih bahasa" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="javascript">JavaScript</SelectItem>
-                                <SelectItem value="typescript">TypeScript</SelectItem>
-                                <SelectItem value="html">HTML</SelectItem>
-                                <SelectItem value="css">CSS</SelectItem>
-                                <SelectItem value="python">Python</SelectItem>
-                                <SelectItem value="java">Java</SelectItem>
-                                <SelectItem value="csharp">C#</SelectItem>
-                                <SelectItem value="php">PHP</SelectItem>
-                                <SelectItem value="ruby">Ruby</SelectItem>
+                                <SelectItem value={ProgrammingLanguage.JAVASCRIPT}>JavaScript</SelectItem>
+                                <SelectItem value={ProgrammingLanguage.HTML}>HTML</SelectItem>
+                                <SelectItem value={ProgrammingLanguage.CSS}>CSS</SelectItem>
+                                <SelectItem value={ProgrammingLanguage.PYTHON}>Python</SelectItem>
+                                <SelectItem value={ProgrammingLanguage.JAVA}>Java</SelectItem>
+                                <SelectItem value={ProgrammingLanguage.CSHARP}>C#</SelectItem>
+                                <SelectItem value={ProgrammingLanguage.PHP}>PHP</SelectItem>
+                                <SelectItem value={ProgrammingLanguage.RUBY}>Ruby</SelectItem>
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -196,10 +268,10 @@ export function ModulePageFormModal({
                           <FormLabel>Konten Kode</FormLabel>
                           <FormControl>
                             <CodeEditor
-                              content={field.value}
-                              language={form.getValues('language') || 'javascript'}
+                              content={field.value || ''}
+                              language={form.getValues('language') as string || ProgrammingLanguage.JAVASCRIPT}
                               onChange={field.onChange}
-                              onLanguageChange={(lang) => form.setValue('language', lang)}
+                              onLanguageChange={(lang: string) => form.setValue('language', lang as ProgrammingLanguage)}
                               maxLength={2000}
                             />
                           </FormControl>
@@ -213,10 +285,10 @@ export function ModulePageFormModal({
 
               <TabsContent value="preview" className="pt-4">
                 <div className="border rounded-md p-4 min-h-[300px] bg-background">
-                  {contentType === 'theory' ? (
+                  {contentTypeValue === ModulePageType.TEORI ? (
                     <div
                       className="prose dark:prose-invert max-w-none"
-                      dangerouslySetInnerHTML={{ __html: form.getValues('content') }}
+                      dangerouslySetInnerHTML={{ __html: form.getValues('content') || '' }}
                     />
                   ) : (
                     <pre className="p-4 bg-muted rounded-md overflow-x-auto">
@@ -235,8 +307,8 @@ export function ModulePageFormModal({
               >
                 Batal
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Menyimpan...' : isEditing ? 'Simpan' : 'Tambah'}
+              <Button type="submit" disabled={isPending}>
+                {isEditing ? 'Perbarui' : 'Simpan'}
               </Button>
             </DialogFooter>
           </form>
@@ -244,4 +316,8 @@ export function ModulePageFormModal({
       </DialogContent>
     </Dialog>
   )
+}
+
+function isModulePageTypeKode(type: ModulePageType): type is ModulePageType.KODE {
+  return type === ModulePageType.KODE;
 }

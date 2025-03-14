@@ -26,7 +26,7 @@ export function useCreateModulePage(moduleId: string) {
   
   
     },
-    onSuccess: (newPage) => {
+    onSuccess: () => {
       // Invalidate query untuk memperbarui data
       queryClient.invalidateQueries({ queryKey: ['modulePages', moduleId] })
 
