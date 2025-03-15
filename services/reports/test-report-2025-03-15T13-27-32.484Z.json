@@ -1,0 +1,220 @@
+{
+  "timestamp": "2025-03-15T13-27-32.484Z",
+  "environment": "test",
+  "numFailedTests": 0,
+  "numPassedTests": 30,
+  "numTotalTests": 30,
+  "executionTime": "1742045228406ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\ModuleActionCell.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "merender tombol aksi dengan benar",
+          "status": "passed",
+          "duration": 71,
+          "failureMessages": []
+        },
+        {
+          "title": "navigasi ke halaman konten saat tombol Kelola Konten diklik",
+          "status": "passed",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "title": "membuka ModuleFormModal saat tombol Edit diklik",
+          "status": "passed",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "title": "membuka DeleteModuleDialog saat tombol Hapus diklik",
+          "status": "passed",
+          "duration": 8,
+          "failureMessages": []
+        },
+        {
+          "title": "menutup ModuleFormModal saat onClose dipanggil",
+          "status": "passed",
+          "duration": 17,
+          "failureMessages": []
+        },
+        {
+          "title": "menutup DeleteModuleDialog saat onClose dipanggil",
+          "status": "passed",
+          "duration": 13,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\editors\\CodeEditor.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders the editor correctly",
+          "status": "passed",
+          "duration": 60,
+          "failureMessages": []
+        },
+        {
+          "title": "shows character count",
+          "status": "passed",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "title": "calls onChange when content changes",
+          "status": "passed",
+          "duration": 98,
+          "failureMessages": []
+        },
+        {
+          "title": "calls onLanguageChange when language changes",
+          "status": "passed",
+          "duration": 59,
+          "failureMessages": []
+        },
+        {
+          "title": "applies custom className if provided",
+          "status": "passed",
+          "duration": 8,
+          "failureMessages": []
+        },
+        {
+          "title": "shows warning when approaching character limit",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "shows error when exceeding character limit",
+          "status": "passed",
+          "duration": 5,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\editors\\TheoryEditor.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders the editor correctly",
+          "status": "passed",
+          "duration": 73,
+          "failureMessages": []
+        },
+        {
+          "title": "handles undefined content gracefully",
+          "status": "passed",
+          "duration": 26,
+          "failureMessages": []
+        },
+        {
+          "title": "handles null content gracefully",
+          "status": "passed",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "title": "shows character count",
+          "status": "passed",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "title": "renders toolbar buttons",
+          "status": "passed",
+          "duration": 85,
+          "failureMessages": []
+        },
+        {
+          "title": "applies custom className if provided",
+          "status": "passed",
+          "duration": 17,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleFilter.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders the search input and status filter",
+          "status": "passed",
+          "duration": 111,
+          "failureMessages": []
+        },
+        {
+          "title": "updates search filter when input changes",
+          "status": "passed",
+          "duration": 49,
+          "failureMessages": []
+        },
+        {
+          "title": "updates status filter when selection changes",
+          "status": "passed",
+          "duration": 142,
+          "failureMessages": []
+        },
+        {
+          "title": "resets status filter when \"Semua Status\" is selected",
+          "status": "passed",
+          "duration": 102,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\columns.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "memiliki header dengan tombol sorting",
+          "status": "passed",
+          "duration": 48,
+          "failureMessages": []
+        },
+        {
+          "title": "memanggil toggleSorting dengan nilai yang benar saat tombol diklik",
+          "status": "passed",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "title": "melakukan sanitasi pada title",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "menampilkan badge dengan variant yang benar untuk status ACTIVE",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "menampilkan badge dengan variant yang benar untuk status DRAFT",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "menampilkan badge dengan variant yang benar untuk status ARCHIVED",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "merender ModuleActionCell dengan benar",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        }
+      ]
+    }
+  ]
+}

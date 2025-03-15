@@ -102,18 +102,77 @@ src/
 
 'untuk structure file yang lebih jelas silahkan analisis file file-structure-documentation.md'
 
-## 3. Test-Driven Development (TDD)
-- Before writing implementation code, create a corresponding test file with the suffix `.test.ts`.
-- Format penamaan test file sesuai dengan nama compoennt untuk unit test FE dan BE: **ComponentName.test.tsx** atau **ServiceName.test.ts**.
-- Gunakan **mocking** untuk API dan data eksternal.
-- Run unit tests automatically after each file change.
-- Show warnings if test files are missing or failing.
-- Unit Test: Menguji fungsi-fungsi utama (UI, API handler, validasi input).
-- Integration Test: Menguji integrasi antar fitur (misal: login → akses modul → submit quiz).
-- E2E Test: Menguji keseluruhan user flow (Cypress digunakan untuk simulasi interaksi pengguna).
-- Unit Test: Jest.
-- Integration Test: Supertest.
-- E2E Test: Cypress.
+---
+
+## 3. Test-Driven Development (TDD) - Aturan yang Diperbarui
+
+### Prinsip Utama:
+- Semua jenis testing (**Unit, Integration, E2E**) harus memiliki test case yang ditulis sebelum implementasi kode.
+- **Tujuan:** Memastikan kode dirancang untuk lulus test case, mengurangi bug, dan meningkatkan kualitas kode.
+
+---
+# Test-Driven Development (TDD)
+
+## Prinsip
+Tulis test case sebelum implementasi kode.
+
+## Format File
+- **Unit Test**: `ComponentName.test.tsx` (FE) / `ServiceName.test.ts` (BE).
+- **Integration Test**: `FeatureName.integration.test.ts`.
+- **E2E Test**: `FeatureName.e2e.spec.ts`.
+
+## Tools
+- **Unit**: Jest + React Testing Library (FE) / Jest (BE).
+- **Integration**: Jest + MSW (FE) / Jest + Supertest (BE).
+- **E2E**: Cypress atau Playwright.
+
+## Best Practices
+- Gunakan mocking untuk API/database.
+- Jalankan test otomatis di CI/CD pipeline.
+- Block commit jika test gagal atau test file tidak ada.
+
+# Jenis Testing & Aturan Singkat
+
+## a. Unit Testing
+- **Fokus**: Logika internal komponen/fungsi.
+
+## b. Integration Testing
+- **Fokus**: Interaksi antar komponen/sistem.
+
+## c. End-to-End (E2E) Testing
+- **Fokus**: Alur lengkap aplikasi.
+
+## d. Smoke Testing
+- **Fokus**: Fitur kritis setelah build.
+
+## e. Exploratory Testing
+- **Fokus**: Temukan bug tak terduga.
+- **Dokumentasi**: Catat temuan di `docs/exploratory/feature.md`.
+
+## f. Regression Testing
+- **Fokus**: Pastikan perubahan tidak merusak fitur lama.
+
+# Struktur Direktori
+```
+components/
+  Button/
+    Button.tsx
+    Button.test.tsx    <-- Unit test
+__tests__/
+  integration/
+    name-epic/
+      Login-API.test.tsx <-- Integration test
+  e2e/
+    name-epic/
+      registration.spec.ts <-- E2E test
+  smoke/
+    name-epic/
+      Login.smoke.test.ts
+
+docs/
+  exploratory/
+    name-epic/
+    checkout-flow.md
 
 
 ## 4. Commit Message Standards

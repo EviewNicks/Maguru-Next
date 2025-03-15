@@ -5,6 +5,7 @@ import React, { useEffect } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
+import CharacterCount from '@tiptap/extension-character-count'
 import { Editor } from '@tiptap/core'
 import { Button } from '@/components/ui/button'
 import { Toggle } from '@/components/ui/toggle'
@@ -45,6 +46,9 @@ export function TheoryEditor({
           rel: 'noopener noreferrer',
           target: '_blank',
         },
+      }),
+      CharacterCount.configure({
+        limit: maxLength,
       }),
     ],
     content: safeContent,
@@ -189,8 +193,10 @@ export function TheoryEditor({
         <EditorContent editor={editor} className="prose dark:prose-invert max-w-none" />
       </div>
 
-      <div className="text-xs text-muted-foreground mt-1 text-right">
-        {editor.storage.characterCount.characters()}/{maxLength} karakter
+      <div className="text-xs text-muted-foreground mt-1 text-right" data-testid="theory-editor-toolbar">
+        {editor && editor.storage && editor.storage.characterCount ? 
+          `${editor.storage.characterCount.characters()}/${maxLength} karakter` : 
+          `0/${maxLength} karakter`}
       </div>
     </div>
   )

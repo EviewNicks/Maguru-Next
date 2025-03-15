@@ -75,7 +75,7 @@ export function ModuleFormModal({
     defaultValues: {
       title: module?.title || '',
       description: module?.description || '',
-      status: module?.status || ModuleStatus.DRAFT,
+      status: module?.status || 'DRAFT' as ModuleStatus,
     },
   })
   

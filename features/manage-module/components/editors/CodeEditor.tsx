@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTheme } from 'next-themes'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 // Dynamic import untuk Monaco Editor
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
@@ -63,16 +64,27 @@ export function CodeEditor({
     }
   }
 
+  // Menentukan warna teks untuk counter karakter
+  const getCounterClassName = () => {
+    if (charCount > maxLength) {
+      return 'text-destructive'
+    }
+    if (charCount > maxLength * 0.8) {
+      return 'text-amber-500'
+    }
+    return 'text-muted-foreground'
+  }
+
   return (
-    <div className={`code-editor ${className || ''}`}>
+    <div data-testid="code-editor" className={cn('code-editor', className)}>
       <div className="mb-2">
         <Select value={language} onValueChange={onLanguageChange}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[200px]" data-testid="language-select">
             <SelectValue placeholder="Pilih bahasa" />
           </SelectTrigger>
           <SelectContent>
             {SUPPORTED_LANGUAGES.map((lang) => (
-              <SelectItem key={lang.value} value={lang.value}>
+              <SelectItem key={lang.value} value={lang.value} data-testid={`language-option-${lang.value}`}>
                 {lang.label}
               </SelectItem>
             ))}
@@ -97,7 +109,7 @@ export function CodeEditor({
         />
       </div>
 
-      <div className="text-xs text-muted-foreground mt-1 text-right">
+      <div data-testid="char-counter" className={cn("text-xs mt-1 text-right", getCounterClassName())}>
         {charCount}/{maxLength} karakter
       </div>
     </div>

@@ -9,7 +9,7 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import axios from 'axios'
 import { toast } from 'sonner'
-import { ModulePageType, ProgrammingLanguage } from '../schemas/modulePageSchema'
+import { ModulePageType } from '../schemas/modulePageSchema'
 import React from 'react'
 
 // Mock axios dan toast
@@ -65,7 +65,8 @@ describe('useModulePageMutations', () => {
       // Call the mutation
       const pageInput = {
         type: ModulePageType.TEORI,
-        content: '<p>Konten teori</p>',
+        content: '<p>Konten teori baru</p>',
+        order: 1
       }
       
       await result.current.mutateAsync(pageInput)
@@ -97,6 +98,7 @@ describe('useModulePageMutations', () => {
         result.current.mutateAsync({
           type: ModulePageType.TEORI,
           content: '<p>Konten teori</p>',
+          order: 1
         })
       ).rejects.toThrow()
       
@@ -130,9 +132,12 @@ describe('useModulePageMutations', () => {
       // Call the mutation
       const pageInput = {
         id: '1',
-        moduleId: 'module-1',
-        type: ModulePageType.TEORI,
-        content: '<p>Konten teori yang diperbarui</p>',
+        data: {
+          id: '1',
+          type: ModulePageType.TEORI,
+          content: '<p>Konten teori yang diperbarui</p>'
+        },
+        version: 1
       }
       
       await result.current.mutateAsync(pageInput)
@@ -140,7 +145,8 @@ describe('useModulePageMutations', () => {
       // Verify API call
       expect(mockedAxios.put).toHaveBeenCalledWith(
         '/api/modules/module-1/pages/1',
-        pageInput
+        pageInput.data,
+        { headers: { 'x-page-version': '1' } }
       )
       
       // Verify toast
@@ -160,14 +166,17 @@ describe('useModulePageMutations', () => {
       })
       
       // Call the mutation and expect it to throw
-      await expect(
-        result.current.mutateAsync({
+      const pageInput = {
+        id: '1',
+        data: {
           id: '1',
-          moduleId: 'module-1',
           type: ModulePageType.TEORI,
-          content: '<p>Konten teori yang diperbarui</p>',
-        })
-      ).rejects.toThrow()
+          content: '<p>Konten teori yang diperbarui</p>'
+        },
+        version: 1
+      }
+      
+      await expect(result.current.mutateAsync(pageInput)).rejects.toThrow()
       
       // Verify toast
       expect(mockedToast.error).toHaveBeenCalledWith(
@@ -236,7 +245,7 @@ describe('useModulePageMutations', () => {
         { pageId: '2', order: 1 },
       ]
       
-      await result.current.mutateAsync(reorderInput)
+      await result.current.mutateAsync({ updates: reorderInput })
       
       // Verify API call
       expect(mockedAxios.patch).toHaveBeenCalledWith(
@@ -266,12 +275,12 @@ describe('useModulePageMutations', () => {
         { pageId: '2', order: 1 },
       ]
       
-      await expect(result.current.mutateAsync(reorderInput)).rejects.toThrow()
+      await expect(result.current.mutateAsync({ updates: reorderInput })).rejects.toThrow()
       
       // Verify toast
       expect(mockedToast.error).toHaveBeenCalledWith(
-        'Gagal memperbarui urutan halaman',
-        expect.any(Object)
+        'Gagal mengubah urutan halaman',
+        { description: 'API Error' }
       )
     })
   })

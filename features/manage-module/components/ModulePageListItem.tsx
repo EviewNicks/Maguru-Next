@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { GripVertical, Pencil, Trash2, Eye } from 'lucide-react'
@@ -20,15 +20,9 @@ import {
 } from '@/components/ui/alert-dialog'
 import { ModulePageFormModal } from './ModulePageFormModal'
 import { useUpdateModulePage, useDeleteModulePage } from '../hooks/useModulePageMutations'
-import { ModulePage } from '../types'
+import { ModulePage, ContentType } from '../types'
 import { ModulePageType, ModulePageUpdateSchema } from '../schemas/modulePageSchema'
 import { z } from 'zod'
-
-// Enum untuk tipe konten halaman modul
-enum ContentType {
-  THEORY = 'teori',
-  CODE = 'kode',
-}
 
 interface ModulePageListItemProps {
   page: ModulePage
@@ -62,7 +56,7 @@ export function ModulePageListItem({ page, moduleId }: ModulePageListItemProps) 
       id: page.id,
       data: {
         content: data.content,
-        ...(data.type === ModulePageType.KODE && 'language' in data ? { language: data.language } : {}),
+        ...(data.type === ModulePageType.KODE && 'language' in data && data.language ? { language: data.language } : {}),
       },
       version: page.version,
     }, {
@@ -138,17 +132,17 @@ export function ModulePageListItem({ page, moduleId }: ModulePageListItemProps) 
         </div>
       </CardContent>
       
-      <CardFooter className="pt-2">
+      <div className="pt-2 pb-2 px-6">
         <Button variant="outline" size="sm" className="ml-auto">
           <Eye className="mr-2 h-4 w-4" />
           Pratinjau
         </Button>
-      </CardFooter>
+      </div>
       
       {/* Modal Edit */}
       <ModulePageFormModal
-        open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
+        isOpen={isEditModalOpen}
+        onClose={setIsEditModalOpen}
         moduleId={moduleId}
         contentType={contentType}
         onSubmit={handleEditPage}

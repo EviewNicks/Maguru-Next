@@ -56,6 +56,7 @@ export const ModulePageCreateSchema = z.discriminatedUnion('type', [
 export const ModulePageUpdateSchema = z.discriminatedUnion('type', [
   // Schema untuk tipe konten "teori"
   z.object({
+    id: z.string().uuid('Id harus berupa UUID yang valid'),
     type: z.literal(ModulePageType.TEORI),
     order: z.number().int().min(0, 'Urutan harus angka non-negatif').optional(),
     content: z
@@ -66,6 +67,7 @@ export const ModulePageUpdateSchema = z.discriminatedUnion('type', [
   }),
   // Schema untuk tipe konten "kode"
   z.object({
+    id: z.string().uuid('Id harus berupa UUID yang valid'),
     type: z.literal(ModulePageType.KODE),
     order: z.number().int().min(0, 'Urutan harus angka non-negatif').optional(),
     content: z

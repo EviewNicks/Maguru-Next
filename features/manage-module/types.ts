@@ -34,9 +34,9 @@ export type ModulePageReorderInput = z.infer<typeof ModulePageReorderSchema>
 
 // Tipe untuk filter
 export interface FilterType {
-  status?: ModuleStatus
-  search?: string
-  limit?: number
+  status?: ModuleStatus | 'ALL'
+  search: string
+  limit: number
   cursor?: string
 }
 
@@ -51,6 +51,8 @@ export interface ModuleTableProps {
   modules: Module[]
   isLoading: boolean
   isError: boolean
+  pagination?: Pagination
+  onLoadMore: () => void
 }
 
 // Props untuk ModulePageList

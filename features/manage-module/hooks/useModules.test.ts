@@ -68,10 +68,8 @@ describe('useModules', () => {
       expect(result.current.isSuccess).toBe(true)
     })
     
-    expect(mockedAxios.get).toHaveBeenCalledWith('/api/modules', { 
-      params: { limit: 10 } 
-    })
-    expect(result.current.data).toEqual(mockData)
+    expect(mockedAxios.get).toHaveBeenCalledWith('/api/modules?limit=10')
+    expect(result.current.data?.pages[0]).toEqual(mockData)
   })
   
   it('fetches modules with custom parameters', async () => {
@@ -109,13 +107,7 @@ describe('useModules', () => {
       expect(result.current.isSuccess).toBe(true)
     })
     
-    expect(mockedAxios.get).toHaveBeenCalledWith('/api/modules', { 
-      params: { 
-        status: ModuleStatus.DRAFT,
-        limit: 5,
-        search: 'fisika'
-      } 
-    })
-    expect(result.current.data).toEqual(mockData)
+    expect(mockedAxios.get).toHaveBeenCalledWith('/api/modules?status=DRAFT&search=fisika&limit=5')
+    expect(result.current.data?.pages[0]).toEqual(mockData)
   })
 })

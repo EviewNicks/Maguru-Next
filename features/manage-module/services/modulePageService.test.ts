@@ -9,25 +9,43 @@ import {
 } from './modulePageService'
 import prisma from '@/lib/prisma'
 import DOMPurify from 'isomorphic-dompurify'
-import { ModulePageType, ProgrammingLanguage } from '../schemas/modulePageSchema'
-import { ModulePageCreateInput, ModulePageUpdateInput } from '../types'
+import {
+  ModulePageType,
+  ProgrammingLanguage,
+} from '../schemas/modulePageSchema'
+import {
+  ModulePageCreateInput,
+  ModulePageUpdateInput,
+} from '../types'
+import { Prisma } from '@prisma/client'
+
+// Interface untuk Prisma error
+interface PrismaError extends Error {
+  name: string;
+  code?: string;
+}
 
 // Mock prisma
-jest.mock('@/lib/prisma', () => ({
-  modulePage: {
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-    findUnique: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    updateMany: jest.fn(),
-  },
-  module: {
-    findUnique: jest.fn(),
-  },
-  $transaction: jest.fn((callback) => callback(prisma)),
-}))
+jest.mock('@/lib/prisma', () => {
+  return {
+    __esModule: true,
+    default: {
+      modulePage: {
+        findFirst: jest.fn(),
+        findMany: jest.fn(),
+        findUnique: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        updateMany: jest.fn(),
+        delete: jest.fn(),
+      },
+      module: {
+        findUnique: jest.fn(),
+      },
+      $transaction: jest.fn((callback) => callback()),
+    },
+  }
+})
 
 // Mock DOMPurify
 jest.mock('isomorphic-dompurify', () => ({
@@ -47,6 +65,7 @@ describe('modulePageService', () => {
         moduleId,
         type: ModulePageType.TEORI,
         content: '<p>Konten teori</p><script>alert("xss")</script>',
+        order: 0,
       }
 
       const sanitizedContent = '<p>Konten teori</p>'
@@ -61,11 +80,12 @@ describe('modulePageService', () => {
       const createdPage = {
         id: '1',
         moduleId,
-        order: 3,
+        order: 0,
         type: ModulePageType.TEORI,
         content: sanitizedContent,
         createdAt: new Date(),
         updatedAt: new Date(),
+        version: 1,
       }
       ;(prisma.modulePage.create as jest.Mock).mockResolvedValue(createdPage)
 
@@ -80,10 +100,11 @@ describe('modulePageService', () => {
       // Verify create was called with sanitized content
       expect(prisma.modulePage.create).toHaveBeenCalledWith({
         data: {
-          moduleId,
+          module: { connect: { id: moduleId } },
           type: ModulePageType.TEORI,
           content: sanitizedContent,
-          order: 3,
+          order: 0,
+          version: 1,
         },
       })
 
@@ -98,6 +119,7 @@ describe('modulePageService', () => {
         type: ModulePageType.KODE,
         content: 'console.log("<script>alert(\'xss\')</script>")',
         language: ProgrammingLanguage.JAVASCRIPT,
+        order: 0,
       }
 
       // Mock last page query
@@ -107,12 +129,13 @@ describe('modulePageService', () => {
       const createdPage = {
         id: '1',
         moduleId,
-        order: 1,
+        order: 0,
         type: ModulePageType.KODE,
         content: input.content,
         language: ProgrammingLanguage.JAVASCRIPT,
         createdAt: new Date(),
         updatedAt: new Date(),
+        version: 1,
       }
       ;(prisma.modulePage.create as jest.Mock).mockResolvedValue(createdPage)
 
@@ -124,11 +147,12 @@ describe('modulePageService', () => {
       // Verify create was called with original content
       expect(prisma.modulePage.create).toHaveBeenCalledWith({
         data: {
-          moduleId,
+          module: { connect: { id: moduleId } },
           type: ModulePageType.KODE,
           content: input.content,
           language: ProgrammingLanguage.JAVASCRIPT,
-          order: 1,
+          order: 0,
+          version: 1,
         },
       })
 
@@ -142,13 +166,78 @@ describe('modulePageService', () => {
         moduleId,
         type: ModulePageType.TEORI,
         content: '<p>Konten teori</p>',
+        order: 1,
       }
 
       // Mock error
       const error = new Error('Database error')
       ;(prisma.modulePage.findFirst as jest.Mock).mockRejectedValue(error)
 
-      await expect(createModulePage(input)).rejects.toThrow('Database error')
+      await expect(createModulePage(input)).rejects.toThrow(
+        'Gagal membuat halaman modul: Database error'
+      )
+    })
+
+    it('throws error if order is not provided', async () => {
+      // Mock data
+      const moduleId = 'module-1'
+      const input: ModulePageCreateInput = {
+        moduleId,
+        type: ModulePageType.TEORI,
+        content: '<p>Konten teori</p>',
+        order: 1,
+      }
+
+      // Mock error during findFirst
+      const error = new Error('Database error')
+      ;(prisma.modulePage.findFirst as jest.Mock).mockRejectedValue(error)
+
+      await expect(createModulePage(input)).rejects.toThrow(
+        'Gagal membuat halaman modul: Database error'
+      )
+    })
+
+    it('uses default order when not provided', async () => {
+      // Mock data
+      const moduleId = 'module-1'
+      const input: ModulePageCreateInput = {
+        moduleId,
+        type: ModulePageType.TEORI,
+        content: '<p>Konten teori</p>',
+      } as ModulePageCreateInput // Casting karena order adalah opsional dalam implementasi
+
+      // Mock last page query
+      ;(prisma.modulePage.findFirst as jest.Mock).mockResolvedValue({
+        order: 2,
+      })
+
+      // Mock create
+      const createdPage = {
+        id: '1',
+        moduleId,
+        order: 3, // order terakhir + 1
+        type: ModulePageType.TEORI,
+        content: '<p>Konten teori</p>',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        version: 1,
+      }
+      ;(prisma.modulePage.create as jest.Mock).mockResolvedValue(createdPage)
+
+      const result = await createModulePage(input)
+
+      // Verify create was called with calculated order
+      expect(prisma.modulePage.create).toHaveBeenCalledWith({
+        data: {
+          module: { connect: { id: moduleId } },
+          type: ModulePageType.TEORI,
+          content: input.content,
+          order: 3, // order terakhir + 1
+          version: 1,
+        },
+      })
+
+      expect(result).toEqual(createdPage)
     })
   })
 
@@ -165,6 +254,7 @@ describe('modulePageService', () => {
           content: '<p>Konten teori</p>',
           createdAt: new Date(),
           updatedAt: new Date(),
+          version: 1,
         },
         {
           id: '2',
@@ -175,6 +265,7 @@ describe('modulePageService', () => {
           language: ProgrammingLanguage.JAVASCRIPT,
           createdAt: new Date(),
           updatedAt: new Date(),
+          version: 1,
         },
       ]
 
@@ -203,6 +294,7 @@ describe('modulePageService', () => {
         content: '<p>Konten teori</p>',
         createdAt: new Date(),
         updatedAt: new Date(),
+        version: 1,
       }
 
       ;(prisma.modulePage.findUnique as jest.Mock).mockResolvedValue(page)
@@ -232,7 +324,6 @@ describe('modulePageService', () => {
       const pageId = '1'
       const input: ModulePageUpdateInput = {
         id: pageId,
-        moduleId: 'module-1',
         type: ModulePageType.TEORI,
         content: '<p>Konten teori yang diperbarui</p><script>alert("xss")</script>',
       }
@@ -270,12 +361,65 @@ describe('modulePageService', () => {
         expect.any(Object)
       )
 
-      // Verify update was called with sanitized content
+      // Verify update was called with sanitized content and version check
       expect(prisma.modulePage.update).toHaveBeenCalledWith({
         where: { id: pageId, version: 1 },
         data: {
           type: ModulePageType.TEORI,
           content: sanitizedContent,
+          version: { increment: 1 },
+        },
+      })
+
+      expect(result).toEqual(updatedPage)
+    })
+
+    it('updates a code page without sanitizing content', async () => {
+      // Mock data
+      const pageId = '1'
+      const input: ModulePageUpdateInput = {
+        id: pageId,
+        type: ModulePageType.KODE,
+        content: 'console.log("<script>alert(\'xss\')</script>")',
+        language: ProgrammingLanguage.JAVASCRIPT,
+      }
+
+      // Mock existing page
+      const existingPage = {
+        id: pageId,
+        moduleId: 'module-1',
+        order: 1,
+        type: ModulePageType.KODE,
+        content: 'console.log("Hello")',
+        language: ProgrammingLanguage.PYTHON,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        version: 1,
+      }
+      ;(prisma.modulePage.findUnique as jest.Mock).mockResolvedValue(existingPage)
+
+      // Mock update
+      const updatedPage = {
+        ...existingPage,
+        content: input.content,
+        language: ProgrammingLanguage.JAVASCRIPT,
+        updatedAt: new Date(),
+        version: 2,
+      }
+      ;(prisma.modulePage.update as jest.Mock).mockResolvedValue(updatedPage)
+
+      const result = await updateModulePage(pageId, input, 1)
+
+      // Verify sanitize was NOT called
+      expect(DOMPurify.sanitize).not.toHaveBeenCalled()
+
+      // Verify update was called with original content and language update
+      expect(prisma.modulePage.update).toHaveBeenCalledWith({
+        where: { id: pageId, version: 1 },
+        data: {
+          type: ModulePageType.KODE,
+          content: input.content,
+          language: ProgrammingLanguage.JAVASCRIPT,
           version: { increment: 1 },
         },
       })
@@ -292,13 +436,46 @@ describe('modulePageService', () => {
           'non-existent',
           {
             id: 'non-existent',
-            moduleId: 'module-1',
             type: ModulePageType.TEORI,
             content: '<p>Konten</p>',
           },
           1
         )
       ).rejects.toThrow('Halaman modul tidak ditemukan')
+    })
+
+    it('throws error if version mismatch (optimistic locking)', async () => {
+      // Mock existing page
+      const pageId = '1'
+      const existingPage = {
+        id: pageId,
+        moduleId: 'module-1',
+        order: 1,
+        type: ModulePageType.TEORI,
+        content: '<p>Konten teori lama</p>',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        version: 2, // Version in database is 2
+      }
+      ;(prisma.modulePage.findUnique as jest.Mock).mockResolvedValue(existingPage)
+
+      // Mock Prisma error for version mismatch
+      const mockPrismaError = new Error('Version mismatch') as PrismaError
+      mockPrismaError.name = 'PrismaClientKnownRequestError'
+      mockPrismaError.code = 'P2034' // Contoh kode error Prisma
+      ;(prisma.modulePage.update as jest.Mock).mockRejectedValue(mockPrismaError)
+
+      await expect(
+        updateModulePage(
+          pageId,
+          {
+            id: pageId,
+            type: ModulePageType.TEORI,
+            content: '<p>Konten baru</p>',
+          },
+          1 // Version yang dikirim client adalah 1 (tidak sesuai dengan 2 di database)
+        )
+      ).rejects.toThrow('Konflik versi: Halaman telah diperbarui oleh pengguna lain')
     })
   })
 
@@ -317,6 +494,7 @@ describe('modulePageService', () => {
         content: '<p>Konten teori</p>',
         createdAt: new Date(),
         updatedAt: new Date(),
+        version: 1,
       }
       ;(prisma.modulePage.findUnique as jest.Mock).mockResolvedValue(existingPage)
 
@@ -385,6 +563,7 @@ describe('modulePageService', () => {
           language: ProgrammingLanguage.JAVASCRIPT,
           createdAt: new Date(),
           updatedAt: new Date(),
+          version: 1,
         },
         {
           id: '1',
@@ -394,6 +573,7 @@ describe('modulePageService', () => {
           content: '<p>Konten teori</p>',
           createdAt: new Date(),
           updatedAt: new Date(),
+          version: 1,
         },
       ]
       ;(prisma.modulePage.findMany as jest.Mock).mockResolvedValue(updatedPages)
@@ -413,8 +593,8 @@ describe('modulePageService', () => {
       // Verify each update was called
       updates.forEach((update) => {
         expect(prisma.modulePage.update).toHaveBeenCalledWith({
-          where: { id: update.pageId },
-          data: { order: update.order },
+          where: { id: update.pageId, moduleId },
+          data: { order: update.order, version: { increment: 1 } },
         })
       })
 

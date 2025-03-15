@@ -231,8 +231,8 @@ describe('useModuleMutations', () => {
       
       // Check if success toast was shown
       expect(mockedToast.success).toHaveBeenCalledWith(
-        'Modul berhasil dihapus',
-        expect.anything()
+        `Modul dengan ID 1 berhasil dihapus`,
+        { description: 'Modul telah berhasil dihapus dari sistem.' }
       )
     })
     

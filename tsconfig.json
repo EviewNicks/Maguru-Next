@@ -22,6 +22,7 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./*"
@@ -34,7 +35,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "jest.setup.tsx"
-  ],
+, "services/simpleJsonReporter.js"  ],
   "exclude": [
     "node_modules"
   ]

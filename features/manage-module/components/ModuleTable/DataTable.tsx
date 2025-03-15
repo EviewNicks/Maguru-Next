@@ -1,178 +1,119 @@
 'use client'
 
-import { useRef } from 'react'
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  getSortedRowModel,
-  SortingState,
-  OnChangeFn,
-} from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type SortingState,
+} from '@tanstack/react-table'
+import { useRef, useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Loader2, AlertCircle } from 'lucide-react'
-import { Module, Pagination } from '../../types'
 import { columns } from './columns'
+import { type Module } from '../../types'
 
 interface DataTableProps {
   data: Module[]
   isLoading: boolean
-  isError: boolean
-  pagination?: Pagination
+  hasMore: boolean
   onLoadMore: () => void
-  sorting: SortingState
-  onSortingChange: OnChangeFn<SortingState>
 }
 
 export function DataTable({
   data,
   isLoading,
-  isError,
-  pagination,
+  hasMore,
   onLoadMore,
-  sorting,
-  onSortingChange,
 }: DataTableProps) {
-  // Referensi untuk virtual scrolling
+  const [sorting, setSorting] = useState<SortingState>([])
   const tableContainerRef = useRef<HTMLDivElement>(null)
 
-  // Setup tabel dengan tanstack/react-table
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    onSortingChange,
     getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
     state: {
       sorting,
     },
   })
 
-  // Setup virtual scrolling dengan tanstack/react-virtual
   const { rows } = table.getRowModel()
-
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 10, // estimasi tinggi baris
+    estimateSize: () => 45,
     overscan: 10,
   })
 
-  // Render loading state
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 data-testid="loading-spinner" className="h-8 w-8 animate-spin text-primary" />
         <span className="ml-2 text-lg">Memuat data modul...</span>
       </div>
     )
   }
 
-  // Render error state
-  if (isError) {
-    return (
-      <div className="flex flex-col justify-center items-center h-64">
-        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-        <p className="text-destructive text-center">
-          Terjadi kesalahan saat memuat data modul. Silakan coba lagi nanti.
-        </p>
-        <Button
-          variant="outline"
-          className="mt-4"
-          onClick={() => window.location.reload()}
-        >
-          Muat Ulang
-        </Button>
-      </div>
-    )
-  }
-
-  // Render skeleton loading state
-  if (isLoading) {
-    return (
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    <Skeleton className="h-4 w-[100px]" />
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, idx) => (
-              <TableRow key={idx}>
-                {Array.from({ length: columns.length }).map((_, cellIdx) => (
-                  <TableCell key={cellIdx}>
-                    <Skeleton className="h-4 w-[100px]" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-    )
-  }
-
   return (
-    <div
-      ref={tableContainerRef}
-      className="rounded-md border"
-    >
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => (
-            <TableRow
-              key={virtualRow.index}
-              data-state={table.getRowModel().rows[virtualRow.index].getIsSelected() && 'selected'}
-            >
-              {table.getRowModel().rows[virtualRow.index].getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      {pagination?.hasMore && (
-        <div className="flex justify-center mt-4">
-          <Button
-            onClick={onLoadMore}
-            disabled={isLoading}
-            variant="outline"
-          >
+    <div>
+      <div
+        ref={tableContainerRef}
+        className="virtual-table relative overflow-auto border rounded-md h-[calc(100vh-300px)]"
+      >
+        <table className="w-full">
+          <thead className="sticky top-0 bg-background">
+            {table.getHeaderGroups().map(headerGroup => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <th
+                    key={header.id}
+                    className="border-b px-4 py-3 text-left align-middle font-medium text-muted-foreground"
+                    data-testid={`header-${header.id}`}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {rowVirtualizer.getVirtualItems().map(virtualRow => {
+              const row = rows[virtualRow.index]
+              return (
+                <tr key={row.id} data-testid="table-row">
+                  {row.getVisibleCells().map(cell => {
+                    const content = flexRender(
+                      cell.column.columnDef.cell,
+                      cell.getContext(),
+                    )
+                    return (
+                      <td
+                        key={cell.id}
+                        className="border-b px-4 py-3 align-middle [&:has([role=checkbox])]:pr-0"
+                        data-testid={`cell-${cell.column.id}`}
+                      >
+                        {content}
+                      </td>
+                    )
+                  })}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      {hasMore && (
+        <div className="mt-4 flex justify-center">
+          <Button onClick={onLoadMore}>
             Muat Lebih Banyak
           </Button>
         </div>

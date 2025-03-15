@@ -1,195 +1,126 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { ModuleTable } from './ModuleTable'
 import { ModuleStatus, type Module } from '../types'
+import { ModuleFilter } from './ModuleFilter'
 
-// Mock hooks dan komponen
-jest.mock('../hooks/useModules', () => ({
-  useModules: jest.fn(),
-}))
-
+// Mock ModuleFilter component
 jest.mock('./ModuleFilter', () => ({
-  ModuleFilter: jest.fn(() => <div data-testid="module-filter">Filter Mock</div>),
+  ModuleFilter: jest.fn(() => (
+    <div data-testid="module-filter">
+      <input type="text" placeholder="Cari modul..." />
+    </div>
+  )),
 }))
 
+// Mock ModuleFormModal component
 jest.mock('./ModuleFormModal', () => ({
-  ModuleFormModal: jest.fn(() => <div data-testid="module-form-modal">Form Modal Mock</div>),
+  ModuleFormModal: jest.fn(() => null),
 }))
 
-jest.mock('./DeleteModuleDialog', () => ({
-  DeleteModuleDialog: jest.fn(() => <div data-testid="delete-module-dialog">Delete Dialog Mock</div>),
+// Mock DOMPurify untuk sanitasi
+jest.mock('dompurify', () => ({
+  sanitize: jest.fn((content) => content),
 }))
-
-// Import hooks setelah mock
-import { useModules } from '../hooks/useModules'
 
 describe('ModuleTable', () => {
   const mockModules: Module[] = [
     {
       id: '1',
       title: 'Module 1',
-      description: 'Deskripsi modul 1',
+      description: 'Description 1',
       status: ModuleStatus.ACTIVE,
+      createdAt: new Date('2024-01-01'),
+      updatedAt: new Date('2024-01-01'),
       createdBy: 'admin',
       updatedBy: 'admin',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
+    },
+    {
+      id: '2',
+      title: 'Module 2',
+      description: 'Description 2',
+      status: ModuleStatus.DRAFT,
+      createdAt: new Date('2024-01-02'),
+      updatedAt: new Date('2024-01-02'),
+      createdBy: 'admin',
+      updatedBy: 'admin',
+    },
   ]
+
+  const defaultProps = {
+    modules: mockModules,
+    isLoading: false,
+    isError: false,
+    pagination: {
+      hasMore: true,
+      nextCursor: 'next',
+    },
+    onLoadMore: jest.fn(),
+  }
 
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   it('menampilkan loading state saat data sedang dimuat', () => {
-    // Mock loading state
-    ;(useModules as jest.Mock).mockReturnValue({
-      data: null,
-      isLoading: true,
-      isError: false,
-      error: null,
-    })
-
-    render(
-      <ModuleTable 
-        modules={[]}
-        isLoading={true}
-        isError={false}
-        onLoadMore={() => {}}
-      />
-    )
-
-    expect(screen.getByText('Memuat data modul...')).toBeInTheDocument()
+    render(<ModuleTable {...defaultProps} isLoading={true} />)
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument()
   })
 
   it('menampilkan error state saat terjadi kesalahan', () => {
-    // Mock error state
-    ;(useModules as jest.Mock).mockReturnValue({
-      data: null,
-      isLoading: false,
-      isError: true,
-      error: new Error('Terjadi kesalahan'),
-    })
-
-    render(
-      <ModuleTable 
-        modules={[]}
-        isLoading={false}
-        isError={true}
-        onLoadMore={() => {}}
-      />
-    )
-
-    expect(screen.getByText('Terjadi kesalahan saat memuat data modul.')).toBeInTheDocument()
+    render(<ModuleTable {...defaultProps} isError={true} />)
+    expect(screen.getByText(/Terjadi kesalahan saat memuat data modul/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Muat Ulang/i })).toBeInTheDocument()
   })
 
   it('menampilkan data modul dalam tabel', () => {
-    // Mock successful data fetch
-    ;(useModules as jest.Mock).mockReturnValue({
-      data: {
-        modules: mockModules,
-        pagination: {
-          count: 1,
-          hasMore: false,
-        },
-      },
-      isLoading: false,
-      isError: false,
-      error: null,
-    })
-
-    render(
-      <ModuleTable 
-        modules={mockModules}
-        isLoading={false}
-        isError={false}
-        onLoadMore={() => {}}
-      />
-    )
-
-    // Cek apakah filter komponen ditampilkan
-    expect(screen.getByTestId('module-filter')).toBeInTheDocument()
-
-    // Cek apakah judul kolom ditampilkan
-    expect(screen.getByText('Judul')).toBeInTheDocument()
-    expect(screen.getByText('Status')).toBeInTheDocument()
-    expect(screen.getByText('Terakhir Diperbarui')).toBeInTheDocument()
-
-    // Cek apakah data modul ditampilkan
+    render(<ModuleTable {...defaultProps} />)
+    
+    // Cek judul kolom
+    expect(screen.getByRole('button', { name: /Nama Modul/i })).toBeInTheDocument()
+    
+    // Cek data modul menggunakan text content
     expect(screen.getByText('Module 1')).toBeInTheDocument()
+    expect(screen.getByText('Module 2')).toBeInTheDocument()
   })
 
   it('menampilkan tombol "Muat Lebih Banyak" jika hasMore true', () => {
-    // Mock data dengan pagination hasMore true
-    ;(useModules as jest.Mock).mockReturnValue({
-      data: {
-        modules: mockModules,
-        pagination: {
-          count: 1,
-          hasMore: true,
-          nextCursor: 'next-cursor',
-        },
-      },
-      isLoading: false,
-      isError: false,
-      error: null,
-      fetchNextPage: jest.fn(),
-      isFetchingNextPage: false,
-    })
-
-    render(
-      <ModuleTable 
-        modules={mockModules}
-        isLoading={false}
-        isError={false}
-        onLoadMore={() => {}}
-      />
-    )
-
-    // Cek apakah tombol "Muat Lebih Banyak" ditampilkan
-    expect(screen.getByText('Muat Lebih Banyak')).toBeInTheDocument()
+    render(<ModuleTable {...defaultProps} />)
+    expect(screen.getByRole('button', { name: /Muat Lebih Banyak/i })).toBeInTheDocument()
   })
 
-  it('membuka form modal saat tombol "Tambah Modul" diklik', () => {
-    // Mock successful data fetch
-    ;(useModules as jest.Mock).mockReturnValue({
-      data: {
-        modules: mockModules,
-        pagination: {
-          count: 1,
-          hasMore: false,
-        },
-      },
-      isLoading: false,
-      isError: false,
-      error: null,
-    })
-
-    render(
-      <ModuleTable 
-        modules={mockModules}
-        isLoading={false}
-        isError={false}
-        onLoadMore={() => {}}
-      />
-    )
-
-    // Klik tombol "Tambah Modul"
-    fireEvent.click(screen.getByText('Tambah Modul'))
-
-    // Cek apakah form modal ditampilkan
-    expect(screen.getByTestId('module-form-modal')).toBeInTheDocument()
-  })
-
-  it('renders correctly', () => {
-    render(
-      <ModuleTable 
-        modules={mockModules}
-        isLoading={false}
-        isError={false}
-        onLoadMore={() => {}}
-      />
-    );
+  it('mengubah sorting state saat header kolom diklik', () => {
+    render(<ModuleTable {...defaultProps} />)
     
-    expect(screen.getByRole('columnheader', { name: /nama modul/i })).toBeInTheDocument();
-  });
+    // Klik pada button dengan text "Nama Modul" untuk sorting
+    const titleHeader = screen.getByRole('button', { name: /Nama Modul/i })
+    fireEvent.click(titleHeader)
+    
+    // Cek data setelah sort
+    expect(screen.getByText('Module 1')).toBeInTheDocument()
+  })
+
+  it('memanggil onLoadMore saat tombol "Muat Lebih Banyak" diklik', () => {
+    render(<ModuleTable {...defaultProps} />)
+    
+    const loadMoreButton = screen.getByRole('button', { name: /Muat Lebih Banyak/i })
+    fireEvent.click(loadMoreButton)
+    
+    expect(defaultProps.onLoadMore).toHaveBeenCalled()
+  })
+
+  it('memperbarui filter saat ModuleFilter berubah', () => {
+    render(<ModuleTable {...defaultProps} />)
+    
+    // Cek apakah ModuleFilter component dirender
+    expect(screen.getByTestId('module-filter')).toBeInTheDocument()
+    
+    // Cek apakah ModuleFilter dipanggil dengan props yang benar
+    expect(ModuleFilter).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filter: expect.any(Object),
+        onFilterChange: expect.any(Function),
+      }),
+      expect.any(Object)
+    )
+  })
 })

@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { SortingState } from '@tanstack/react-table'
 import { DataTable } from './ModuleTable/DataTable'
 import { FilterType } from '../types'
 import { ModuleFormModal } from './ModuleFormModal'
 import { ModuleTableProps } from '../types'
-
-
+import { Button } from '@/components/ui/button'
+import { ModuleFilter } from './ModuleFilter'
+import { Loader2, AlertCircle } from 'lucide-react'
 
 export function ModuleTable({
   modules,
@@ -16,15 +16,13 @@ export function ModuleTable({
   pagination,
   onLoadMore,
 }: ModuleTableProps) {
-  // State untuk filter, sorting, dan pagination
+  // State untuk filter dan pagination
   const [filter, setFilter] = useState<FilterType>({
     status: undefined,
     search: '',
     limit: 10,
     cursor: undefined,
   })
-  
-  const [sorting, setSorting] = useState<SortingState>([])
   
   // State untuk modal tambah modul
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -40,18 +38,49 @@ export function ModuleTable({
       onLoadMore()
     }
   }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 data-testid="loading-spinner" className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg">Memuat data modul...</span>
+      </div>
+    )
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col justify-center items-center h-64">
+        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+        <p className="text-destructive text-center">
+          Terjadi kesalahan saat memuat data modul. Silakan coba lagi nanti.
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => window.location.reload()}
+        >
+          Muat Ulang
+        </Button>
+      </div>
+    )
+  }
   
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <ModuleFilter 
+          filter={filter} 
+          onFilterChange={setFilter} 
+        />
+        <Button onClick={() => setIsAddModalOpen(true)}>Tambah Modul</Button>
+      </div>
       
       <DataTable 
         data={modules} 
         isLoading={isLoading} 
-        isError={isError} 
-        pagination={pagination}
+        hasMore={pagination?.hasMore || false}
         onLoadMore={handleLoadMore}
-        sorting={sorting}
-        onSortingChange={setSorting}
       />
       
       {/* Modal untuk tambah modul baru */}

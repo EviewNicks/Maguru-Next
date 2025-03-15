@@ -94,7 +94,7 @@ describe('ModuleFilter', () => {
     
     expect(mockOnFilterChange).toHaveBeenCalledWith({
       ...defaultFilter,
-      status: undefined,
+      status: 'ALL',
       cursor: undefined
     })
   })

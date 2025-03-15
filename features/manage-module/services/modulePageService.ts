@@ -55,15 +55,22 @@ export async function createModulePage(
     // Jika order tidak ditentukan, gunakan urutan terakhir + 1 atau 0 jika tidak ada halaman
     const order = data.order ?? (lastPage ? lastPage.order + 1 : 0)
 
+    // Buat objek data sesuai dengan tipe konten
+    const createData: Prisma.ModulePageCreateInput = {
+      module: { connect: { id: data.moduleId } },
+      order,
+      type: data.type,
+      content: sanitizedContent,
+      version: 1, // Versi awal
+    }
+
+    // Tambahkan language hanya jika tipe konten adalah kode
+    if (data.type === ModulePageType.KODE && data.language) {
+      createData.language = data.language
+    }
+
     return (await prisma.modulePage.create({
-      data: {
-        moduleId: data.moduleId,
-        order,
-        type: data.type,
-        content: sanitizedContent,
-        language: data.language,
-        version: 1, // Versi awal
-      },
+      data: createData,
     })) as ModulePage
   } catch (error) {
     if (error instanceof Error) {
@@ -145,6 +152,15 @@ export async function updateModulePage(
   currentVersion: number
 ): Promise<ModulePage> {
   try {
+    // Periksa apakah halaman ada
+    const existingPage = await prisma.modulePage.findUnique({
+      where: { id },
+    })
+
+    if (!existingPage) {
+      throw new Error('Halaman modul tidak ditemukan')
+    }
+
     // Sanitasi konten untuk mencegah XSS jika tipe konten adalah teori dan konten diperbarui
     let sanitizedContent = data.content
     if (data.type === ModulePageType.TEORI && data.content) {
@@ -172,36 +188,50 @@ export async function updateModulePage(
       })
     }
 
+    // Buat objek data untuk update
+    const updateData: Prisma.ModulePageUpdateInput = {
+      ...(data.order !== undefined && { order: data.order }),
+      ...(data.type !== undefined && { type: data.type }),
+      ...(sanitizedContent !== undefined && { content: sanitizedContent }),
+      version: { increment: 1 }, // Increment versi
+    }
+
+    // Tambahkan language hanya jika tipe konten adalah kode
+    if (data.type === ModulePageType.KODE && data.language !== undefined) {
+      updateData.language = data.language
+    }
+
     // Gunakan optimistic locking untuk mencegah konflik
     const updatedPage = await prisma.modulePage.update({
       where: {
         id,
         version: currentVersion, // Pastikan versi sesuai
       },
-      data: {
-        ...(data.order !== undefined && { order: data.order }),
-        ...(data.type !== undefined && { type: data.type }),
-        ...(sanitizedContent !== undefined && { content: sanitizedContent }),
-        ...(data.language !== undefined && { language: data.language }),
-        version: { increment: 1 }, // Increment versi
-      },
+      data: updateData,
     })
 
     return updatedPage as ModulePage
   } catch (error) {
     if (error instanceof Error) {
-      // Cek jika error adalah dari Prisma dengan kode P2025
+      // Jika error sudah berisi pesan 'Halaman modul tidak ditemukan', gunakan itu langsung
+      if (error.message === 'Halaman modul tidak ditemukan') {
+        throw error;
+      }
+      
+      // Cek jika error adalah dari Prisma dengan pendekatan yang lebih aman
+      const errorObj = error as unknown as Record<string, unknown>;
       if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2025'
+        errorObj.name === 'PrismaClientKnownRequestError' &&
+        typeof errorObj.code === 'string' && 
+        errorObj.code === 'P2025'
       ) {
         throw new Error(
           `Versi halaman tidak sesuai. Halaman telah diubah oleh pengguna lain: ${error.message}`
         )
-      } else {
-        console.error('Error updating module page:', error)
-        throw new Error(`Gagal memperbarui halaman modul: ${error.message}`)
       }
+      
+      console.error('Error updating module page:', error)
+      throw new Error(`Gagal memperbarui halaman modul: ${error.message}`)
     } else {
       console.error('Error updating module page:', error)
       throw new Error('Gagal memperbarui halaman modul')
@@ -264,6 +294,15 @@ export async function reorderModulePages(
   data: ModulePageReorderInput
 ): Promise<ModulePage[]> {
   try {
+    // Verifikasi bahwa modul ada
+    const moduleExists = await prisma.module.findUnique({
+      where: { id: moduleId },
+    })
+
+    if (!moduleExists) {
+      throw new Error('Modul tidak ditemukan')
+    }
+
     // Gunakan transaksi untuk memastikan semua perubahan berhasil atau gagal bersama
     await prisma.$transaction(async (tx) => {
       // Verifikasi bahwa semua pageId ada dan milik modul yang sama

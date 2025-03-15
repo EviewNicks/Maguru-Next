@@ -97,7 +97,7 @@ describe('DeleteModuleDialog', () => {
   it('shows loading state when deleting', () => {
     // Mock loading state
     ;(useDeleteModule as jest.Mock).mockReturnValue({
-      mutateAsync: jest.fn(() => new Promise(resolve => setTimeout(resolve, 1000))),
+      mutateAsync: mockMutateAsync,
       isPending: true,
     })
     
@@ -110,11 +110,11 @@ describe('DeleteModuleDialog', () => {
     )
     
     // Check if buttons are disabled during loading
-    expect(screen.getByRole('button', { name: /hapus/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /^hapus$/i })).toBeDisabled()
     expect(screen.getByRole('button', { name: /batal/i })).toBeDisabled()
     
     // Check if loading spinner is shown
-    expect(screen.getByText(/hapus/i).parentElement?.querySelector('svg')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^hapus$/i }).querySelector('svg')).toBeInTheDocument()
   })
   
   it('handles errors when delete fails', async () => {
@@ -134,7 +134,7 @@ describe('DeleteModuleDialog', () => {
     )
     
     // Click delete button
-    fireEvent.click(screen.getByRole('button', { name: /hapus/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^hapus$/i }))
     
     // Check if error was logged
     await waitFor(() => {
