@@ -7,11 +7,13 @@ import { ModuleStatus } from '../types'
 jest.mock('../hooks/useModuleMutations', () => ({
   useCreateModule: jest.fn(() => ({
     mutate: jest.fn(),
-    isLoading: false
+    isPending: false,
+    mutateAsync: jest.fn().mockResolvedValue({})
   })),
   useUpdateModule: jest.fn(() => ({
     mutate: jest.fn(),
-    isLoading: false
+    isPending: false,
+    mutateAsync: jest.fn().mockResolvedValue({})
   }))
 }))
 
@@ -30,7 +32,7 @@ describe('ModuleFormModal', () => {
     updatedBy: 'user1'
   }
 
-  const mockOnOpenChange = jest.fn()
+  const mockOnClose = jest.fn()
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -40,22 +42,22 @@ describe('ModuleFormModal', () => {
     render(
       <ModuleFormModal 
         isOpen={true} 
-        onClose={mockOnOpenChange} 
+        onClose={mockOnClose} 
       />
     )
 
-    expect(screen.getByText('Tambah Modul')).toBeInTheDocument()
-    expect(screen.getByLabelText('Judul')).toBeInTheDocument()
+    expect(screen.getByText('Tambah Modul Baru')).toBeInTheDocument()
+    expect(screen.getByLabelText('Judul Modul')).toBeInTheDocument()
     expect(screen.getByLabelText('Deskripsi')).toBeInTheDocument()
     expect(screen.getByLabelText('Status')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Simpan' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Tambah Modul' })).toBeInTheDocument()
   })
 
   it('renders form for editing module when module is provided', () => {
     render(
       <ModuleFormModal 
         isOpen={true} 
-        onClose={mockOnOpenChange} 
+        onClose={mockOnClose} 
         module={mockModule}
       />
     )
@@ -63,7 +65,7 @@ describe('ModuleFormModal', () => {
     expect(screen.getByText('Edit Modul')).toBeInTheDocument()
     
     // Cek apakah form terisi dengan data modul
-    expect(screen.getByLabelText('Judul')).toHaveValue('Modul Matematika')
+    expect(screen.getByLabelText('Judul Modul')).toHaveValue('Modul Matematika')
     expect(screen.getByLabelText('Deskripsi')).toHaveValue('Deskripsi modul matematika')
   })
 
@@ -71,38 +73,39 @@ describe('ModuleFormModal', () => {
     render(
       <ModuleFormModal 
         isOpen={true} 
-        onClose={mockOnOpenChange} 
+        onClose={mockOnClose} 
       />
     )
 
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: 'Batal' }))
     
-    expect(mockOnOpenChange).toHaveBeenCalledWith(false)
+    expect(mockOnClose).toHaveBeenCalled()
   })
 
   it('calls createModule when form is submitted for new module', async () => {
-    const mockCreateMutate = jest.fn()
+    const mockCreateMutate = jest.fn().mockResolvedValue({})
     ;(useCreateModule as jest.Mock).mockReturnValue({
       mutate: mockCreateMutate,
-      isLoading: false
+      isPending: false,
+      mutateAsync: mockCreateMutate
     })
 
     render(
       <ModuleFormModal 
         isOpen={true} 
-        onClose={mockOnOpenChange} 
+        onClose={mockOnClose} 
       />
     )
 
     const user = userEvent.setup()
     
     // Isi form
-    await user.type(screen.getByLabelText('Judul'), 'Modul Baru')
+    await user.type(screen.getByLabelText('Judul Modul'), 'Modul Baru')
     await user.type(screen.getByLabelText('Deskripsi'), 'Deskripsi modul baru')
     
     // Submit form
-    await user.click(screen.getByRole('button', { name: 'Simpan' }))
+    await user.click(screen.getByRole('button', { name: 'Tambah Modul' }))
     
     // Verifikasi createModule dipanggil dengan data yang benar
     await waitFor(() => {
@@ -110,22 +113,23 @@ describe('ModuleFormModal', () => {
         title: 'Modul Baru',
         description: 'Deskripsi modul baru',
         status: ModuleStatus.DRAFT, // Default status
-        createdBy: expect.any(String)
-      }, expect.any(Object))
+        createdBy: 'current-user-id'
+      })
     })
   })
 
   it('calls updateModule when form is submitted for existing module', async () => {
-    const mockUpdateMutate = jest.fn()
+    const mockUpdateMutate = jest.fn().mockResolvedValue({})
     ;(useUpdateModule as jest.Mock).mockReturnValue({
       mutate: mockUpdateMutate,
-      isLoading: false
+      isPending: false,
+      mutateAsync: mockUpdateMutate
     })
 
     render(
       <ModuleFormModal 
         isOpen={true} 
-        onClose={mockOnOpenChange} 
+        onClose={mockOnClose} 
         module={mockModule}
       />
     )
@@ -133,11 +137,11 @@ describe('ModuleFormModal', () => {
     const user = userEvent.setup()
     
     // Edit form
-    await user.clear(screen.getByLabelText('Judul'))
-    await user.type(screen.getByLabelText('Judul'), 'Modul Matematika Updated')
+    await user.clear(screen.getByLabelText('Judul Modul'))
+    await user.type(screen.getByLabelText('Judul Modul'), 'Modul Matematika Updated')
     
     // Submit form
-    await user.click(screen.getByRole('button', { name: 'Simpan' }))
+    await user.click(screen.getByRole('button', { name: 'Simpan Perubahan' }))
     
     // Verifikasi updateModule dipanggil dengan data yang benar
     await waitFor(() => {
@@ -146,8 +150,8 @@ describe('ModuleFormModal', () => {
         title: 'Modul Matematika Updated',
         description: 'Deskripsi modul matematika',
         status: ModuleStatus.ACTIVE,
-        updatedBy: expect.any(String)
-      }, expect.any(Object))
+        updatedBy: 'current-user-id'
+      })
     })
   })
 
@@ -155,19 +159,19 @@ describe('ModuleFormModal', () => {
     render(
       <ModuleFormModal 
         isOpen={true} 
-        onClose={mockOnOpenChange} 
+        onClose={mockOnClose} 
       />
     )
 
     const user = userEvent.setup()
     
     // Isi judul dengan teks pendek
-    await user.type(screen.getByLabelText('Judul'), 'Test')
+    await user.type(screen.getByLabelText('Judul Modul'), 'Test')
     
-    // Klik di luar input untuk trigger validasi
-    await user.click(document.body)
+    // Submit form untuk memicu validasi
+    await user.click(screen.getByRole('button', { name: 'Tambah Modul' }))
     
     // Cek pesan error
-    expect(screen.getByText('Judul harus minimal 5 karakter')).toBeInTheDocument()
+    expect(screen.getByText('Judul minimal 5 karakter')).toBeInTheDocument()
   })
 })

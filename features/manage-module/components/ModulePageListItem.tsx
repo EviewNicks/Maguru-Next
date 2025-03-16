@@ -20,9 +20,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { ModulePageFormModal } from './ModulePageFormModal'
 import { useUpdateModulePage, useDeleteModulePage } from '../hooks/useModulePageMutations'
-import { ModulePage, ContentType } from '../types'
-import { ModulePageType, ModulePageUpdateSchema } from '../schemas/modulePageSchema'
-import { z } from 'zod'
+import { ModulePage, ContentType, ModulePageCreateInput, ModulePageUpdateInput } from '../types'
+import { ModulePageType } from '../schemas/modulePageSchema'
 
 interface ModulePageListItemProps {
   page: ModulePage
@@ -51,13 +50,20 @@ export function ModulePageListItem({ page, moduleId }: ModulePageListItemProps) 
   }
   
   // Handler untuk edit halaman
-  const handleEditPage = (data: z.infer<typeof ModulePageUpdateSchema>) => {
+  const handleEditPage = (formData: ModulePageCreateInput | ModulePageUpdateInput) => {
+    // Pastikan data memiliki id
+    const updateData = {
+      id: page.id,
+      type: page.type,
+      content: formData.content,
+      ...(page.type === ModulePageType.KODE && 'language' in formData && formData.language 
+        ? { language: formData.language } 
+        : {})
+    };
+    
     updateMutation.mutate({
       id: page.id,
-      data: {
-        content: data.content,
-        ...(data.type === ModulePageType.KODE && 'language' in data && data.language ? { language: data.language } : {}),
-      },
+      data: updateData,
       version: page.version,
     }, {
       onSuccess: () => {
@@ -141,14 +147,21 @@ export function ModulePageListItem({ page, moduleId }: ModulePageListItemProps) 
       
       {/* Modal Edit */}
       <ModulePageFormModal
-        isOpen={isEditModalOpen}
-        onClose={setIsEditModalOpen}
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
         moduleId={moduleId}
         contentType={contentType}
         onSubmit={handleEditPage}
         initialData={{
-          ...page,
-          language: page.language || null
+          id: page.id,
+          type: page.type,
+          content: page.content,
+          language: page.language || null,
+          moduleId: page.moduleId,
+          order: page.order,
+          createdAt: page.createdAt,
+          updatedAt: page.updatedAt,
+          version: page.version
         }}
         isLoading={updateMutation.isPending}
       />

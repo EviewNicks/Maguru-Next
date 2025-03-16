@@ -9,21 +9,25 @@ Dokumen ini menjelaskan hierarki komponen dalam fitur manajemen modul, diurutkan
 Komponen-komponen ini memiliki sedikit atau tidak ada ketergantungan pada komponen lain dalam fitur manajemen modul:
 
 1. **ModuleTable/columns.tsx**
+
    - Deskripsi: Definisi kolom untuk tabel modul
    - Dependensi: Tidak bergantung pada komponen lain dalam fitur
    - Test: `columns.test.tsx`
 
 2. **ModuleTable/ModuleActionCell.tsx**
+
    - Deskripsi: Sel aksi untuk setiap baris modul
    - Dependensi: Tidak bergantung pada komponen lain dalam fitur
    - Test: `ModuleActionCell.test.tsx`
 
 3. **editors/CodeEditor.tsx**
+
    - Deskripsi: Editor untuk konten kode
    - Dependensi: Tidak bergantung pada komponen lain dalam fitur
    - Test: `CodeEditor.test.tsx`
 
 4. **editors/TheoryEditor.tsx**
+
    - Deskripsi: Editor untuk konten teori
    - Dependensi: Tidak bergantung pada komponen lain dalam fitur
    - Test: `TheoryEditor.test.tsx`
@@ -38,21 +42,25 @@ Komponen-komponen ini memiliki sedikit atau tidak ada ketergantungan pada kompon
 Komponen-komponen ini bergantung pada komponen Level 1:
 
 1. **ModuleTable/DataTable.tsx**
+
    - Deskripsi: Tabel data untuk menampilkan modul
    - Dependensi: `columns.tsx`, `ModuleActionCell.tsx`
    - Test: `DataTable.test.tsx`
 
 2. **ModuleFormModal.tsx**
+
    - Deskripsi: Modal untuk membuat atau mengedit modul
    - Dependensi: Tidak bergantung langsung pada komponen lain, tetapi lebih kompleks dari komponen Level 1
    - Test: `ModuleFormModal.test.tsx`
 
 3. **DeleteModuleDialog.tsx**
+
    - Deskripsi: Dialog konfirmasi untuk menghapus modul
    - Dependensi: Tidak bergantung langsung pada komponen lain, tetapi lebih kompleks dari komponen Level 1
    - Test: `DeleteModuleDialog.test.tsx`
 
 4. **ModulePageListItem.tsx**
+
    - Deskripsi: Item untuk daftar halaman modul
    - Dependensi: Tidak bergantung langsung pada komponen lain, tetapi lebih kompleks dari komponen Level 1
    - Test: `ModulePageListItem.test.tsx`
@@ -67,6 +75,7 @@ Komponen-komponen ini bergantung pada komponen Level 1:
 Komponen-komponen ini bergantung pada komponen Level 2:
 
 1. **ModuleTable.tsx**
+
    - Deskripsi: Komponen utama untuk menampilkan tabel modul
    - Dependensi: `DataTable.tsx`, `ModuleFilter.tsx`, `ModuleFormModal.tsx`
    - Test: `ModuleTable.test.tsx`
@@ -81,6 +90,7 @@ Komponen-komponen ini bergantung pada komponen Level 2:
 Komponen-komponen ini bergantung pada komponen Level 3 dan merupakan komponen tingkat tertinggi:
 
 1. **ModuleManagement.tsx**
+
    - Deskripsi: Halaman manajemen modul
    - Dependensi: `ModuleTable.tsx`, `DeleteModuleDialog.tsx`
    - Test: `ModuleManagement.test.tsx`
@@ -110,6 +120,7 @@ Untuk komponen yang lebih tinggi (Level 3 dan 4), gunakan teknik mocking untuk m
 3. Mock komponen Level 3 saat menguji komponen Level 4
 
 Contoh mocking untuk ModuleTable.test.tsx:
+
 ```typescript
 // Mock ModuleFilter component
 jest.mock('./ModuleFilter', () => ({

@@ -2,9 +2,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import {
   Dialog,
   DialogContent,
@@ -32,7 +31,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TheoryEditor } from './editors/TheoryEditor'
 import { CodeEditor } from './editors/CodeEditor'
 import { ContentType, ModulePageFormModalProps } from '../types'
-import { ModulePageCreateSchema, ModulePageUpdateSchema, ModulePageType, ProgrammingLanguage } from '../schemas/modulePageSchema'
+import { 
+  ModulePageCreateSchema, 
+  ModulePageUpdateSchema, 
+  ModulePageType, 
+  ProgrammingLanguage,
+  ModulePageCreateInput,
+  ModulePageUpdateInput
+} from '../schemas/modulePageSchema'
 import { useCreateModulePage, useUpdateModulePage } from '../hooks/useModulePageMutations'
 
 export function ModulePageFormModal({
@@ -50,25 +56,35 @@ export function ModulePageFormModal({
   const createMutation = useCreateModulePage(moduleId)
   const updateMutation = useUpdateModulePage(moduleId)
   
-  // Buat schema berdasarkan apakah ini form edit atau tambah
-  const formSchema = isEditing ? ModulePageUpdateSchema : ModulePageCreateSchema
+  // Definisikan tipe untuk form values berdasarkan mode edit atau create
+  type FormValues = {
+    id?: string;
+    moduleId?: string;
+    type: ModulePageType;
+    content: string;
+    order?: number;
+    language?: ProgrammingLanguage;
+  };
   
   // Setup form dengan react-hook-form dan zod
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<FormValues>({
+    resolver: zodResolver(isEditing ? ModulePageUpdateSchema : ModulePageCreateSchema),
     defaultValues: isEditing && initialData
       ? {
           // Untuk form edit, gunakan nilai dari initialData
+          id: initialData.id,
           type: initialData.type,
           content: initialData.content || '',
-          ...(isModulePageTypeKode(initialData.type) && 'language' in initialData ? { 
+          ...(isModulePageTypeKode(initialData.type) && initialData.language ? { 
             language: initialData.language as ProgrammingLanguage 
           } : {})
         }
       : {
           // Untuk form tambah, gunakan nilai default berdasarkan initialContentType
+          moduleId,
           type: initialContentType === ContentType.THEORY ? ModulePageType.TEORI : ModulePageType.KODE,
           content: '',
+          order: 0,
           ...(initialContentType === ContentType.CODE ? { 
             language: ProgrammingLanguage.JAVASCRIPT 
           } : {})
@@ -81,10 +97,11 @@ export function ModulePageFormModal({
       if (isEditing && initialData) {
         // Reset form untuk edit
         form.reset({
+          id: initialData.id,
           type: initialData.type,
           content: initialData.content || '',
-          ...(isModulePageTypeKode(initialData.type) && 'language' in initialData ? { 
-            language: initialData.language 
+          ...(isModulePageTypeKode(initialData.type) && initialData.language ? { 
+            language: initialData.language as ProgrammingLanguage 
           } : {})
         })
       } else {
@@ -95,19 +112,23 @@ export function ModulePageFormModal({
           
         if (defaultType === ModulePageType.KODE) {
           form.reset({
+            moduleId,
             type: ModulePageType.KODE,
             content: '',
+            order: 0,
             language: ProgrammingLanguage.JAVASCRIPT
           });
         } else {
           form.reset({
+            moduleId,
             type: ModulePageType.TEORI,
-            content: ''
+            content: '',
+            order: 0
           });
         }
       }
     }
-  }, [form, initialData, open, initialContentType, isEditing])
+  }, [form, initialData, open, initialContentType, isEditing, moduleId])
 
   // Ambil nilai tipe konten saat ini
   const contentTypeValue = form.watch('type')
@@ -121,16 +142,18 @@ export function ModulePageFormModal({
     
     if (isEditing && initialData) {
       // Update halaman yang sudah ada
-      updateMutation.mutate({
+      const updateData = {
         id: initialData.id,
         data: {
           content: values.content || '',
-          ...(isModulePageTypeKode(values.type) && 'language' in values ? { 
+          ...(isModulePageTypeKode(values.type) && values.language ? { 
             language: values.language 
           } : {})
         },
         version: initialData.version || 1
-      }, {
+      };
+      
+      updateMutation.mutate(updateData, {
         onSuccess: () => {
           onOpenChange(false)
         }
@@ -142,7 +165,7 @@ export function ModulePageFormModal({
         type: values.type,
         content: values.content || '',
         order: 0, // Default order untuk halaman baru
-        ...(isModulePageTypeKode(values.type) && 'language' in values ? { 
+        ...(isModulePageTypeKode(values.type) && values.language ? { 
           language: values.language 
         } : {})
       };
