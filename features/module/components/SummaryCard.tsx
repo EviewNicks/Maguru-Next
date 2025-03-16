@@ -105,9 +105,6 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
     
     localStorage.setItem(`module_completion_${moduleData.id}`, JSON.stringify(moduleProgress))
     
-    // Log aktivitas pengguna
-    console.log('Pengguna menyelesaikan modul dan melanjutkan ke quiz', moduleProgress)
-    
     // Navigasi ke halaman quiz
     setTimeout(() => {
       router.push(`/quiz/${moduleData.id}`)

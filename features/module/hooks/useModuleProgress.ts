@@ -86,11 +86,6 @@ const useModuleProgress = ({
     const newMode = !quickViewMode
     setQuickViewMode(newMode)
 
-    // Tampilkan peringatan jika mode eksplorasi cepat diaktifkan
-    if (newMode) {
-      console.log('Mode eksplorasi cepat diaktifkan. Progres tidak akan disimpan.')
-    }
-
     return newMode
   }
 
@@ -99,9 +94,7 @@ const useModuleProgress = ({
     const currentModule = getCurrentModule()
     if (!currentModule) return
 
-    // Jika halaman belum selesai dan bukan mode eksplorasi cepat, tampilkan peringatan
     if (!isPageCompleted && !quickViewMode && currentPage < currentModule.totalPages) {
-      console.log('Halaman belum selesai. Selesaikan halaman ini terlebih dahulu atau aktifkan mode eksplorasi cepat.')
       return false
     }
 
@@ -173,13 +166,11 @@ const useModuleProgress = ({
 
     // Validasi ketat
     if (pageNumber < 1 || pageNumber > currentModule.totalPages) {
-      console.log(`Halaman ${pageNumber} tidak valid. Halaman harus antara 1 dan ${currentModule.totalPages}.`)
       return false
     }
 
-    // Jika halaman belum selesai dan bukan mode eksplorasi cepat, tampilkan peringatan
-    if (!isPageCompleted && !quickViewMode && !forceNavigate && pageNumber > currentPage) {
-      console.log('Halaman belum selesai. Selesaikan halaman ini terlebih dahulu atau aktifkan mode eksplorasi cepat.')
+    // Jika halaman belum selesai, tampilkan peringatan
+    if (!isPageCompleted && !forceNavigate && pageNumber > currentPage) {
       return false
     }
 
@@ -206,12 +197,6 @@ const useModuleProgress = ({
     setIncompleteSections([])
 
     return true
-  }
-
-  // Fungsi untuk mencatat navigasi untuk analitik UX
-  const logNavigation = (fromPage: number, toPage: number) => {
-    console.log(`Navigasi: Dari halaman ${fromPage} ke halaman ${toPage}`)
-    setNavigationHistory((prev) => [...prev, toPage])
   }
 
   // Fungsi untuk memulai modul

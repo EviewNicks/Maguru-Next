@@ -11,10 +11,8 @@ export default function GlobalModal() {
   )
 
   if (!isOpen) {
-    console.log('Modal tidak muncul karena isOpen:', isOpen)
     return null
   }
-  console.log('Modal muncul:', { isOpen, title, message, onConfirm })
 
   const handleConfirm = async () => {
     if (onConfirm) {

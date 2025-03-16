@@ -53,22 +53,28 @@ export function LinksDropdown() {
                   <DropdownMenuItem
                     key={link.label}
                     disabled={link.disabled}
-                    // onClick={link.onClick} // Tambahkan handler function
+                    asChild={link.href ? true : false}
                   >
                     {link.href ? (
-                      <Link href={link.href} className="w-full">
-                        {link.label}
+                      <Link href={link.href} className="w-full flex justify-between items-center">
+                        <span>{link.label}</span>
+                        {link.shortcut && (
+                          <DropdownMenuShortcut>
+                            {link.shortcut}
+                          </DropdownMenuShortcut>
+                        )}
                       </Link>
                     ) : (
-                      <span className="w-full">{link.label}</span>
-                    )}
-                    {link.shortcut && (
-                      <DropdownMenuShortcut>
-                        {link.shortcut}
-                      </DropdownMenuShortcut>
+                      <div className="w-full flex justify-between items-center">
+                        <span>{link.label}</span>
+                        {link.shortcut && (
+                          <DropdownMenuShortcut>
+                            {link.shortcut}
+                          </DropdownMenuShortcut>
+                        )}
+                      </div>
                     )}
                   </DropdownMenuItem>
-                  // </Link>
                 ))}
               </DropdownMenuGroup>
               {group.separator && <DropdownMenuSeparator />}

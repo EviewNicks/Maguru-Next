@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const nextJest = require('next/jest')
 
 const createJestConfig = nextJest({
@@ -16,6 +17,7 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/$1',
     '^@clerk/nextjs$': '<rootDir>/__tests__/__mocks__/@clerk/nextjs.ts',
     '^@clerk/backend$': '<rootDir>/__tests__/__mocks__/@clerk/backend.ts',
+    '^@prisma/client$': '<rootDir>/__tests__/__mocks__/@prisma/client.ts',
   },
   transform: {
     '^.+\\.(ts|tsx|js|jsx|mjs)$': ['babel-jest', { presets: ['next/babel'] }],
@@ -40,6 +42,11 @@ const customJestConfig = {
   testEnvironmentOptions: {
     customExportConditions: [''],
   },
+  // Sementara nonaktifkan custom reporter
+  reporters: [
+    'default', // Reporter default Jest
+    '<rootDir>/services/simpleJsonReporter.js', // Custom reporter
+  ],
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

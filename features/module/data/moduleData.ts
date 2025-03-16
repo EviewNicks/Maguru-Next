@@ -140,7 +140,7 @@ document.getElementById("demo").innerHTML = "Teks baru dari JavaScript";
 // Menangani event
 document.getElementById("myButton").addEventListener("click", function() {
     console.log("Tombol diklik!");
-});
+});     
 \`\`\`
 
 ## Konsep Dasar JavaScript

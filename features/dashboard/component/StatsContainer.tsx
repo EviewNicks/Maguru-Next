@@ -10,8 +10,6 @@ import { fetchStatsData } from '../service/stats'
 // ]
 
 function StatsContainer() {
-  console.log('⚡ StatsContainer dirender ulang')
-
   const { data: statsData = [] } = useQuery({
     queryKey: ['stats'],
     queryFn: fetchStatsData

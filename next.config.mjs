@@ -19,7 +19,7 @@ const nextConfig = {
       allowedOrigins: ['localhost:3000'],
     },
   },
-  devvIndicators: false,
+  devIndicators: false,
 
   // Disable some ESLint rules for tests
   eslint: {

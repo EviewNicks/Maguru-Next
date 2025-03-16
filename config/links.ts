@@ -17,23 +17,23 @@ export const dropdownLinks: DropdownGroup[] = [
     links: [
       { label: 'Dashboard', href: '/stats', shortcut: '⌘S' },
       { label: 'Profile', href: '/profile', shortcut: '⇧⌘P' },
-      { label: 'courses', href: '/courses', shortcut: '⌘B' },
-      { label: 'Keyboard shortcuts', href: '/shortcuts', shortcut: '⌘K' },
+      { label: 'Kursus', href: '/courses', shortcut: '⌘K' },
+      { label: 'Keyboard shortcuts', href: '/shortcuts', shortcut: '⌘S' },
     ],
     separator: true,
   },
   {
     links: [
-      { label: 'team', href: '/team' },
-      { label: 'Invite users', href: '/invite' },
-      { label: 'New Team', href: '/team/new', shortcut: '⌘+T' },
+      { label: 'Tim', href: '/team' },
+      { label: 'Undang Pengguna', href: '/invite' },
+      { label: 'Tim Baru', href: '/team/new', shortcut: '⌘+T' },
     ],
     separator: true,
   },
   {
     links: [
       { label: 'GitHub', href: 'https://github.com' },
-      { label: 'Support', href: '/support' },
+      { label: 'Bantuan', href: '/support' },
       { label: 'API', href: '/api', disabled: true },
     ],
     separator: true,

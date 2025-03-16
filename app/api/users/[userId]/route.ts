@@ -13,12 +13,42 @@ type RouteParams = {
 }
 
 type RouteContext = {
-  params: Promise<RouteParams>
+  params: RouteParams
+}
+
+export async function GET(req: NextRequest, context: RouteContext) {
+  try {
+    const userId = context.params.userId
+
+    // Simulasi pengambilan data user dari database
+    // Dalam implementasi nyata, ini akan mengambil data dari database
+    const userData = {
+      id: userId,
+      name: 'Admin User',
+      email: 'admin@example.com',
+      role: 'ADMIN',
+      createdAt: new Date().toISOString(),
+    }
+
+    return NextResponse.json(userData)
+  } catch (error) {
+    console.error(`Error in GET /api/users/${context.params.userId}:`, error)
+
+    return NextResponse.json(
+      {
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Terjadi kesalahan saat memproses permintaan',
+        },
+      },
+      { status: 500 }
+    )
+  }
 }
 
 export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
-    const { userId: paramsUserId } = await context.params
+    const { userId: paramsUserId } = context.params
     const { userId } = await auth()
 
     if (!userId) {
@@ -97,7 +127,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
 export async function DELETE(req: NextRequest, context: RouteContext) {
   try {
-    const { userId: paramsUserId } = await context.params
+    const { userId: paramsUserId } = context.params
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
