@@ -115,18 +115,25 @@ src/
 
 ## Prinsip/iterasi Development Per Langkah/SubTask
 1. Lihat Aturan di @.windsurfrules → Pahami aturan tim.
-2. Lihat Test Plan → Buat daftar test case.
-3. Buat Unit Test → Jalankan npx jest <path/nama file/component> .
-4. Implementasi Kode → Tulis kode minimal agar unit test lulus.
-*Note = jika Unit Test telah lulus semua lalukan (pre-commit sesuai dengan #Format Commit Message)
-5. (jika func/compoennt telah dapat dibuatkan integration test) Buat Integration Test → Jalankan npm run test:integration.
-6. Perbaiki Kode → Pastikan integration test lulus  (pre-commit).
-7. (jika func/compoennt telah dapat dibuatkan e2e test) Buat E2E Test → Jalankan npm run test:e2e (pre-commit).
-8. Perbaiki Kode → Pastikan E2E test lulus (pre-commit).
-9. Pre-Commit Akhir & CI/CD Pipelines → Otomatisasi pengujian.
-10. Buat/Perbarui Dokumentasi Report Test sesuai (Modul yang dilakukan) pada folder documentation\task\module\report-test\ → sesuai dengan format documentation\test-report.md
-11. Jika kredit cascade telah habis berikan informasi terkait proses Langkah/subtask sekarang. apakaha ini telah selesai atau perlu dilanjutkan iterasi sleanjutnya.
+2. Lihat Test Plan → Buat daftar test case -> prioritaskan berdasarkan risiko.
+3. Tulis unit test untuk func/compoennt (status red)
+4. Implementasi Kode → Tulis kode minimal agar unit test lulus (status green).
+5. Refactor kode -> Optimalkan kode (bersihkan duplikasi, tingkatkan readability) -> Jalankan unit test lagi
+6. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
+7. Buat Integration Test -> Jika func/compoennt sudah terintegrasi, buat dan jalankan integration test
+8. Perbaiki kode -> jika integration test gagal
+9. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
+10. Buat E2E Test -> Jika sudah deployable -> dibuatkan e2e test untuk simulasi user flow, 
+11. Perbaiki Kode → Pastikan E2E test lulus.
+12. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit,integration, e2e test lulus (pada fitur yang dikerjakan) sebelum commit
+14. Buat/Perbarui Dokumentasi Report Test sesuai (Modul yang dilakukan) pada folder documentation	ask\module\report-test\ → sesuai dengan format documentation\test-report.md
+13. Pre-Commit Akhir & CI/CD Pipelines → Otomatisasi pengujian.
+14. evaluasi iterasi berikutnya -> jika kredit cascade habis, evaluasi apakah task selesai atau perlu iterasi lanjutan.
 
+## catatan penting
+- Peer Review: Mintakan review kode dan test dari tim sebelum merge.
+- Flaky Test Management: Pantau dan perbaiki test yang gagal inconsistently.
+- Dokumentasi Developer: Tambahkan panduan setup dan troubleshooting untuk tim
 
 ## Format File
 - **Unit Test**: `ComponentName.test.tsx` (FE) / `ServiceName.test.ts` (BE).
