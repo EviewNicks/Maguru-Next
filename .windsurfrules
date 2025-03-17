@@ -113,8 +113,20 @@ src/
 ---
 # Test-Driven Development (TDD)
 
-## Prinsip
-Tulis test case sebelum implementasi kode.
+## Prinsip/iterasi Development Per Langkah/SubTask
+1. Lihat Aturan di @.windsurfrules → Pahami aturan tim.
+2. Lihat Test Plan → Buat daftar test case.
+3. Buat Unit Test → Jalankan npx jest <path/nama file/component> .
+4. Implementasi Kode → Tulis kode minimal agar unit test lulus.
+*Note = jika Unit Test telah lulus semua lalukan (pre-commit sesuai dengan #Format Commit Message)
+5. (jika func/compoennt telah dapat dibuatkan integration test) Buat Integration Test → Jalankan npm run test:integration.
+6. Perbaiki Kode → Pastikan integration test lulus  (pre-commit).
+7. (jika func/compoennt telah dapat dibuatkan e2e test) Buat E2E Test → Jalankan npm run test:e2e (pre-commit).
+8. Perbaiki Kode → Pastikan E2E test lulus (pre-commit).
+9. Pre-Commit Akhir & CI/CD Pipelines → Otomatisasi pengujian.
+10. Buat/Perbarui Dokumentasi Report Test sesuai (Modul yang dilakukan) pada folder documentation\task\module\report-test\ → sesuai dengan format documentation\test-report.md
+11. Jika kredit cascade telah habis berikan informasi terkait proses Langkah/subtask sekarang. apakaha ini telah selesai atau perlu dilanjutkan iterasi sleanjutnya.
+
 
 ## Format File
 - **Unit Test**: `ComponentName.test.tsx` (FE) / `ServiceName.test.ts` (BE).
