@@ -14,6 +14,13 @@
 9. Documentation & Guidelines
 10. Development Workflow
 
+**`TypeScript menganggap penggunaan any sebagai praktik yang tidak baik karena:**
+`!important : jangan menggunaakan any, jika tidak ada apilihan lain maka silahkan menggunakan any`
+
+- Menghilangkan keuntungan dari type-checking
+- Dapat menyebabkan bug yang sulit dilacak
+- Mengurangi kemampuan IDE untuk memberikan saran kode yang akurat\*\*
+
 ## 0. Read Documentation Before Coding
 
 AI **harus membaca dokumentasi proyek** sebelum menulis atau mengedit kode.  
@@ -95,18 +102,97 @@ src/
 
 'untuk structure file yang lebih jelas silahkan analisis file file-structure-documentation.md'
 
-## 3. Test-Driven Development (TDD)
-- Before writing implementation code, create a corresponding test file with the suffix `.test.ts`.
-- Format penamaan test file sesuai dengan nama compoennt untuk unit test FE dan BE: **ComponentName.test.tsx** atau **ServiceName.test.ts**.
-- Gunakan **mocking** untuk API dan data eksternal.
-- Run unit tests automatically after each file change.
-- Show warnings if test files are missing or failing.
-- Unit Test: Menguji fungsi-fungsi utama (UI, API handler, validasi input).
-- Integration Test: Menguji integrasi antar fitur (misal: login → akses modul → submit quiz).
-- E2E Test: Menguji keseluruhan user flow (Cypress digunakan untuk simulasi interaksi pengguna).
-- Unit Test: Jest.
-- Integration Test: Supertest.
-- E2E Test: Cypress.
+---
+
+## 3. Test-Driven Development (TDD) - Aturan yang Diperbarui
+
+### Prinsip Utama:
+- Semua jenis testing (**Unit, Integration, E2E**) harus memiliki test case yang ditulis sebelum implementasi kode.
+- **Tujuan:** Memastikan kode dirancang untuk lulus test case, mengurangi bug, dan meningkatkan kualitas kode.
+
+---
+# Test-Driven Development (TDD)
+
+## Prinsip/iterasi Development Per Langkah/SubTask
+1. Lihat Aturan di @.windsurfrules → Pahami aturan tim.
+2. Lihat Test Plan → Buat daftar test case -> prioritaskan berdasarkan risiko.
+3. Tulis unit test untuk func/compoennt (status red)
+4. Implementasi Kode → Tulis kode minimal agar unit test lulus (status green).
+5. Refactor kode -> Optimalkan kode (bersihkan duplikasi, tingkatkan readability) -> Jalankan unit test lagi
+6. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
+7. Buat Integration Test -> Jika func/compoennt sudah terintegrasi, buat dan jalankan integration test
+8. Perbaiki kode -> jika integration test gagal
+9. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
+10. Buat E2E Test -> Jika sudah deployable -> dibuatkan e2e test untuk simulasi user flow, 
+11. Perbaiki Kode → Pastikan E2E test lulus.
+12. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit,integration, e2e test lulus (pada fitur yang dikerjakan) sebelum commit
+14. Buat/Perbarui Dokumentasi Report Test sesuai (Modul yang dilakukan) pada folder documentation	ask\module\report-test\ → sesuai dengan format documentation\test-report.md
+15. Buat/perbarui Modul docs sesuai (Modul yang dilakukan) pada folder documentation\task\module → sesuai dengan format documentation\modul-docs.md
+16. Pre-Commit Akhir & CI/CD Pipelines → Otomatisasi pengujian.
+17. evaluasi iterasi berikutnya -> jika kredit cascade habis, evaluasi apakah task selesai atau perlu iterasi lanjutan.
+
+## catatan penting
+- Peer Review: Mintakan review kode dan test dari tim sebelum merge.
+- Flaky Test Management: Pantau dan perbaiki test yang gagal inconsistently.
+- Dokumentasi Developer: Tambahkan panduan setup dan troubleshooting untuk tim
+
+## Format File
+- **Unit Test**: `ComponentName.test.tsx` (FE) / `ServiceName.test.ts` (BE).
+- **Integration Test**: `FeatureName.integration.test.ts`.
+- **E2E Test**: `FeatureName.e2e.spec.ts`.
+
+## Tools
+- **Unit**: Jest + React Testing Library (FE) / Jest (BE).
+- **Integration**: Jest + MSW (FE) / Jest + Supertest (BE).
+- **E2E**: Cypress atau Playwright.
+
+## Best Practices
+- Gunakan mocking untuk API/database.
+- Jalankan test otomatis di CI/CD pipeline.
+- Block commit jika test gagal atau test file tidak ada.
+
+# Jenis Testing & Aturan Singkat
+
+## a. Unit Testing
+- **Fokus**: Logika internal komponen/fungsi.
+
+## b. Integration Testing
+- **Fokus**: Interaksi antar komponen/sistem.
+
+## c. End-to-End (E2E) Testing
+- **Fokus**: Alur lengkap aplikasi.
+
+## d. Smoke Testing
+- **Fokus**: Fitur kritis setelah build.
+
+## e. Exploratory Testing
+- **Fokus**: Temukan bug tak terduga.
+- **Dokumentasi**: Catat temuan di `docs/exploratory/feature.md`.
+
+## f. Regression Testing
+- **Fokus**: Pastikan perubahan tidak merusak fitur lama.
+
+# Struktur Direktori
+```
+components/
+  Button/
+    Button.tsx
+    Button.test.tsx    <-- Unit test
+__tests__/
+  integration/
+    name-epic/
+      Login-API.test.tsx <-- Integration test
+  e2e/
+    name-epic/
+      registration.spec.ts <-- E2E test
+  smoke/
+    name-epic/
+      Login.smoke.test.ts
+
+docs/
+  exploratory/
+    name-epic/
+    checkout-flow.md
 
 
 ## 4. Commit Message Standards
@@ -126,6 +212,45 @@ src/
 - Block commits if:
   - Linting fails (run `npm run lint`).
   - Tests fail (run `npm test`).
+
+# Format Commit Message
+
+```php-template
+<type>(<scope>/s<story>t<task>): <deskripsi singkat> (ISSUE_ID) v<versi>
+```
+
+## Contoh:
+
+```java
+feat(module/s2t1): implementasi halaman manajemen modul dengan CRUD (OPS-29) v1.0
+fix(auth/s2t3): perbaiki validasi middleware untuk akses admin (OPS-30) v1.1
+docs(api/s2t4): tambahkan dokumentasi CRUD modul akademik (OPS-29) v1.0
+```
+
+## Penjelasan Format:
+
+- **`type`**: Jenis perubahan, contoh:
+  - `feat` → Fitur baru
+  - `fix` → Perbaikan bug
+  - `docs` → Perubahan dokumentasi
+  - `refactor` → Perbaikan kode tanpa mengubah fungsionalitas
+  - `chore` → Perubahan kecil atau perawatan proyek
+
+- **`scope`**: Area yang terpengaruh, contoh:
+  - `module` → Modul tertentu
+  - `auth` → Sistem autentikasi
+  - `api` → Endpoint backend
+
+- **`s<story>t<task>`**: Nomor story dan task sesuai JIRA/GitHub.
+  - `s2t1` → Story 2, Task 1
+  - `s2t3` → Story 2, Task 3
+
+- **`ISSUE_ID`**: Mengaitkan commit dengan task spesifik di sistem manajemen proyek.
+  - `(OPS-29)`, `(OPS-30)`, dll.
+
+- **`versi`**: Menunjukkan versi perubahan.
+  - `v1.0`, `v1.1`, dll.
+
 
 ## 5. Dependency Management
 - All imported libraries must exist in `package.json`.

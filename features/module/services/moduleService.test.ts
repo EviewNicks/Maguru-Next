@@ -52,7 +52,7 @@ describe('moduleService', () => {
 
     it('should return null when given an invalid ID', async () => {
       const foundModule = await fetchModuleById('invalid-id');
-      expect(foundModule).not.toBeNull();
+      expect(foundModule).toBeNull();
     });
   });
 

@@ -20,3 +20,44 @@ model User {
 
   @@map("users")
 }
+
+enum ModuleStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+model Module {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  status      ModuleStatus @default(DRAFT)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   String
+  updatedBy   String
+  
+  pages       ModulePage[] // Relasi balik ke ModulePage
+
+  @@index([status])
+  @@index([title])
+  @@map("modules")
+}
+
+model ModulePage {
+  id          String   @id @default(uuid())
+  moduleId    String   @map("module_id")
+  order       Int
+  type        String   // "teori" atau "kode"
+  content     String   // HTML untuk teori, snippet kode untuk kode
+  language    String?  // Hanya diisi jika type = "kode" (contoh: "python", "javascript")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  version     Int      @default(1)  // Untuk optimistic locking
+  
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId, order])
+  @@unique([moduleId, order])
+  @@map("module_pages")
+}

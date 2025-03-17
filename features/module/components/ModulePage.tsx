@@ -56,9 +56,6 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId, quickViewMode: initia
   // Fungsi untuk menyorot bagian yang belum selesai
   const highlightIncompleteSections = useCallback(() => {
     // Implementasi nyata akan menambahkan kelas CSS atau efek visual ke elemen yang belum selesai
-    console.log('Menyorot bagian yang belum selesai:', incompleteSections)
-    
-    // Contoh: tambahkan kelas CSS ke elemen dengan ID yang sesuai
     incompleteSections.forEach(sectionId => {
       const element = document.getElementById(sectionId)
       if (element) {
@@ -130,12 +127,6 @@ const ModulePage: React.FC<ModulePageProps> = ({ moduleId, quickViewMode: initia
   // Efek untuk logging saat pengguna membuka halaman terakhir
   useEffect(() => {
     if (currentPageData?.isLastPage) {
-      console.log('Pengguna membuka halaman terakhir modul', {
-        moduleId,
-        userId,
-        timestamp: new Date().toISOString(),
-        navigationHistory
-      })
       
       // Simpan status ke localStorage
       const moduleCompletion = {
