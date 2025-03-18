@@ -1,0 +1,238 @@
+{
+  "timestamp": "2025-03-18T11-56-21.753Z",
+  "environment": "test",
+  "numFailedTests": 0,
+  "numPassedTests": 32,
+  "numTotalTests": 32,
+  "executionTime": "1742298956284ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\PaginationControls.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render pagination controls with current page and total pages",
+          "status": "passed",
+          "duration": 54,
+          "failureMessages": []
+        },
+        {
+          "title": "should disable previous button on first page",
+          "status": "passed",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "title": "should disable next button on last page",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "should call onPageChange when navigation buttons are clicked",
+          "status": "passed",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "title": "should call onPageSizeChange when page size is changed",
+          "status": "passed",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "title": "should show correct item range information",
+          "status": "passed",
+          "duration": 5,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\ModuleDescriptionCell.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render the description without truncation for short descriptions",
+          "status": "passed",
+          "duration": 34,
+          "failureMessages": []
+        },
+        {
+          "title": "should truncate long descriptions and show \"Lihat Selengkapnya\" button",
+          "status": "passed",
+          "duration": 18,
+          "failureMessages": []
+        },
+        {
+          "title": "should expand truncated description when \"Lihat Selengkapnya\" is clicked",
+          "status": "passed",
+          "duration": 19,
+          "failureMessages": []
+        },
+        {
+          "title": "should collapse expanded description when \"Sembunyikan\" is clicked",
+          "status": "passed",
+          "duration": 13,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\ModuleActionCell.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render edit and delete buttons",
+          "status": "passed",
+          "duration": 75,
+          "failureMessages": []
+        },
+        {
+          "title": "should call toast.info when edit button is clicked",
+          "status": "passed",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "title": "should call toast.info when delete button is clicked",
+          "status": "passed",
+          "duration": 9,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\SearchAndFilter.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render search input and filter dropdown",
+          "status": "passed",
+          "duration": 77,
+          "failureMessages": []
+        },
+        {
+          "title": "should call onSearch when search input changes with debounce",
+          "status": "passed",
+          "duration": 33,
+          "failureMessages": []
+        },
+        {
+          "title": "should call onFilterChange when status filter changes",
+          "status": "passed",
+          "duration": 10,
+          "failureMessages": []
+        },
+        {
+          "title": "should display the current search value",
+          "status": "passed",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "title": "should display the current filter value",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        },
+        {
+          "title": "should have a clear button for search input when there is a search value",
+          "status": "passed",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "title": "should not display clear button when search input is empty",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\DataTableWithFeatures.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render DataTable with pagination controls",
+          "status": "passed",
+          "duration": 130,
+          "failureMessages": []
+        },
+        {
+          "title": "should render search and filter controls",
+          "status": "passed",
+          "duration": 10,
+          "failureMessages": []
+        },
+        {
+          "title": "should update query parameters when pagination changes",
+          "status": "passed",
+          "duration": 27,
+          "failureMessages": []
+        },
+        {
+          "title": "should update query parameters when search input changes",
+          "status": "passed",
+          "duration": 27,
+          "failureMessages": []
+        },
+        {
+          "title": "should update query parameters when filter changes",
+          "status": "passed",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "title": "should update query parameters when sorting changes",
+          "status": "passed",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle loading state correctly",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle error state correctly",
+          "status": "passed",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "title": "should reset to page 1 when search or filter changes",
+          "status": "passed",
+          "duration": 12,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\DataTable.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render loading skeleton when isLoading is true",
+          "status": "passed",
+          "duration": 42,
+          "failureMessages": []
+        },
+        {
+          "title": "should render empty state when no data is available",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        },
+        {
+          "title": "should render table headers correctly",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        }
+      ]
+    }
+  ]
+}

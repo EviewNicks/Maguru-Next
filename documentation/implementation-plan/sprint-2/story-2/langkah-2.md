@@ -11,7 +11,7 @@ Membangun halaman admin untuk mengelola modul secara visual dan efisien. Halaman
 ### 2.1. Pembuatan Halaman Admin Modul
 **Tugas:**
 - Buat halaman di `pages/admin/module.tsx` menggunakan Next.js.
-- Desain layout dengan header, sidebar (opsional), dan area utama untuk datatable.
+- Desain layout dengan header, sidebar (components\layouts\Sidebar.tsx), dan area utama untuk datatable.
 
 **Kriteria Keberhasilan:**
 - Halaman dapat diakses dan menampilkan layout yang rapi, meskipun datatable masih kosong.

@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-03-18T12-05-48.339Z",
+  "environment": "test",
+  "numFailedTests": 0,
+  "numPassedTests": 2,
+  "numTotalTests": 2,
+  "executionTime": "1742299546734ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\app\\admin\\modules\\page.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render the page with correct layout",
+          "status": "passed",
+          "duration": 28,
+          "failureMessages": []
+        },
+        {
+          "title": "should have the correct page title",
+          "status": "passed",
+          "duration": 34,
+          "failureMessages": []
+        }
+      ]
+    }
+  ]
+}
