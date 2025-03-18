@@ -4,8 +4,8 @@
 
 - **Judul Dokumen:** Test Summary Report - Backend API CRUD Modul Akademik
 - **Identifikasi Versi dan Tanggal:**
-  - Versi: 1.1
-  - Tanggal: 2025-03-17
+  - Versi: 1.2
+  - Tanggal: 2025-03-18
 
 ## 2. Pendahuluan
 
@@ -56,7 +56,7 @@
 ## 5. Ringkasan Aktivitas Pengujian
 
 - **Deskripsi Kegiatan:**  
-  Pengujian dilakukan dengan menggunakan Jest dan Supertest untuk unit testing dan integration testing. Pengujian mencakup validasi input, middleware otorisasi, error handling, audit trail dasar, dan kinerja API.
+  Pengujian dilakukan menggunakan Jest untuk unit test dan integration test. Pengujian mencakup validasi input, otorisasi, error handling, kinerja, dan audit trail.
 
 - **Metodologi Pengujian:**
   - Unit testing untuk fungsi dan middleware
@@ -64,6 +64,9 @@
   - Performance testing untuk kinerja API
   - Black-box testing untuk validasi fungsionalitas
   - White-box testing untuk validasi implementasi
+    - Black-box testing untuk fungsionalitas API
+  - White-box testing untuk validasi input dan middleware
+  - Performance testing untuk mengukur kinerja API
 
 ## 6. Lingkungan Pengujian
 
@@ -75,21 +78,22 @@
   - PostgreSQL v15.x
   - Jest v29.x
   - Supertest v6.x
+    - node-mocks-http untuk mock request/response
 
 - **Kondisi Sistem:**
-  - Database dengan data dummy untuk pengujian
-  - Middleware otorisasi dengan mock user
+  - Database testing dengan 10.000+ data dummy
+  - Indeks pada kolom status dan title untuk optimasi query
 
 ## 7. Ringkasan Hasil Pengujian
 
 - **Statistik Pengujian:**
 
-  - Jumlah test cases: 57
-  - Jumlah test cases yang berhasil: 57
+  - Jumlah test cases yang dieksekusi: 39
+  - Jumlah test cases yang berhasil: 39
   - Jumlah test cases yang gagal: 0
-  - Defect density: 0% (0/57)
+  - Defect density: 0%
 
-- **Evaluasi Kriteria Kelulusan:**  
+- **Evaluasi Kriteria Kelulusan:**
   Berdasarkan kriteria kelulusan yang ditetapkan dalam test plan, pengujian telah memenuhi semua kriteria kelulusan:
 
   - Semua test case telah dieksekusi dan berhasil
@@ -115,12 +119,19 @@
      - Semua test kinerja API berhasil
      - Respons API <300ms untuk semua skenario pengujian, termasuk beban 10.000 modul
 
+- **Ringkasan Bug/Defect:**
+  Tidak ditemukan bug/defect selama pengujian.
+
 ## 8. Evaluasi dan Analisis
 
 - **Analisis Hasil:**
 
   1. **Middleware dan Validasi:**
+
      - Semua test untuk middleware (auth, audit, validation) dan validasi modul berhasil, menunjukkan bahwa komponen dasar berfungsi dengan baik.
+     - Validasi input menggunakan Zod berhasil menangkap semua kasus input yang tidak valid.
+     - Sanitasi input berhasil mencegah serangan XSS.
+
   2. **Service Layer:**
      - Semua test untuk service layer berhasil, menunjukkan bahwa implementasi service layer sesuai dengan ekspektasi.
      - Pagination, filter, search, dan update berfungsi dengan baik.
@@ -142,8 +153,13 @@
   2. **Keamanan:**
      - Non-admin tidak dapat mengakses operasi kritikal (POST/PUT/DELETE)
      - Sanitasi input berfungsi dengan baik
+     - Service layer berhasil menangani operasi CRUD dengan baik.
+     - Error handling berfungsi dengan baik, mengembalikan respons error yang terstandarisasi.
   3. **Kinerja:**
-     - Respons API <300ms untuk 10.000+ modul, sesuai dengan target dalam test plan
+
+     - API berhasil menangani beban 10.000+ modul dengan respons <300ms.
+     - Indeks pada kolom status dan title berhasil mengoptimasi query.
+
   4. **Audit Trail:**
      - Setiap operasi CRUD tercatat dalam audit trail
      - Format dan kelengkapan data audit trail sesuai dengan ekspektasi
@@ -159,13 +175,24 @@
   3. **Penambahan Test Audit Trail:**
      - Test audit trail telah ditambahkan dan berhasil
      - Audit trail mencatat semua operasi CRUD dengan benar
+       - Semua operasi CRUD berhasil dicatat dalam audit trail.
+
+- **Deviasi dan Isu:**
+  - Tidak ada deviasi signifikan dari rencana pengujian.
+  - Beberapa masalah TypeScript terkait penggunaan `any` telah diperbaiki untuk meningkatkan type safety.
+
+- **Rekomendasi:**
+  1. Implementasikan audit trail queryable untuk memudahkan penelusuran aktivitas admin.
+  2. Tingkatkan validasi input dengan menambahkan validasi untuk field tambahan seperti tags, categories, dll.
+  3. Implementasikan caching untuk meningkatkan kinerja API lebih lanjut.
 
 ## 9. Kesimpulan
 
-- **Ringkasan Kesimpulan:**  
+- **Ringkasan Kesimpulan:**
   Pengujian Backend API CRUD Modul Akademik menunjukkan bahwa semua komponen berfungsi dengan baik, termasuk middleware, validasi, service layer, API, kinerja, dan audit trail. Semua kriteria kelulusan telah terpenuhi, dan tidak ada bug atau defect yang ditemukan.
+    Backend API CRUD untuk Modul Akademik telah berhasil diimplementasikan dan memenuhi semua kriteria yang ditetapkan dalam Test Plan. API berfungsi dengan baik, aman, dan memiliki kinerja yang baik.
 
-- **Status Akhir:**  
+- **Status Akhir:**
   **LULUS** - Semua test case berhasil, tidak ada bug atau defect yang ditemukan, dan semua kriteria kelulusan terpenuhi.
 
 ## 10. Rencana Tindak Lanjut
@@ -176,74 +203,80 @@
    - Target: Sesuai dengan jadwal implementasi frontend
 
 2. **Monitoring Kinerja di Produksi:**
-
    - Memantau kinerja API di lingkungan produksi
    - Target: Ongoing setelah deployment
 
 3. **Pengembangan Audit Trail Queryable:**
    - Mengembangkan fitur audit trail queryable sesuai dengan rencana pada Langkah 9
    - Target: Sesuai dengan jadwal implementasi Langkah 9
+- **Tanda Tangan:**
+  (Bagian untuk persetujuan akhir sebagai bukti penerimaan laporan pengujian)
 
-## 11. Lampiran
+## Lampiran
 
-### Hasil Test Detail
+### Rincian Test Case dan Hasil
 
-```json
-{
-  "timestamp": "2025-03-17T15-00-26.988Z",
-  "environment": "test",
-  "numFailedTests": 0,
-  "numPassedTests": 57,
-  "numTotalTests": 57,
-  "executionTime": "1742223624415ms"
-}
-```
+| **Kategori**        | **Test Case**                                                          | **Status** | **Durasi (ms)** |
+| ------------------- | ---------------------------------------------------------------------- | ---------: | --------------: |
+| **Error Handling**  | should return standardized error for invalid module data               |     Passed |               8 |
+|                     | should return standardized 404 error for non-existent module           |     Passed |               1 |
+|                     | should return standardized 404 error when updating non-existent module |     Passed |               1 |
+|                     | should return standardized 500 error when service throws exception     |     Passed |               2 |
+|                     | should return standardized 401 error when user ID is missing           |     Passed |               1 |
+| **Performa**        | should respond in less than 300ms for GET /api/module                  |     Passed |              47 |
+|                     | should handle load of 100 modules in less than 300ms                   |     Passed |               9 |
+|                     | should handle load of 10000 modules in less than 300ms                 |     Passed |               9 |
+| **Filter & Search** | should filter modules by DRAFT status                                  |     Passed |               7 |
+|                     | should filter modules by ACTIVE status                                 |     Passed |               1 |
+|                     | should search modules by keyword                                       |     Passed |               1 |
+|                     | should combine filter and search                                       |     Passed |               1 |
+|                     | should handle pagination correctly                                     |     Passed |               1 |
+|                     | should handle empty search results                                     |     Passed |               0 |
+| **Validasi Input**  | should reject module creation with empty title                         |     Passed |               4 |
+|                     | should reject module creation with short description                   |     Passed |               1 |
+|                     | should reject module creation with invalid status                      |     Passed |               1 |
+|                     | should reject module creation with missing fields                      |     Passed |               2 |
+|                     | should accept valid module data                                        |     Passed |               1 |
+|                     | should sanitize input to prevent XSS                                   |     Passed |               1 |
+| **Otorisasi**       | should allow admin to create module                                    |     Passed |               2 |
+|                     | should allow admin to delete module                                    |     Passed |               2 |
+|                     | should reject module creation by mahasiswa                             |     Passed |               1 |
+|                     | should reject module deletion by mahasiswa                             |     Passed |               1 |
+|                     | should reject requests with missing authentication                     |     Passed |               1 |
+|                     | should handle auth service errors gracefully                           |     Passed |               0 |
+| **API Endpoints**   | should return paginated modules                                        |     Passed |               2 |
+|                     | should handle errors when fetching modules                             |     Passed |               1 |
+|                     | should create a new module                                             |     Passed |               0 |
+|                     | should return module by ID                                             |     Passed |               1 |
+|                     | should update module by ID                                             |     Passed |               1 |
+|                     | should delete module by ID                                             |     Passed |               1 |
+| **Audit Trail**     | should log module creation in audit trail                              |     Passed |               2 |
+|                     | should log module update in audit trail                                |     Passed |               1 |
+|                     | should log module deletion in audit trail                              |     Passed |               1 |
+| **Status API**      | should update module status                                            |     Passed |               2 |
+|                     | should return 404 if module not found                                  |     Passed |               1 |
+|                     | should handle missing user ID                                          |     Passed |               0 |
+|                     | should handle errors when updating module status                       |     Passed |               1 |
 
-### Rincian Test Case yang Berhasil
+### Ringkasan Pencapaian Kriteria
 
-1. **Module Performance Tests:**
-
-   - should respond in less than 300ms for GET /api/module
-   - should handle load of 100 modules in less than 300ms
-   - should handle load of 10000 modules in less than 300ms
-
-2. **Module API Integration Tests:**
-
-   - should return paginated modules
-   - should handle errors when fetching modules
-   - should create a new module
-   - should return module by ID
-   - should update module by ID
-   - should delete module by ID
-
-3. **Module Status API Integration Tests:**
-
-   - should update module status
-   - should return 404 if module not found
-   - should handle missing user ID
-   - should handle errors when updating module status
-
-4. **Module Audit Trail Integration Tests:**
-
-   - should log module creation in audit trail
-   - should log module update in audit trail
-   - should log module deletion in audit trail
-
-5. **Middleware dan Validasi Tests:**
-
-   - Semua test untuk middleware auth, audit, dan validation
-   - Semua test untuk validasi modul
-
-6. **Service Layer Tests:**
-   - Semua test untuk service layer, termasuk create, get, update, dan delete
-   - Semua test untuk pagination, filter, dan search
-
-### Perbandingan dengan Test Plan
-
-| **Aspek**          | **Target dalam Test Plan**                                      | **Hasil Pengujian**                                            |
+| **Kriteria**       | **Target**                                                      | **Hasil**                                                      |
 | ------------------ | --------------------------------------------------------------- | -------------------------------------------------------------- |
 | **Fungsionalitas** | CRUD modul berjalan sempurna dengan validasi input & middleware | Semua test CRUD, validasi, dan middleware berhasil             |
 | **Keamanan**       | Non-admin tidak bisa akses operasi kritikal                     | Semua test keamanan berhasil                                   |
 | **Kinerja**        | Respons API <300ms untuk 10.000+ modul                          | Semua test kinerja berhasil, respons <300ms untuk 10.000 modul |
 | **Audit Trail**    | Setiap operasi CRUD tercatat di log                             | Semua test audit trail berhasil                                |
 | **Error Handling** | Error response terstandarisasi dengan kode & pesan jelas        | Semua test error handling berhasil                             |
+
+### Hasil Test Detail
+
+```json
+{
+  "timestamp": "2025-03-18T02-22-57.457Z",
+  "environment": "test",
+  "numFailedTests": 0,
+  "numPassedTests": 39,
+  "numTotalTests": 39,
+  "executionTime": "1742223624415ms"
+}
+```

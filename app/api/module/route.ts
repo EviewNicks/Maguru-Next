@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { moduleService } from '../../../features/manage-module/services/moduleService'
-import {
-  moduleQuerySchema,
-  createModuleSchema,
-} from '../../../features/manage-module/utils/moduleValidation'
+import { createModuleSchema } from '../../../features/manage-module/utils/moduleValidation'
 import {
   withAdminAuth,
   withAuditTrail,
   withValidation,
   composeMiddlewares,
 } from './middleware'
-import { auth } from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 
 /**
  * Handler untuk GET request
@@ -51,7 +48,7 @@ async function getModulesHandler(request: NextRequest) {
  */
 async function createModuleHandler(request: NextRequest) {
   try {
-    const { userId } = auth()
+    const { userId } = await auth()
 
     if (!userId) {
       return NextResponse.json(
