@@ -1,0 +1,371 @@
+# Maguru Project Development Rules
+
+## 📚 Daftar Isi
+
+0. Read Documentation File
+1. Folder & File Structure
+2. UI/UX Consistency
+3. Test-Driven Development (TDD)
+4. Commit Message Standards
+5. Dependency Management
+6. Linting & Formatting
+7. CI/CD Integration
+8. Code Modularity & Optimization
+9. Documentation & Guidelines
+10. Development Workflow
+
+**`TypeScript menganggap penggunaan any sebagai praktik yang tidak baik karena:**
+`!important : jangan menggunaakan any, jika tidak ada apilihan lain maka silahkan menggunakan any`
+
+- Menghilangkan keuntungan dari type-checking
+- Dapat menyebabkan bug yang sulit dilacak
+- Mengurangi kemampuan IDE untuk memberikan saran kode yang akurat\*\*
+
+## 0. Read Documentation Before Coding
+
+AI **harus membaca dokumentasi proyek** sebelum menulis atau mengedit kode.  
+Dokumentasi ini berisi standar coding, alur sistem, serta aturan proyek.
+
+### 📌 File Dokumentasi yang Wajib Dibaca:
+
+1️⃣ **PRD (Project Requirements Document) → `/documentation/PRD.md`**
+
+- **Deskripsi**: Visi proyek, fitur utama, dan persyaratan sistem yang harus dipenuhi untuk keberhasilan proyek.
+- **Mengapa Harus Dibaca?**: Pastikan fitur yang dikembangkan sesuai dengan rencana awal proyek agar konsistensi dan tujuan tercapai.
+
+2️⃣ **App Flow Document → `/documentation/app-flow-documentation.md`**
+
+- **Deskripsi**: Diagram alur aplikasi dan interaksi pengguna yang menggambarkan bagaimana pengguna akan berinteraksi dengan sistem.
+- **Mengapa Harus Dibaca?**: Fitur yang dibuat harus mengikuti flow aplikasi yang telah disusun untuk meningkatkan pengalaman pengguna.
+
+3️⃣ **Tech Stack Document → `/documentation/tech-stack-documentation.md`**
+
+- **Deskripsi**: Menjelaskan framework, database, dan teknologi yang digunakan dalam proyek, serta alasan pemilihannya.
+- **Mengapa Harus Dibaca?**: Jangan gunakan library atau teknologi yang tidak disebutkan dalam dokumen ini untuk menjaga konsistensi dan kompatibilitas.
+
+4️⃣ **Frontend Guidelines → `/documentation/frontend-guidelines.md`**
+
+- **Deskripsi**: Panduan tentang konvensi coding frontend (React, Tailwind, dsb.) serta praktik terbaik dalam pengembangan antarmuka pengguna.
+- **Mengapa Harus Dibaca?**: Semua kode frontend harus sesuai dengan aturan desain dan struktur yang ada untuk memastikan kualitas dan keterbacaan kode.
+
+5️⃣ **Backend Structure Document → `/documentation/backend-structure.md`**
+
+- **Deskripsi**: Struktur database, arsitektur backend, dan API endpoints yang digunakan dalam proyek.
+- **Mengapa Harus Dibaca?**: Jangan improvisasi dalam penulisan backend, pastikan API dan database sesuai aturan untuk menjaga integritas sistem.
+
+6️⃣ **File Structure Document → `/documentation/file-structure.md`**
+
+- **Deskripsi**: Organisasi folder dan file proyek yang menjelaskan lokasi dan tujuan setiap file dalam proyek.
+- **Mengapa Harus Dibaca?**: File harus ditempatkan pada direktori yang benar agar proyek tetap terstruktur dengan baik dan memudahkan navigasi.
+
+7️⃣ **Roadmap Planning → `/documentation/RoadmapPlanning.md`**
+
+- **Deskripsi**: High-level roadmap ini adalah roadmap proyek dan sprint planning yang membantu kamu memahami:
+  - Fitur apa yang sedang dikerjakan dan akan datang.
+  - Prioritas fitur dan sprint yang sedang berjalan.
+  - Bagaimana kamu dapat membantu dalam menyelesaikan proyek ini.
+- **Mengapa Harus Dibaca?**: Dengan membaca roadmap planning, kamu dapat memahami tujuan proyek dan bagaimana kamu dapat berkontribusi. Juga, kamu dapat memahami bagaimana fitur yang sedang dikerjakan dan akan datang, sehingga kamu dapat berkoordinasi dengan baik dalam tim.
+
+8️⃣ **Implementation Plan → `/documentation/ImplementationPlan.md`**
+
+- **Deskripsi**: Instruksi detail tentang fitur yang sedang dikerjakan (Step-by-Step Execution Plan).
+- **Mengapa Harus Dibaca?**: **AI hanya boleh mengerjakan kode berdasarkan Implementation Plan yang ada.**
+
+## 1. Folder & File Structure
+
+- Follow the structure defined in the **File Structure Document**.
+- Place reusable components in `/features` or `/components`.
+- Avoid complex configurations in `/app`. Keep this folder focused on routing and page-level logic.
+
+## 2.UI/UX Consistency
+
+- **Shadcn UI First:** Selalu prioritaskan komponen dari **Shadcn UI** sebelum membuat custom components.
+- **Class Order & Spacing:** AI akan otomatis mengatur urutan class Tailwind untuk keterbacaan dan performa.
+- **Dark/Light Mode Support:** Pastikan setiap komponen mendukung **Next Themes**.
+
+Contoh struktur folder:
+
+````
+src/
+├── components/
+│   ├── ui/           # Komponen UI reusable
+│   ├── layouts/      # Layout utama bersifat global
+├── features/
+│   ├── dashboard/
+│   │   ├── components/ #Kompoennt Khusus yang digunakan untuk Dashboard
+│   │   ├── hooks/      #hooks khusus Dashbaord
+│   │   ├── services/   #service khusus Dashboard
+│   │   └── utils/      #utils khusus Dashboard
+├── hooks/            # Custom hooks bersifat Golbal
+├── utils/            # Fungsi utilitas global
+└── config/           # Konfigurasi global
+
+'untuk structure file yang lebih jelas silahkan analisis file file-structure-documentation.md'
+
+---
+
+## 3. Test-Driven Development (TDD) - Aturan yang Diperbarui
+
+### Prinsip Utama:
+- Semua jenis testing (**Unit, Integration, E2E**) harus memiliki test case yang ditulis sebelum implementasi kode.
+- **Tujuan:** Memastikan kode dirancang untuk lulus test case, mengurangi bug, dan meningkatkan kualitas kode.
+
+---
+# Test-Driven Development (TDD)
+
+## Prinsip/iterasi Development Per Langkah/SubTask
+1. Lihat Aturan di @.windsurfrules → Pahami aturan tim.
+2. Lihat Test Plan → Buat daftar test case -> prioritaskan berdasarkan risiko.
+3. Tulis unit test untuk func/compoennt (status red)
+4. Implementasi Kode → Tulis kode minimal agar unit test lulus (status green).
+5. Refactor kode -> Optimalkan kode (bersihkan duplikasi, tingkatkan readability) -> Jalankan unit test lagi
+6. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
+7. Buat Integration Test (__tests__\integration\<name-epic>) -> Jika func/compoennt sudah terintegrasi, buat dan jalankan integration test
+8. Perbaiki kode -> jika integration test gagal
+9. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
+10. Buat E2E Test (__tests__\e2e\<name-epic>) -> Jika sudah deployable -> dibuatkan e2e test untuk simulasi user flow,
+11. Perbaiki Kode → Pastikan E2E test lulus.
+12. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit,integration, e2e test lulus (pada fitur yang dikerjakan) sebelum commit
+14. Buat/Perbarui Dokumentasi Report Test sesuai (Modul yang dilakukan) pada folder documentation	ask\module\report-test\ → sesuai dengan format documentation\test-report.md
+15. Buat/perbarui Modul docs sesuai (Modul yang dilakukan) pada folder documentation\task\module → sesuai dengan format documentation\modul-docs.md
+16. Pre-Commit Akhir & CI/CD Pipelines → Otomatisasi pengujian.
+17. evaluasi iterasi berikutnya -> jika kredit cascade habis, evaluasi apakah task selesai atau perlu iterasi lanjutan.
+
+## catatan penting
+- Peer Review: Mintakan review kode dan test dari tim sebelum merge.
+- Flaky Test Management: Pantau dan perbaiki test yang gagal inconsistently.
+- Dokumentasi Developer: Tambahkan panduan setup dan troubleshooting untuk tim
+
+## Format File
+- **Unit Test**: `ComponentName.test.tsx` (FE) / `ServiceName.test.ts` (BE).
+- **Integration Test**: `FeatureName.integration.test.ts`.
+- **E2E Test**: `FeatureName.e2e.spec.ts`.
+
+## Tools
+- **Unit**: Jest + React Testing Library (FE) / Jest (BE).
+- **Integration**: Jest + MSW (FE) / Jest + Supertest (BE).
+- **E2E**: Cypress atau Playwright.
+
+## Best Practices
+- Gunakan mocking untuk API/database.
+- Jalankan test otomatis di CI/CD pipeline.
+- Block commit jika test gagal atau test file tidak ada.
+
+# Jenis Testing & Aturan Singkat
+
+## a. Unit Testing
+- **Fokus**: Logika internal komponen/fungsi.
+
+## b. Integration Testing
+- **Fokus**: Interaksi antar komponen/sistem.
+
+## c. End-to-End (E2E) Testing
+- **Fokus**: Alur lengkap aplikasi.
+
+## d. Smoke Testing
+- **Fokus**: Fitur kritis setelah build.
+
+## e. Exploratory Testing
+- **Fokus**: Temukan bug tak terduga.
+- **Dokumentasi**: Catat temuan di `docs/exploratory/feature.md`.
+
+## f. Regression Testing
+- **Fokus**: Pastikan perubahan tidak merusak fitur lama.
+
+# Struktur Direktori
+```
+components/
+  Button/
+    Button.tsx
+    Button.test.tsx    <-- Unit test
+__tests__/
+  integration/
+    name-epic/
+      Login-API.test.tsx <-- Integration test
+  e2e/
+    name-epic/
+      registration.spec.ts <-- E2E test
+  smoke/
+    name-epic/
+      Login.smoke.test.ts
+
+docs/
+  exploratory/
+    name-epic/
+    checkout-flow.md
+
+
+## 4. Commit Message Standards
+- Use **Conventional Commits** format for clear, consistent commit history:
+  - `feat:` → New features.
+  - `fix:` → Bug fixes.
+  - `chore:` → Maintenance tasks.
+  - `docs:` → Documentation updates.
+  - `style:` → Code style changes (no logic changes).
+  - `refactor:` → Code restructuring without changing behavior.
+  - `test:` → Adding or modifying tests.
+
+- **Panjang maksimal:**
+  - **Header:** 50 karakter.
+  - **Body:** 72 karakter per baris.
+
+- Block commits if:
+  - Linting fails (run `npm run lint`).
+  - Tests fail (run `npm test`).
+
+# Format Commit Message
+
+```php-template
+<type>(<scope>/s<story>t<task>): <deskripsi singkat> (ISSUE_ID) v<versi>
+```
+
+## Contoh:
+
+```java
+feat(module/s2t1): implementasi halaman manajemen modul dengan CRUD (OPS-29) v1.0
+fix(auth/s2t3): perbaiki validasi middleware untuk akses admin (OPS-30) v1.1
+docs(api/s2t4): tambahkan dokumentasi CRUD modul akademik (OPS-29) v1.0
+```
+
+## Penjelasan Format:
+
+- **`type`**: Jenis perubahan, contoh:
+  - `feat` → Fitur baru
+  - `fix` → Perbaikan bug
+  - `docs` → Perubahan dokumentasi
+  - `refactor` → Perbaikan kode tanpa mengubah fungsionalitas
+  - `chore` → Perubahan kecil atau perawatan proyek
+
+- **`scope`**: Area yang terpengaruh, contoh:
+  - `module` → Modul tertentu
+  - `auth` → Sistem autentikasi
+  - `api` → Endpoint backend
+
+- **`s<story>t<task>`**: Nomor story dan task sesuai JIRA/GitHub.
+  - `s2t1` → Story 2, Task 1
+  - `s2t3` → Story 2, Task 3
+
+- **`ISSUE_ID`**: Mengaitkan commit dengan task spesifik di sistem manajemen proyek.
+  - `(OPS-29)`, `(OPS-30)`, dll.
+
+- **`versi`**: Menunjukkan versi perubahan.
+  - `v1.0`, `v1.1`, dll.
+
+
+## 5. Dependency Management
+- All imported libraries must exist in `package.json`.
+- Raise warnings for unlisted or incompatible libraries.
+- Rekomendasikan **versi stabil (semver)** untuk menghindari konflik.
+- Use **alias imports** (`@/`) to avoid complex relative paths.
+- jika ada library yang pelru di tambahkan maka silahkan berikan alasan mengapa pelru menginstallnya dan saya akan memberikan persetujuan
+
+## 6. Linting & Formatting
+- Use **ESLint** and **Prettier** with the project’s predefined configurations.
+- Automatically fix simple linting issues.
+- Show warnings for any remaining lint errors or code style violations.
+- **Aturan penting:**
+  - Hindari penggunaan `any` di TypeScript.
+  - Gunakan **arrow functions** jika memungkinkan.
+  - **Organize imports** otomatis.
+   - Aktifkan **strict mode** di `tsconfig.json`.
+  - **Tipe eksplisit** untuk fungsi dan variabel.
+  - Gunakan **eslint-plugin-import** untuk pengurutan import otomatis.
+
+## 7. CI/CD Integration
+- Use **GitHub Actions** for continuous integration.
+- Automatically run tests and linting on pull requests.
+- Block merges if tests or linting fail.
+- Tahapan pipeline:
+  1. **Install dependencies:** `npm ci`
+  2. **Linting:** `npm run lint`
+  3. **Testing:** `npm test`
+  4. **Build:** `npm run build
+
+## 8.Code Modularity & Optimization
+- Split complex logic into smaller, focused modules.
+- Suggest refactoring for duplicate or overly complex code.
+- Prioritize performance optimizations (e.g., memoization, server-side rendering).
+- Pisahkan kode kompleks ke **utils/** atau **hooks/**.
+- Deteksi kode duplikat dan beri saran refactor.
+
+## 9.Documentation & Guidelines
+
+### 9.1 Documentation Overview
+
+#### Referensi Utama:
+- **PRD (Project Requirements Document):** [/documentation/PRD.md](documentation/PRD.md)
+- **App Flow Document:** [/documentation/app-flow-documentation.md](documentation/app-flow-documentation.md)
+- **Tech Stack Document:** [/documentation/tech-stack-documentation.md](documentation/tech-stack-documentation.md)
+- **Frontend Guidelines:** [/documentation/frontend-guidelines.md](documentation/frontend-guidelines.md)
+- **Backend Structure Document:** [/documentation/backend-structure.md](documentation/backend-structure.md)
+
+#### Tujuan:
+- Menjamin bahwa setiap fitur dan perubahan kode sejalan dengan visi dan persyaratan proyek.
+- Memastikan konsistensi dan kompatibilitas antara bagian frontend dan backend.
+
+### 9.2 Task-based Documentation
+
+#### Dasar Penulisan:
+- Sebelum menulis atau mengupdate dokumentasi untuk task-based modul, pastikan membaca file `module-docs.md` yang berisi fundamental penulisan dokumen.
+- File ini menjadi acuan utama dalam menulis dokumentasi untuk setiap modul.
+
+#### Update Dokumentasi Task-based:
+- Setiap update pada dokumentasi modul harus disertai dengan tanda pembaruan dalam format `[update+YYYY-MM-DD]` (contoh: `[update+2025-03-08]`) pada modul docs yang di kerjakan contohnya @/documentation/task/module/t1-module-learning.md.
+- Pastikan bahwa setiap langkah atau perubahan yang dilakukan pada task-based modul terdokumentasi dengan jelas dan konsisten.
+
+#### Struktur Folder Dokumentasi Modul:
+```
+/documentation/
+└── task/
+    ├── dashboard/
+    │   └── t1-dashboard.md
+    └── module/
+        ├── t1-module-learning.md
+        └── t2-manage-module.md
+```
+
+- Pastikan untuk menempatkan file dokumentasi yang relevan di dalam folder `module/` sesuai dengan konteks task yang sedang dikerjakan.
+
+#### Tujuan:
+- Memastikan semua task dan subtask terdokumentasi dengan baik untuk memudahkan review dan onboarding anggota tim baru.
+- Menjaga konsistensi dalam dokumentasi dan meminimalisir risiko langkah pengembangan yang terlewat.
+- Memberikan catatan perubahan yang transparan melalui tanda pembaruan `[update+YYYY-MM-DD]`.
+
+### 9.3 Code Comments & Annotations
+
+#### Komentar Kode:
+- Sertakan komentar pada bagian kode yang kompleks dengan referensi ke dokumentasi terkait.
+
+##### Contoh:
+```typescript
+// Fungsi ini menangani autentikasi pengguna dengan JWT tokens.
+// Detail algoritma: lihat /documentation/PRD.md dan /documentation/app-flow-documentation.md
+const authenticateUser = async () => { ... };
+```
+
+#### Tujuan:
+- Memudahkan pemahaman kode oleh anggota tim lain.
+- Memastikan bahwa logika kompleks memiliki penjelasan pendukung yang terperinci.
+
+### 9.4 Documentation Automation & Review
+
+#### Otomasi Dokumen:
+- Integrasikan CI/CD (misalnya, melalui GitHub Actions) untuk memeriksa apakah setiap pull request disertai dengan pembaruan dokumentasi jika ada perubahan pada task.
+- Notifikasi otomatis jika ada subtask yang belum terdokumentasi.
+
+#### Review Dokumentasi:
+- Pastikan dokumentasi di-review bersamaan dengan code review untuk menjaga akurasi dan relevansi informasi.
+
+#### Tujuan:
+- Mengurangi risiko langkah pengembangan yang tidak terdokumentasi.
+- Memastikan transparansi dan kontinuitas informasi antar anggota tim.
+
+
+## 10. Development Workflow
+- Break down features into smaller, incremental tasks.
+- Create meaningful pull requests with clear descriptions.
+- Prioritize regular code reviews to maintain quality.
+- Use feature flags or environment variables for experimental features.
+
+Let me know if you want me to tweak or expand anything! 🚀
+````

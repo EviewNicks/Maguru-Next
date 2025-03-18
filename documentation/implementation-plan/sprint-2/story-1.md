@@ -34,8 +34,8 @@ Membangun kerangka utama untuk modul pembelajaran dengan navigasi dan progres ya
 
 - **1.1** Buat folder `feature/module` untuk menyimpan semua komponen terkait modul.
 - **1.2** Buat file `ModulePage.tsx` sebagai komponen utama untuk menampilkan setiap halaman modul.
-- **1.3** Tambahkan folder `data` untuk menyimpan file `moduleData.js` berisi data dummy modul.
-- **1.4** Tambahkan properti standar dalam `moduleData.js`:
+- **1.3** Tambahkan folder `data` untuk menyimpan file `moduleData.ts` berisi data dummy modul.
+- **1.4** Tambahkan properti standar dalam `moduleData.ts`:
   - `id`: ID unik modul.
   - `title`: Judul modul.
   - `content`: Konten utama.
@@ -44,7 +44,7 @@ Membangun kerangka utama untuk modul pembelajaran dengan navigasi dan progres ya
 
 #### 2. Memproses Data Modul
 
-- **2.1** Buat fungsi utilitas `getModuleData(moduleId)` di `moduleData.js` untuk mengambil data modul berdasarkan ID.
+- **2.1** Buat fungsi utilitas `getModuleData(moduleId)` di `moduleData.ts` untuk mengambil data modul berdasarkan ID.
 - **2.2** Tambahkan validasi di `getModuleData()` untuk memeriksa apakah modul dengan ID tertentu ada. Jika tidak ditemukan, kembalikan pesan error atau data kosong.
 - **2.3** Implementasikan fallback logic untuk mengatasi data corrupt di `getModuleData()`:
   - Jika konten tidak valid, berikan opsi **"Coba Perbaiki"** kepada pengguna.
@@ -259,26 +259,31 @@ Menampilkan ringkasan materi yang dinamis, memastikan penyelesaian modul sebelum
 - Apakah logging bekerja tanpa spam?
 - Apakah unit test dan E2E test mencakup semua skenario utama dan edge case?
 
-
 # **Langkah 5 : Testing & Debugging**
 
 ## **1. Unit Testing**
 
 ### **5.1 Pengujian Komponen**
+
 Tulis unit test untuk komponen berikut:
+
 - **ModulePage.tsx**: Validasi rendering data modul berdasarkan halaman aktif.
 - **ProgressIndicator.tsx**: Verifikasi perhitungan persentase progres.
 - **SummaryCard.tsx**: Pastikan data ringkasan ditampilkan dengan benar.
 
 ### **5.2 Pengujian Fungsi Utilitas**
+
 Tambahkan unit test untuk fungsi berikut:
+
 - **getInitialPage()**: Pastikan halaman awal ditentukan dengan benar berdasarkan data Redux/localStorage.
 - **syncProgressFromLocalStorage()**: Verifikasi sinkronisasi data progres antara Redux dan localStorage.
 
 ## **2. Integration Testing**
 
 ### **5.3 Skenario Integrasi**
+
 Buat integration test untuk skenario berikut:
+
 - Sinkronisasi progres antar halaman (dari Redux ke localStorage dan sebaliknya).
 - Validasi logika **enable/disable** tombol navigasi berdasarkan status halaman.
 - Interaksi antara **ModulePage.tsx** dan **ProgressIndicator.tsx** untuk memastikan progres diperbarui secara real-time.
@@ -286,7 +291,9 @@ Buat integration test untuk skenario berikut:
 ## **3. End-to-End Testing (E2E)**
 
 ### **5.4 Pembagian Batch E2E Test**
+
 Bagi pengujian E2E menjadi batch kecil untuk mempercepat eksekusi:
+
 - **Batch 1**: Akses modul dari halaman 1 hingga halaman 10.
 - **Batch 2**: Navigasi dari halaman 11 hingga halaman terakhir.
 - **Batch 3**: Navigasi ke halaman terakhir dan lanjut ke quiz.
@@ -294,7 +301,9 @@ Bagi pengujian E2E menjadi batch kecil untuk mempercepat eksekusi:
 - **Visual Regression Testing**: Untuk pastikan UI tetap konsisten, bisa tambahkan snapshot testing dengan Cypress.
 
 ### **5.5 Pengujian Edge Case**
+
 Tambahkan skenario edge case berikut di E2E test:
+
 - Refresh halaman di tengah interaksi.
 - Pengguna menekan tombol **"Back"** di browser.
 - Quiz gagal dimuat karena **API failure**.
@@ -304,7 +313,9 @@ Tambahkan skenario edge case berikut di E2E test:
 ## **4. Stress Testing**
 
 ### **5.6 Simulasi Data Besar**
+
 Simulasikan data dummy besar (>100 halaman) untuk menguji performa aplikasi:
+
 - Uji **waktu load awal** modul.
 - **Memory Leak Detection**: Saat stress testing, bisa pakai Chrome DevTools Protocol untuk memonitor memory usage.
 
@@ -336,9 +347,11 @@ Simulasikan data dummy besar (>100 halaman) untuk menguji performa aplikasi:
 ## **📌 Catatan Tambahan**
 
 ### **🚨 Risiko:**
+
 - Potensi kesalahan penyimpanan progres di localStorage atau Redux → tambahkan validasi data.
 - Ketidakcocokan UI pada beberapa ukuran layar → lakukan pengujian intensif dengan developer tools.
 
 ### **📚 Referensi:**
+
 - Dokumentasi Redux untuk state management.
 - Dokumentasi shadcn/ui untuk komponen UI tambahan.

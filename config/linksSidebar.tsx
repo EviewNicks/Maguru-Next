@@ -1,5 +1,9 @@
-import { ArrowsPointingInIcon, ArrowTopRightOnSquareIcon, ChartBarIcon } from "@heroicons/react/24/outline";
-
+import { 
+  ArrowTopRightOnSquareIcon, 
+  ChartBarIcon,
+  DocumentTextIcon,
+  AcademicCapIcon
+} from "@heroicons/react/24/outline";
 
 type NavLink = {
   href: string;
@@ -9,19 +13,24 @@ type NavLink = {
 
 const links: NavLink[] = [
   {
-    href: "/add-job",
-    label: "add job",
-    icon: <ArrowsPointingInIcon/>,
+    href: "/dashboard",
+    label: "Dashboard",
+    icon: <ChartBarIcon className="w-5 h-5" />,
+  },
+  {
+    href: "/module",
+    label: "Modul Pembelajaran",
+    icon: <AcademicCapIcon className="w-5 h-5" />,
+  },
+  {
+    href: "/manage-module",
+    label: "Kelola Modul",
+    icon: <DocumentTextIcon className="w-5 h-5" />,
   },
   {
     href: "/jobs",
-    label: "all jobs",
-    icon: <ArrowTopRightOnSquareIcon />,
-  },
-  {
-    href: "/stats",
-    label: "stats",
-    icon: <ChartBarIcon />,
+    label: "Lowongan Kerja",
+    icon: <ArrowTopRightOnSquareIcon className="w-5 h-5" />,
   },
 ];
 
