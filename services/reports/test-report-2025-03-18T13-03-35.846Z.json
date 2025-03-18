@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-03-18T13-03-35.846Z",
+  "environment": "test",
+  "numFailedTests": 0,
+  "numPassedTests": 10,
+  "numTotalTests": 10,
+  "executionTime": "1742303012892ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleFormModal\\ModuleFormModal.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render create modal with correct title",
+          "status": "passed",
+          "duration": 133,
+          "failureMessages": []
+        },
+        {
+          "title": "should render edit modal with correct title",
+          "status": "passed",
+          "duration": 33,
+          "failureMessages": []
+        },
+        {
+          "title": "should pre-fill form fields when in edit mode",
+          "status": "passed",
+          "duration": 49,
+          "failureMessages": []
+        },
+        {
+          "title": "should show validation errors for empty title",
+          "status": "passed",
+          "duration": 83,
+          "failureMessages": []
+        },
+        {
+          "title": "should show validation errors for title less than 5 characters",
+          "status": "passed",
+          "duration": 72,
+          "failureMessages": []
+        },
+        {
+          "title": "should show validation errors for title more than 100 characters",
+          "status": "passed",
+          "duration": 68,
+          "failureMessages": []
+        },
+        {
+          "title": "should call createModule when form is submitted in create mode",
+          "status": "passed",
+          "duration": 130,
+          "failureMessages": []
+        },
+        {
+          "title": "should call updateModule when form is submitted in edit mode",
+          "status": "passed",
+          "duration": 127,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle API error during form submission",
+          "status": "passed",
+          "duration": 140,
+          "failureMessages": []
+        },
+        {
+          "title": "should close modal when cancel button is clicked",
+          "status": "passed",
+          "duration": 50,
+          "failureMessages": []
+        }
+      ]
+    }
+  ]
+}

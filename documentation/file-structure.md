@@ -144,6 +144,54 @@ Dokumen ini menjelaskan struktur folder pada proyek Maguru, lengkap dengan fungs
     - `hooks/`: Custom hooks khusus fitur
     - `services/`: Service API khusus fitur
     - `utils/`: Utilitas khusus fitur
+    - `types/`: Tipe data dan interface khusus fitur
+    - `__tests__/`: Pengujian khusus fitur
+
+### Contoh Struktur: features/manage-module/
+
+Berikut adalah contoh implementasi struktur folder untuk fitur manajemen modul:
+
+```
+features/manage-module/
+├── __tests__/                  # Pengujian khusus fitur manajemen modul
+│   ├── e2e/                    # End-to-end testing
+│   └── integration/            # Integration testing
+├── components/                 # Komponen UI khusus fitur manajemen modul
+│   ├── ModuleTable/            # Subfolder untuk komponen kompleks
+│   ├── ModuleTable.tsx         # Komponen utama
+│   └── ModuleTable.test.tsx    # Unit test untuk komponen
+├── hooks/                      # Custom hooks khusus fitur
+│   ├── useModuleData.ts
+│   └── useModuleActions.ts
+├── services/                   # Service API khusus fitur
+│   ├── moduleService.ts
+│   └── moduleStatusService.ts
+├── types/                      # Tipe data dan interface
+│   ├── index.ts
+│   └── moduleTypes.ts
+└── utils/                      # Utilitas khusus fitur
+
+```
+
+**Penjelasan Struktur:**
+
+1. **`__tests__/`**: Berisi semua pengujian terkait fitur, diorganisir berdasarkan jenis pengujian:
+   - `e2e/`: End-to-end testing menggunakan Cypress atau Playwright
+   - `integration/`: Integration testing untuk menguji interaksi antar komponen dan API
+
+2. **`components/`**: Berisi komponen UI khusus fitur:
+   - Komponen kompleks dapat memiliki subfolder sendiri (seperti `ModuleTable/`)
+   - File test komponen ditempatkan bersama dengan komponen yang diuji
+
+3. **`hooks/`**: Custom hooks untuk mengelola state dan logika bisnis khusus fitur
+
+4. **`services/`**: Berisi fungsi untuk komunikasi dengan API terkait fitur
+
+5. **`types/`**: Berisi definisi tipe data dan interface khusus fitur
+
+6. **`utils/`**: Berisi fungsi utilitas yang mendukung fitur, seperti validasi, middleware, dll.
+
+Struktur ini memungkinkan isolasi fitur yang baik, memudahkan pengembangan dan pengujian, serta meningkatkan maintainability kode.
 
 ---
 

@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-03-18T12-50-22.190Z",
+  "environment": "test",
+  "numFailedTests": 0,
+  "numPassedTests": 5,
+  "numTotalTests": 5,
+  "executionTime": "1742302219935ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\ModuleForm.integration.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should open edit modal when edit button is clicked",
+          "status": "passed",
+          "duration": 167,
+          "failureMessages": []
+        },
+        {
+          "title": "should open delete confirmation when delete button is clicked",
+          "status": "passed",
+          "duration": 38,
+          "failureMessages": []
+        },
+        {
+          "title": "should update module when edit form is submitted",
+          "status": "passed",
+          "duration": 91,
+          "failureMessages": []
+        },
+        {
+          "title": "should show toast info when delete is confirmed",
+          "status": "passed",
+          "duration": 56,
+          "failureMessages": []
+        },
+        {
+          "title": "should close modals when cancel button is clicked",
+          "status": "passed",
+          "duration": 110,
+          "failureMessages": []
+        }
+      ]
+    }
+  ]
+}
