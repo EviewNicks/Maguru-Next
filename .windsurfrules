@@ -114,22 +114,22 @@ src/
 # Test-Driven Development (TDD)
 
 ## Prinsip/iterasi Development Per Langkah/SubTask
-1. Lihat Aturan di @.windsurfrules → Pahami aturan tim.
-2. Lihat Test Plan → Buat daftar test case -> prioritaskan berdasarkan risiko.
-3. Tulis unit test untuk func/compoennt (status red)
-4. Implementasi Kode → Tulis kode minimal agar unit test lulus (status green).
-5. Refactor kode -> Optimalkan kode (bersihkan duplikasi, tingkatkan readability) -> Jalankan unit test lagi
-6. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
-7. Buat Integration Test (__tests__\integration\<name-epic>) -> Jika func/compoennt sudah terintegrasi, buat dan jalankan integration test
-8. Perbaiki kode -> jika integration test gagal
-9. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
-10. Buat E2E Test (__tests__\e2e\<name-epic>) -> Jika sudah deployable -> dibuatkan e2e test untuk simulasi user flow,
-11. Perbaiki Kode → Pastikan E2E test lulus.
-12. Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit,integration, e2e test lulus (pada fitur yang dikerjakan) sebelum commit
-14. Buat/Perbarui Dokumentasi Report Test sesuai (Modul yang dilakukan) pada folder documentation	ask\module\report-test\ → sesuai dengan format documentation\test-report.md
-15. Buat/perbarui Modul docs sesuai (Modul yang dilakukan) pada folder documentation\task\module → sesuai dengan format documentation\modul-docs.md
-16. Pre-Commit Akhir & CI/CD Pipelines → Otomatisasi pengujian.
-17. evaluasi iterasi berikutnya -> jika kredit cascade habis, evaluasi apakah task selesai atau perlu iterasi lanjutan.
+1. [ ] Lihat Aturan di @.windsurfrules → Pahami aturan tim.
+2. [ ] Lihat Test Plan → Buat daftar test case -> prioritaskan berdasarkan risiko.
+3. [ ] Tulis unit test untuk func/compoennt (status red)
+4. [ ] Implementasi Kode → Tulis kode minimal agar unit test lulus (status green).
+5. [ ] Refactor kode -> Optimalkan kode (bersihkan duplikasi, tingkatkan readability) -> Jalankan unit test lagi
+6. [ ] Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
+7. [ ] Buat Integration Test (__tests__\integration\<name-epic>) -> Jika func/compoennt sudah terintegrasi, buat dan jalankan integration test
+8. [ ]Perbaiki kode -> jika integration test gagal
+9. [ ]Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
+10.[ ]Buat E2E Test (__tests__\e2e\<name-epic>) -> Jika sudah deployable -> dibuatkan e2e test untuk simulasi user flow,
+11. [ ] Perbaiki Kode → Pastikan E2E test lulus.
+12. [ ]Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit,integration, e2e test lulus (pada fitur yang dikerjakan) sebelum commit
+14. [ ]Buat/Perbarui Dokumentasi Report Test sesuai (Modul yang dilakukan) pada folder documentation	ask\module\report-test\ → sesuai dengan format documentation\test-report.md
+15. [ ]Buat/perbarui Modul docs sesuai (Modul yang dilakukan) pada folder documentation\task\module → sesuai dengan format documentation\modul-docs.md
+16. [ ]Pre-Commit Akhir & CI/CD Pipelines → Otomatisasi pengujian.
+17. [ ]evaluasi iterasi berikutnya -> jika kredit cascade habis, evaluasi apakah task selesai atau perlu iterasi lanjutan.
 
 ## catatan penting
 - Peer Review: Mintakan review kode dan test dari tim sebelum merge.

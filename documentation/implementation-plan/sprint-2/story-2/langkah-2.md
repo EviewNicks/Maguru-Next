@@ -26,6 +26,7 @@ Membangun halaman admin untuk mengelola modul secara visual dan efisien. Halaman
   - **Aksi** (Edit, Hapus)
 - Terapkan virtual scrolling menggunakan `@tanstack/react-virtual` atau `react-virtualized` untuk optimasi jika data lebih dari 500 baris.
 
+
 **Kriteria Keberhasilan:**
 - Datatable dapat menampilkan data dengan cepat dan efisien (>1.000 baris).
 

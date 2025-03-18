@@ -9,7 +9,6 @@ Dokumen ini menjelaskan struktur folder pada proyek Maguru, lengkap dengan fungs
 # 2. Struktur Folder Utama
 
 ```
-src/
 ├── app/              # Routing & halaman utama (Next.js App Router)
 ├── components/       # Komponen UI reusable
 ├── config/           # Konfigurasi global proyek
@@ -22,13 +21,11 @@ src/
 ├── styles/           # Styling global & konfigurasi Tailwind
 ├── types/            # Deklarasi tipe global TypeScript
 ├── utils/            # Fungsi utilitas umum
-├── __test__/         # Folder untuk semua pengujian
+├── __tests__/        # Folder untuk semua pengujian
 │   ├── __mocks__/    # Mock data untuk testing
-│   ├── e2e/          # End-to-End tests
-│   └── integrations/ # Integration tests
 ├── coverage/         # Laporan coverage testing
 ├── documentation/    # Dokumentasi proyek
-└── feature/          # Folder khusus untuk fitur terisolasi
+└── features/         # Folder khusus untuk fitur terisolasi
 ```
 
 ---
@@ -115,13 +112,11 @@ src/
   - Pisahkan styling per komponen jika memungkinkan.
   - Gunakan utility classes dari Tailwind untuk styling sederhana.
 
-## **test**/
+## __tests__/
 
 - **Fungsi:** Menyimpan semua file pengujian aplikasi.
 - **Subfolder:**
   - `__mocks__/`: Mock data untuk testing.
-  - `e2e/`: End-to-End tests.
-  - `integrations/`: Integration tests.
 - **Best Practice:**
   - Gunakan Jest untuk unit dan integration tests.
   - Gunakan Cypress atau Playwright untuk e2e testing.
@@ -138,11 +133,17 @@ src/
 - **Best Practice:**
   - Gunakan format markdown (.md) agar mudah dibaca di GitHub.
 
-## feature/
+## features/
 
 - **Fungsi:** Mengelompokkan fitur secara terisolasi.
+- **Kapan digunakan:** Untuk mengorganisir komponen, hooks, dan services yang terkait dengan fitur tertentu.
 - **Best Practice:**
   - Strukturkan fitur berdasarkan domain-driven design (DDD).
+  - Setiap fitur dapat memiliki subfolder seperti:
+    - `components/`: Komponen khusus untuk fitur tersebut
+    - `hooks/`: Custom hooks khusus fitur
+    - `services/`: Service API khusus fitur
+    - `utils/`: Utilitas khusus fitur
 
 ---
 
