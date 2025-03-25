@@ -1,15 +1,13 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Module } from '@/features/manage-module/types/module'
-import { toast } from 'sonner'
+import { Module } from '@/features/manage-module/types/index'
 import { PencilIcon, TrashIcon } from 'lucide-react'
 import { useState } from 'react'
 import ModuleFormModal from '@/features/manage-module/components/ModuleFormModal'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from '@/components/ui/dialog'
 import { ModuleStatus } from '@/features/manage-module/types'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { deleteModule } from '@/features/manage-module/services/moduleClientService'
+import { useModuleMutation } from '../../hooks/useModuleMutation'
 
 interface ModuleActionCellProps {
   module: Module
@@ -18,20 +16,9 @@ interface ModuleActionCellProps {
 export default function ModuleActionCell({ module }: ModuleActionCellProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const queryClient = useQueryClient()
 
-  // Mutation untuk menghapus modul
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteModule(id),
-    onSuccess: () => {
-      toast.success('Modul berhasil dihapus')
-      queryClient.invalidateQueries({ queryKey: ['modules'] })
-      setIsDeleteModalOpen(false)
-    },
-    onError: (error: Error) => {
-      toast.error(`Gagal menghapus modul: ${error.message}`)
-    },
-  })
+  // Gunakan hook useModuleMutation
+  const { deleteModuleMutation } = useModuleMutation()
 
   const handleEdit = () => {
     setIsEditModalOpen(true)
@@ -42,15 +29,9 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
   }
 
   const handleDeleteConfirm = () => {
-    // Jika implementasi delete sudah tersedia, gunakan mutation
-    if (process.env.NODE_ENV === 'test') {
-      // Untuk keperluan testing, tampilkan toast info
-      toast.info(`Hapus modul: ${module.title}`)
-      setIsDeleteModalOpen(false)
-    } else {
-      // Untuk production, jalankan mutation delete
-      deleteMutation.mutate(module.id)
-    }
+    // Gunakan mutation delete dari useModuleMutation
+    deleteModuleMutation.mutate(module.id)
+    setIsDeleteModalOpen(false)
   }
 
   // Konversi Module dari types/module.ts ke Module dari types/index.ts
@@ -58,9 +39,9 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
     id: module.id,
     title: module.title,
     description: module.description,
-    status: module.status === 'draft' 
+    status: module.status === ModuleStatus.DRAFT 
       ? ModuleStatus.DRAFT 
-      : module.status === 'published' 
+      : module.status === ModuleStatus.ACTIVE 
         ? ModuleStatus.ACTIVE 
         : ModuleStatus.ARCHIVED,
     createdAt: new Date(module.createdAt),
@@ -86,7 +67,7 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
           size="sm" 
           onClick={handleDelete}
           className="h-8 w-8 p-0"
-          disabled={deleteMutation.isPending}
+          disabled={deleteModuleMutation.isPending}
         >
           <TrashIcon className="h-4 w-4" />
           <span className="sr-only">Hapus</span>
@@ -102,29 +83,27 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
       />
 
       {/* Modal Konfirmasi Hapus */}
-      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog 
+        open={isDeleteModalOpen} 
+        onOpenChange={setIsDeleteModalOpen}
+      >
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Konfirmasi Hapus</DialogTitle>
+            <DialogTitle>Konfirmasi Hapus Modul</DialogTitle>
             <DialogDescription>
               Apakah Anda yakin ingin menghapus modul &ldquo;{module.title}&rdquo;?
-              Tindakan ini tidak dapat dibatalkan.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDeleteModalOpen(false)}
-              disabled={deleteMutation.isPending}
-            >
-              Batal
-            </Button>
+            <DialogClose asChild>
+              <Button variant="outline">Batal</Button>
+            </DialogClose>
             <Button 
               variant="destructive" 
               onClick={handleDeleteConfirm}
-              disabled={deleteMutation.isPending}
+              disabled={deleteModuleMutation.isPending}
             >
-              {deleteMutation.isPending ? 'Menghapus...' : 'Hapus'}
+              Hapus
             </Button>
           </DialogFooter>
         </DialogContent>

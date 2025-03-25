@@ -1,0 +1,50 @@
+{
+  "timestamp": "2025-03-23T02-11-00.829Z",
+  "environment": "test",
+  "numFailedTests": 2,
+  "numPassedTests": 3,
+  "numTotalTests": 5,
+  "executionTime": "1742695858396ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\ModuleActionCell.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render edit and delete buttons",
+          "status": "passed",
+          "duration": 51,
+          "failureMessages": []
+        },
+        {
+          "title": "should open edit modal when edit button is clicked",
+          "status": "passed",
+          "duration": 16,
+          "failureMessages": []
+        },
+        {
+          "title": "should open delete confirmation modal when delete button is clicked",
+          "status": "passed",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "title": "should call delete mutation when delete is confirmed",
+          "status": "failed",
+          "duration": 17,
+          "failureMessages": [
+            "TestingLibraryElementError: Found multiple elements with the text: Hapus"
+          ]
+        },
+        {
+          "title": "should disable delete button when mutation is pending",
+          "status": "failed",
+          "duration": 8,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31melement\u001b[39m\u001b[2m).toBeDisabled()\u001b[22m"
+          ]
+        }
+      ]
+    }
+  ]
+}

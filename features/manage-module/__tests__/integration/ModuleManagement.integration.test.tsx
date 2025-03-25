@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import ModuleTable from '../../components/ModuleTable'
-import { Module } from '../../types/module'
+import { Module, ModuleStatus } from '../../types/index'
 
 // Mock DataTable untuk memudahkan testing
 jest.mock('../../components/ModuleTable/DataTable', () => {
@@ -55,17 +55,21 @@ describe('Module Management Integration', () => {
       id: '1',
       title: 'Modul Matematika',
       description: 'Deskripsi modul matematika untuk kelas 10',
-      status: 'published',
+      status: ModuleStatus.ACTIVE,
       createdAt: new Date('2025-01-01'),
       updatedAt: new Date('2025-01-10'),
+      createdBy: '1',
+      updatedBy: '1',
     },
     {
       id: '2',
       title: 'Modul Fisika',
       description: 'Deskripsi modul fisika yang sangat panjang',
-      status: 'draft',
+      status: ModuleStatus.DRAFT,
       createdAt: new Date('2025-02-01'),
       updatedAt: new Date('2025-02-10'),
+      createdBy: '1',
+      updatedBy: '1',
     },
   ]
 

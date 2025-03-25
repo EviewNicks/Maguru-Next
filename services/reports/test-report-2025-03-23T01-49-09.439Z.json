@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-03-23T01-49-09.439Z",
+  "environment": "test",
+  "numFailedTests": 0,
+  "numPassedTests": 5,
+  "numTotalTests": 5,
+  "executionTime": "1742694546930ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\DataTableWithFeatures.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders data table with modules",
+          "status": "passed",
+          "duration": 52,
+          "failureMessages": []
+        },
+        {
+          "title": "handles search functionality",
+          "status": "passed",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "title": "handles status filter",
+          "status": "passed",
+          "duration": 66,
+          "failureMessages": []
+        },
+        {
+          "title": "handles pagination",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "displays error state when query fails",
+          "status": "passed",
+          "duration": 26,
+          "failureMessages": []
+        }
+      ]
+    }
+  ]
+}

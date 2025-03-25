@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import ModuleTable from './ModuleTable'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
-import { Module } from '../types/module'
+import { Module } from '../types/index'
 
 // Mock komponen DataTable
 jest.mock('./ModuleTable/DataTable', () => {

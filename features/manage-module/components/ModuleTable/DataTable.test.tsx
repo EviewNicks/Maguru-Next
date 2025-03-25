@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { DataTable } from './DataTable'
-import { Module } from '../../types/module'
+import { Module, ModuleStatus } from '../../types/index'
 
 // Mock komponen yang digunakan dalam DataTable
 jest.mock('@tanstack/react-table', () => ({
@@ -40,9 +40,11 @@ describe('DataTable', () => {
       id: '1',
       title: 'Modul Test',
       description: 'Deskripsi test',
-      status: 'published',
+      status: ModuleStatus.ACTIVE,
       createdAt: new Date(),
       updatedAt: new Date(),
+      createdBy: '1',
+      updatedBy: '1',
     },
   ]
 

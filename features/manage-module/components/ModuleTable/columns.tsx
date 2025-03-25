@@ -1,7 +1,7 @@
 'use client'
 
 import { ColumnDef } from '@tanstack/react-table'
-import { Module } from '../../types/module'
+import { Module, ModuleStatus } from '../../types/index'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
@@ -33,16 +33,16 @@ export const columns: ColumnDef<Module>[] = [
       return (
         <Badge
           variant={
-            status === 'published'
+            status === ModuleStatus.ACTIVE
               ? 'default'
-              : status === 'draft'
+              : status === ModuleStatus.DRAFT
               ? 'outline'
               : 'destructive'
           }
         >
-          {status === 'published'
+          {status === ModuleStatus.ACTIVE
             ? 'Dipublikasikan'
-            : status === 'draft'
+            : status === ModuleStatus.DRAFT
             ? 'Draft'
             : 'Diarsipkan'}
         </Badge>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Module } from '../../types/module'
+import { Module } from '../../types/index'
 import { Button } from '@/components/ui/button'
 import DOMPurify from 'isomorphic-dompurify'
 
@@ -13,7 +13,7 @@ export default function ModuleDescriptionCell({ module }: ModuleDescriptionCellP
   const [isExpanded, setIsExpanded] = useState(false)
   
   // Sanitasi deskripsi untuk mencegah XSS
-  const sanitizedDescription = DOMPurify.sanitize(module.description)
+  const sanitizedDescription = DOMPurify.sanitize(module.description || '')
   
   // Truncate deskripsi jika lebih dari 100 karakter
   const isTruncated = sanitizedDescription.length > 100

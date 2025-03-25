@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ModuleActionCell from '../../components/ModuleTable/ModuleActionCell';
-import { Module } from '../../types/module';
+import { Module, ModuleStatus } from '../../types/index';
 import { toast } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -39,9 +39,11 @@ describe('ModuleFormModal Integration', () => {
     id: '1',
     title: 'Modul Test',
     description: 'Deskripsi test',
-    status: 'draft',
-    createdAt: '2023-01-01T00:00:00.000Z',
-    updatedAt: '2023-01-01T00:00:00.000Z',
+    status: ModuleStatus.DRAFT,
+    createdAt: new Date('2023-01-01T00:00:00.000Z'),
+    updatedAt: new Date('2023-01-01T00:00:00.000Z'),
+    createdBy: '1',
+updatedBy: '1',
   };
 
   beforeEach(() => {

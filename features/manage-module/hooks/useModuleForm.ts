@@ -34,7 +34,7 @@ export function useModuleForm({ mode, module, onSuccess }: UseModuleFormProps) {
       return createModule({
         title: data.title,
         description: data.description || '',
-        status: data.status.toLowerCase() as 'published' | 'draft' | 'archived',
+        status: data.status.toLowerCase() as ModuleStatus,
       })
     },
     onSuccess: () => {
@@ -55,7 +55,7 @@ export function useModuleForm({ mode, module, onSuccess }: UseModuleFormProps) {
       return updateModule(module.id, {
         title: data.title,
         description: data.description || '',
-        status: data.status.toLowerCase() as 'published' | 'draft' | 'archived',
+        status: data.status.toLowerCase() as ModuleStatus,
       })
     },
     onSuccess: () => {

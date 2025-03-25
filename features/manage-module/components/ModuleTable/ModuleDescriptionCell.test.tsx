@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import ModuleDescriptionCell from './ModuleDescriptionCell'
-import { Module } from '../../types/module'
+import { Module, ModuleStatus } from '../../types/index'
 
 // Mock DOMPurify
 jest.mock('isomorphic-dompurify', () => ({
@@ -14,18 +14,22 @@ describe('ModuleDescriptionCell', () => {
     id: '1',
     title: 'Modul Test',
     description: 'Deskripsi pendek',
-    status: 'published',
+    status: ModuleStatus.ACTIVE,
     createdAt: new Date(),
     updatedAt: new Date(),
+    createdBy: '1',
+    updatedBy: '1',
   }
 
   const longDescription: Module = {
     id: '2',
     title: 'Modul Test 2',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl eget ultricies aliquam, nunc nisl aliquet nunc, quis aliquam nisl nunc eu nisl. Nullam auctor, nisl eget ultricies aliquam, nunc nisl aliquet nunc, quis aliquam nisl nunc eu nisl.',
-    status: 'draft',
+    status: ModuleStatus.DRAFT,
     createdAt: new Date(),
     updatedAt: new Date(),
+    createdBy: '1',
+    updatedBy: '1',
   }
 
   it('should render the description without truncation for short descriptions', () => {

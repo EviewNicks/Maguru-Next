@@ -1,26 +1,13 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { DataTable } from './DataTable'
 import { PaginationControls } from './PaginationControls'
 import { SearchAndFilter } from './SearchAndFilter'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
-import { Module } from '../../types/module'
-import { getModules } from '../../services/moduleClientService'
-
-interface PaginationMeta {
-  currentPage: number
-  totalPages: number
-  pageSize: number
-  totalItems: number
-}
-
-interface ModuleResponse {
-  data: Module[]
-  meta: PaginationMeta
-}
+import { useModuleQuery } from '../../hooks/useModuleQuery'
+import { ModuleStatus } from '../../types/index'
 
 export function DataTableWithFeatures() {
   // State untuk parameter query
@@ -33,11 +20,17 @@ export function DataTableWithFeatures() {
     sortOrder: '' as 'asc' | 'desc' | '',
   })
 
-  // Fetch data dengan React Query
-  const { data, isLoading, error } = useQuery<ModuleResponse>({
-    queryKey: ['modules', queryParams],
-    queryFn: () => getModules(queryParams),
+  // Fetch data dengan useModuleQuery
+  const { useModuleListQuery } = useModuleQuery({
+    page: queryParams.page,
+    pageSize: queryParams.pageSize,
+    search: queryParams.search,
+    status: queryParams.status as ModuleStatus,
+    sortBy: queryParams.sortBy,
+    sortOrder: queryParams.sortOrder,
   })
+
+  const { data, isLoading, error } = useModuleListQuery
 
   // Handler untuk perubahan halaman
   const handlePageChange = (page: number) => {
@@ -55,23 +48,28 @@ export function DataTableWithFeatures() {
   }
 
   // Handler untuk filter status
-  const handleFilterChange = (status: string) => {
+  const handleStatusFilter = (status: string) => {
     setQueryParams((prev) => ({ ...prev, page: 1, status }))
   }
 
   // Handler untuk sorting
-  const handleSortChange = (sortBy: string, sortOrder: 'asc' | 'desc') => {
-    setQueryParams((prev) => ({ ...prev, sortBy, sortOrder }))
+  const handleSortChange = (column: string, direction: 'asc' | 'desc' | '') => {
+    setQueryParams((prev) => ({ 
+      ...prev, 
+      page: 1, 
+      sortBy: column, 
+      sortOrder: direction 
+    }))
   }
 
-  // Tampilkan error jika ada
+  // Tampilkan error jika terjadi
   if (error) {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Error</AlertTitle>
         <AlertDescription>
-          Gagal memuat data modul: {error instanceof Error ? error.message : 'Terjadi kesalahan'}
+          {error instanceof Error ? error.message : 'Terjadi kesalahan saat memuat data'}
         </AlertDescription>
       </Alert>
     )
@@ -79,23 +77,21 @@ export function DataTableWithFeatures() {
 
   return (
     <div className="space-y-4">
-      <SearchAndFilter
+      <SearchAndFilter 
         onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
+        onFilterChange={handleStatusFilter}
         searchValue={queryParams.search}
         statusFilter={queryParams.status}
       />
-      
-      <DataTable
-        data={data?.data || []}
+      <DataTable 
+        data={data?.data || []} 
         isLoading={isLoading}
         onSortChange={handleSortChange}
         sortBy={queryParams.sortBy}
         sortOrder={queryParams.sortOrder}
       />
-      
       {data?.meta && (
-        <PaginationControls
+        <PaginationControls 
           currentPage={data.meta.currentPage}
           totalPages={data.meta.totalPages}
           pageSize={data.meta.pageSize}

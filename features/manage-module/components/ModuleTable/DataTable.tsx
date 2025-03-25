@@ -19,7 +19,7 @@ import {
   OnChangeFn,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Module } from '../../types/module'
+import { Module } from '../../types/index'
 import { columns } from './columns'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useEffect, useRef, useState } from 'react'

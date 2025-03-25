@@ -1,0 +1,50 @@
+{
+  "timestamp": "2025-03-23T01-37-09.038Z",
+  "environment": "test",
+  "numFailedTests": 2,
+  "numPassedTests": 3,
+  "numTotalTests": 5,
+  "executionTime": "1742693826276ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\DataTableWithFeatures.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders data table with modules",
+          "status": "failed",
+          "duration": 90,
+          "failureMessages": [
+            "TestingLibraryElementError: Unable to find an element with the text: Modul Matematika. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+          ]
+        },
+        {
+          "title": "handles search functionality",
+          "status": "passed",
+          "duration": 16,
+          "failureMessages": []
+        },
+        {
+          "title": "handles status filter",
+          "status": "passed",
+          "duration": 57,
+          "failureMessages": []
+        },
+        {
+          "title": "handles pagination",
+          "status": "passed",
+          "duration": 20,
+          "failureMessages": []
+        },
+        {
+          "title": "displays error state when query fails",
+          "status": "failed",
+          "duration": 6,
+          "failureMessages": [
+            "TestingLibraryElementError: Unable to find an element with the text: /Terjadi kesalahan/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+          ]
+        }
+      ]
+    }
+  ]
+}
