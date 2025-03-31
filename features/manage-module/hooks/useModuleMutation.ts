@@ -8,6 +8,7 @@ import {
   deleteModule,
 } from '../services/moduleClientService'
 import { Module, ModuleStatus } from '../types'
+import { handleError } from '../components/ErrorNotifier/ErrorNotifier'
 
 // Tipe data untuk input pembuatan modul
 export interface CreateModuleInput {
@@ -51,8 +52,14 @@ export function useModuleMutation() {
       toast.success('Modul berhasil dibuat')
     },
     onError: (error) => {
-      console.error('Error creating module:', error)
-      toast.error('Gagal membuat modul')
+      const errorDetails = handleError(error)
+      toast.error(errorDetails.message, {
+        description: errorDetails.code
+      })
+      // Hanya log error saat development
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Error creating module:', errorDetails)
+      }
     },
   })
 
@@ -68,8 +75,14 @@ export function useModuleMutation() {
       toast.success('Modul berhasil diperbarui')
     },
     onError: (error) => {
-      console.error('Error updating module:', error)
-      toast.error('Gagal memperbarui modul')
+      const errorDetails = handleError(error)
+      toast.error(errorDetails.message, {
+        description: errorDetails.code
+      })
+      // Hanya log error saat development
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Error updating module:', errorDetails)
+      }
     },
   })
 
@@ -100,13 +113,20 @@ export function useModuleMutation() {
       queryClient.invalidateQueries({ queryKey: ['modules'] })
       toast.success('Modul berhasil dihapus')
     },
-    onError: (error, _, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
+    onError: (error, _deletedId, context) => {
+      const errorDetails = handleError(error)
+      toast.error(errorDetails.message, {
+        description: errorDetails.code
+      })
+      // Hanya log error saat development
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Error deleting module:', errorDetails)
+      }
+
+      // Rollback optimistic update jika terjadi error
       if (context?.previousModules) {
         queryClient.setQueryData(['modules'], context.previousModules)
       }
-      console.error('Error deleting module:', error)
-      toast.error('Gagal menghapus modul')
     },
   })
 
