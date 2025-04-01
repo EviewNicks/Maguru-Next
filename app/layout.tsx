@@ -6,7 +6,7 @@ import Providers from '@/config/providers'
 import Navbar from '@/components/layouts/Navbar'
 import GlobalModal from '@/components/layouts/GlobalModal'
 import GlobalToast from '@/components/layouts/GlobalToast'
-
+import { configureDOMPurify } from '@/features/common/utils/sanitize'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const playfair = Playfair_Display({
@@ -27,9 +27,9 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
-}>)
+}>) {
+  configureDOMPurify()
 
-{
   return (
     <html lang="en" suppressHydrationWarning>
       <body

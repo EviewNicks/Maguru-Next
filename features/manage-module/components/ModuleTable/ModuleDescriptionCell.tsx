@@ -3,27 +3,28 @@
 import { useState } from 'react'
 import { Module } from '../../types/index'
 import { Button } from '@/components/ui/button'
-import DOMPurify from 'isomorphic-dompurify'
+import { sanitizedMarkup } from '@/features/common/utils/sanitize'
 
 interface ModuleDescriptionCellProps {
   module: Module
 }
 
-export default function ModuleDescriptionCell({ module }: ModuleDescriptionCellProps) {
+export default function ModuleDescriptionCell({
+  module,
+}: ModuleDescriptionCellProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  
-  // Sanitasi deskripsi untuk mencegah XSS
-  const sanitizedDescription = DOMPurify.sanitize(module.description || '')
-  
+
   // Truncate deskripsi jika lebih dari 100 karakter
-  const isTruncated = sanitizedDescription.length > 100
-  const truncatedDescription = isTruncated && !isExpanded
-    ? sanitizedDescription.substring(0, 100) + '...'
-    : sanitizedDescription
+  const description = module.description || '' // Menyediakan nilai default
+  const isTruncated = description.length > 100
+  const truncatedDescription =
+    isTruncated && !isExpanded
+      ? description.substring(0, 100) + '...'
+      : description
 
   return (
     <div>
-      <div dangerouslySetInnerHTML={{ __html: truncatedDescription }} />
+      <div dangerouslySetInnerHTML={sanitizedMarkup(truncatedDescription)} />
       {isTruncated && (
         <Button
           variant="link"

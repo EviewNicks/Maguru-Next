@@ -8,6 +8,7 @@ import { createModule, updateModule } from '../services/moduleClientService'
 import { toast } from 'sonner'
 import { Module, ModuleStatus } from '../types'
 import { handleError } from '../components/ErrorNotifier/ErrorNotifier'
+import { sanitizeHtml } from '@/features/common/utils/sanitize'
 
 interface UseModuleFormProps {
   mode: 'create' | 'edit'
@@ -46,9 +47,9 @@ export function useModuleForm({ mode, module, onSuccess }: UseModuleFormProps) {
     onError: (error: unknown) => {
       const errorDetails = handleError(error)
       toast.error(errorDetails.message, {
-        description: errorDetails.code
+        description: errorDetails.code,
       })
-      
+
       // Log error hanya di lingkungan development
       if (process.env.NODE_ENV !== 'production') {
         console.error('Error membuat modul:', errorDetails)
@@ -75,9 +76,9 @@ export function useModuleForm({ mode, module, onSuccess }: UseModuleFormProps) {
     onError: (error: unknown) => {
       const errorDetails = handleError(error)
       toast.error(errorDetails.message, {
-        description: errorDetails.code
+        description: errorDetails.code,
       })
-      
+
       // Log error hanya di lingkungan development
       if (process.env.NODE_ENV !== 'production') {
         console.error('Error memperbarui modul:', errorDetails)
@@ -87,10 +88,19 @@ export function useModuleForm({ mode, module, onSuccess }: UseModuleFormProps) {
 
   // Handler untuk submit form
   const onSubmit = (data: ModuleFormValues) => {
+    // Sanitasi input sebelum dikirim ke server
+    const sanitizedData = {
+      ...data,
+      title: sanitizeHtml(data.title),
+      description: data.description
+        ? sanitizeHtml(data.description)
+        : undefined,
+    }
+
     if (mode === 'create') {
-      createMutation.mutate(data)
+      createMutation.mutate(sanitizedData)
     } else {
-      updateMutation.mutate(data)
+      updateMutation.mutate(sanitizedData)
     }
   }
 

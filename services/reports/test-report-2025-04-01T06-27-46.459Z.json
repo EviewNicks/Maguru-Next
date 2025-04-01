@@ -1,113 +1,11 @@
 {
-  "timestamp": "2025-04-01T02-28-33.908Z",
+  "timestamp": "2025-04-01T06-27-46.459Z",
   "environment": "test",
   "numFailedTests": 0,
-  "numPassedTests": 165,
-  "numTotalTests": 165,
-  "executionTime": "1743474483200ms",
+  "numPassedTests": 167,
+  "numTotalTests": 167,
+  "executionTime": "1743488836985ms",
   "testResults": [
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\ModuleDescriptionCell.test.tsx",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should render the description without truncation for short descriptions",
-          "status": "passed",
-          "duration": 63,
-          "failureMessages": []
-        },
-        {
-          "title": "should truncate long descriptions and show \"Lihat Selengkapnya\" button",
-          "status": "passed",
-          "duration": 24,
-          "failureMessages": []
-        },
-        {
-          "title": "should expand truncated description when \"Lihat Selengkapnya\" is clicked",
-          "status": "passed",
-          "duration": 23,
-          "failureMessages": []
-        },
-        {
-          "title": "should collapse expanded description when \"Sembunyikan\" is clicked",
-          "status": "passed",
-          "duration": 19,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\SearchAndFilter.test.tsx",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should render search input and filter dropdown",
-          "status": "passed",
-          "duration": 118,
-          "failureMessages": []
-        },
-        {
-          "title": "should call onSearch when search input changes with debounce",
-          "status": "passed",
-          "duration": 38,
-          "failureMessages": []
-        },
-        {
-          "title": "should call onFilterChange when status filter changes",
-          "status": "passed",
-          "duration": 13,
-          "failureMessages": []
-        },
-        {
-          "title": "should display the current search value",
-          "status": "passed",
-          "duration": 14,
-          "failureMessages": []
-        },
-        {
-          "title": "should display the current filter value",
-          "status": "passed",
-          "duration": 19,
-          "failureMessages": []
-        },
-        {
-          "title": "should have a clear button for search input when there is a search value",
-          "status": "passed",
-          "duration": 19,
-          "failureMessages": []
-        },
-        {
-          "title": "should not display clear button when search input is empty",
-          "status": "passed",
-          "duration": 9,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\ModuleManagement.integration.test.tsx",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should render ModuleTable with data",
-          "status": "passed",
-          "duration": 103,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle loading state correctly",
-          "status": "passed",
-          "duration": 7,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle error state correctly",
-          "status": "passed",
-          "duration": 6,
-          "failureMessages": []
-        }
-      ]
-    },
     {
       "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\modulePerformance.integration.test.ts",
       "failureMessages": [],
@@ -115,85 +13,19 @@
         {
           "title": "should respond in less than 300ms for GET /api/module",
           "status": "passed",
-          "duration": 99,
+          "duration": 124,
           "failureMessages": []
         },
         {
           "title": "should handle load of 100 modules in less than 300ms",
           "status": "passed",
-          "duration": 20,
+          "duration": 22,
           "failureMessages": []
         },
         {
           "title": "should handle load of 10000 modules in less than 300ms",
           "status": "passed",
-          "duration": 11,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\PaginationControls.test.tsx",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should render pagination controls with current page and total pages",
-          "status": "passed",
-          "duration": 111,
-          "failureMessages": []
-        },
-        {
-          "title": "should disable previous button on first page",
-          "status": "passed",
           "duration": 10,
-          "failureMessages": []
-        },
-        {
-          "title": "should disable next button on last page",
-          "status": "passed",
-          "duration": 9,
-          "failureMessages": []
-        },
-        {
-          "title": "should call onPageChange when navigation buttons are clicked",
-          "status": "passed",
-          "duration": 26,
-          "failureMessages": []
-        },
-        {
-          "title": "should call onPageSizeChange when page size is changed",
-          "status": "passed",
-          "duration": 24,
-          "failureMessages": []
-        },
-        {
-          "title": "should show correct item range information",
-          "status": "passed",
-          "duration": 10,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable.test.tsx",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should render the DataTable component",
-          "status": "passed",
-          "duration": 78,
-          "failureMessages": []
-        },
-        {
-          "title": "should pass loading state to DataTable",
-          "status": "passed",
-          "duration": 8,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle error state",
-          "status": "passed",
-          "duration": 11,
           "failureMessages": []
         }
       ]
@@ -205,67 +37,103 @@
         {
           "title": "should render the page with correct layout",
           "status": "passed",
-          "duration": 78,
+          "duration": 116,
           "failureMessages": []
         },
         {
           "title": "should have the correct page title",
           "status": "passed",
-          "duration": 89,
+          "duration": 114,
           "failureMessages": []
         }
       ]
     },
     {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\hooks\\useModuleForm.test.tsx",
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\ModuleManagement.integration.test.tsx",
       "failureMessages": [],
       "testResults": [
         {
-          "title": "should initialize form with default values in create mode",
+          "title": "should render ModuleTable with data",
           "status": "passed",
-          "duration": 56,
+          "duration": 116,
           "failureMessages": []
         },
         {
-          "title": "should call createModule service with form data",
-          "status": "passed",
-          "duration": 27,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle errors when creating module",
-          "status": "passed",
-          "duration": 23,
-          "failureMessages": []
-        },
-        {
-          "title": "should initialize form with module values in edit mode",
+          "title": "should handle loading state correctly",
           "status": "passed",
           "duration": 7,
           "failureMessages": []
         },
         {
-          "title": "should call updateModule service with form data",
+          "title": "should handle error state correctly",
           "status": "passed",
-          "duration": 29,
+          "duration": 7,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\PaginationControls.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render pagination controls with current page and total pages",
+          "status": "passed",
+          "duration": 90,
           "failureMessages": []
         },
         {
-          "title": "should throw error when updating module without ID",
+          "title": "should disable previous button on first page",
           "status": "passed",
-          "duration": 20,
+          "duration": 14,
           "failureMessages": []
         },
         {
-          "title": "should handle errors when updating module",
+          "title": "should disable next button on last page",
+          "status": "passed",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "title": "should call onPageChange when navigation buttons are clicked",
+          "status": "passed",
+          "duration": 19,
+          "failureMessages": []
+        },
+        {
+          "title": "should call onPageSizeChange when page size is changed",
+          "status": "passed",
+          "duration": 16,
+          "failureMessages": []
+        },
+        {
+          "title": "should show correct item range information",
+          "status": "passed",
+          "duration": 13,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render the DataTable component",
+          "status": "passed",
+          "duration": 74,
+          "failureMessages": []
+        },
+        {
+          "title": "should pass loading state to DataTable",
           "status": "passed",
           "duration": 10,
           "failureMessages": []
         },
         {
-          "title": "should track loading state during mutations",
+          "title": "should handle error state",
           "status": "passed",
-          "duration": 185,
+          "duration": 13,
           "failureMessages": []
         }
       ]
@@ -277,205 +145,115 @@
         {
           "title": "should handle and log errors for module operations",
           "status": "passed",
-          "duration": 588,
+          "duration": 575,
           "failureMessages": []
         },
         {
           "title": "should correctly map error types",
           "status": "passed",
-          "duration": 2,
+          "duration": 5,
           "failureMessages": []
         }
       ]
     },
     {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\hooks\\useModuleMutation.test.tsx",
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\hooks\\useModuleForm.test.tsx",
       "failureMessages": [],
       "testResults": [
         {
-          "title": "should call createModule with correct data",
+          "title": "should initialize form with default values in create mode",
           "status": "passed",
-          "duration": 90,
+          "duration": 57,
+          "failureMessages": []
+        },
+        {
+          "title": "should call createModule service with form data",
+          "status": "passed",
+          "duration": 73,
           "failureMessages": []
         },
         {
           "title": "should handle errors when creating module",
           "status": "passed",
-          "duration": 77,
+          "duration": 12,
           "failureMessages": []
         },
         {
-          "title": "should call updateModule with correct data",
-          "status": "passed",
-          "duration": 93,
-          "failureMessages": []
-        },
-        {
-          "title": "should call deleteModule with correct id",
-          "status": "passed",
-          "duration": 93,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\ModuleAPI.integration.test.tsx",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should fetch and display modules",
-          "status": "passed",
-          "duration": 48,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle error when fetching modules",
-          "status": "passed",
-          "duration": 14,
-          "failureMessages": []
-        },
-        {
-          "title": "should create module with optimistic update",
-          "status": "passed",
-          "duration": 100,
-          "failureMessages": []
-        },
-        {
-          "title": "should update module with optimistic update",
-          "status": "passed",
-          "duration": 92,
-          "failureMessages": []
-        },
-        {
-          "title": "should delete module with optimistic update",
-          "status": "passed",
-          "duration": 93,
-          "failureMessages": []
-        },
-        {
-          "title": "should fetch module by id",
-          "status": "passed",
-          "duration": 15,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle error when fetching module by id",
-          "status": "passed",
-          "duration": 17,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleStatusApi.integration.test.ts",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should update module status",
+          "title": "should initialize form with module values in edit mode",
           "status": "passed",
           "duration": 6,
           "failureMessages": []
         },
         {
-          "title": "should return 404 if module not found",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle missing user ID",
-          "status": "passed",
-          "duration": 13,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle errors when updating module status",
-          "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ErrorNotifier\\ErrorNotifier.test.tsx",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should have correct predefined error types",
-          "status": "passed",
-          "duration": 4,
-          "failureMessages": []
-        },
-        {
-          "title": "should not allow other types of error",
-          "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        },
-        {
-          "title": "should render error toast with default message for validation error",
-          "status": "passed",
-          "duration": 9,
-          "failureMessages": []
-        },
-        {
-          "title": "should render error toast with network error message",
-          "status": "passed",
-          "duration": 3,
-          "failureMessages": []
-        },
-        {
-          "title": "should render error toast with server error message",
-          "status": "passed",
-          "duration": 11,
-          "failureMessages": []
-        },
-        {
-          "title": "should render error toast with permission error message",
-          "status": "passed",
-          "duration": 4,
-          "failureMessages": []
-        },
-        {
-          "title": "should render error toast with unknown error message",
-          "status": "passed",
-          "duration": 10,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\ModuleActionCell.test.tsx",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should render edit and delete buttons",
-          "status": "passed",
-          "duration": 16,
-          "failureMessages": []
-        },
-        {
-          "title": "should open edit modal when edit button is clicked",
-          "status": "passed",
-          "duration": 19,
-          "failureMessages": []
-        },
-        {
-          "title": "should open delete confirmation modal when delete button is clicked",
+          "title": "should call updateModule service with form data",
           "status": "passed",
           "duration": 28,
           "failureMessages": []
         },
         {
-          "title": "should call delete mutation when delete is confirmed",
+          "title": "should throw error when updating module without ID",
           "status": "passed",
-          "duration": 29,
+          "duration": 10,
           "failureMessages": []
         },
         {
-          "title": "should disable delete button when mutation is pending",
+          "title": "should handle errors when updating module",
           "status": "passed",
-          "duration": 5,
+          "duration": 30,
+          "failureMessages": []
+        },
+        {
+          "title": "should track loading state during mutations",
+          "status": "passed",
+          "duration": 190,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\SearchAndFilter.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render search input and filter dropdown",
+          "status": "passed",
+          "duration": 125,
+          "failureMessages": []
+        },
+        {
+          "title": "should call onSearch when search input changes with debounce",
+          "status": "passed",
+          "duration": 48,
+          "failureMessages": []
+        },
+        {
+          "title": "should call onFilterChange when status filter changes",
+          "status": "passed",
+          "duration": 19,
+          "failureMessages": []
+        },
+        {
+          "title": "should display the current search value",
+          "status": "passed",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "title": "should display the current filter value",
+          "status": "passed",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "title": "should have a clear button for search input when there is a search value",
+          "status": "passed",
+          "duration": 31,
+          "failureMessages": []
+        },
+        {
+          "title": "should not display clear button when search input is empty",
+          "status": "passed",
+          "duration": 16,
           "failureMessages": []
         }
       ]
@@ -493,19 +271,19 @@
         {
           "title": "handles search functionality",
           "status": "passed",
-          "duration": 9,
+          "duration": 7,
           "failureMessages": []
         },
         {
           "title": "handles status filter",
           "status": "passed",
-          "duration": 59,
+          "duration": 89,
           "failureMessages": []
         },
         {
           "title": "handles pagination",
           "status": "passed",
-          "duration": 5,
+          "duration": 4,
           "failureMessages": []
         },
         {
@@ -517,19 +295,331 @@
       ]
     },
     {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\XssPrevention.integration.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should sanitize dangerous content in title cells",
+          "status": "passed",
+          "duration": 25,
+          "failureMessages": []
+        },
+        {
+          "title": "should sanitize dangerous content in description cells",
+          "status": "passed",
+          "duration": 17,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\ModuleDescriptionCell.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render the description without truncation for short descriptions",
+          "status": "passed",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "title": "should truncate long descriptions and show \"Lihat Selengkapnya\" button",
+          "status": "passed",
+          "duration": 16,
+          "failureMessages": []
+        },
+        {
+          "title": "should expand truncated description when \"Lihat Selengkapnya\" is clicked",
+          "status": "passed",
+          "duration": 21,
+          "failureMessages": []
+        },
+        {
+          "title": "should collapse expanded description when \"Sembunyikan\" is clicked",
+          "status": "passed",
+          "duration": 12,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleValidation.integration.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should reject module creation with empty title",
+          "status": "passed",
+          "duration": 8,
+          "failureMessages": []
+        },
+        {
+          "title": "should reject module creation with short description",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should reject module creation with invalid status",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should reject module creation with missing fields",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should accept valid module data",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should sanitize input to prevent XSS",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\ModuleActionCell.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render edit and delete buttons",
+          "status": "passed",
+          "duration": 44,
+          "failureMessages": []
+        },
+        {
+          "title": "should open edit modal when edit button is clicked",
+          "status": "passed",
+          "duration": 29,
+          "failureMessages": []
+        },
+        {
+          "title": "should open delete confirmation modal when delete button is clicked",
+          "status": "passed",
+          "duration": 31,
+          "failureMessages": []
+        },
+        {
+          "title": "should call delete mutation when delete is confirmed",
+          "status": "passed",
+          "duration": 31,
+          "failureMessages": []
+        },
+        {
+          "title": "should disable delete button when mutation is pending",
+          "status": "passed",
+          "duration": 5,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleErrorHandling.integration.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should return standardized error for invalid module data",
+          "status": "passed",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "title": "should return standardized 404 error for non-existent module",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should return standardized 404 error when updating non-existent module",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should return standardized 500 error when service throws exception",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should return standardized 401 error when user ID is missing",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleFilter.integration.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should filter modules by DRAFT status",
+          "status": "passed",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "title": "should filter modules by ACTIVE status",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should search modules by keyword",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should combine filter and search",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle pagination correctly",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle empty search results",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\hooks\\useModuleQuery.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should fetch modules with default params",
+          "status": "passed",
+          "duration": 112,
+          "failureMessages": []
+        },
+        {
+          "title": "should fetch modules with custom params",
+          "status": "passed",
+          "duration": 76,
+          "failureMessages": []
+        },
+        {
+          "title": "should fetch module by id",
+          "status": "passed",
+          "duration": 87,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle error when fetching module by id",
+          "status": "passed",
+          "duration": 75,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\ModuleAPI.integration.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should fetch and display modules",
+          "status": "passed",
+          "duration": 98,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle error when fetching modules",
+          "status": "passed",
+          "duration": 35,
+          "failureMessages": []
+        },
+        {
+          "title": "should create module with optimistic update",
+          "status": "passed",
+          "duration": 154,
+          "failureMessages": []
+        },
+        {
+          "title": "should update module with optimistic update",
+          "status": "passed",
+          "duration": 123,
+          "failureMessages": []
+        },
+        {
+          "title": "should delete module with optimistic update",
+          "status": "passed",
+          "duration": 112,
+          "failureMessages": []
+        },
+        {
+          "title": "should fetch module by id",
+          "status": "passed",
+          "duration": 25,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle error when fetching module by id",
+          "status": "passed",
+          "duration": 18,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\hooks\\useModuleMutation.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should call createModule with correct data",
+          "status": "passed",
+          "duration": 98,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle errors when creating module",
+          "status": "passed",
+          "duration": 83,
+          "failureMessages": []
+        },
+        {
+          "title": "should call updateModule with correct data",
+          "status": "passed",
+          "duration": 103,
+          "failureMessages": []
+        },
+        {
+          "title": "should call deleteModule with correct id",
+          "status": "passed",
+          "duration": 75,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
       "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleAuth.integration.test.ts",
       "failureMessages": [],
       "testResults": [
         {
           "title": "should allow admin to create module",
           "status": "passed",
-          "duration": 4,
+          "duration": 7,
           "failureMessages": []
         },
         {
           "title": "should allow admin to delete module",
           "status": "passed",
-          "duration": 1,
+          "duration": 2,
           "failureMessages": []
         },
         {
@@ -547,11 +637,191 @@
         {
           "title": "should reject requests with missing authentication",
           "status": "passed",
-          "duration": 1,
+          "duration": 2,
           "failureMessages": []
         },
         {
           "title": "should handle auth service errors gracefully",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\utils\\validateRequest.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should call the handler when validation passes",
+          "status": "passed",
+          "duration": 5,
+          "failureMessages": []
+        },
+        {
+          "title": "should parse string body to JSON",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should return 400 status with validation error details when validation fails",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should return 500 status when an unexpected error occurs",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleApi.integration.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should return paginated modules",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle errors when fetching modules",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should create a new module",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should return module by ID",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should update module by ID",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should delete module by ID",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\ModuleForm.integration.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should open edit modal when edit button is clicked",
+          "status": "passed",
+          "duration": 544,
+          "failureMessages": []
+        },
+        {
+          "title": "should open delete confirmation when delete button is clicked",
+          "status": "passed",
+          "duration": 107,
+          "failureMessages": []
+        },
+        {
+          "title": "should update module when edit form is submitted",
+          "status": "passed",
+          "duration": 306,
+          "failureMessages": []
+        },
+        {
+          "title": "should show toast info when delete is confirmed",
+          "status": "passed",
+          "duration": 207,
+          "failureMessages": []
+        },
+        {
+          "title": "should close modals when cancel button is clicked",
+          "status": "passed",
+          "duration": 328,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleAuditTrail.integration.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should log module creation in audit trail",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "should log module update in audit trail",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should log module deletion in audit trail",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ErrorNotifier\\ErrorNotifier.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should have correct predefined error types",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should not allow other types of error",
+          "status": "passed",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "title": "should render error toast with default message for validation error",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "should render error toast with network error message",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should render error toast with server error message",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "should render error toast with permission error message",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should render error toast with unknown error message",
           "status": "passed",
           "duration": 2,
           "failureMessages": []
@@ -577,7 +847,7 @@
         {
           "title": "should return paginated modules",
           "status": "passed",
-          "duration": 2,
+          "duration": 1,
           "failureMessages": []
         },
         {
@@ -589,7 +859,7 @@
         {
           "title": "should apply search filter if provided",
           "status": "passed",
-          "duration": 1,
+          "duration": 2,
           "failureMessages": []
         },
         {
@@ -607,7 +877,7 @@
         {
           "title": "should return null if module not found",
           "status": "passed",
-          "duration": 1,
+          "duration": 7,
           "failureMessages": []
         },
         {
@@ -643,19 +913,19 @@
         {
           "title": "should log request information when handler is called",
           "status": "passed",
-          "duration": 3,
+          "duration": 2,
           "failureMessages": []
         },
         {
           "title": "should log anonymous for unauthenticated requests",
           "status": "passed",
-          "duration": 1,
+          "duration": 2,
           "failureMessages": []
         },
         {
           "title": "should log response information when res.json is called",
           "status": "passed",
-          "duration": 1,
+          "duration": 2,
           "failureMessages": []
         },
         {
@@ -667,247 +937,73 @@
         {
           "title": "should log request body for non-GET requests",
           "status": "passed",
-          "duration": 0,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleErrorHandling.integration.test.ts",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should return standardized error for invalid module data",
-          "status": "passed",
-          "duration": 8,
-          "failureMessages": []
-        },
-        {
-          "title": "should return standardized 404 error for non-existent module",
-          "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        },
-        {
-          "title": "should return standardized 404 error when updating non-existent module",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should return standardized 500 error when service throws exception",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should return standardized 401 error when user ID is missing",
-          "status": "passed",
           "duration": 1,
           "failureMessages": []
         }
       ]
     },
     {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\utils\\validateRequest.test.ts",
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleFormModal\\ModuleFormModal.test.tsx",
       "failureMessages": [],
       "testResults": [
         {
-          "title": "should call the handler when validation passes",
+          "title": "should render create modal with correct title",
           "status": "passed",
-          "duration": 5,
+          "duration": 400,
           "failureMessages": []
         },
         {
-          "title": "should parse string body to JSON",
+          "title": "should render edit modal with correct title",
           "status": "passed",
-          "duration": 1,
+          "duration": 85,
           "failureMessages": []
         },
         {
-          "title": "should return 400 status with validation error details when validation fails",
+          "title": "should pre-fill form fields when in edit mode",
           "status": "passed",
-          "duration": 2,
+          "duration": 146,
           "failureMessages": []
         },
         {
-          "title": "should return 500 status when an unexpected error occurs",
+          "title": "should show validation errors for empty title",
           "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleFilter.integration.test.ts",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should filter modules by DRAFT status",
-          "status": "passed",
-          "duration": 5,
+          "duration": 237,
           "failureMessages": []
         },
         {
-          "title": "should filter modules by ACTIVE status",
+          "title": "should show validation errors for title less than 5 characters",
           "status": "passed",
-          "duration": 2,
+          "duration": 235,
           "failureMessages": []
         },
         {
-          "title": "should search modules by keyword",
+          "title": "should show validation errors for title more than 100 characters",
           "status": "passed",
-          "duration": 2,
+          "duration": 181,
           "failureMessages": []
         },
         {
-          "title": "should combine filter and search",
+          "title": "should call createModule when form is submitted in create mode",
           "status": "passed",
-          "duration": 2,
+          "duration": 266,
           "failureMessages": []
         },
         {
-          "title": "should handle pagination correctly",
+          "title": "should call updateModule when form is submitted in edit mode",
           "status": "passed",
-          "duration": 1,
+          "duration": 221,
           "failureMessages": []
         },
         {
-          "title": "should handle empty search results",
+          "title": "should handle API error during form submission",
           "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleValidation.integration.test.ts",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should reject module creation with empty title",
-          "status": "passed",
-          "duration": 8,
+          "duration": 208,
           "failureMessages": []
         },
         {
-          "title": "should reject module creation with short description",
+          "title": "should close modal when cancel button is clicked",
           "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        },
-        {
-          "title": "should reject module creation with invalid status",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should reject module creation with missing fields",
-          "status": "passed",
-          "duration": 12,
-          "failureMessages": []
-        },
-        {
-          "title": "should accept valid module data",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should sanitize input to prevent XSS",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\hooks\\useModuleQuery.test.tsx",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should fetch modules with default params",
-          "status": "passed",
-          "duration": 107,
-          "failureMessages": []
-        },
-        {
-          "title": "should fetch modules with custom params",
-          "status": "passed",
-          "duration": 78,
-          "failureMessages": []
-        },
-        {
-          "title": "should fetch module by id",
-          "status": "passed",
-          "duration": 76,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle error when fetching module by id",
-          "status": "passed",
-          "duration": 88,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleAuditTrail.integration.test.ts",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should log module creation in audit trail",
-          "status": "passed",
-          "duration": 3,
-          "failureMessages": []
-        },
-        {
-          "title": "should log module update in audit trail",
-          "status": "passed",
-          "duration": 3,
-          "failureMessages": []
-        },
-        {
-          "title": "should log module deletion in audit trail",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\ModuleForm.integration.test.tsx",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should open edit modal when edit button is clicked",
-          "status": "passed",
-          "duration": 350,
-          "failureMessages": []
-        },
-        {
-          "title": "should open delete confirmation when delete button is clicked",
-          "status": "passed",
-          "duration": 96,
-          "failureMessages": []
-        },
-        {
-          "title": "should update module when edit form is submitted",
-          "status": "passed",
-          "duration": 253,
-          "failureMessages": []
-        },
-        {
-          "title": "should show toast info when delete is confirmed",
-          "status": "passed",
-          "duration": 158,
-          "failureMessages": []
-        },
-        {
-          "title": "should close modals when cancel button is clicked",
-          "status": "passed",
-          "duration": 293,
+          "duration": 101,
           "failureMessages": []
         }
       ]
@@ -925,11 +1021,41 @@
         {
           "title": "should return 401 when user is not authenticated",
           "status": "passed",
-          "duration": 0,
+          "duration": 1,
           "failureMessages": []
         },
         {
           "title": "should return 403 when user is not admin",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleStatusApi.integration.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should update module status",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "should return 404 if module not found",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle missing user ID",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle errors when updating module status",
           "status": "passed",
           "duration": 1,
           "failureMessages": []
@@ -943,19 +1069,19 @@
         {
           "title": "should validate a valid module",
           "status": "passed",
-          "duration": 1,
+          "duration": 3,
           "failureMessages": []
         },
         {
           "title": "should validate a module without description",
           "status": "passed",
-          "duration": 0,
+          "duration": 1,
           "failureMessages": []
         },
         {
           "title": "should set default status to DRAFT if not provided",
           "status": "passed",
-          "duration": 1,
+          "duration": 2,
           "failureMessages": []
         },
         {
@@ -967,19 +1093,19 @@
         {
           "title": "should reject a module with title more than 100 characters",
           "status": "passed",
-          "duration": 0,
+          "duration": 1,
           "failureMessages": []
         },
         {
           "title": "should reject a module with invalid status",
           "status": "passed",
-          "duration": 0,
+          "duration": 1,
           "failureMessages": []
         },
         {
           "title": "should validate a valid update with all fields",
           "status": "passed",
-          "duration": 0,
+          "duration": 1,
           "failureMessages": []
         },
         {
@@ -991,7 +1117,7 @@
         {
           "title": "should validate a partial update with only description",
           "status": "passed",
-          "duration": 0,
+          "duration": 4,
           "failureMessages": []
         },
         {
@@ -1015,7 +1141,7 @@
         {
           "title": "should coerce string numbers to actual numbers",
           "status": "passed",
-          "duration": 1,
+          "duration": 2,
           "failureMessages": []
         },
         {
@@ -1027,7 +1153,7 @@
         {
           "title": "should reject negative page numbers",
           "status": "passed",
-          "duration": 0,
+          "duration": 1,
           "failureMessages": []
         },
         {
@@ -1045,133 +1171,25 @@
       ]
     },
     {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleFormModal\\ModuleFormModal.test.tsx",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should render create modal with correct title",
-          "status": "passed",
-          "duration": 324,
-          "failureMessages": []
-        },
-        {
-          "title": "should render edit modal with correct title",
-          "status": "passed",
-          "duration": 94,
-          "failureMessages": []
-        },
-        {
-          "title": "should pre-fill form fields when in edit mode",
-          "status": "passed",
-          "duration": 170,
-          "failureMessages": []
-        },
-        {
-          "title": "should show validation errors for empty title",
-          "status": "passed",
-          "duration": 200,
-          "failureMessages": []
-        },
-        {
-          "title": "should show validation errors for title less than 5 characters",
-          "status": "passed",
-          "duration": 209,
-          "failureMessages": []
-        },
-        {
-          "title": "should show validation errors for title more than 100 characters",
-          "status": "passed",
-          "duration": 165,
-          "failureMessages": []
-        },
-        {
-          "title": "should call createModule when form is submitted in create mode",
-          "status": "passed",
-          "duration": 227,
-          "failureMessages": []
-        },
-        {
-          "title": "should call updateModule when form is submitted in edit mode",
-          "status": "passed",
-          "duration": 205,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle API error during form submission",
-          "status": "passed",
-          "duration": 181,
-          "failureMessages": []
-        },
-        {
-          "title": "should close modal when cancel button is clicked",
-          "status": "passed",
-          "duration": 55,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\moduleApi.integration.test.ts",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should return paginated modules",
-          "status": "passed",
-          "duration": 3,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle errors when fetching modules",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should create a new module",
-          "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        },
-        {
-          "title": "should return module by ID",
-          "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        },
-        {
-          "title": "should update module by ID",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should delete module by ID",
-          "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
       "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable\\DataTable.test.tsx",
       "failureMessages": [],
       "testResults": [
         {
           "title": "should render loading skeleton when isLoading is true",
           "status": "passed",
-          "duration": 60,
+          "duration": 116,
           "failureMessages": []
         },
         {
           "title": "should render empty state when no data is available",
           "status": "passed",
-          "duration": 8,
+          "duration": 10,
           "failureMessages": []
         },
         {
           "title": "should render table headers correctly",
           "status": "passed",
-          "duration": 4,
+          "duration": 6,
           "failureMessages": []
         }
       ]

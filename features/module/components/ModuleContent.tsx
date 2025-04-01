@@ -1,5 +1,5 @@
 // features/module/components/ModuleContent.tsx
-import  { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -8,13 +8,18 @@ import { Button } from '@/components/ui/button'
 import { CheckCircle, Circle } from 'lucide-react'
 import Image from 'next/image'
 import type { Components } from 'react-markdown'
+import { sanitizeHtml } from '@/features/common/utils/sanitize'
+
 interface ModuleContentProps {
   title?: string
   content: string
   media?: string
   pageNumber?: number
   onInteraction?: (interactionId: string) => void
-  onScroll?: (scrollData: { pageNumber: number, scrollPercentage: number }) => void
+  onScroll?: (scrollData: {
+    pageNumber: number
+    scrollPercentage: number
+  }) => void
 }
 
 const ModuleContent: React.FC<ModuleContentProps> = ({
@@ -41,7 +46,7 @@ const ModuleContent: React.FC<ModuleContentProps> = ({
       if (scrollTop + clientHeight >= scrollHeight - 50) {
         onInteraction('scroll-to-bottom')
       }
-      
+
       // Panggil onScroll callback jika tersedia
       if (onScroll) {
         const scrollPercentage = Math.min(
@@ -75,7 +80,7 @@ const ModuleContent: React.FC<ModuleContentProps> = ({
         {items.map((item, index) => {
           const interactionId = `checklist-item-${index}`
           return (
-            <li 
+            <li
               key={interactionId}
               className="flex items-start gap-2 p-2 hover:bg-muted-foreground/10 rounded transition-colors"
               id={interactionId}
@@ -98,18 +103,8 @@ const ModuleContent: React.FC<ModuleContentProps> = ({
   )
 
   // Komponen khusus untuk menampilkan tombol interaktif
-  const InteractiveButton = ({ 
-    id, 
-    label 
-  }: { 
-    id: string
-    label: string 
-  }) => (
-    <Button
-      className="my-2"
-      id={id}
-      onClick={() => handleInteraction(id)}
-    >
+  const InteractiveButton = ({ id, label }: { id: string; label: string }) => (
+    <Button className="my-2" id={id} onClick={() => handleInteraction(id)}>
       {label}
     </Button>
   )
@@ -141,8 +136,8 @@ const ModuleContent: React.FC<ModuleContentProps> = ({
     h3: ({ children }) => {
       const headingId = `heading-${String(children).toLowerCase().replace(/\s+/g, '-')}`
       return (
-        <h3 
-          id={headingId} 
+        <h3
+          id={headingId}
           className="scroll-mt-20"
           onClick={() => handleInteraction(`view-${headingId}`)}
         >
@@ -156,31 +151,38 @@ const ModuleContent: React.FC<ModuleContentProps> = ({
         const content = String(children)
         const items = content
           .split('\n')
-          .filter(item => item.trim().startsWith('- '))
-          .map(item => item.trim().substring(2))
-        
+          .filter((item) => item.trim().startsWith('- '))
+          .map((item) => item.trim().substring(2))
+
         return <InteractiveChecklist items={items} />
       }
-      
+
       // Deteksi blok tombol interaktif
       if (className?.includes('interactive-button')) {
         const content = String(children).trim()
         const id = className.split(' ')[1] || 'interactive-button'
         return <InteractiveButton id={id} label={content} />
       }
-      
-      return <div className={className} {...props}>{children}</div>
-    }
+
+      return (
+        <div className={className} {...props}>
+          {children}
+        </div>
+      )
+    },
   }
+
+  // Dalam fungsi ModuleContent, tambahkan sanitasi untuk content
+  const sanitizedContent = sanitizeHtml(content)
 
   return (
     <Card className="w-full">
       <CardContent className="p-6">
         <h2 className="text-2xl font-bold mb-4">{title}</h2>
-        
+
         {media && (
           <div className="mb-6 relative h-[300px] w-full">
-            <Image 
+            <Image
               src={media || ''}
               alt={title || 'Module content image'}
               className="rounded-md object-cover"
@@ -191,19 +193,19 @@ const ModuleContent: React.FC<ModuleContentProps> = ({
             />
           </div>
         )}
-        
-        <div 
+
+        <div
           className="prose prose-slate dark:prose-invert max-w-none overflow-auto max-h-[500px] pr-2"
           ref={contentRef}
         >
           <ReactMarkdown components={markdownComponents}>
-            {content}
+            {sanitizedContent}
           </ReactMarkdown>
         </div>
-        
+
         {/* Tombol untuk menandai halaman telah dibaca */}
         <div className="mt-6 flex justify-end">
-          <Button 
+          <Button
             variant="outline"
             onClick={() => handleInteraction('mark-as-read')}
             className="text-sm"

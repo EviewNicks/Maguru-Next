@@ -54,11 +54,11 @@ export function DataTableWithFeatures() {
 
   // Handler untuk sorting
   const handleSortChange = (column: string, direction: 'asc' | 'desc' | '') => {
-    setQueryParams((prev) => ({ 
-      ...prev, 
-      page: 1, 
-      sortBy: column, 
-      sortOrder: direction 
+    setQueryParams((prev) => ({
+      ...prev,
+      page: 1,
+      sortBy: column,
+      sortOrder: direction,
     }))
   }
 
@@ -67,7 +67,7 @@ export function DataTableWithFeatures() {
     if (error) {
       const errorDetails = handleError(error)
       toast.error(errorDetails.message, {
-        description: errorDetails.code
+        description: errorDetails.code,
       })
 
       // Log error hanya di lingkungan development
@@ -79,21 +79,21 @@ export function DataTableWithFeatures() {
 
   return (
     <div className="space-y-4">
-      <SearchAndFilter 
+      <SearchAndFilter
         onSearch={handleSearch}
         onFilterChange={handleStatusFilter}
         searchValue={queryParams.search}
         statusFilter={queryParams.status}
       />
-      <DataTable 
-        data={data?.data || []} 
+      <DataTable
+        data={data?.data || []}
         isLoading={isLoading}
         onSortChange={handleSortChange}
         sortBy={queryParams.sortBy}
         sortOrder={queryParams.sortOrder}
       />
       {data?.meta && (
-        <PaginationControls 
+        <PaginationControls
           currentPage={data.meta.currentPage}
           totalPages={data.meta.totalPages}
           pageSize={data.meta.pageSize}
