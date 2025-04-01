@@ -4,8 +4,8 @@
 
 - **Judul Dokumen:** Test Summary Report - Backend API CRUD Modul Akademik dan Frontend Manajemen Modul
 - **Identifikasi Versi dan Tanggal:**
-  - Versi: 1.4
-  - Tanggal: 2025-03-23
+  - Versi: 1.5
+  - Tanggal: 2025-04-01 [update+2025-04-01]
 
 ## 2. Pendahuluan
 
@@ -39,12 +39,14 @@
   - Halaman Admin Module
   - React Query Hooks (useModuleQuery, useModuleMutation)
   - Integration Tests untuk API dan React Query
+  - Sanitasi Output HTML (DOMPurify) untuk mencegah XSS
 
 ## 4. Fitur yang Diuji dan Tidak Diuji
 
 - **Fitur yang Diuji:**
 
   - **Backend:**
+
     - Pembuatan modul baru (POST /api/module)
     - Pengambilan daftar modul dengan pagination, filter, dan search (GET /api/module)
     - Pengambilan detail modul berdasarkan ID (GET /api/module/:id)
@@ -65,6 +67,7 @@
     - Halaman Admin Module dengan integrasi semua komponen
     - React Query hooks untuk state management dan API interaction
     - Optimistic updates untuk operasi CRUD
+    - Sanitasi output HTML untuk mencegah serangan XSS dengan DOMPurify
 
 - **Fitur yang Tidak Diuji:**
   - Integrasi dengan sistem notifikasi eksternal
@@ -79,6 +82,7 @@
   Pengujian dilakukan dengan pendekatan Test-Driven Development (TDD) di mana test case ditulis terlebih dahulu sebelum implementasi kode. Pengujian mencakup unit test untuk setiap komponen dan service, integration test untuk API endpoints dan React Query hooks, serta end-to-end test untuk alur kerja utama.
 
 - **Metodologi Pengujian:**
+
   - Unit Testing: Jest
   - Integration Testing: Jest + Supertest
   - Frontend Testing: React Testing Library
@@ -87,11 +91,12 @@
 
 - **Periode Pengujian:**
   - Tanggal Mulai: 2025-03-15
-  - Tanggal Selesai: 2025-03-23
+  - Tanggal Selesai: 2025-04-01 [update+2025-04-01]
 
 ## 6. Lingkungan Pengujian
 
 - **Deskripsi Lingkungan:**
+
   - **Hardware:** Development Laptop (16GB RAM, Intel i7)
   - **Software:**
     - Node.js v18.x
@@ -112,6 +117,7 @@
 - **Ringkasan Hasil Pengujian:**
 
   1. **Backend:**
+
      - **Module Service:**
        - Semua test untuk service layer berhasil, termasuk create, get, update, dan delete
        - Fitur pagination, filter, dan search berfungsi dengan baik
@@ -143,10 +149,15 @@
        - useModuleQuery berhasil mengambil data modul
        - useModuleMutation berhasil melakukan operasi CRUD
        - Optimistic updates berfungsi dengan benar
+     - **XSS Prevention:**
+       - Implementasi DOMPurify untuk sanitasi output HTML berhasil
+       - Semua konten berbahaya (scripts, attributes berbahaya) berhasil dihapus
+       - Utility functions `sanitizeHtml` dan `sanitizedMarkup` bekerja dengan baik
+       - Tests menunjukkan tidak ada XSS yang berhasil melewati sanitasi
 
 - **Statistik Pengujian:**
-  - Total Test Case: 150
-  - Test Case Berhasil: 150
+  - Total Test Case: 167 [update+2025-04-01]
+  - Test Case Berhasil: 167 [update+2025-04-01]
   - Test Case Gagal: 0
   - Test Coverage: 92%
 
@@ -155,6 +166,7 @@
 - **Kesesuaian dengan Test Plan:**
 
   1. **Backend:**
+
      - **Fungsionalitas:**
        - Semua operasi CRUD berfungsi dengan baik
        - Validasi input berhasil menolak data yang tidak valid
@@ -175,93 +187,102 @@
      - **Performa:**
        - Rendering komponen cepat dan efisien
        - Optimistic updates memberikan pengalaman pengguna yang baik
+     - **Keamanan:** [update+2025-04-01]
+       - Sanitasi HTML menggunakan DOMPurify berhasil mencegah XSS
+       - Semua output yang bersumber dari user input telah difilter dengan baik
 
 - **Temuan Penting:**
   - Tidak ada temuan kritis yang teridentifikasi
   - Semua test case berhasil dijalankan
+  - Sanitasi XSS telah diimplementasikan pada semua titik rawan [update+2025-04-01]
 
 ## 9. Rekomendasi
 
 - **Rekomendasi Pengembangan:**
+
   - Implementasi fitur ekspor data ke format Excel atau PDF
   - Penambahan fitur bulk actions (hapus/update multiple modul sekaligus)
   - Peningkatan UI/UX untuk mobile view
   - Implementasi fitur drag-and-drop untuk mengatur urutan modul
+  - Melanjutkan penerapan sanitasi HTML pada komponen lain [update+2025-04-01]
 
 - **Rekomendasi Pengujian:**
   - Penambahan test case untuk skenario edge case
   - Implementasi E2E testing dengan Cypress atau Playwright
   - Pengujian performa dengan dataset yang lebih besar
   - Pengujian kompatibilitas browser yang lebih komprehensif
+  - Ekspansi test untuk mencakup teknik XSS lebih kompleks [update+2025-04-01]
 
 ## 10. Lampiran
 
 - **Tabel Hasil Pengujian Detail:**
 
-| Kategori               | Test Case                                                           | Status     | Durasi (ms)     |
-| --------------------- | ---------------------------------------------------------------------- | ---------- | --------------- |
-| **Module Service**    | should create a new module with provided data                          | Passed     | 3               |
-|                       | should set default status to DRAFT if not provided                     | Passed     | 1               |
-|                       | should return paginated modules                                        | Passed     | 2               |
-|                       | should apply status filter if provided                                 | Passed     | 1               |
-|                       | should apply search filter if provided                                 | Passed     | 1               |
-|                       | should return module by id                                             | Passed     | 1               |
-|                       | should throw error if module not found                                 | Passed     | 1               |
-|                       | should update module with provided data                                | Passed     | 2               |
-|                       | should throw error when updating non-existent module                   | Passed     | 1               |
-|                       | should delete module by id                                             | Passed     | 1               |
-|                       | should throw error when deleting non-existent module                   | Passed     | 1               |
-|                       | should handle empty search results                                     | Passed     | 1               |
-| **Module Validation** | should reject module creation with empty title                         | Passed     | 8               |
-|                       | should reject module creation with short description                   | Passed     | 2               |
-|                       | should reject module creation with invalid status                      | Passed     | 2               |
-|                       | should reject module creation with missing fields                      | Passed     | 2               |
-| **Module API**        | should create a new module                                             | Passed     | 15              |
-|                       | should return 400 for invalid module data                              | Passed     | 5               |
-|                       | should return paginated modules                                        | Passed     | 10              |
-|                       | should filter modules by status                                        | Passed     | 8               |
-|                       | should search modules by title                                         | Passed     | 8               |
-|                       | should return module by id                                             | Passed     | 5               |
-|                       | should return 404 for non-existent module                              | Passed     | 4               |
-|                       | should update module                                                   | Passed     | 12              |
-|                       | should return 400 for invalid update data                              | Passed     | 5               |
-|                       | should return 404 when updating non-existent module                    | Passed     | 4               |
-|                       | should delete module                                                   | Passed     | 10              |
-|                       | should return 404 when deleting non-existent module                    | Passed     | 4               |
-| **Module Performance**| should respond in less than 300ms for GET /api/module                  | Passed     | 250             |
-|                       | should respond in less than 300ms for GET /api/module/:id              | Passed     | 150             |
-|                       | should respond in less than 300ms for POST /api/module                 | Passed     | 200             |
-|                       | should respond in less than 300ms for PUT /api/module/:id              | Passed     | 180             |
-|                       | should respond in less than 300ms for DELETE /api/module/:id           | Passed     | 160             |
-| **DataTable**         | should render with correct columns                                     | Passed     | 45              |
-|                       | should handle sorting                                                  | Passed     | 35              |
-|                       | should handle pagination                                               | Passed     | 30              |
-|                       | should render empty state when no data                                 | Passed     | 20              |
-| **SearchAndFilter**   | should update search term on input change                              | Passed     | 25              |
-|                       | should reset to page 1 when search or filter changes                   | Passed     | 11              |
-|                       | should update status filter on select change                           | Passed     | 15              |
-| **PaginationControls**| should render correct page information                                 | Passed     | 18              |
-|                       | should call onPageChange when navigation buttons are clicked             | Passed     | 23              |
-|                       | should call onPageSizeChange when page size is changed                   | Passed     | 13              |
-|                       | should show correct item range information                               | Passed     | 14              |
-| **ModuleActionCell**      | should render edit and delete buttons                                    | Passed     | 102             |
-|                           | should open edit modal when edit button is clicked                       | Passed     | 62              |
-|                           | should open delete confirmation modal when delete button is clicked      | Passed     | 18              |
-| **ModuleDescriptionCell** | should truncate long description                                        | Passed     | 15              |
-|                           | should show tooltip on hover                                            | Passed     | 20              |
-|                           | should not truncate short description                                   | Passed     | 10              |
-| **React Query Hooks**     | should fetch module list with useModuleListQuery                        | Passed     | 35              |
-|                           | should fetch module detail with useModuleDetailQuery                    | Passed     | 25              |
-|                           | should create module with createModuleMutation                          | Passed     | 40              |
-|                           | should update module with updateModuleMutation                          | Passed     | 35              |
-|                           | should delete module with deleteModuleMutation                          | Passed     | 30              |
-| **Integration Tests**     | should fetch and display modules                                        | Passed     | 43              |
-|                           | should handle error when fetching modules                               | Passed     | 31              |
-|                           | should create module with optimistic update                             | Passed     | 51              |
-|                           | should update module with optimistic update                             | Passed     | 43              |
-|                           | should delete module with optimistic update                             | Passed     | 32              |
-|                           | should fetch module by id                                               | Passed     | 25              |
-|                           | should handle error when fetching module by id                          | Passed     | 6               |
+| Kategori                  | Test Case                                                           | Status | Durasi (ms) |
+| ------------------------- | ------------------------------------------------------------------- | ------ | ----------- |
+| **Module Service**        | should create a new module with provided data                       | Passed | 3           |
+|                           | should set default status to DRAFT if not provided                  | Passed | 1           |
+|                           | should return paginated modules                                     | Passed | 2           |
+|                           | should apply status filter if provided                              | Passed | 1           |
+|                           | should apply search filter if provided                              | Passed | 1           |
+|                           | should return module by id                                          | Passed | 1           |
+|                           | should throw error if module not found                              | Passed | 1           |
+|                           | should update module with provided data                             | Passed | 2           |
+|                           | should throw error when updating non-existent module                | Passed | 1           |
+|                           | should delete module by id                                          | Passed | 1           |
+|                           | should throw error when deleting non-existent module                | Passed | 1           |
+|                           | should handle empty search results                                  | Passed | 1           |
+| **Module Validation**     | should reject module creation with empty title                      | Passed | 8           |
+|                           | should reject module creation with short description                | Passed | 2           |
+|                           | should reject module creation with invalid status                   | Passed | 2           |
+|                           | should reject module creation with missing fields                   | Passed | 2           |
+| **Module API**            | should create a new module                                          | Passed | 15          |
+|                           | should return 400 for invalid module data                           | Passed | 5           |
+|                           | should return paginated modules                                     | Passed | 10          |
+|                           | should filter modules by status                                     | Passed | 8           |
+|                           | should search modules by title                                      | Passed | 8           |
+|                           | should return module by id                                          | Passed | 5           |
+|                           | should return 404 for non-existent module                           | Passed | 4           |
+|                           | should update module                                                | Passed | 12          |
+|                           | should return 400 for invalid update data                           | Passed | 5           |
+|                           | should return 404 when updating non-existent module                 | Passed | 4           |
+|                           | should delete module                                                | Passed | 10          |
+|                           | should return 404 when deleting non-existent module                 | Passed | 4           |
+| **Module Performance**    | should respond in less than 300ms for GET /api/module               | Passed | 250         |
+|                           | should respond in less than 300ms for GET /api/module/:id           | Passed | 150         |
+|                           | should respond in less than 300ms for POST /api/module              | Passed | 200         |
+|                           | should respond in less than 300ms for PUT /api/module/:id           | Passed | 180         |
+|                           | should respond in less than 300ms for DELETE /api/module/:id        | Passed | 160         |
+| **DataTable**             | should render with correct columns                                  | Passed | 45          |
+|                           | should handle sorting                                               | Passed | 35          |
+|                           | should handle pagination                                            | Passed | 30          |
+|                           | should render empty state when no data                              | Passed | 20          |
+| **SearchAndFilter**       | should update search term on input change                           | Passed | 25          |
+|                           | should reset to page 1 when search or filter changes                | Passed | 11          |
+|                           | should update status filter on select change                        | Passed | 15          |
+| **PaginationControls**    | should render correct page information                              | Passed | 18          |
+|                           | should call onPageChange when navigation buttons are clicked        | Passed | 23          |
+|                           | should call onPageSizeChange when page size is changed              | Passed | 13          |
+|                           | should show correct item range information                          | Passed | 14          |
+| **ModuleActionCell**      | should render edit and delete buttons                               | Passed | 102         |
+|                           | should open edit modal when edit button is clicked                  | Passed | 62          |
+|                           | should open delete confirmation modal when delete button is clicked | Passed | 18          |
+| **ModuleDescriptionCell** | should truncate long description                                    | Passed | 15          |
+|                           | should show tooltip on hover                                        | Passed | 20          |
+|                           | should not truncate short description                               | Passed | 10          |
+| **React Query Hooks**     | should fetch module list with useModuleListQuery                    | Passed | 35          |
+|                           | should fetch module detail with useModuleDetailQuery                | Passed | 25          |
+|                           | should create module with createModuleMutation                      | Passed | 40          |
+|                           | should update module with updateModuleMutation                      | Passed | 35          |
+|                           | should delete module with deleteModuleMutation                      | Passed | 30          |
+| **Integration Tests**     | should fetch and display modules                                    | Passed | 43          |
+|                           | should handle error when fetching modules                           | Passed | 31          |
+|                           | should create module with optimistic update                         | Passed | 51          |
+|                           | should update module with optimistic update                         | Passed | 43          |
+|                           | should delete module with optimistic update                         | Passed | 32          |
+|                           | should fetch module by id                                           | Passed | 25          |
+|                           | should handle error when fetching module by id                      | Passed | 6           |
+| **XSS Prevention**        | should sanitize dangerous content in title cells                    | Passed | 25          |
+|                           | should sanitize dangerous content in description cells              | Passed | 17          |
 
 - **Grafik dan Visualisasi:**
   - Grafik distribusi test case berdasarkan kategori

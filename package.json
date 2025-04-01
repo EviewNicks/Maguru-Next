@@ -11,7 +11,10 @@
     "seed": "tsx prisma/seed.ts",
     "test": "cross-env USE_BABEL=true jest",
     "test:watch": "cross-env USE_BABEL=true jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright test --reporter=./services/playwrightReporter.js",
+    "test:e2e:ui": "playwright test --ui"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -82,6 +85,7 @@
     "@babel/preset-typescript": "^7.26.0",
     "@eslint/eslintrc": "^3",
     "@jest/globals": "^29.7.0",
+    "@playwright/test": "^1.51.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",
