@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DataTable } from './DataTable'
 import { PaginationControls } from './PaginationControls'
 import { SearchAndFilter } from './SearchAndFilter'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertCircle } from 'lucide-react'
 import { useModuleQuery } from '../../hooks/useModuleQuery'
 import { ModuleStatus } from '../../types/index'
+import { handleError } from '../ErrorNotifier/ErrorNotifier'
+import { toast } from 'sonner'
 
 export function DataTableWithFeatures() {
   // State untuk parameter query
@@ -63,17 +63,19 @@ export function DataTableWithFeatures() {
   }
 
   // Tampilkan error jika terjadi
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>
-          {error instanceof Error ? error.message : 'Terjadi kesalahan saat memuat data'}
-        </AlertDescription>
-      </Alert>
-    )
-  }
+  useEffect(() => {
+    if (error) {
+      const errorDetails = handleError(error)
+      toast.error(errorDetails.message, {
+        description: errorDetails.code
+      })
+
+      // Log error hanya di lingkungan development
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('Error fetching modules:', errorDetails)
+      }
+    }
+  }, [error])
 
   return (
     <div className="space-y-4">

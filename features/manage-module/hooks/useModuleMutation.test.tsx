@@ -1,13 +1,39 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useModuleMutation, CreateModuleInput, UpdateModuleInput } from './useModuleMutation'
+import {
+  useModuleMutation,
+  CreateModuleInput,
+  UpdateModuleInput,
+} from './useModuleMutation'
 import * as moduleClientService from '../services/moduleClientService'
 import { ReactNode } from 'react'
 import { Module, ModuleStatus } from '../types'
+import { toast } from 'sonner'
 
 // Mock moduleClientService
 jest.mock('../services/moduleClientService')
-const mockedModuleClientService = moduleClientService as jest.Mocked<typeof moduleClientService>
+const mockedModuleClientService = moduleClientService as jest.Mocked<
+  typeof moduleClientService
+>
+
+// Mock ErrorNotifier dan toast
+jest.mock('sonner', () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+  },
+}))
+
+// Mock console.error untuk mencegah log dalam test
+const originalConsoleError = console.error
+beforeAll(() => {
+  console.error = jest.fn()
+})
+
+afterAll(() => {
+  console.error = originalConsoleError
+})
 
 describe('useModuleMutation', () => {
   // Setup mock data
@@ -19,7 +45,7 @@ describe('useModuleMutation', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     createdBy: 'user1',
-    updatedBy: 'user1'
+    updatedBy: 'user1',
   }
 
   // Reset mocks before each test
@@ -34,15 +60,18 @@ describe('useModuleMutation', () => {
         queries: {
           retry: false,
         },
+        mutations: {
+          retry: false,
+        },
       },
     })
-    
+
     const Wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     )
-    Wrapper.displayName = 'QueryClientWrapper';
-    
-    return Wrapper;
+    Wrapper.displayName = 'QueryClientWrapper'
+
+    return Wrapper
   }
 
   describe('createModuleMutation', () => {
@@ -61,41 +90,60 @@ describe('useModuleMutation', () => {
 
       // Act
       const { result } = renderHook(() => useModuleMutation(), { wrapper })
-      
+
       // Assert
       expect(result.current.createModuleMutation).toBeDefined()
-      
+
       // Call the mutation
       result.current.createModuleMutation.mutate(newModule)
-      
-      // Wait for the mutation to complete
-      await waitFor(() => expect(result.current.createModuleMutation.isSuccess).toBe(true))
-      
+
+      // Tunggu service dipanggil, bukan lagi menunggu isSuccess
+      await waitFor(() =>
+        expect(mockedModuleClientService.createModule).toHaveBeenCalledTimes(1)
+      )
+
       // Check if the service was called with correct data
-      expect(mockedModuleClientService.createModule).toHaveBeenCalledWith(newModule)
+      expect(mockedModuleClientService.createModule).toHaveBeenCalledWith(
+        newModule
+      )
+
+      // Verifikasi toast dipanggil setelah sukses
+      await waitFor(() =>
+        expect(toast.success).toHaveBeenCalledWith('Modul berhasil dibuat')
+      )
     })
 
     it('should handle errors when creating module', async () => {
       // Arrange
       const wrapper = createWrapper()
-      const error = new Error('Failed to create module')
+      const error = {
+        response: {
+          status: 400,
+          data: { message: 'Validation Error' },
+        },
+      }
       mockedModuleClientService.createModule.mockRejectedValue(error)
-      
+
       // Act
       const { result } = renderHook(() => useModuleMutation(), { wrapper })
-      
+
       // Call the mutation
       result.current.createModuleMutation.mutate({
         title: 'Test Module',
         description: 'Test Description',
         status: ModuleStatus.DRAFT,
       })
-      
-      // Wait for the mutation to fail
-      await waitFor(() => expect(result.current.createModuleMutation.isError).toBe(true))
-      
-      // Check if error is correct
-      expect(result.current.createModuleMutation.error).toEqual(error)
+
+      // Tunggu service dipanggil dan error ditangani
+      await waitFor(() => expect(toast.error).toHaveBeenCalled())
+
+      // Verifikasi pesan error yang benar ditampilkan
+      expect(toast.error).toHaveBeenCalledWith(
+        expect.stringContaining('Terjadi kesalahan validasi'),
+        expect.objectContaining({
+          description: expect.stringContaining('HTTP_400'),
+        })
+      )
     })
   })
 
@@ -116,19 +164,26 @@ describe('useModuleMutation', () => {
 
       // Act
       const { result } = renderHook(() => useModuleMutation(), { wrapper })
-      
+
       // Call the mutation
       result.current.updateModuleMutation.mutate(updateData)
-      
-      // Wait for the mutation to complete
-      await waitFor(() => expect(result.current.updateModuleMutation.isSuccess).toBe(true))
-      
+
+      // Tunggu service dipanggil, bukan lagi menunggu isSuccess
+      await waitFor(() =>
+        expect(mockedModuleClientService.updateModule).toHaveBeenCalledTimes(1)
+      )
+
       // Check if the service was called with correct data
       expect(mockedModuleClientService.updateModule).toHaveBeenCalledWith('1', {
         title: 'Updated Module',
         description: 'Updated Description',
         status: ModuleStatus.ACTIVE,
       })
+
+      // Verifikasi toast dipanggil setelah sukses
+      await waitFor(() =>
+        expect(toast.success).toHaveBeenCalledWith('Modul berhasil diperbarui')
+      )
     })
   })
 
@@ -144,15 +199,24 @@ describe('useModuleMutation', () => {
 
       // Act
       const { result } = renderHook(() => useModuleMutation(), { wrapper })
-      
+
       // Call the mutation
       result.current.deleteModuleMutation.mutate(moduleId)
-      
-      // Wait for the mutation to complete
-      await waitFor(() => expect(result.current.deleteModuleMutation.isSuccess).toBe(true))
-      
+
+      // Tunggu service dipanggil, bukan lagi menunggu isSuccess
+      await waitFor(() =>
+        expect(mockedModuleClientService.deleteModule).toHaveBeenCalledTimes(1)
+      )
+
       // Check if the service was called with correct id
-      expect(mockedModuleClientService.deleteModule).toHaveBeenCalledWith(moduleId)
+      expect(mockedModuleClientService.deleteModule).toHaveBeenCalledWith(
+        moduleId
+      )
+
+      // Verifikasi toast dipanggil setelah sukses
+      await waitFor(() =>
+        expect(toast.success).toHaveBeenCalledWith('Modul berhasil dihapus')
+      )
     })
   })
 })

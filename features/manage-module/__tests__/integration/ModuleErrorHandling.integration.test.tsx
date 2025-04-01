@@ -87,12 +87,6 @@ describe('Module Mutation Error Handling', () => {
           retry: false,
         },
       },
-      logger: {
-        // Matikan semua log dari react-query
-        log: () => {},
-        warn: () => {},
-        error: () => {},
-      },
     })
 
     // Ganti implementasi mock console.error sepenuhnya

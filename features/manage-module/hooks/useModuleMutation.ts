@@ -54,7 +54,7 @@ export function useModuleMutation() {
     onError: (error) => {
       const errorDetails = handleError(error)
       toast.error(errorDetails.message, {
-        description: errorDetails.code
+        description: errorDetails.code,
       })
       // Hanya log error saat development
       if (process.env.NODE_ENV !== 'test') {
@@ -77,7 +77,7 @@ export function useModuleMutation() {
     onError: (error) => {
       const errorDetails = handleError(error)
       toast.error(errorDetails.message, {
-        description: errorDetails.code
+        description: errorDetails.code,
       })
       // Hanya log error saat development
       if (process.env.NODE_ENV !== 'test') {
@@ -97,13 +97,16 @@ export function useModuleMutation() {
       const previousModules = queryClient.getQueryData(['modules'])
 
       // Optimistically update to the new value
-      queryClient.setQueryData(['modules'], (old: ModuleResponse | undefined) => {
-        if (!old) return old
-        return {
-          ...old,
-          data: old.data.filter((module) => module.id !== deletedId),
+      queryClient.setQueryData(
+        ['modules'],
+        (old: ModuleResponse | undefined) => {
+          if (!old) return old
+          return {
+            ...old,
+            data: old.data.filter((module) => module.id !== deletedId),
+          }
         }
-      })
+      )
 
       // Return a context object with the snapshot value
       return { previousModules }
@@ -116,7 +119,7 @@ export function useModuleMutation() {
     onError: (error, _deletedId, context) => {
       const errorDetails = handleError(error)
       toast.error(errorDetails.message, {
-        description: errorDetails.code
+        description: errorDetails.code,
       })
       // Hanya log error saat development
       if (process.env.NODE_ENV !== 'test') {

@@ -6,6 +6,8 @@ import { DataTableWithFeatures } from './DataTableWithFeatures'
 import { useModuleQuery } from '../../hooks/useModuleQuery'
 import { ModuleStatus } from '../../types/index'
 import { Module } from '../../types/index'
+import { toast } from 'sonner'
+import { handleError } from '../ErrorNotifier/ErrorNotifier'
 
 // Mock komponen-komponen
 jest.mock('./SearchAndFilter', () => ({
@@ -33,6 +35,21 @@ jest.mock('./PaginationControls', () => ({
 // Mock useModuleQuery
 jest.mock('../../hooks/useModuleQuery', () => ({
   useModuleQuery: jest.fn(),
+}))
+
+// Mock toast
+jest.mock('sonner', () => ({
+  toast: {
+    error: jest.fn(),
+  },
+}))
+
+// Mock handleError
+jest.mock('../ErrorNotifier/ErrorNotifier', () => ({
+  handleError: jest.fn().mockReturnValue({
+    message: 'Error Message',
+    code: 'ERROR_CODE',
+  }),
 }))
 
 const mockModules = [
@@ -177,8 +194,10 @@ describe('DataTableWithFeatures', () => {
 
     renderComponent()
 
-    // Cek apakah pesan error ditampilkan
-    expect(screen.getByText('Error')).toBeInTheDocument()
-    expect(screen.getByText(errorMessage)).toBeInTheDocument()
+    // Cek apakah toast.error dipanggil dengan parameter yang benar
+    expect(handleError).toHaveBeenCalledWith(new Error(errorMessage))
+    expect(toast.error).toHaveBeenCalledWith('Error Message', {
+      description: 'ERROR_CODE'
+    })
   })
 })

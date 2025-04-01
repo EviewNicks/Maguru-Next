@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createModule, updateModule } from '../services/moduleClientService'
 import { toast } from 'sonner'
 import { Module, ModuleStatus } from '../types'
+import { handleError } from '../components/ErrorNotifier/ErrorNotifier'
 
 interface UseModuleFormProps {
   mode: 'create' | 'edit'
@@ -42,8 +43,16 @@ export function useModuleForm({ mode, module, onSuccess }: UseModuleFormProps) {
       queryClient.invalidateQueries({ queryKey: ['modules'] })
       onSuccess()
     },
-    onError: (error: Error) => {
-      toast.error(`Gagal menyimpan modul: ${error.message}`)
+    onError: (error: unknown) => {
+      const errorDetails = handleError(error)
+      toast.error(errorDetails.message, {
+        description: errorDetails.code
+      })
+      
+      // Log error hanya di lingkungan development
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error membuat modul:', errorDetails)
+      }
     },
   })
 
@@ -63,8 +72,16 @@ export function useModuleForm({ mode, module, onSuccess }: UseModuleFormProps) {
       queryClient.invalidateQueries({ queryKey: ['modules'] })
       onSuccess()
     },
-    onError: (error: Error) => {
-      toast.error(`Gagal memperbarui modul: ${error.message}`)
+    onError: (error: unknown) => {
+      const errorDetails = handleError(error)
+      toast.error(errorDetails.message, {
+        description: errorDetails.code
+      })
+      
+      // Log error hanya di lingkungan development
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error memperbarui modul:', errorDetails)
+      }
     },
   })
 
