@@ -1,3 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
 # Maguru Project Development Rules
 
 ## 📚 Daftar Isi
@@ -28,37 +34,37 @@ Dokumentasi ini berisi standar coding, alur sistem, serta aturan proyek.
 
 ### 📌 File Dokumentasi yang Wajib Dibaca:
 
-1️⃣ **PRD (Project Requirements Document) → `/documentation/PRD.md`**
+1️⃣ **PRD (Project Requirements Document) → `/documentation/PRD.md`** [prd.mdc](mdc:.cursor/rules/prd.mdc)
 
 - **Deskripsi**: Visi proyek, fitur utama, dan persyaratan sistem yang harus dipenuhi untuk keberhasilan proyek.
 - **Mengapa Harus Dibaca?**: Pastikan fitur yang dikembangkan sesuai dengan rencana awal proyek agar konsistensi dan tujuan tercapai.
 
-2️⃣ **App Flow Document → `/documentation/app-flow-documentation.md`**
+2️⃣ **App Flow Document → `/documentation/app-flow-documentation.md`** [app-flow-docs.mdc](mdc:.cursor/rules/app-flow-docs.mdc)
 
 - **Deskripsi**: Diagram alur aplikasi dan interaksi pengguna yang menggambarkan bagaimana pengguna akan berinteraksi dengan sistem.
 - **Mengapa Harus Dibaca?**: Fitur yang dibuat harus mengikuti flow aplikasi yang telah disusun untuk meningkatkan pengalaman pengguna.
 
-3️⃣ **Tech Stack Document → `/documentation/tech-stack-documentation.md`**
+3️⃣ **Tech Stack Document → `/documentation/tech-stack-documentation.md`** [tech-stack-docs.mdc](mdc:.cursor/rules/tech-stack-docs.mdc)
 
 - **Deskripsi**: Menjelaskan framework, database, dan teknologi yang digunakan dalam proyek, serta alasan pemilihannya.
 - **Mengapa Harus Dibaca?**: Jangan gunakan library atau teknologi yang tidak disebutkan dalam dokumen ini untuk menjaga konsistensi dan kompatibilitas.
 
-4️⃣ **Frontend Guidelines → `/documentation/frontend-guidelines.md`**
+4️⃣ **Frontend Guidelines → `/documentation/frontend-guidelines.md`** [frontend-guidelines.mdc](mdc:.cursor/rules/frontend-guidelines.mdc)
 
 - **Deskripsi**: Panduan tentang konvensi coding frontend (React, Tailwind, dsb.) serta praktik terbaik dalam pengembangan antarmuka pengguna.
 - **Mengapa Harus Dibaca?**: Semua kode frontend harus sesuai dengan aturan desain dan struktur yang ada untuk memastikan kualitas dan keterbacaan kode.
 
-5️⃣ **Backend Structure Document → `/documentation/backend-structure.md`**
+5️⃣ **Backend Structure Document → `/documentation/backend-structure.md`** [backend-structure.mdc](mdc:.cursor/rules/backend-structure.mdc)
 
 - **Deskripsi**: Struktur database, arsitektur backend, dan API endpoints yang digunakan dalam proyek.
 - **Mengapa Harus Dibaca?**: Jangan improvisasi dalam penulisan backend, pastikan API dan database sesuai aturan untuk menjaga integritas sistem.
 
-6️⃣ **File Structure Document → `/documentation/file-structure.md`**
+6️⃣ **File Structure Document → `/documentation/file-structure.md`** [file-structure.mdc](mdc:.cursor/rules/file-structure.mdc)
 
 - **Deskripsi**: Organisasi folder dan file proyek yang menjelaskan lokasi dan tujuan setiap file dalam proyek.
 - **Mengapa Harus Dibaca?**: File harus ditempatkan pada direktori yang benar agar proyek tetap terstruktur dengan baik dan memudahkan navigasi.
 
-7️⃣ **Roadmap Planning → `/documentation/RoadmapPlanning.md`**
+7️⃣ **Roadmap Planning → `/documentation/RoadmapPlanning.md`** [high-level-roadmap.md](mdc:documentation/roadmap-planning/high-level-roadmap.md)
 
 - **Deskripsi**: High-level roadmap ini adalah roadmap proyek dan sprint planning yang membantu kamu memahami:
   - Fitur apa yang sedang dikerjakan dan akan datang.
@@ -66,7 +72,7 @@ Dokumentasi ini berisi standar coding, alur sistem, serta aturan proyek.
   - Bagaimana kamu dapat membantu dalam menyelesaikan proyek ini.
 - **Mengapa Harus Dibaca?**: Dengan membaca roadmap planning, kamu dapat memahami tujuan proyek dan bagaimana kamu dapat berkontribusi. Juga, kamu dapat memahami bagaimana fitur yang sedang dikerjakan dan akan datang, sehingga kamu dapat berkoordinasi dengan baik dalam tim.
 
-8️⃣ **Implementation Plan → `/documentation/ImplementationPlan.md`**
+8️⃣ **Implementation Plan → `/documentation/ImplementationPlan`** 
 
 - **Deskripsi**: Instruksi detail tentang fitur yang sedang dikerjakan (Step-by-Step Execution Plan).
 - **Mengapa Harus Dibaca?**: **AI hanya boleh mengerjakan kode berdasarkan Implementation Plan yang ada.**
@@ -82,27 +88,6 @@ Dokumentasi ini berisi standar coding, alur sistem, serta aturan proyek.
 - **Shadcn UI First:** Selalu prioritaskan komponen dari **Shadcn UI** sebelum membuat custom components.
 - **Class Order & Spacing:** AI akan otomatis mengatur urutan class Tailwind untuk keterbacaan dan performa.
 - **Dark/Light Mode Support:** Pastikan setiap komponen mendukung **Next Themes**.
-
-Contoh struktur folder:
-
-````
-src/
-├── components/
-│   ├── ui/           # Komponen UI reusable
-│   ├── layouts/      # Layout utama bersifat global
-├── features/
-│   ├── dashboard/
-│   │   ├── components/ #Kompoennt Khusus yang digunakan untuk Dashboard
-│   │   ├── hooks/      #hooks khusus Dashbaord
-│   │   ├── services/   #service khusus Dashboard
-│   │   └── utils/      #utils khusus Dashboard
-├── hooks/            # Custom hooks bersifat Golbal
-├── utils/            # Fungsi utilitas global
-└── config/           # Konfigurasi global
-
-'untuk structure file yang lebih jelas silahkan analisis file file-structure-documentation.md'
-
----
 
 ## 3. Test-Driven Development (TDD) - Aturan yang Diperbarui
 
@@ -121,15 +106,15 @@ src/
 5. [ ] Refactor kode -> Optimalkan kode (bersihkan duplikasi, tingkatkan readability) -> Jalankan unit test lagi
 6. [ ] Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
 7. [ ] Buat Integration Test (__tests__\integration\<name-epic>) -> Jika func/compoennt sudah terintegrasi, buat dan jalankan integration test
-8. [ ]Perbaiki kode -> jika integration test gagal
-9. [ ]Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
-10.[ ]Buat E2E Test (__tests__\e2e\<name-epic>) -> Jika sudah deployable -> dibuatkan e2e test untuk simulasi user flow,
+8. [ ] Perbaiki kode -> jika integration test gagal
+9. [ ] Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit test lulus sebelum commit
+10. [ ] Buat E2E Test (__tests__\e2e\<name-epic>) -> Jika sudah deployable -> dibuatkan e2e test untuk simulasi user flow,
 11. [ ] Perbaiki Kode → Pastikan E2E test lulus.
-12. [ ]Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit,integration, e2e test lulus (pada fitur yang dikerjakan) sebelum commit
-14. [ ]Buat/Perbarui Dokumentasi Report Test sesuai (Modul yang dilakukan) pada folder documentation	ask\module\report-test\ → sesuai dengan format documentation\test-report.md
-15. [ ]Buat/perbarui Modul docs sesuai (Modul yang dilakukan) pada folder documentation\task\module → sesuai dengan format documentation\modul-docs.md
-16. [ ]Pre-Commit Akhir & CI/CD Pipelines → Otomatisasi pengujian.
-17. [ ]evaluasi iterasi berikutnya -> jika kredit cascade habis, evaluasi apakah task selesai atau perlu iterasi lanjutan.
+12. [ ] Pre-commit -> lint kode, format <# Format Commit Message>, pastikan semua unit,integration, e2e test lulus (pada fitur yang dikerjakan) sebelum commit
+14. [ ] Buat/Perbarui Dokumentasi Report Test sesuai (Modul yang dilakukan) pada folder documentation	ask\module\report-test\ → sesuai dengan format documentation\test-report.md
+15. [ ] Buat/perbarui Modul docs sesuai (Modul yang dilakukan) pada folder documentation\task\module → sesuai dengan format documentation\modul-docs.md
+16. [ ] Pre-Commit Akhir & CI/CD Pipelines → Otomatisasi pengujian.
+17. [ ] evaluasi iterasi berikutnya -> jika kredit cascade habis, evaluasi apakah task selesai atau perlu iterasi lanjutan.
 
 ## catatan penting
 - Peer Review: Mintakan review kode dan test dari tim sebelum merge.
@@ -142,7 +127,7 @@ src/
 - **E2E Test**: `FeatureName.e2e.spec.ts`.
 
 ## Tools
-- **Unit**: Jest + React Testing Library (FE) / Jest (BE).
+- **Unit**: Jest + React Testing Library (FE) / Jest (BE). 
 - **Integration**: Jest + MSW (FE) / Jest + Supertest (BE).
 - **E2E**: Cypress atau Playwright.
 
@@ -193,6 +178,8 @@ docs/
   exploratory/
     name-epic/
     checkout-flow.md
+
+```
 
 
 ## 4. Commit Message Standards
@@ -293,11 +280,11 @@ docs(api/s2t4): tambahkan dokumentasi CRUD modul akademik (OPS-29) v1.0
 ### 9.1 Documentation Overview
 
 #### Referensi Utama:
-- **PRD (Project Requirements Document):** [/documentation/PRD.md](documentation/PRD.md)
-- **App Flow Document:** [/documentation/app-flow-documentation.md](documentation/app-flow-documentation.md)
-- **Tech Stack Document:** [/documentation/tech-stack-documentation.md](documentation/tech-stack-documentation.md)
-- **Frontend Guidelines:** [/documentation/frontend-guidelines.md](documentation/frontend-guidelines.md)
-- **Backend Structure Document:** [/documentation/backend-structure.md](documentation/backend-structure.md)
+- **PRD (Project Requirements Document):** [/documentation/PRD.md](mdc:documentation/PRD.md)
+- **App Flow Document:** [/documentation/app-flow-documentation.md](mdc:documentation/app-flow-documentation.md)
+- **Tech Stack Document:** [/documentation/tech-stack-documentation.md](mdc:documentation/tech-stack-documentation.md)
+- **Frontend Guidelines:** [/documentation/frontend-guidelines.md](mdc:documentation/frontend-guidelines.md)
+- **Backend Structure Document:** [/documentation/backend-structure.md](mdc:documentation/backend-structure.md)
 
 #### Tujuan:
 - Menjamin bahwa setiap fitur dan perubahan kode sejalan dengan visi dan persyaratan proyek.
@@ -369,3 +356,4 @@ const authenticateUser = async () => { ... };
 
 Let me know if you want me to tweak or expand anything! 🚀
 ````
+
