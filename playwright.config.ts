@@ -26,9 +26,8 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. */
   reporter: [
-    ['html', { outputFolder: 'playwright-report' }],
-    ['json', { outputFile: 'playwright-report/test-results.json' }],
-    ['./services/playwrightReporter.js'], // Custom reporter untuk menyimpan hasil di services/e2e-reports
+    ['html', { outputFolder: './services/playwright-report' }],
+    ['json', { outputFile: './services/playwright-report/test-results.json' }],
   ],
 
   /* Shared settings for all the projects below */
