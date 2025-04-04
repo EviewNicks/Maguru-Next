@@ -3,6 +3,7 @@
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { closeModal } from '@/store/features/modalSlice'
 import { Button } from '@/components/ui/button'
+import { sanitizeHtml, sanitizedMarkup } from '@/features/common/utils/sanitize'
 
 export default function GlobalModal() {
   const dispatch = useAppDispatch()
@@ -24,8 +25,11 @@ export default function GlobalModal() {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-black p-6 rounded-lg shadow-lg max-w-sm w-full">
-        <h2 className="text-lg font-semibold mb-2">{title}</h2>
-        <p className="mb-4">{message}</p>
+        <h2 className="text-lg font-semibold mb-2">{sanitizeHtml(title)}</h2>
+        <p
+          className="mb-4"
+          dangerouslySetInnerHTML={sanitizedMarkup(message)}
+        ></p>
         <div className="flex justify-end space-x-2">
           <Button variant="outline" onClick={() => dispatch(closeModal())}>
             Cancel

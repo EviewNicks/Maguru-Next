@@ -1,4 +1,4 @@
-# 📌 Dokumentasi Modul: Manajemen Modul Akademik
+# 📌 Dokumentasi Modul: Manajemen Modul Akademik [update+2025-04-01]
 
 ---
 
@@ -15,9 +15,12 @@ Modul Manajemen Modul Akademik bertujuan untuk menyediakan sistem pengelolaan ma
 
 ### 📅 Informasi Sprint & Timeline
 
-| Fitur                           | Sprint   | Tanggal Implementasi | Update Terakhir                                       |
-| ------------------------------- | -------- | -------------------- | ----------------------------------------------------- |
-| Backend API CRUD Modul Akademik | Sprint 2 | 2025-03-17           | 2025-03-17 – Implementasi Backend API CRUD            |
+| Fitur                           | Sprint   | Tanggal Implementasi | Update Terakhir                                    |
+| ------------------------------- | -------- | -------------------- | -------------------------------------------------- |
+| Backend API CRUD Modul Akademik | Sprint 2 | 2025-03-17           | 2025-03-17 – Implementasi Backend API CRUD         |
+| Integrasi React Query           | Sprint 2 | 2025-03-20           | 2025-03-20 – Implementasi Integrasi React Query    |
+| Implementasi Frontend UI        | Sprint 2 | 2025-03-25           | 2025-03-30 – Implementasi Halaman Manajemen Modul  |
+| E2E Testing                     | Sprint 2 | 2025-04-01           | 2025-04-01 – Implementasi E2E Testing dan Reporter |
 
 ---
 
@@ -35,15 +38,26 @@ Struktur file dan folder diorganisir untuk memudahkan pengembangan, pengujian, d
 features/
 └── manage-module/
     ├── components/
-    │   ├── ModuleFormModal.tsx
-    │   ├── ModuleFormModal.test.tsx
-    │   ├── ModuleDataTable.tsx
-    │   ├── ModuleDataTable.test.tsx
-    │   ├── ModuleStatusBadge.tsx
-    │   └── ModuleStatusBadge.test.tsx
+    │   ├── ModuleFormModal/
+    │   │   ├── ModuleFormModal.tsx
+    │   │   └── ModuleFormModal.test.tsx
+    │   ├── ModuleTable/
+    │   │   ├── DataTable.tsx
+    │   │   ├── DataTableWithFeatures.tsx
+    │   │   ├── ModuleActionCell.tsx
+    │   │   ├── ModuleDescriptionCell.tsx
+    │   │   ├── PaginationControls.tsx
+    │   │   ├── SearchAndFilter.tsx
+    │   │   └── *.test.tsx
+    │   ├── ErrorNotifier/
+    │   │   ├── ErrorNotifier.tsx
+    │   │   └── ErrorNotifier.test.tsx
+    │   └── ModuleTable.tsx
     ├── hooks/
-    │   ├── useModules.ts
-    │   └── useModules.test.ts
+    │   ├── useModuleForm.ts
+    │   ├── useModuleMutation.ts
+    │   ├── useModuleQuery.ts
+    │   └── *.test.ts
     ├── services/
     │   ├── moduleService.ts
     │   └── moduleService.test.ts
@@ -51,11 +65,25 @@ features/
     │   └── index.ts
     ├── utils/
     │   ├── moduleValidation.ts
-    │   └── moduleValidation.test.ts
+    │   ├── validateRequest.ts
+    │   ├── authMiddleware.ts
+    │   ├── auditMiddleware.ts
+    │   └── *.test.ts
     └── __tests__/
         ├── unit/
         ├── integration/
+        │   ├── ModuleAPI.integration.test.tsx
+        │   ├── ModuleForm.integration.test.tsx
+        │   ├── ModuleManagement.integration.test.tsx
+        │   ├── XssPrevention.integration.test.tsx
+        │   ├── moduleAuth.integration.test.ts
+        │   ├── moduleValidation.integration.test.ts
+        │   └── modulePerformance.integration.test.ts
         └── e2e/
+            ├── ModuleManagement.e2e.spec.ts
+            ├── ModuleTable.e2e.spec.ts
+            ├── ModuleForm.e2e.spec.ts
+            └── README.md
 
 pages/
 └── api/
@@ -65,6 +93,15 @@ pages/
         └── __tests__/
             ├── index.test.ts
             └── [id].test.ts
+
+services/
+├── simpleJsonReporter.js
+├── playwrightReporter.js
+├── reports/
+│   └── test-report-*.json
+└── e2e-reports/
+    ├── README.md
+    └── e2e-report-*.json
 ```
 
 ### ✅ Manfaat
@@ -83,6 +120,12 @@ Struktur ini memisahkan komponen, hooks, services, dan types untuk memudahkan pe
 - [x] Middleware Otorisasi (Admin-only)
 - [x] Audit Trail Dasar
 - [x] Error Handling Terstruktur
+- [x] Integrasi React Query
+- [x] Notifikasi Real-Time
+- [x] Keamanan XSS
+- [x] Datatable dengan Fitur Lengkap
+- [x] Testing Komprehensif (Unit, Integration, E2E)
+- [x] Custom Report untuk E2E Testing
 
 ### 🛠️ Penjelasan Fungsi
 
@@ -92,6 +135,12 @@ Struktur ini memisahkan komponen, hooks, services, dan types untuk memudahkan pe
 - **Middleware Otorisasi**: Memastikan hanya admin yang dapat melakukan operasi CRUD.
 - **Audit Trail**: Mencatat setiap operasi CRUD dengan informasi user, action, dan timestamp.
 - **Error Handling**: Mengembalikan pesan error yang terstruktur dan informatif.
+- **Integrasi React Query**: Manajemen state dan operasi CRUD dengan optimistic updates.
+- **Notifikasi Real-Time**: Implementasi toast notifications menggunakan Sonner.
+- **Keamanan XSS**: Sanitasi input menggunakan DOMPurify untuk mencegah serangan cross-site scripting.
+- **Datatable dengan Fitur Lengkap**: Implementasi datatable dengan pagination, sorting, filtering, dan searching yang dioptimalkan.
+- **Testing Komprehensif**: Implementasi unit testing, integration testing, dan E2E testing untuk memastikan kualitas kode.
+- **Custom Report**: Implementasi custom reporter untuk E2E testing yang menghasilkan laporan JSON serupa dengan unit dan integration testing.
 
 ---
 
@@ -144,25 +193,27 @@ model Module {
 
 ### 🌐 Endpoint API
 
-| Endpoint                | Metode | Deskripsi                                                |
-| ----------------------- | ------ | -------------------------------------------------------- |
-| `/api/module`           | GET    | Mengambil daftar modul dengan pagination, filter, search |
-| `/api/module`           | POST   | Membuat modul baru                                       |
-| `/api/module/:id`       | GET    | Mengambil detail modul berdasarkan ID                    |
-| `/api/module/:id`       | PUT    | Memperbarui modul berdasarkan ID                         |
-| `/api/module/:id`       | DELETE | Menghapus modul berdasarkan ID                           |
+| Endpoint          | Metode | Deskripsi                                                |
+| ----------------- | ------ | -------------------------------------------------------- |
+| `/api/module`     | GET    | Mengambil daftar modul dengan pagination, filter, search |
+| `/api/module`     | POST   | Membuat modul baru                                       |
+| `/api/module/:id` | GET    | Mengambil detail modul berdasarkan ID                    |
+| `/api/module/:id` | PUT    | Memperbarui modul berdasarkan ID                         |
+| `/api/module/:id` | DELETE | Menghapus modul berdasarkan ID                           |
 
 ### 🔍 Metode dan Parameter
 
 #### GET /api/module
 
 **Query Parameters:**
+
 - `page`: Nomor halaman (default: 1)
 - `limit`: Jumlah item per halaman (default: 10)
 - `status`: Filter berdasarkan status (DRAFT, ACTIVE, ARCHIVED)
 - `search`: Pencarian berdasarkan judul
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -187,6 +238,7 @@ model Module {
 #### POST /api/module
 
 **Request Body:**
+
 ```json
 {
   "title": "Judul Modul",
@@ -196,6 +248,7 @@ model Module {
 ```
 
 **Response:**
+
 ```json
 {
   "id": "uuid",
@@ -215,11 +268,33 @@ model Module {
 
 ### 🎨 Desain UI/UX
 
-Untuk Langkah 1, fokus pada implementasi backend API CRUD. UI/UX akan diimplementasikan pada Langkah 2.
+Halaman Manajemen Modul terdiri dari:
+
+- **Header** dengan judul dan tombol "Tambah Modul"
+- **Area Pencarian dan Filter** untuk memudahkan pencarian dan penyaringan modul
+- **DataTable** yang menampilkan daftar modul dengan kolom:
+  - Judul
+  - Deskripsi (dengan fitur expand/collapse)
+  - Status (dengan badge berwarna)
+  - Tanggal Dibuat
+  - Aksi (Edit, Hapus)
+- **Pagination Control** untuk navigasi antar halaman
+- **Modal Form** untuk operasi CRUD
 
 ### 🏗️ Komponen Utama
 
-Komponen utama akan diimplementasikan pada Langkah 2.
+1. **ModuleTable**: Komponen utama yang mengintegrasikan semua fitur datatable.
+
+   - **DataTable**: Menampilkan data dalam bentuk tabel dengan kolom yang dapat disesuaikan.
+   - **SearchAndFilter**: Komponen untuk pencarian dan penyaringan data.
+   - **PaginationControls**: Kontrol untuk navigasi antar halaman.
+
+2. **ModuleFormModal**: Modal untuk operasi Create dan Edit modul.
+
+   - Validasi form dengan react-hook-form dan zod.
+   - Sanitasi input untuk mencegah XSS.
+
+3. **ErrorNotifier**: Komponen untuk menampilkan pesan error secara konsisten.
 
 ---
 
@@ -229,9 +304,13 @@ Komponen utama akan diimplementasikan pada Langkah 2.
 
 - **Backend**: Next.js API Routes, Prisma, Zod
 - **Database**: PostgreSQL
-- **Validasi**: Zod
-- **Logging**: Winston atau Pino
-- **Testing**: Jest, Supertest
+- **Frontend**: React, shadcn/ui, Tailwind CSS
+- **State Management**: React Query
+- **Form Management**: react-hook-form dengan Zod
+- **Notifikasi**: Sonner
+- **Keamanan**: DOMPurify
+- **Testing**: Jest, React Testing Library, Playwright
+- **Reporting**: Custom Reporter untuk Unit, Integration, dan E2E Testing
 
 ### ⚙️ Konfigurasi Khusus
 
@@ -246,15 +325,34 @@ Komponen utama akan diimplementasikan pada Langkah 2.
 ### 🧪 Rencana Pengujian
 
 - **Unit Testing**: Menggunakan Jest untuk menguji fungsi dan komponen secara terisolasi.
-- **Integration Testing**: Menggunakan Supertest untuk menguji endpoint API.
-- **End-to-End Testing**: Menggunakan Cypress untuk menguji interaksi pengguna dengan UI.
+- **Integration Testing**: Menguji interaksi antar komponen dan integrasi dengan API.
+- **End-to-End Testing**: Menggunakan Playwright untuk menguji alur pengguna dari awal hingga akhir.
 
 ### 📊 Skema Pengujian
 
-- **Functional Testing**: Menguji semua operasi CRUD dengan valid/invalid input.
-- **Security Testing**: Memeriksa akses ilegal (non-admin), sanitasi input, dan error handling.
-- **Performance Testing**: Load test GET /api/module dengan 10.000 data.
-- **Audit Trail Testing**: Verifikasi log operasi CRUD di file Winston/Pino.
+- **Unit Testing**:
+
+  - **Komponen UI**: Memastikan rendering dan interaksi yang benar.
+  - **Hooks**: Memastikan logika bisnis yang benar.
+  - **Utility Functions**: Memastikan fungsi-fungsi utilitas berfungsi dengan benar.
+
+- **Integration Testing**:
+
+  - **API Integration**: Memastikan integrasi dengan API berfungsi dengan benar.
+  - **Component Integration**: Memastikan interaksi antar komponen berfungsi dengan benar.
+  - **Form Validation**: Memastikan validasi form berfungsi dengan benar.
+  - **XSS Prevention**: Memastikan sanitasi input berfungsi dengan benar.
+
+- **End-to-End Testing**:
+  - **CRUD Flow**: Memastikan alur CRUD berfungsi dengan benar dari perspektif pengguna.
+  - **Validation**: Memastikan validasi form berfungsi dengan benar pada level UI.
+  - **Error Handling**: Memastikan penanganan error berfungsi dengan benar.
+
+### 📑 Reporting
+
+- **Unit & Integration Testing**: Menggunakan SimpleJsonReporter untuk menghasilkan laporan dalam format JSON.
+- **E2E Testing**: Menggunakan custom Playwright reporter untuk menghasilkan laporan dalam format JSON yang kompatibel dengan SimpleJsonReporter.
+- **Format Report**: Berisi informasi tentang test yang dijalankan, status (pass/fail), dan pesan error jika ada.
 
 ---
 
@@ -266,13 +364,70 @@ Komponen utama akan diimplementasikan pada Langkah 2.
 - **Real-Time Status Propagation**: Memperbarui status modul secara real-time.
 - **Enhanced Metadata**: Menambahkan metadata tambahan untuk modul.
 - **Queryable Audit Trail**: Meningkatkan audit trail dengan tabel queryable.
+- **Batch Operations**: Menambahkan fitur untuk operasi batch pada modul.
 
 ### 📈 Saran Optimasi
 
 - **Caching**: Menambahkan caching untuk meningkatkan performa.
 - **Rate Limiting**: Menambahkan rate limiting untuk mencegah abuse.
 - **Pagination Optimization**: Mengoptimalkan pagination untuk dataset besar.
+- **Image Optimization**: Menambahkan dukungan untuk gambar dan optimasinya.
 
 ---
 
 🚀 **Dokumentasi ini akan terus diperbarui sesuai dengan perkembangan proyek!**
+
+### 🚀 Fitur Terbaru
+
+- **E2E Testing**: Implementasi E2E testing menggunakan Playwright untuk menguji alur pengguna.
+- **Custom Reporter**: Implementasi custom reporter untuk E2E testing yang kompatibel dengan SimpleJsonReporter.
+- **Datatable dengan Fitur Lengkap**: Implementasi datatable dengan pagination, sorting, filtering, dan searching yang dioptimalkan.
+- **Sanitasi XSS**: Implementasi sanitasi input dan output untuk mencegah serangan XSS.
+
+### 🛡️ Keamanan & Validasi
+
+- **Input Sanitasi**:
+  - Gunakan DOMPurify untuk membersihkan input HTML
+  - Mencegah eksekusi script berbahaya
+  - Mempertahankan struktur HTML dasar
+
+### 📊 Manajemen State
+
+- **React Query Hooks**:
+  - `useModuleQuery`: Fetch dan mutasi data modul
+  - Dukungan caching dan optimistic updates
+  - Penanganan loading dan error states
+
+### 🔔 Notifikasi & Feedback
+
+- **Toast Notifications**:
+  - Tampilkan feedback untuk setiap operasi CRUD
+  - Konfigurasi pesan sukses dan error
+  - Integrasi dengan React Query
+
+### 📋 Daftar Komponen Terkait
+
+- `ModuleFormModal`: Form input modul dengan sanitasi
+- `DataTableWithFeatures`: Tabel modul dengan fitur sorting dan filtering
+- `ErrorNotifier`: Komponen penanganan error
+- `useModuleMutation`: Hook untuk operasi CRUD
+
+### 🧪 Testing Komprehensif
+
+- **Unit Test**:
+  - 65+ unit test untuk komponen, hooks, services, dan utils
+  - Test coverage > 90%
+- **Integration Test**:
+  - 30+ integration test untuk memastikan integrasi antar komponen
+  - Test untuk XSS prevention, auth, validation, dan performance
+- **E2E Test**:
+  - Test untuk CRUD flow
+  - Test untuk form validation
+  - Test untuk error handling
+  - Custom reporter untuk JSON reporting
+
+### 🔍 Performa & Optimasi
+
+- **Debounce pada Pencarian**: Mencegah request berlebihan saat user mengetik
+- **Virtual Scrolling**: Optimasi rendering untuk dataset besar
+- **Optimistic Update**: Meningkatkan UX dengan mengupdate UI sebelum request selesai

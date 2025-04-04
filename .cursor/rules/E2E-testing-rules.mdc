@@ -1,0 +1,218 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# E2E Testing Rules
+
+## 1. Pendahuluan
+
+Dokumentasi ini menjelaskan aturan, best practices, dan teknik lanjutan untuk melakukan End-to-End (E2E) testing pada aplikasi Next.js menggunakan Playwright. Tujuan dari dokumen ini adalah untuk memastikan bahwa seluruh tim pengembang dan QA memiliki pemahaman yang sama terkait proses pengujian, sehingga aplikasi dapat diuji secara menyeluruh dan konsisten.
+
+## 2. Tujuan dan Ruang Lingkup
+
+### Tujuan
+
+- **Menjamin Kualitas**: Memastikan bahwa seluruh alur kerja aplikasi berjalan sesuai spesifikasi dan memenuhi ekspektasi pengguna.  
+- **Deteksi Dini Bug**: Mengidentifikasi bug atau ketidaksesuaian pada tahap awal pengembangan.  
+- **Konsistensi Pengalaman Pengguna**: Memastikan aplikasi memberikan pengalaman pengguna yang optimal di berbagai browser dan perangkat.  
+- **Integrasi dan Otomasi**: Mengintegrasikan pengujian ke dalam pipeline CI/CD untuk feedback cepat dan otomatisasi pengujian.  
+
+### Ruang Lingkup
+
+- Pengujian fungsionalitas inti (login, navigasi, interaksi pengguna, dll.).
+- Pengujian komponen dinamis seperti pagination, sorting, filtering, pencarian, dan tampilan kosong.
+- Pengujian API dan SSR/SSG pada Next.js.
+- Pengujian dynamic routes dan penanganan kondisi asinkron.
+- Pengujian lintas browser menggunakan fitur Browser Context dan Multi-Page/Multi-Tab Playwright.
+- Integrasi ke dalam CI/CD (misalnya, GitHub Actions).
+- Debugging dan Refactoring: Biasakan membaca log dan error yang dihasilkan selama test berjalan. Lakukan refactoring test suite secara berkala untuk menjaga kebersihan dan keterbacaan kode.
+
+## 3. Aturan Umum dan Panduan
+
+### 3.1 Struktur Test
+
+- **Folder Organization**:  
+  Semua file test disimpan di dalam direktori seperti `tests/e2e/`. Struktur folder harus konsisten dan mudah dipahami, dengan menggunakan pendekatan hibrida: struktur direktori terpisah untuk pengujian dengan subdirektori berdasarkan fitur yang dikerjakan.
+
+/tests
+  └── e2e
+       ├── auth/
+       │     ├── login.spec.ts
+       │     └── register.spec.ts
+       ├── dashboard/
+       │     ├── overview.spec.ts
+       │     └── stats.spec.ts
+       ├── fixtures/
+       │     ├── 
+       ├── pages/
+       │     ├── dashboardPages.ts
+       │     └── modulesPages.ts
+       └── utils/
+             └── helper.ts
+
+
+> *Note: folder `pages` digunakan untuk implementasi POM (Page Object Model)*
+
+- **Konfigurasi Global**:  
+  File `playwright.config.ts` harus mengatur direktori test, timeout, proyek browser, dan reporter. Pastikan pengaturan mendukung eksekusi lokal dan CI/CD.
+
+### 3.2 Penggunaan Selector yang Stabil
+
+- **Prioritaskan Selector Aksesibilitas**:  
+  Gunakan selector berbasis peran, label, atau teks (misalnya, `getByRole`, `getByText`).
+
+- **Gunakan Atribut Data**:  
+  Tambahkan atribut seperti `data-testid` untuk selector yang stabil dan tidak bergantung pada struktur DOM yang sering berubah.
+
+### 3.3 Menetapkan Cakupan Pengujian
+
+- **Identifikasi Fitur Inti**:  
+  Fokuskan pengujian pada alur kerja utama dan fitur krusial yang mendukung fungsionalitas bisnis.
+
+- **Analisis Risiko**:  
+  Identifikasi area dengan risiko tinggi dan berikan prioritas pengujian yang lebih intensif.
+
+- **Dokumentasi**:  
+  Catat skenario dan langkah pengujian agar setiap perubahan dapat dilacak dengan jelas, sesuai dokumentasi fitur yang dikerjakan.  
+  Simpan file dokumentasi markdown-nya di: File dokumentasi E2E disimpan dalam:  
+`documentation/task/[nama-fitur-yang-dikerjakan]/report-test/test-plan-E2E.md`
+
+/documentation
+  └── task
+       ├── authentication-user/
+       │     ├── login.spec.ts
+       │     └── register.spec.ts
+       ├── dashboard-admin/
+       │     ├── overview.spec.ts
+       │     └── stats.spec.ts
+       ├── module/
+             ├── report-test/
+             ├── manage-module-docs.md
+             └── tp-1-crudd-backend-modul
+
+## 4. Best Practices dalam Pengujian E2E Menggunakan Playwright
+
+### 4.1 Setup dan Struktur Lingkungan Test
+
+- **Setup Playwright**:  
+  Pastikan proyek telah dikonfigurasi dengan benar (instalasi package, pengunduhan browser, konfigurasi CI/CD).
+
+- **Gunakan Browser Context**:  
+  Buat konteks browser terisolasi untuk setiap test sehingga tidak ada state yang saling mengganggu.
+
+- **Pemisahan Test Cases**:  
+  Setiap test case harus fokus pada satu skenario yang jelas, menggunakan hooks seperti `beforeEach` untuk setup awal, `describe()`, `test.step()`, fungsi utility/modularisasi, dan file terpisah per fitur.
+
+### 4.2 Penulisan Test Case yang Deskriptif
+
+- **Nama Test yang Jelas**:  
+  Berikan nama yang mendeskripsikan tujuan test (contoh: “pagination berfungsi dengan benar”).
+
+- **Langkah Pengujian yang Terstruktur**:  
+  Gunakan `test.step()` jika diperlukan untuk mendokumentasikan setiap langkah dalam test case.
+
+- **Asersi yang Berorientasi Pengguna**:  
+  Tulislah asersi berdasarkan apa yang dilihat dan dialami oleh pengguna, bukan hanya detail implementasi internal.
+
+### 4.3 Pengelolaan Data dan Mocking
+
+- **Data Fixtures**:  
+  Gunakan file data statis (JSON) untuk menyediakan data uji yang konsisten.
+
+- **Mocking API dengan Intercept**:  
+  Gunakan `page.route()` untuk mencegat request dan mengembalikan data mock, sehingga pengujian tidak bergantung pada backend nyata.
+
+- **Penggunaan Intercept untuk Layanan Pihak Ketiga**:  
+  Untuk layanan pihak ketiga sebaiknya menggunakan intercept (`page.route()`) agar pengujian tetap stabil tanpa ketergantungan ke API eksternal. Best Practice-nya:
+
+  - **Pisahkan Intercept ke File Sendiri**:  
+    Buat/cari folder `tests/e2e/fixtures` untuk menyimpan intercept dan data mock.
+
+  - **Gunakan page.route()**:  
+    Contoh intercept API pihak ketiga (misal: Stripe):
+
+```ts
+page.route('https://api.stripe.com/v1/charges', async (route) => {
+  await route.fulfill({ status: 200, body: JSON.stringify({ success: true }) });
+});
+
+### 4.4 Menangani Kondisi Asinkron dan Dynamic Routes
+
+- **Penggunaan waitForSelector() dan waitForLoadState()**:  
+  Pastikan test menunggu hingga data atau elemen muncul sebelum melakukan asersi.  
+  Catatan: Playwright secara otomatis menunggu elemen siap sebelum berinteraksi dengannya. Namun, dalam beberapa kasus, penantian eksplisit seperti di atas diperlukan untuk memastikan stabilitas pengujian.
+
+- **Pengujian Dynamic Routes**:  
+  Uji halaman dinamis dengan parameter URL untuk memastikan data yang ditampilkan sesuai dengan parameter tersebut.
+
+- **Validasi Loading State**:  
+  Periksa apakah indikator loading muncul dan menghilang secara benar saat data dimuat.
+
+> Hindari penggunaan waitForTimeout() atau penundaan berbasis waktu lainnya.
+
+### 4.5 Integrasi Lintas Browser dan Multi-Page/Multi-Tab
+
+- **Konfigurasi Proyek Browser**:  
+  Atur proyek di file konfigurasi untuk menjalankan test pada Chromium, Firefox, dan WebKit.
+
+- **Simulasi Multi-Page/Multi-Tab**:  
+  Gunakan `context.newPage()` untuk menguji skenario interaksi antar halaman atau tab jika diperlukan (misalnya, alur kerja yang melibatkan beberapa tab).
+
+### 4.6 Debugging dan Reporting
+
+- **UI Mode dan Trace Viewer**:  
+  Gunakan Playwright UI mode dan trace viewer untuk debugging test yang gagal.
+
+- **HTML Reporter**:  
+  Konfigurasikan HTML reporter untuk mendapatkan laporan visual yang lengkap dari hasil pengujian, yang dapat diunggah sebagai artifact di pipeline CI/CD.
+
+- **Berikan Hasil dari Debugging Test**:  
+  Berikan hasil dari debugging testnya terkait test yang gagal dan informasi detail lainnya terkait alasan/mengapa testnya gagal.
+
+## 5. Teknik Lanjutan dan Integrasi CI/CD
+
+### 5.1 Teknik Lanjutan
+
+- **Page Object Model (POM)**:  
+  Implementasikan POM untuk memisahkan logika antarmuka pengguna dari test logic, sehingga memudahkan pemeliharaan.
+
+- **Penggunaan Data-Driven Testing**:  
+  Jalankan test dengan berbagai set data untuk memastikan aplikasi menangani berbagai kasus input dengan benar.
+
+- **Sharding dan Parallel Execution**:  
+  Optimalkan waktu eksekusi dengan menjalankan test secara paralel atau menggunakan sharding, terutama pada pipeline CI/CD.
+
+### 5.2 Integrasi CI/CD (GitHub Actions)
+
+- **Workflow Otomatis**:  
+  Konfigurasikan file YAML di `.github/workflows/` untuk menjalankan test secara otomatis pada push dan pull request.
+
+- **Environment Setup**:  
+  Pastikan lingkungan CI mendukung instalasi Playwright dan browser yang diperlukan.
+
+- **Reporting dan Artifacts**:  
+  Unggah laporan test (HTML report, screenshot, video, trace) sebagai artifacts untuk analisis lebih lanjut jika terjadi kegagalan.
+
+---
+
+## 6. Dokumentasi dan Kolaborasi
+
+- **Update Dokumentasi Secara Berkala**:  
+  Dokumentasikan setiap perubahan dan perbarui panduan pengujian sesuai dengan evolusi aplikasi dan tulis/perbarui `documentasi test-plan-e2e.md` sebelumnya pada path file documentasi markdownnya di:  
+  `documentation/task/[nama fiture yang dikerjakan]/report-test/test-plan-E2E.md`  
+  *Note = sesuai fitur/modul yang sedang dikerjakan*
+
+- **Kolaborasi Tim**:  
+  Libatkan semua anggota tim (developer, QA, product owner) untuk memberikan umpan balik terkait cakupan pengujian dan efektivitas test case.
+
+## Kesimpulan
+
+Dokumentasi Testing Rules untuk E2E testing dengan Playwright ini bertujuan untuk:
+
+- Menetapkan standar dan praktik terbaik yang konsisten.
+- Memastikan bahwa setiap aspek penting aplikasi, mulai dari fungsionalitas dasar hingga skenario kompleks, diuji secara menyeluruh.
+- Meningkatkan keandalan, efisiensi, dan pemeliharaan test suite dengan menerapkan teknik lanjutan seperti Page Object Model, data-driven testing, dan parallel execution.
+- Mengintegrasikan pengujian secara otomatis dalam pipeline CI/CD untuk feedback yang cepat dan akurat setiap kali ada perubahan kode.
+
+Dengan mengikuti aturan dan praktik terbaik ini, Anda akan mendapatkan test suite yang robust, mudah dipelihara, dan mampu memastikan kualitas aplikasi Next.js Anda secara menyeluruh.

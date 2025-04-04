@@ -11,7 +11,10 @@
     "seed": "tsx prisma/seed.ts",
     "test": "cross-env USE_BABEL=true jest",
     "test:watch": "cross-env USE_BABEL=true jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright test --reporter=./services/playwrightReporter.js",
+    "test:e2e:ui": "playwright test --ui"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -50,6 +53,7 @@
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
     "@types/express": "^5.0.0",
+    "@types/lodash.debounce": "^4.0.9",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -58,6 +62,7 @@
     "express": "^4.21.2",
     "isomorphic-dompurify": "^2.22.0",
     "jsdom": "^26.0.0",
+    "lodash.debounce": "^4.0.8",
     "mongodb": "^6.13.0",
     "next": "^15.0.0",
     "next-themes": "^0.4.4",
@@ -80,6 +85,7 @@
     "@babel/preset-typescript": "^7.26.0",
     "@eslint/eslintrc": "^3",
     "@jest/globals": "^29.7.0",
+    "@playwright/test": "^1.51.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",

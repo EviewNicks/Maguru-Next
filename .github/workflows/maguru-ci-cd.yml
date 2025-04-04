@@ -1,0 +1,225 @@
+name: Maguru CI/CD Pipeline
+
+# Trigger saat push ke branch atau pull request
+on:
+  push:
+    branches: [main, develop, feature/*]
+  pull_request:
+    branches: [main, develop]
+  # Scheduler untuk menjalankan tes secara berkala
+  schedule:
+    - cron: '0 0 * * 1' # Setiap hari Senin jam 00:00 UTC
+
+# Menggunakan environment secrets
+env:
+  NODE_ENV: test
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+# Job yang akan dijalankan
+jobs:
+  # ===== Job 1: Validasi dan Linting =====
+  validate:
+    name: Validate & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Mengambil semua history untuk tools yang membutuhkannya
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm' # Mengaktifkan caching
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # Keamanan: Melakukan audit dependencies
+      - name: Security Audit
+        run: npm audit --audit-level=high
+        continue-on-error: true # Lanjutkan meskipun ada warning
+
+      # Linting untuk memastikan kualitas kode
+      - name: Lint Code
+        run: npm run lint
+
+      # Pengecekan format kode
+      - name: Format Check
+        run: npm run format
+        continue-on-error: true
+
+      # Validasi tipe TypeScript
+      - name: TypeScript Check
+        run: npx tsc --noEmit
+
+  # ===== Job 2: Unit & Integration Testing =====
+  test:
+    name: Test
+    needs: validate
+    runs-on: ubuntu-latest
+
+    # Matrix testing untuk menjalankan pada Node versi berbeda
+    strategy:
+      matrix:
+        node-version: [18.x]
+        # Bisa ditambahkan versi lain jika perlu: [16.x, 18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # Cache node_modules untuk mempercepat build
+      - name: Cache Node Modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Menjalankan unit test dengan coverage
+      - name: Run Unit Tests
+        run: npm run test
+
+      # Upload hasil test coverage untuk analisis
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/
+
+  # ===== Job 3: E2E Testing =====
+  e2e-test:
+    name: End-to-End Tests
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15 # Batasi waktu eksekusi
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # Install Playwright browsers
+      - name: Install Playwright
+        run: npx playwright install --with-deps
+
+      # Menjalankan E2E tests dengan Playwright
+      - name: Run E2E Tests
+        run: npm run test:e2e
+
+      # Menyimpan hasil test jika gagal
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-results
+          path: test-results/
+
+  # ===== Job 4: Build =====
+  build:
+    name: Build Application
+    needs: [test, e2e-test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # Menggunakan cache untuk mempercepat build
+      - name: Cache Next.js Build
+        uses: actions/cache@v3
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
+
+      # Build aplikasi
+      - name: Build Application
+        run: npm run build
+
+      # Upload build artifacts
+      - name: Upload Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-files
+          path: .next/
+
+  # ===== Job 5: Deploy ke Staging =====
+  deploy-staging:
+    name: Deploy to Staging
+    if: github.ref == 'refs/heads/develop'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging # Menggunakan environment khusus staging
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download Build
+        uses: actions/download-artifact@v3
+        with:
+          name: build-files
+          path: .next
+
+      # Menggunakan Railway untuk deployment
+      - name: Deploy to Railway (Staging)
+        uses: railway/railway-action@v1
+        with:
+          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+          environment: staging
+          service: maguru-backend
+        env:
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+  # ===== Job 6: Deploy ke Production =====
+  deploy-production:
+    name: Deploy to Production
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production # Menggunakan environment untuk production
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download Build
+        uses: actions/download-artifact@v3
+        with:
+          name: build-files
+          path: .next
+
+      # Deployment ke Vercel
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.ORG_ID }}
+          vercel-project-id: ${{ secrets.PROJECT_ID }}
+          working-directory: ./
+          vercel-args: '--prod'

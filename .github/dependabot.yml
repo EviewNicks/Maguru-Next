@@ -1,0 +1,50 @@
+version: 2
+updates:
+  # Update npm packages
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    # Batasi jumlah PR yang dibuka oleh dependabot
+    open-pull-requests-limit: 10
+    # Grup update minor dan patch dalam 1 PR
+    groups:
+      development-dependencies:
+        patterns:
+          - '@types/*'
+          - 'eslint*'
+          - 'jest*'
+          - 'prettier*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      production-dependencies:
+        patterns:
+          - '@clerk/*'
+          - 'next*'
+          - 'react*'
+        update-types:
+          - 'minor'
+          - 'patch'
+    # Ignore certain dependencies or versions
+    ignore:
+      - dependency-name: 'next'
+        versions: ['16.x', '17.x']
+    # Tambahkan label untuk PR
+    labels:
+      - 'dependencies'
+      - 'npm'
+
+  # Update GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'wednesday'
+    commit-message:
+      prefix: 'ci'
+      include: 'scope'
+    labels:
+      - 'ci'
+      - 'dependencies'
