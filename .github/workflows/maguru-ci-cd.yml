@@ -81,7 +81,7 @@ jobs:
 
       # Cache node_modules untuk mempercepat build
       - name: Cache Node Modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -154,7 +154,7 @@ jobs:
 
       # Menggunakan cache untuk mempercepat build
       - name: Cache Next.js Build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .next/cache
           key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
