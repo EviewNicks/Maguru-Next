@@ -48,7 +48,7 @@
     "@tanstack/react-table": "^8.20.6",
     "@tanstack/react-virtual": "^3.13.2",
     "@tiptap/extension-character-count": "^2.11.5",
-    "@tiptap/extension-link": "^2.11.5",
+    "@tiptap/extension-link": "^2.11.7",
     "@tiptap/pm": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
