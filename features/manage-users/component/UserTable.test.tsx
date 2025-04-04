@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { fireEvent } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import UsersPage from '@/features/dashboard/component/UserTable'
+import UsersPage from '@/features/manage-users/component/UserTable'
 import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
 import userReducer from '@/store/features/userSlice'

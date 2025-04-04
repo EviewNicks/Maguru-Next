@@ -1,9 +1,9 @@
 export const dynamic = 'force-dynamic'
 
-import { fetchStatsData } from '@/features/dashboard/service/stats'
-import ChartsContainer from '@/features/dashboard/component/ChartContainer'
-import StatsContainer from '@/features/dashboard/component/StatsContainer'
-import UserTable from '@/features/dashboard/component/UserTable'
+import { fetchStatsData } from '@/features/manage-users/service/stats'
+import ChartsContainer from '@/features/manage-users/component/ChartContainer'
+import StatsContainer from '@/features/manage-users/component/StatsContainer'
+import UserTable from '@/features/manage-users/component/UserTable'
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { getQueryClient } from '@/lib/getQueryClient'
 

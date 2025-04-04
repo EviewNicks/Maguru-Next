@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
 # **📋 Test Plan untuk Story-2: Manajemen Modul Akademik**
 
 _(Menggabungkan IEEE 829 & Agile, Disesuaikan untuk Maguru)_
@@ -173,5 +178,5 @@ _(Menggabungkan IEEE 829 & Agile, Disesuaikan untuk Maguru)_
 
 **Lampiran**:
 
-- [Postman Collection untuk Story-2](link-shareable-postman)
-- [Contoh Laporan Load Test](contoh-load-test.pdf)
+- [Postman Collection untuk Story-2](mdc:link-shareable-postman)
+- [Contoh Laporan Load Test](mdc:contoh-load-test.pdf)

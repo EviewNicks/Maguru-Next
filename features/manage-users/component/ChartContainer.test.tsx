@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import ChartContainer from './ChartContainer'
-import { processChartData } from '@/features/dashboard/service/charts'
+import { processChartData } from '@/features/manage-users/service/charts'
 import type { User } from '@/types/user'
 
 // Mock the charts service

@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
 # E2E Testing Rules
 
 ## 1. Pendahuluan
