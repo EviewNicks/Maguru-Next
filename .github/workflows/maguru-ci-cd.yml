@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Mengambil semua history untuk tools yang membutuhkannya
 
@@ -68,7 +68,7 @@ jobs:
         # Bisa ditambahkan versi lain jika perlu: [16.x, 18.x, 20.x]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
@@ -107,7 +107,7 @@ jobs:
     timeout-minutes: 15 # Batasi waktu eksekusi
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -141,7 +141,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -179,7 +179,7 @@ jobs:
     environment: staging # Menggunakan environment khusus staging
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download Build
         uses: actions/download-artifact@v3
@@ -206,7 +206,7 @@ jobs:
     environment: production # Menggunakan environment untuk production
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download Build
         uses: actions/download-artifact@v3
