@@ -18,7 +18,7 @@ export const dropdownLinks: DropdownGroup[] = [
     links: [
       {
         label: 'Dashboard Admin',
-        href: '/(admin)/manage-users',
+        href: '/manage-users',
         shortcut: '⌘D',
         roleRequired: 'admin',
       },

@@ -1,7 +1,6 @@
 import {
   ArrowTopRightOnSquareIcon,
   ChartBarIcon,
-  DocumentTextIcon,
   AcademicCapIcon,
 } from '@heroicons/react/24/outline'
 
@@ -13,19 +12,14 @@ type NavLink = {
 
 const links: NavLink[] = [
   {
-    href: '/(admin)/manage-users',
+    href: '/manage-users',
     label: 'Dashboard',
     icon: <ChartBarIcon className="w-5 h-5" />,
   },
   {
-    href: '/(admin)/manage-module',
-    label: 'Modul Pembelajaran',
-    icon: <AcademicCapIcon className="w-5 h-5" />,
-  },
-  {
     href: '/manage-module',
-    label: 'Kelola Modul',
-    icon: <DocumentTextIcon className="w-5 h-5" />,
+    label: 'kelola module',
+    icon: <AcademicCapIcon className="w-5 h-5" />,
   },
   {
     href: '/jobs',

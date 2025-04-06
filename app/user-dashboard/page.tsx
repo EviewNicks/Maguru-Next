@@ -19,7 +19,7 @@ export default async function UserDashboard() {
   // Jika user role adalah admin, redirect ke admin dashboard
   const role = (authData.sessionClaims?.metadata as ClerkMetadata)?.role
   if (role === 'admin') {
-    redirect('/(admin)/manage-users')
+    redirect('/manage-users')
   }
 
   // Mendapatkan nama pengguna dari clerk
