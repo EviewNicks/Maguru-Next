@@ -18,7 +18,10 @@ export async function GET() {
     if (!user) {
       const clerkUser = await currentUser()
       if (!clerkUser) {
-        return NextResponse.json({ error: 'User data not available' }, { status: 400 })
+        return NextResponse.json(
+          { error: 'User data not available' },
+          { status: 400 }
+        )
       }
 
       user = await prisma.user.create({
@@ -35,6 +38,9 @@ export async function GET() {
     return NextResponse.json({ user })
   } catch (error) {
     console.error('Error in user authentication:', error)
-    return NextResponse.json({ error: 'Authentication failed' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Authentication failed' },
+      { status: 500 }
+    )
   }
 }

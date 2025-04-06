@@ -8,21 +8,42 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { getQueryClient } from '@/lib/getQueryClient'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
+import prisma from '@/lib/prisma'
 
 interface ClerkMetadata {
   role?: string
 }
 
 async function StatsPage() {
-  // Periksa autentikasi dan role pengguna
-  const authData = await auth()
-  if (!authData.userId) {
+  // Periksa autentikasi
+  const { userId, sessionClaims } = await auth()
+
+  if (!userId) {
     redirect('/')
   }
 
+  // Coba ambil role dari metadata Clerk
+  const metadata = (sessionClaims?.metadata as ClerkMetadata) || {}
+  let userRole = metadata.role
+
+  // Jika role tidak ada di metadata, coba ambil dari database
+  if (!userRole) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { clerkUserId: userId },
+      })
+
+      if (user) {
+        userRole = user.role
+      }
+    } catch (error) {
+      console.error('Error saat mengambil data pengguna:', error)
+    }
+  }
+
   // Jika bukan admin, redirect ke dashboard user
-  const role = (authData.sessionClaims?.metadata as ClerkMetadata)?.role
-  if (role !== 'admin') {
+  if (userRole !== 'admin') {
+    console.log(`Akses ditolak: ${userRole} mencoba akses halaman admin`)
     redirect('/user-dashboard')
   }
 
