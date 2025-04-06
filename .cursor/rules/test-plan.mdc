@@ -3,6 +3,11 @@ description:
 globs: 
 alwaysApply: false
 ---
+---
+description: 
+globs: 
+alwaysApply: false
+---
 # **📋 Test Plan untuk Story-2: Manajemen Modul Akademik**
 
 _(Menggabungkan IEEE 829 & Agile, Disesuaikan untuk Maguru)_

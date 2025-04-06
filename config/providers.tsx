@@ -15,7 +15,8 @@ function InitUser() {
       if (!isLoaded || !userId) return
 
       try {
-        const response = await fetch('/api/users', {
+        // Panggil API untuk menyinkronkan pengguna di database lokal
+        const userResponse = await fetch('/api/users', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -25,13 +26,23 @@ function InitUser() {
           }),
         })
 
-        const data = await response.json()
-
-        if (!response.ok) {
-          const error = await response.json()
+        if (!userResponse.ok) {
+          const error = await userResponse.json()
           throw new Error(error.message || 'Failed to sync user')
         }
 
+        // Sinkronkan metadata Clerk dengan data di database
+        const metadataResponse = await fetch('/api/users/sync-metadata', {
+          method: 'GET',
+        })
+
+        if (!metadataResponse.ok) {
+          console.error('Metadata sync failed:', await metadataResponse.json())
+        } else {
+          console.log('Metadata synced successfully')
+          // Muat ulang halaman agar perubahan metadata segera terlihat
+          window.location.reload()
+        }
       } catch (error) {
         console.error('Error syncing user:', error)
       }
@@ -54,14 +65,14 @@ function Providers({ children }: { children: React.ReactNode }) {
           },
         },
       })
-)
+  )
 
   return (
     <ClerkProvider
       signInUrl="/auth/sign-in"
       signUpUrl="/auth/sign-up"
-      signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/dashboard"
+      signInFallbackRedirectUrl="/user-dashboard"
+      signUpFallbackRedirectUrl="/user-dashboard"
     >
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>

@@ -3,6 +3,11 @@ description:
 globs: 
 alwaysApply: false
 ---
+---
+description: 
+globs: 
+alwaysApply: false
+---
 # E2E Testing Rules
 
 ## 1. Pendahuluan
@@ -203,8 +208,8 @@ page.route('https://api.stripe.com/v1/charges', async (route) => {
   `documentation/task/[nama fiture yang dikerjakan]/report-test/test-plan-E2E.md`  
   *Note = sesuai fitur/modul yang sedang dikerjakan*
 
-- **Kolaborasi Tim**:  
-  Libatkan semua anggota tim (developer, QA, product owner) untuk memberikan umpan balik terkait cakupan pengujian dan efektivitas test case.
+
+
 
 ## Kesimpulan
 

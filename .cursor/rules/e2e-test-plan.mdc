@@ -1,0 +1,153 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# E2E Test Plan - [Nama Fitur]
+
+**Versi:** 1.0.0  
+**Pemilik:** [Nama Tim/Individu]  
+**Terakhir Diperbarui:** [DD/MM/YYYY]  
+
+---
+
+## 1. Pendahuluan
+
+### 1.1 Tujuan
+Dokumen ini menjelaskan strategi, cakupan, dan prosedur pengujian End-to-End (E2E) untuk fitur **[Nama Fitur]**, dengan tujuan memastikan fungsionalitas sesuai spesifikasi dan kebutuhan pengguna.
+
+### 1.2 Ruang Lingkup
+| Diuji ✅ | Tidak Diuji ❌ |  
+|---------|---------------|  
+| - Alur utama fitur | - Layanan pihak ketiga (jika ada) |  
+| - Integrasi dengan modul terkait | - Performa ekstrem (load testing) |  
+
+---
+
+## 2. Lingkungan Pengujian
+
+| Komponen          | Detail                          |  
+|-------------------|---------------------------------|  
+| **Environment**   | Staging/Testing                 |  
+| **URL**           | `https://staging.[aplikasi].com`|  
+| **Tools**         | Playwright v1.40, Node.js v18+  |  
+| **Browser**       | Chromium, Firefox, WebKit       |  
+
+### 2.1 Struktur File Testing yang digunakan
+example: 
+/tests
+  └── e2e
+       ├── auth/
+       │     ├── login.spec.ts
+       │     ├── register.spec.ts
+       │     └── logout.spec.ts
+       ├── fixtures/
+       │     └── auth-mocks.ts
+       ├── pages/
+       │     └── authPages.ts
+       └── utils/
+             └── auth-helpers.ts
+---
+
+## 3. Fitur yang Diuji
+
+| Fitur             | Prioritas | Deskripsi Singkat               |  
+|-------------------|-----------|----------------------------------|  
+| [Contoh: Checkout]| High      | Validasi alur pembayaran lengkap |  
+
+---
+
+## 4. Strategi Pengujian
+
+### 4.1 Metode
+- **Jenis Pengujian:** Regression, smoke testing.  
+- **Kriteria Kelulusan:**  
+  - 100% skenario happy path pass.  
+  - Maksimal 5% flaky test.  
+
+### 4.2 Kriteria Kegagalan
+- Test dihentikan jika:  
+  - Terdapat critical bug yang memblokir alur utama.  
+  - Kegagalan di >30% test case.  
+
+---
+
+## 5. Skenario Pengujian
+
+| ID   | Deskripsi                  | Langkah                                  | Data Uji          | Kriteria Sukses          |  
+|------|----------------------------|------------------------------------------|-------------------|--------------------------|  
+| TC01 | Login dengan email valid   | 1. Input email & password. 2. Submit    | `user@test.com`   | Redirect ke `/dashboard` |  
+| TC02 | Tambah item ke keranjang   | 1. Pilih produk. 2. Klik "Tambah"       | `product_id=123`  | Item muncul di keranjang |  
+
+---
+
+## 6. Manajemen Data
+
+### 6.1 Data Input
+- **File Statis:** `tests/fixtures/[fitur].json`  
+- **Data Dinamis:** Dibuat via API factory sebelum test.  
+
+### 6.2 Cleanup
+```typescript
+// Contoh: Hapus data setelah test
+afterEach(async () => {
+  await prisma.orders.deleteMany({ where: { userId: testUserId } });
+});
+
+## 7. Jadwal & Sumber Daya
+
+| Task                   | Timeline | Penanggung Jawab        |
+|------------------------|----------|--------------------------|
+| Implementasi Test      | 3 Hari   | [Nama Automation Engineer] |
+| Eksekusi & Reporting   | 1 Hari   | [Nama QA Analyst]         |
+
+---
+
+## 8. Risiko & Mitigasi
+
+| Risiko                    | Dampak | Mitigasi                               |
+|---------------------------|--------|----------------------------------------|
+| API eksternal tidak stabil | High   | Mock response menggunakan route.fulfill |
+| Test flaky                | Medium | Optimasi selector & waitFor            |
+
+---
+
+## 9. Pelaporan
+
+**Format**: HTML Report (Playwright built-in)
+
+**Metrik**:
+- Pass/fail rate
+- Screenshot untuk test gagal
+
+**Contoh Laporan**:  
+_Sample Report_
+
+---
+
+## 10. Persetujuan
+
+| Pihak          | Tanda Tangan | Tanggal       |
+|----------------|--------------|----------------|
+| QA Lead        | [Digital]    | [DD/MM/YYYY]   |
+| Product Owner  | [Digital]    | [DD/MM/YYYY]   |
+
+---
+
+## Catatan
+
+- **Standar**: Dokumen ini mengikuti pedoman **IEEE 829** dan **ISO/IEC/IEEE 29119-3** (disederhanakan).
+- **Lokasi File**: `/documentation/test-plans/e2e/[fitur]/e2e-test-plan-[fitur].md`
+
+### Cara Penggunaan:
+1. Ganti placeholder seperti `[Nama Fitur]`, `[DD/MM/YYYY]`, dan `user@test.com` dengan data aktual.  
+2. Sesuaikan tabel **Fitur yang Diuji** dan **Skenario Pengujian** sesuai kebutuhan fitur.  
+3. Simpan dengan format: `e2e-test-plan-[nama-fitur].md`.  
+
+### Contoh Implementasi:
+- Untuk fitur "Checkout": `e2e-test-plan-checkout.md`  
+- Untuk fitur "Authentication": `e2e-test-plan-authentication.md`  
+
+Let me know if you need further customization! 😊
+

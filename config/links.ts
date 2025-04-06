@@ -5,6 +5,7 @@ type DropdownLink = {
   disabled?: boolean
   icon?: string // Nama icon (opsional)
   onClick?: () => void // Handler function (opsional)
+  roleRequired?: string // Role yang diperlukan untuk menampilkan link
 }
 
 type DropdownGroup = {
@@ -15,9 +16,20 @@ type DropdownGroup = {
 export const dropdownLinks: DropdownGroup[] = [
   {
     links: [
-      { label: 'Dashboard', href: '/stats', shortcut: '⌘S' },
+      {
+        label: 'Dashboard Admin',
+        href: '/(admin)/manage-users',
+        shortcut: '⌘D',
+        roleRequired: 'admin',
+      },
+      {
+        label: 'Dashboard Mahasiswa',
+        href: '/user-dashboard',
+        shortcut: '⌘D',
+        roleRequired: 'mahasiswa',
+      },
       { label: 'Profile', href: '/profile', shortcut: '⇧⌘P' },
-      { label: 'Kursus', href: '/courses', shortcut: '⌘K' },
+      { label: 'Kursus', href: '/module', shortcut: '⌘K' },
       { label: 'Keyboard shortcuts', href: '/shortcuts', shortcut: '⌘S' },
     ],
     separator: true,

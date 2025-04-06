@@ -1,12 +1,17 @@
 // app/api/users/[userId]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { Prisma } from '@prisma/client'
+import { z } from 'zod'
+import { UserRole, UserStatus } from '@prisma/client'
 import prisma from '@/lib/prisma'
-import { auth } from '@clerk/nextjs/server'
-import { updateUserSchema } from '@/lib/validations/user'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
+// Skema validasi update user
+const updateUserSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().email().optional(),
+  role: z.enum(['mahasiswa', 'admin', 'dosen']).optional(),
+  status: z.enum(['active', 'inactive', 'pending']).optional(),
+})
 
 type RouteParams = {
   userId: string
@@ -16,108 +21,27 @@ type RouteContext = {
   params: RouteParams
 }
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
-    const userId = context.params.userId
-
-    // Simulasi pengambilan data user dari database
-    // Dalam implementasi nyata, ini akan mengambil data dari database
-    const userData = {
-      id: userId,
-      name: 'Admin User',
-      email: 'admin@example.com',
-      role: 'ADMIN',
-      createdAt: new Date().toISOString(),
+    const { userId: clerkUserId } = await auth()
+    if (!clerkUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    return NextResponse.json(userData)
+    const user = await prisma.user.findUnique({
+      where: { id: context.params.userId },
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    return NextResponse.json(user)
   } catch (error) {
-    console.error(`Error in GET /api/users/${context.params.userId}:`, error)
-
-    return NextResponse.json(
-      {
-        error: {
-          code: 'SERVER_ERROR',
-          message: 'Terjadi kesalahan saat memproses permintaan',
-        },
-      },
-      { status: 500 }
-    )
-  }
-}
-
-export async function PATCH(req: NextRequest, context: RouteContext) {
-  try {
-    const { userId: paramsUserId } = context.params
-    const { userId } = await auth()
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: { code: 'UNAUTHORIZED', message: 'Unauthorized' } },
-        { status: 401 }
-      )
-    }
-
-    const body = await req.json()
-    const parsed = updateUserSchema.safeParse(body)
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Invalid input',
-            details: parsed.error.format(),
-          },
-        },
-        { status: 400 }
-      )
-    }
-
-    const currentUser = await prisma.user.findUnique({
-      where: { id: paramsUserId },
-    })
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { error: { code: 'NOT_FOUND', message: 'User not found' } },
-        { status: 404 }
-      )
-    }
-
-    if (
-      body.lastKnownUpdate &&
-      new Date(body.lastKnownUpdate) < currentUser.updatedAt
-    ) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'CONCURRENT_MODIFICATION',
-            message: 'This record has been modified by another user',
-            details: { currentVersion: currentUser.updatedAt },
-          },
-        },
-        { status: 409 }
-      )
-    }
-
-    const updatedUser = await prisma.user.update({
-      where: { id: paramsUserId },
-      data: parsed.data,
-    })
-
-    return NextResponse.json({
-      data: updatedUser,
-      message: 'User updated successfully',
-    })
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2025') {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 })
-      }
-    }
-
-    console.error('PATCH user error:', error)
+    console.error('Error fetching user:', error)
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
@@ -125,27 +49,144 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
   }
 }
 
-export async function DELETE(req: NextRequest, context: RouteContext) {
+export async function PATCH(req: NextRequest, context: RouteContext) {
   try {
-    const { userId: paramsUserId } = context.params
+    const { userId: clerkUserId } = await auth()
+    if (!clerkUserId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Cek apakah pengguna saat ini adalah admin
+    const currentUser = await prisma.user.findUnique({
+      where: { clerkUserId },
+    })
+
+    if (!currentUser || currentUser.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Only admin can update user data' },
+        { status: 403 }
+      )
+    }
+
+    const body = await req.json()
+    const { role, status } = body
+
+    // Update user di database lokal
+    const updatedUser = await prisma.user.update({
+      where: { id: context.params.userId },
+      data: {
+        role,
+        status,
+      },
+    })
+
+    // Dapatkan Clerk user ID dari database
+    const userToUpdate = await prisma.user.findUnique({
+      where: { id: context.params.userId },
+      select: { clerkUserId: true },
+    })
+
+    if (!userToUpdate) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Update metadata di Clerk sesuai dengan data di database
+    const clerkClientInstance = await clerkClient()
+    await clerkClientInstance.users.updateUser(userToUpdate.clerkUserId, {
+      publicMetadata: {
+        role: updatedUser.role,
+        status: updatedUser.status
+      }
+    })
+
+    return NextResponse.json(updatedUser)
+  } catch (error) {
+    console.error('Error updating user:', error)
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  context: { params: { userId: string } }
+) {
+  try {
     const { userId } = await auth()
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await prisma.user.delete({
-      where: { id: paramsUserId },
+    // Cari pengguna yang akan dihapus
+    const userToDelete = await prisma.user.findUnique({
+      where: { id: context.params.userId },
     })
 
-    return NextResponse.json({ message: 'User deleted successfully' })
-  } catch (error) {
-    const prismaError = error as { code?: string }
-
-    if (prismaError.code === 'P2025') {
+    if (!userToDelete) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    console.error('DELETE user error:', error)
+    // Hapus pengguna dari database
+    await prisma.user.delete({
+      where: { id: context.params.userId },
+    })
+
+    // Opsional: hapus juga pengguna dari Clerk (perhatian: ini akan menghapus akun sepenuhnya)
+    // await getAuth(req).clerkClient.users.deleteUser(userToDelete.clerkUserId);
+
+    return NextResponse.json({ message: 'User deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting user:', error)
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(
+  req: NextRequest,
+  context: { params: { userId: string } }
+) {
+  try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Parse request body
+    const body = await req.json()
+
+    // Validasi input
+    const parsed = updateUserSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.format() },
+        { status: 400 }
+      )
+    }
+
+    const { name, email, role, status } = parsed.data
+
+    // Update pengguna di database
+    const updatedUser = await prisma.user.update({
+      where: { id: context.params.userId },
+      data: {
+        ...(name && { name }),
+        ...(email && { email }),
+        ...(role && { role: role as UserRole }),
+        ...(status && { status: status as UserStatus }),
+      },
+    })
+
+    return NextResponse.json(updatedUser)
+  } catch (error) {
+    console.error('Error updating user:', error)
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
