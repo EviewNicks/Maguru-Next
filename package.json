@@ -60,7 +60,7 @@
     "date-fns": "^4.1.0",
     "dompurify": "^3.2.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
+    "express": "^5.1.0",
     "isomorphic-dompurify": "^2.23.0",
     "jsdom": "^26.0.0",
     "lodash.debounce": "^4.0.8",
