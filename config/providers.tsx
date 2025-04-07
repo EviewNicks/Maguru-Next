@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from './theme-provider'
 import { ClerkProvider, useAuth } from '@clerk/nextjs'
@@ -8,11 +8,11 @@ import { Provider } from 'react-redux'
 import { store } from '@/store/store'
 import { useSearchParams } from 'next/navigation'
 
-function InitUser() {
+function InitUserContent() {
   const { isLoaded, userId } = useAuth()
   const [hasSynced, setHasSynced] = useState(false)
+  const searchParams = useSearchParams()
 
-  // Effect untuk memastikan user tersimpan di database
   useEffect(() => {
     async function syncUserWithDatabase() {
       if (!isLoaded || !userId || hasSynced) return
@@ -38,7 +38,6 @@ function InitUser() {
 
         if (!metadataResponse.ok) {
           console.warn('Gagal sinkronisasi metadata, mencoba lagi...')
-          // Coba lagi setelah jeda singkat (mungkin perlu waktu untuk user tersimpan di database)
           setTimeout(async () => {
             try {
               const retryResponse = await fetch('/api/users/sync-metadata', {
@@ -59,7 +58,7 @@ function InitUser() {
                 retryError
               )
             }
-          }, 1000) // Tunggu 1 detik sebelum mencoba lagi
+          }, 1000)
         } else {
           console.log('Sinkronisasi metadata berhasil')
         }
@@ -74,7 +73,23 @@ function InitUser() {
     syncUserWithDatabase()
   }, [isLoaded, userId, hasSynced])
 
+  useEffect(() => {
+    const reloadSession = searchParams.get('reload_session')
+    if (reloadSession === 'true') {
+      window.history.replaceState({}, '', window.location.pathname)
+      window.location.reload()
+    }
+  }, [searchParams])
+
   return null
+}
+
+function InitUser() {
+  return (
+    <Suspense fallback={null}>
+      <InitUserContent />
+    </Suspense>
+  )
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -83,36 +98,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1 menit
+            staleTime: 60 * 1000,
             retry: 1,
           },
         },
       })
   )
 
-  const [shouldReload, setShouldReload] = useState(false)
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    // Cek parameter reload_session
-    const reloadSession = searchParams.get('reload_session')
-    if (reloadSession === 'true') {
-      setShouldReload(true)
-      // Hapus parameter dari URL
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-  }, [searchParams])
-
-  useEffect(() => {
-    if (shouldReload) {
-      window.location.reload()
-    }
-  }, [shouldReload])
-
   return (
     <ClerkProvider
-      afterSignInUrl="/"
-      afterSignUpUrl="/"
       appearance={{
         elements: {
           formButtonPrimary: 'bg-sky-500 hover:bg-sky-600',
