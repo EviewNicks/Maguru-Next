@@ -13,7 +13,12 @@ jest.mock('next-themes', () => ({
 
 // Mock UI components
 jest.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => (
+  Button: ({
+    children,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    children?: React.ReactNode
+  }) => (
     <button data-testid="mock-Button" {...props}>
       {children}
     </button>
@@ -21,16 +26,23 @@ jest.mock('@/components/ui/button', () => ({
 }))
 
 jest.mock('@/components/ui/dropdown-menu', () => ({
-  DropdownMenu: ({ children }: any) => (
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="mock-DropdownMenu">{children}</div>
   ),
-  DropdownMenuTrigger: ({ children }: any) => (
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="mock-DropdownMenuTrigger">{children}</div>
   ),
-  DropdownMenuContent: ({ children }: any) => (
+  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="mock-DropdownMenuContent">{children}</div>
   ),
-  DropdownMenuItem: ({ children, ...props }: any) => (
+  DropdownMenuItem: ({
+    children,
+    ...props
+  }: {
+    children: React.ReactNode
+    onClick?: () => void
+    [key: string]: unknown
+  }) => (
     <div data-testid="mock-DropdownMenuItem" {...props}>
       {children}
     </div>

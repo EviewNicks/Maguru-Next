@@ -42,6 +42,9 @@ export async function POST(req: Request) {
   const eventType = evt.type
 
   try {
+    // Inisialisasi klien Clerk
+    const clerk = await clerkClient()
+
     if (eventType === 'user.created') {
       // Handle user creation
       const user = await prisma.user.create({
@@ -55,7 +58,7 @@ export async function POST(req: Request) {
       })
 
       // Sinkronkan metadata ke Clerk
-      await clerkClient.users.updateUser(evt.data.id, {
+      await clerk.users.updateUser(evt.data.id, {
         publicMetadata: {
           role: user.role,
           status: user.status,
@@ -79,7 +82,7 @@ export async function POST(req: Request) {
         })
 
         // Sinkronkan metadata ke Clerk (memastikan metadata di Clerk sesuai dengan database)
-        await clerkClient.users.updateUser(evt.data.id, {
+        await clerk.users.updateUser(evt.data.id, {
           publicMetadata: {
             role: updatedUser.role,
             status: updatedUser.status,
@@ -99,7 +102,7 @@ export async function POST(req: Request) {
         })
 
         // Sinkronkan metadata ke Clerk
-        await clerkClient.users.updateUser(evt.data.id, {
+        await clerk.users.updateUser(evt.data.id, {
           publicMetadata: {
             role: newUser.role,
             status: newUser.status,

@@ -9,30 +9,26 @@ import { auth, clerkClient } from '@clerk/nextjs/server'
 const updateUserSchema = z.object({
   name: z.string().optional(),
   email: z.string().email().optional(),
-  role: z.enum(['mahasiswa', 'admin', 'dosen']).optional(),
+  role: z.enum(['mahasiswa', 'admin']).optional(),
   status: z.enum(['active', 'inactive', 'pending']).optional(),
 })
-
-type RouteParams = {
-  userId: string
-}
-
-type RouteContext = {
-  params: RouteParams
-}
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-export async function GET(req: NextRequest, context: RouteContext) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
   try {
     const { userId: clerkUserId } = await auth()
     if (!clerkUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { userId } = await params
     const user = await prisma.user.findUnique({
-      where: { id: context.params.userId },
+      where: { id: userId },
     })
 
     if (!user) {
@@ -49,7 +45,10 @@ export async function GET(req: NextRequest, context: RouteContext) {
   }
 }
 
-export async function PATCH(req: NextRequest, context: RouteContext) {
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
   try {
     const { userId: clerkUserId } = await auth()
     if (!clerkUserId) {
@@ -70,10 +69,11 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
     const body = await req.json()
     const { role, status } = body
+    const { userId } = await params
 
     // Update user di database lokal
     const updatedUser = await prisma.user.update({
-      where: { id: context.params.userId },
+      where: { id: userId },
       data: {
         role,
         status,
@@ -82,7 +82,7 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
     // Dapatkan Clerk user ID dari database
     const userToUpdate = await prisma.user.findUnique({
-      where: { id: context.params.userId },
+      where: { id: userId },
       select: { clerkUserId: true },
     })
 
@@ -95,8 +95,8 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     await clerkClientInstance.users.updateUser(userToUpdate.clerkUserId, {
       publicMetadata: {
         role: updatedUser.role,
-        status: updatedUser.status
-      }
+        status: updatedUser.status,
+      },
     })
 
     return NextResponse.json(updatedUser)
@@ -111,18 +111,20 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
 
 export async function DELETE(
   req: NextRequest,
-  context: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = await auth()
+    const { userId: clerkUserId } = await auth()
 
-    if (!userId) {
+    if (!clerkUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { userId } = await params
+
     // Cari pengguna yang akan dihapus
     const userToDelete = await prisma.user.findUnique({
-      where: { id: context.params.userId },
+      where: { id: userId },
     })
 
     if (!userToDelete) {
@@ -131,7 +133,7 @@ export async function DELETE(
 
     // Hapus pengguna dari database
     await prisma.user.delete({
-      where: { id: context.params.userId },
+      where: { id: userId },
     })
 
     // Opsional: hapus juga pengguna dari Clerk (perhatian: ini akan menghapus akun sepenuhnya)
@@ -149,12 +151,12 @@ export async function DELETE(
 
 export async function PUT(
   req: NextRequest,
-  context: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { userId } = await auth()
+    const { userId: clerkUserId } = await auth()
 
-    if (!userId) {
+    if (!clerkUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -172,10 +174,11 @@ export async function PUT(
     }
 
     const { name, email, role, status } = parsed.data
+    const { userId } = await params
 
     // Update pengguna di database
     const updatedUser = await prisma.user.update({
-      where: { id: context.params.userId },
+      where: { id: userId },
       data: {
         ...(name && { name }),
         ...(email && { email }),

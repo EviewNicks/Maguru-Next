@@ -42,6 +42,39 @@ const useModuleProgress = ({
   // State untuk logging navigasi
   const [navigationHistory, setNavigationHistory] = useState<number[]>([])
 
+  // Fungsi untuk logging navigasi antara halaman
+  const logNavigation = useCallback(
+    (fromPage: number, toPage: number) => {
+      setNavigationHistory((prev) => [...prev, toPage])
+
+      // Simpan log navigasi ke localStorage jika diperlukan
+      try {
+        const timestamp = new Date().toISOString()
+        const navigationLog = {
+          moduleId: currentModuleId,
+          fromPage,
+          toPage,
+          timestamp,
+        }
+
+        // Simpan ke localStorage untuk analitik
+        const existingLogs = localStorage.getItem('navigation_history')
+        const logs = existingLogs ? JSON.parse(existingLogs) : []
+        logs.push(navigationLog)
+
+        // Batasi jumlah log (simpan 100 navigasi terakhir)
+        if (logs.length > 100) {
+          logs.shift()
+        }
+
+        localStorage.setItem('navigation_history', JSON.stringify(logs))
+      } catch (error) {
+        console.error('Error logging navigation:', error)
+      }
+    },
+    [currentModuleId]
+  )
+
   // Fungsi untuk mendapatkan data modul berdasarkan ID
   const getModuleById = useCallback((id: string): ModuleData | undefined => {
     return modules.find((moduleItem) => moduleItem.id === id)
@@ -75,7 +108,10 @@ const useModuleProgress = ({
   }
 
   // Fungsi untuk mengatur status penyelesaian halaman
-  const setPageCompletionStatus = (isCompleted: boolean, sections: string[] = []) => {
+  const setPageCompletionStatus = (
+    isCompleted: boolean,
+    sections: string[] = []
+  ) => {
     setIsPageCompleted(isCompleted)
     setIncompleteSections(sections)
     return isCompleted
@@ -94,7 +130,11 @@ const useModuleProgress = ({
     const currentModule = getCurrentModule()
     if (!currentModule) return
 
-    if (!isPageCompleted && !quickViewMode && currentPage < currentModule.totalPages) {
+    if (
+      !isPageCompleted &&
+      !quickViewMode &&
+      currentPage < currentModule.totalPages
+    ) {
       return false
     }
 
@@ -160,7 +200,10 @@ const useModuleProgress = ({
   }
 
   // Fungsi untuk pindah ke halaman tertentu dengan validasi
-  const navigateToPage = (pageNumber: number, forceNavigate: boolean = false) => {
+  const navigateToPage = (
+    pageNumber: number,
+    forceNavigate: boolean = false
+  ) => {
     const currentModule = getCurrentModule()
     if (!currentModule) return false
 

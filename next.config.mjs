@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+import withBundleAnalyzer from '@next/bundle-analyzer'
+
 const nextConfig = {
   /* config options here */
   images: {
@@ -11,7 +13,7 @@ const nextConfig = {
   },
 
   // Disable static optimization for all pages
-  staticPageGenerationTimeout: 0,
+  staticPageGenerationTimeout: 180,
 
   // Enable dynamic rendering
   experimental: {
@@ -44,4 +46,6 @@ const nextConfig = {
   output: 'standalone',
 }
 
-export default nextConfig
+export default withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})(nextConfig)

@@ -5,8 +5,27 @@ import UserIcon from '@/components/layouts/Navbar/UserIcon'
 // Mock next/image
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: ({ src, alt, className }: any) => (
-    <img src={src} alt={alt} className={className} data-testid="next-image" />
+  default: ({
+    src,
+    alt,
+    className,
+  }: {
+    src: string
+    alt: string
+    className?: string
+    width?: number
+    height?: number
+  }) => (
+    <div
+      style={{
+        backgroundImage: `url(${src})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+      aria-label={alt}
+      className={className}
+      data-testid="next-image"
+    />
   ),
 }))
 
