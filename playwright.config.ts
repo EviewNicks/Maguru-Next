@@ -1,11 +1,14 @@
 import { defineConfig, devices } from '@playwright/test'
+import * as dotenv from 'dotenv'
 
+// Memuat environment variables dari .env.test
+dotenv.config({ path: '.env.test' })
 /**
  * Konfigurasi Playwright untuk E2E testing
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: './',
+  testDir: './tests/e2e',
   testMatch: '**/*.e2e.spec.ts',
   /* Maximum time one test can run for */
   timeout: 30 * 1000,
@@ -61,7 +64,7 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3000',
+    port: 3000,
     reuseExistingServer: !process.env.CI,
   },
 })

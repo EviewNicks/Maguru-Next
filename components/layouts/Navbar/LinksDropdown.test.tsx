@@ -67,20 +67,6 @@ jest.mock('@/components/ui/dropdown-menu', () => ({
   DropdownMenuGroup: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dropdown-group">{children}</div>
   ),
-  DropdownMenuItem: ({
-    children,
-    disabled,
-  }: {
-    children: React.ReactNode
-    disabled?: boolean
-  }) => (
-    <div
-      data-testid="dropdown-item"
-      aria-disabled={disabled ? 'true' : 'false'}
-    >
-      {children}
-    </div>
-  ),
   DropdownMenuLabel: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="dropdown-label">{children}</div>
   ),

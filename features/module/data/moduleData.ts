@@ -1,11 +1,13 @@
 // features/module/data/moduleData.ts
-import { ModuleData } from '../types';
+import { ModuleData } from '../types'
 
 export const modules: ModuleData[] = [
   {
     id: 'module-1',
     title: 'Pengenalan Pemrograman Web',
-    description: 'Modul ini akan mengenalkan Anda pada dasar-dasar pemrograman web, termasuk HTML, CSS, dan JavaScript.',
+    description:
+      'Modul ini akan mengenalkan Anda pada dasar-dasar pemrograman web, termasuk HTML, CSS, dan JavaScript.',
+    estimatedTime: 45,
     pages: [
       {
         id: 'page-1-1',
@@ -194,7 +196,9 @@ Terima kasih telah mengikuti modul ini. Semoga sukses dalam perjalanan belajar p
   {
     id: 'module-2',
     title: 'Dasar-dasar React',
-    description: 'Modul ini akan mengenalkan Anda pada dasar-dasar React, sebuah library JavaScript untuk membangun antarmuka pengguna.',
+    description:
+      'Modul ini akan mengenalkan Anda pada dasar-dasar React, sebuah library JavaScript untuk membangun antarmuka pengguna.',
+    estimatedTime: 60,
     pages: [
       {
         id: 'page-2-1',
@@ -315,6 +319,6 @@ JSX sangat mirip dengan HTML, tetapi ada beberapa perbedaan:
     progressPercentage: 0,
     isCompleted: false,
   },
-];
+]
 
-export default modules;
+export default modules

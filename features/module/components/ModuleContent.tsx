@@ -1,5 +1,5 @@
 // features/module/components/ModuleContent.tsx
-import { useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import ReactMarkdown from 'react-markdown'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
@@ -9,7 +9,6 @@ import { CheckCircle, Circle } from 'lucide-react'
 import Image from 'next/image'
 import type { Components } from 'react-markdown'
 import { sanitizeHtml } from '@/features/common/utils/sanitize'
-
 interface ModuleContentProps {
   title?: string
   content: string

@@ -8,20 +8,17 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
-  setupFilesAfterEnv: [
-    '<rootDir>/jest.setup.js',
-    '<rootDir>/__tests__/setup/api-test.ts',
-  ],
-  setupFiles: ['<rootDir>/__tests__/setup/env.js'],
-  testEnvironment: 'jest-environment-jsdom',
+  testEnvironment: 'jsdom',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleNameMapper: {
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@/(.*)$': '<rootDir>/$1',
     '^@clerk/nextjs$': '<rootDir>/__tests__/__mocks__/@clerk/nextjs.ts',
     '^@clerk/backend$': '<rootDir>/__tests__/__mocks__/@clerk/backend.ts',
     '^@prisma/client$': '<rootDir>/__tests__/__mocks__/@prisma/client.ts',
   },
   transform: {
-    '^.+\\.(ts|tsx|js|jsx|mjs)$': ['babel-jest', { presets: ['next/babel'] }],
+    '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node', 'mjs'],
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],

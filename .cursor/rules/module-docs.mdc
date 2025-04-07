@@ -1,0 +1,293 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Template Dokumentasi Modul/Fitur
+
+> Template ini mengikuti praktik terbaik dari IEEE 829, ISO/IEC/IEEE 29148:2018, dan standar dokumentasi perangkat lunak lainnya.
+
+## 1. Informasi Umum
+
+### 1.1 Identifikasi Modul
+
+- **Nama Modul**: [Nama Modul/Fitur]
+- **Kode Modul**: [Kode Unik Modul jika ada]
+- **Versi**: [x.y.z]
+- **Tanggal Terakhir Update**: [DD-MM-YYYY]
+- **Penulis**: [Nama Tim/Individu]
+- **Status**: [Draft/In Review/Approved/Implemented]
+
+### 1.2 Ringkasan
+
+[Deskripsi singkat 2-3 kalimat tentang modul/fitur ini]
+
+## 2. Spesifikasi Kebutuhan
+
+### 2.1 Tujuan dan Sasaran
+
+#### Tujuan Utama
+
+- Definisikan tujuan utama modul dengan jelas dan terukur
+- Gunakan format SMART (Specific, Measurable, Achievable, Relevant, Time-bound)
+- Contoh: "Mengimplementasikan sistem autentikasi berbasis role menggunakan Clerk dalam waktu 2 sprint"
+
+#### Masalah yang Diselesaikan
+
+- Identifikasi masalah spesifik yang akan diselesaikan
+- Jelaskan dampak masalah terhadap pengguna/sistem
+- Dokumentasikan kondisi sebelum dan sesudah implementasi
+
+#### Manfaat yang Diharapkan
+
+- Manfaat Langsung:
+  - Untuk Pengguna: [jelaskan manfaat]
+  - Untuk Sistem: [jelaskan manfaat]
+  - Untuk Bisnis: [jelaskan manfaat]
+- Manfaat Tidak Langsung:
+  - Peningkatan keamanan
+  - Pengurangan risiko
+  - Efisiensi operasional
+
+### 2.2 Ruang Lingkup
+
+#### Yang Termasuk dalam Modul
+
+1. Komponen Inti:
+
+   - Daftar fitur utama yang akan diimplementasikan
+   - Integrasi dengan sistem yang ada
+   - Antarmuka pengguna yang diperlukan
+
+2. Fungsionalitas:
+   - Detail fungsi-fungsi yang akan dikembangkan
+   - Alur kerja (workflow) yang didukung
+   - Batasan dan parameter
+
+#### Yang Tidak Termasuk dalam Modul
+
+1. Batasan Teknis:
+
+   - Fitur yang secara eksplisit tidak akan diimplementasikan
+   - Fungsi yang akan dikembangkan di fase berikutnya
+   - Limitasi teknologi yang disepakati
+
+2. Batasan Bisnis:
+   - Proses bisnis yang tidak tercakup
+   - Skenario penggunaan yang dikecualikan
+   - Pertimbangan regulasi/compliance
+
+### 2.3 Kebutuhan Fungsional
+
+Setiap kebutuhan harus mencakup:
+
+1. [ID-Kebutuhan]: [Nama Kebutuhan]
+   - **Deskripsi**: Penjelasan detail tentang kebutuhan
+   - **Kriteria Penerimaan**:
+     - Kondisi yang harus dipenuhi
+     - Skenario pengujian
+     - Metrik keberhasilan
+   - **Prioritas**: (Critical/High/Medium/Low)
+   - **Dependensi**: Ketergantungan dengan modul/fitur lain
+   - **Estimasi**: Perkiraan waktu pengembangan
+   - **Status**: (Planned/In Progress/Completed)
+
+### 2.4 Kebutuhan Non-Fungsional
+
+1. Performa:
+
+   - Waktu respons maksimum
+   - Throughput yang diharapkan
+   - Kapasitas concurrent users
+
+2. Keamanan:
+
+   - Standar keamanan yang harus dipenuhi
+   - Metode autentikasi dan otorisasi
+   - Enkripsi data
+
+3. Skalabilitas:
+   - Kemampuan scaling horizontal/vertikal
+   - Batasan pertumbuhan data
+   - Strategi caching
+
+## 3. Desain dan Implementasi
+
+### 3.1 Arsitektur
+
+#### Diagram Arsitektur
+
+- **High-Level Architecture**
+  - Diagram komponen sistem
+  - Alur data antar komponen
+  - Integrasi dengan sistem eksternal
+
+#### Komponen Utama
+
+1. **Frontend Components**
+
+   - Struktur folder/file
+   - Komponen reusable
+   - State management
+
+2. **Backend Services**
+   - Service layer
+   - Business logic
+   - Data access layer
+
+### 3.2 Database
+
+#### Skema Database
+
+1. **Entity Relationship Diagram (ERD)**
+
+   - Entitas dan atribut
+   - Relasi antar entitas
+   - Kardinalitas
+   - Constraints
+
+2. **Model Data**
+   ```typescript
+   interface ExampleModel {
+     id: string
+     field1: string
+     field2: number
+     createdAt: Date
+   }
+   ```
+
+### 3.3 API
+
+#### Endpoint Definitions
+
+1. **REST Endpoints**
+
+   ```typescript
+   /**
+    * @route GET /api/resource
+    * @desc Fetch resources
+    * @access Private
+    */
+   ```
+
+2. **Request/Response Format**
+   ```json
+   {
+     "status": 200,
+     "data": {
+       "id": "uuid",
+       "field1": "value",
+       "field2": 123
+     },
+     "message": "Success"
+   }
+   ```
+
+### 3.4 Antarmuka Pengguna
+
+#### Wireframes
+
+1. **Low-Fidelity**
+
+   - Sketsa layout
+   - Penempatan komponen
+   - User flow diagram
+
+2. **High-Fidelity**
+   - Detailed mockups
+   - Interactive prototypes
+   - Style guide
+
+## 4. Pengujian
+
+### 4.1 Test Cases
+
+1. **Unit Tests**
+
+   ```typescript
+   describe('Component/Function Name', () => {
+     it('should [expected behavior]', () => {
+       // Test implementation
+     })
+   })
+   ```
+
+2. **Integration Tests**
+   ```typescript
+   describe('Feature Integration', () => {
+     it('should [expected behavior]', () => {
+       // Test implementation
+     })
+   })
+   ```
+
+### 4.2 Test Coverage
+
+- Target coverage: 80%
+- Critical path testing
+- Edge cases
+- Error scenarios
+
+## 5. Deployment
+
+### 5.1 Prasyarat
+
+1. **Dependencies**
+
+   ```json
+   {
+     "dependencies": {
+       "package-name": "version"
+     }
+   }
+   ```
+
+2. **Environment Variables**
+   ```bash
+   REQUIRED_VAR=value
+   OPTIONAL_VAR=value
+   ```
+
+## 6. Pemeliharaan
+
+### 6.1 Monitoring
+
+1. **Metrics**
+
+   - Response time
+   - Error rate
+   - Usage statistics
+
+2. **Alert Thresholds**
+   ```json
+   {
+     "error_rate": "5%",
+     "response_time": "2s"
+   }
+   ```
+
+### 6.2 Troubleshooting
+
+1. **Known Issues**
+
+   - Issue description
+   - Impact
+   - Workaround/Solution
+
+2. **Support Contact**
+   - Technical contact
+   - Escalation path
+
+## 7. Referensi
+
+### 7.1 Dokumentasi Teknis
+
+- [API Documentation](./api-docs/endpoints.md)
+- [Authentication](./api-docs/auth.md)
+- [Error Codes](./api-docs/errors.md)
+
+## 8. Riwayat Perubahan
+
+| Tanggal | Versi | Deskripsi Perubahan | Penulis |
+| ------- | ----- | ------------------- | ------- |
+|         |       |                     |         |

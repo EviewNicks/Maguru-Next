@@ -1,13 +1,20 @@
 // app/api/users/route.ts
-import { NextResponse } from 'next/server'
-import { Prisma } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { Prisma, UserRole, UserStatus } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { auth, currentUser } from '@clerk/nextjs/server'
-import { getUsersQuerySchema } from '@/lib/validations/user'
 
-export async function GET(req: Request) {
+const getUserQuerySchema = z.object({
+  search: z.string().optional(),
+  role: z.enum(['mahasiswa', 'admin', 'dosen']).optional(),
+  status: z.enum(['active', 'inactive', 'pending']).optional(),
+  page: z.string().optional().default('1'),
+  limit: z.string().optional().default('10')
+})
+
+export async function GET(req: NextRequest) {
   try {
-
     const { userId } = await auth()
 
     if (!userId) {
@@ -15,13 +22,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Parse and validate query parameters
-    const { searchParams } = new URL(req.url)
+    const searchParams = req.nextUrl.searchParams
+    const queryParams = Object.fromEntries(searchParams)
 
-    const parsed = getUsersQuerySchema.safeParse(
-      Object.fromEntries(searchParams)
-    )
-
+    const parsed = getUserQuerySchema.safeParse(queryParams)
 
     if (!parsed.success) {
       console.error('Query params tidak valid:', parsed.error.format())
@@ -43,10 +47,9 @@ export async function GET(req: Request) {
             { email: { contains: search, mode: 'insensitive' } },
           ]
         : undefined,
-      role: role ?? undefined,
-      status: status ?? undefined,
+      role: role as UserRole | undefined,
+      status: status as UserStatus | undefined,
     }
-
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
@@ -57,7 +60,6 @@ export async function GET(req: Request) {
       }),
       prisma.user.count({ where }),
     ])
-
 
     return NextResponse.json({
       users,
@@ -78,9 +80,8 @@ export async function GET(req: Request) {
 
 export async function POST() {
   try {
-
     const { userId } = await auth()
-        if (!userId) {
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     // Get Clerk user data
@@ -88,8 +89,6 @@ export async function POST() {
     if (!clerkUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
-    
-
 
     // Check if user exists in our database
     let user = await prisma.user.findUnique({

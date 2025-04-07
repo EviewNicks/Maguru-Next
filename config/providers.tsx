@@ -1,44 +1,77 @@
 'use client'
+
+import { useState, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from './theme-provider'
-import { useState } from 'react'
 import { ClerkProvider, useAuth } from '@clerk/nextjs'
 import { Provider } from 'react-redux'
 import { store } from '@/store/store'
-import { useEffect } from 'react'
 
 function InitUser() {
   const { isLoaded, userId } = useAuth()
+  const [hasSynced, setHasSynced] = useState(false)
 
+  // Effect untuk memastikan user tersimpan di database
   useEffect(() => {
-    async function syncUser() {
-      if (!isLoaded || !userId) return
+    async function syncUserWithDatabase() {
+      if (!isLoaded || !userId || hasSynced) return
 
       try {
-        const response = await fetch('/api/users', {
+        console.log('Mulai proses sinkronisasi user...')
+
+        // Simpan user ke database
+        const userResponse = await fetch('/api/users', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            clerkUserId: userId,
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clerkUserId: userId }),
         })
 
-        const data = await response.json()
-
-        if (!response.ok) {
-          const error = await response.json()
-          throw new Error(error.message || 'Failed to sync user')
+        if (!userResponse.ok) {
+          throw new Error('Gagal menyimpan user')
         }
 
+        // Juga sinkronkan metadata
+        const metadataResponse = await fetch('/api/users/sync-metadata', {
+          method: 'POST',
+        })
+
+        if (!metadataResponse.ok) {
+          console.warn('Gagal sinkronisasi metadata, mencoba lagi...')
+          // Coba lagi setelah jeda singkat (mungkin perlu waktu untuk user tersimpan di database)
+          setTimeout(async () => {
+            try {
+              const retryResponse = await fetch('/api/users/sync-metadata', {
+                method: 'POST',
+              })
+              if (retryResponse.ok) {
+                console.log(
+                  'Sinkronisasi metadata berhasil pada percobaan kedua'
+                )
+              } else {
+                console.error(
+                  'Gagal sinkronisasi metadata pada percobaan kedua'
+                )
+              }
+            } catch (retryError) {
+              console.error(
+                'Error saat retry sinkronisasi metadata:',
+                retryError
+              )
+            }
+          }, 1000) // Tunggu 1 detik sebelum mencoba lagi
+        } else {
+          console.log('Sinkronisasi metadata berhasil')
+        }
+
+        console.log('User berhasil disimpan dan disinkronkan')
+        setHasSynced(true)
       } catch (error) {
-        console.error('Error syncing user:', error)
+        console.error('Error saat sinkronisasi user:', error)
       }
     }
 
-    syncUser()
-  }, [isLoaded, userId])
+    syncUserWithDatabase()
+  }, [isLoaded, userId, hasSynced])
 
   return null
 }
@@ -49,19 +82,19 @@ function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1 minute
+            staleTime: 60 * 1000, // 1 menit
             retry: 1,
           },
         },
       })
-)
+  )
 
   return (
     <ClerkProvider
       signInUrl="/auth/sign-in"
       signUpUrl="/auth/sign-up"
-      signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/dashboard"
+      afterSignInUrl="/"
+      afterSignUpUrl="/"
     >
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
@@ -79,4 +112,5 @@ function Providers({ children }: { children: React.ReactNode }) {
     </ClerkProvider>
   )
 }
+
 export default Providers
