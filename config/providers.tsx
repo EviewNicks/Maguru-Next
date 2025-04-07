@@ -6,6 +6,7 @@ import { ThemeProvider } from './theme-provider'
 import { ClerkProvider, useAuth } from '@clerk/nextjs'
 import { Provider } from 'react-redux'
 import { store } from '@/store/store'
+import { useSearchParams } from 'next/navigation'
 
 function InitUser() {
   const { isLoaded, userId } = useAuth()
@@ -76,7 +77,7 @@ function InitUser() {
   return null
 }
 
-function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -89,12 +90,37 @@ function Providers({ children }: { children: React.ReactNode }) {
       })
   )
 
+  const [shouldReload, setShouldReload] = useState(false)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Cek parameter reload_session
+    const reloadSession = searchParams.get('reload_session')
+    if (reloadSession === 'true') {
+      setShouldReload(true)
+      // Hapus parameter dari URL
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    if (shouldReload) {
+      window.location.reload()
+    }
+  }, [shouldReload])
+
   return (
     <ClerkProvider
-      signInUrl="/auth/sign-in"
-      signUpUrl="/auth/sign-up"
       afterSignInUrl="/"
       afterSignUpUrl="/"
+      appearance={{
+        elements: {
+          formButtonPrimary: 'bg-sky-500 hover:bg-sky-600',
+          footerActionLink: 'text-sky-500 hover:text-sky-600',
+        },
+      }}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
     >
       <Provider store={store}>
         <QueryClientProvider client={queryClient}>
