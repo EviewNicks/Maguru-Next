@@ -1,15 +1,30 @@
 'use client'
 
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import ModulePage from '@/features/module/components/ModulePage'
 import { Skeleton } from '@/components/ui/skeleton'
 
+// Komponen untuk menangani search params
+function SearchParamsHandler({
+  onParamsReady,
+}: {
+  onParamsReady: (isQuickView: boolean) => void
+}) {
+  const searchParams = useSearchParams()
+  const quickViewMode = searchParams.get('mode') === 'quick'
+
+  useEffect(() => {
+    onParamsReady(quickViewMode)
+  }, [quickViewMode, onParamsReady])
+
+  return null
+}
+
 export default function ModuleRoute() {
   const params = useParams()
-  const searchParams = useSearchParams()
   const moduleId = params.moduleId as string
-  const quickViewMode = searchParams.get('mode') === 'quick'
+  const [quickViewMode, setQuickViewMode] = useState(false)
 
   // Logging untuk analitik
   useEffect(() => {
@@ -39,26 +54,32 @@ export default function ModuleRoute() {
   }, [moduleId, quickViewMode])
 
   return (
-    <Suspense
-      fallback={
-        <div className="container mx-auto py-8 px-4">
-          <div className="flex flex-col gap-6">
-            <Skeleton className="h-10 w-3/4" />
-            <Skeleton className="h-6 w-1/2" />
-            <div className="flex justify-between items-center">
-              <Skeleton className="h-4 w-1/4" />
-              <Skeleton className="h-8 w-32" />
-            </div>
-            <Skeleton className="h-[400px] w-full" />
-            <div className="flex justify-between mt-6">
-              <Skeleton className="h-10 w-24" />
-              <Skeleton className="h-10 w-24" />
+    <>
+      <Suspense fallback={null}>
+        <SearchParamsHandler onParamsReady={setQuickViewMode} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <div className="container mx-auto py-8 px-4">
+            <div className="flex flex-col gap-6">
+              <Skeleton className="h-10 w-3/4" />
+              <Skeleton className="h-6 w-1/2" />
+              <div className="flex justify-between items-center">
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-8 w-32" />
+              </div>
+              <Skeleton className="h-[400px] w-full" />
+              <div className="flex justify-between mt-6">
+                <Skeleton className="h-10 w-24" />
+                <Skeleton className="h-10 w-24" />
+              </div>
             </div>
           </div>
-        </div>
-      }
-    >
-      <ModulePage moduleId={moduleId} quickViewMode={quickViewMode} />
-    </Suspense>
+        }
+      >
+        <ModulePage moduleId={moduleId} quickViewMode={quickViewMode} />
+      </Suspense>
+    </>
   )
 }

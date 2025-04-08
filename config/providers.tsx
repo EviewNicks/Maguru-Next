@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from './theme-provider'
 import { ClerkProvider, useAuth } from '@clerk/nextjs'
@@ -77,6 +77,28 @@ function InitUser() {
   return null
 }
 
+// Komponen untuk menangani search params dengan Suspense
+function SearchParamsHandler({
+  setParamsCallback,
+}: {
+  setParamsCallback: (hasReloadParam: boolean) => void
+}) {
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Cek parameter reload_session
+    const reloadSession = searchParams.get('reload_session')
+    setParamsCallback(reloadSession === 'true')
+
+    if (reloadSession === 'true') {
+      // Hapus parameter dari URL
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [searchParams, setParamsCallback])
+
+  return null
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -91,23 +113,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
   )
 
   const [shouldReload, setShouldReload] = useState(false)
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    // Cek parameter reload_session
-    const reloadSession = searchParams.get('reload_session')
-    if (reloadSession === 'true') {
-      setShouldReload(true)
-      // Hapus parameter dari URL
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-  }, [searchParams])
 
   useEffect(() => {
     if (shouldReload) {
       window.location.reload()
     }
   }, [shouldReload])
+
+  const handleParams = (hasReloadParam: boolean) => {
+    setShouldReload(hasReloadParam)
+  }
 
   return (
     <ClerkProvider
@@ -131,6 +146,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             disableTransitionOnChange
           >
             <InitUser />
+            <Suspense fallback={null}>
+              <SearchParamsHandler setParamsCallback={handleParams} />
+            </Suspense>
             {children}
           </ThemeProvider>
         </QueryClientProvider>
