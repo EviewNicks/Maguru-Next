@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import ModuleManagementLayout from '../layout'
+import ModuleManagementLayout from './layout'
 
 describe('ModuleManagementLayout', () => {
   it('should render children correctly', () => {

@@ -1,128 +1,93 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import prisma from '@/lib/prisma'
 
 // Rute publik yang dapat diakses tanpa autentikasi
 const isPublicRoute = createRouteMatcher([
   '/',
-  '/products(.*)',
-  '/about',
-  '/auth(.*)',
-  '/api/webhooks/clerk(.*)', // Pastikan webhook Clerk tidak terblokir
-])
-
-// Rute API yang perlu diakses tanpa redirect
-const isApiRoute = createRouteMatcher(['/api/users(.*)', '/api/module(.*)'])
-
-// Rute yang hanya dapat diakses oleh admin
-const isAdminRoute = createRouteMatcher(['/(admin)(.*)', '/manage-users(.*)'])
-
-// Rute yang hanya dapat diakses oleh mahasiswa
-const isStudentRoute = createRouteMatcher([
-  '/user-dashboard(.*)',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/sso-callback(.*)',
+  '/unauthorized',
+  '/verify(.*)',
   '/module(.*)',
+  '/team/new',
+  '/api/webhooks(.*)',
   '/quiz(.*)',
 ])
 
-export default clerkMiddleware(
-  async (auth, request) => {
-    // Periksa jika ini adalah permintaan API - izinkan melewati
-    if (
-      isApiRoute(request) &&
-      !request.nextUrl.pathname.startsWith('/api/webhooks')
-    ) {
-      return NextResponse.next()
-    }
+export const runtime = 'nodejs'
 
-    // Mengambil informasi autentikasi
-    const session = await auth()
-    const userId = session.userId
-
-    if (!userId) {
-      // Jika bukan rute publik dan tidak ada sesi, redirect ke login
-      if (!isPublicRoute(request)) {
-        console.log('Redirecting to login - No session')
-        return NextResponse.redirect(new URL('/auth/sign-in', request.url))
-      }
-      return NextResponse.next()
-    }
-
-    // Dapatkan role pengguna dari metadata Clerk
-    let userRole = (session.sessionClaims?.metadata as { role?: string })?.role
-
-    // Jika role tidak ditemukan di metadata, ambil dari database
-    if (!userRole) {
-      console.log('Role tidak ditemukan di metadata, mencoba dari database...')
-      try {
-        const userFromDb = await prisma.user.findUnique({
-          where: { clerkUserId: userId },
-          select: { role: true },
-        })
-
-        if (userFromDb) {
-          userRole = userFromDb.role
-          console.log('Role dari database:', userRole)
-        } else {
-          console.log(
-            'User tidak ditemukan di database, menggunakan default: mahasiswa'
-          )
-          userRole = 'mahasiswa'
-        }
-      } catch (error) {
-        console.error('Error saat mengambil role dari database:', error)
-        userRole = 'mahasiswa'
-      }
-    }
-
-    // Logging untuk debugging
-    console.log('Middleware Debug:')
-    console.log('User ID:', userId)
-    console.log('User Role:', userRole)
-    console.log('Current Path:', request.nextUrl.pathname)
-    console.log(
-      'Session Claims:',
-      JSON.stringify(session.sessionClaims, null, 2)
-    )
-
-    // Redirect berdasarkan role
-    if (userId) {
-      // Redirect admin ke manage-users
-      if (userRole === 'admin' && request.nextUrl.pathname === '/') {
-        console.log('Redirecting admin to /manage-users')
-        return NextResponse.redirect(new URL('/manage-users', request.url))
-      }
-
-      // Redirect mahasiswa ke user-dashboard
-      if (userRole === 'mahasiswa' && request.nextUrl.pathname === '/') {
-        console.log('Redirecting mahasiswa to /user-dashboard')
-        return NextResponse.redirect(new URL('/user-dashboard', request.url))
-      }
-
-      // Proteksi rute admin
-      if (isAdminRoute(request) && userRole !== 'admin') {
-        console.log('Blocking admin route access')
-        return NextResponse.redirect(new URL('/unauthorized', request.url))
-      }
-
-      // Proteksi rute mahasiswa
-      if (isStudentRoute(request) && userRole !== 'mahasiswa') {
-        console.log('Blocking student route access')
-        return NextResponse.redirect(new URL('/unauthorized', request.url))
-      }
-    }
-
-    return NextResponse.next()
-  },
-  {
-    // Aktifkan debug logging
-    debug: false,
+export default clerkMiddleware(async (auth, req: NextRequest) => {
+  try {
+    const { response } = await handleRequest(auth, req)
+    return response
+  } catch (error) {
+    console.error('Middleware error:', error)
+    return NextResponse.next({
+      request: {
+        headers: req.headers,
+      },
+    })
   }
-)
+})
+
+// Menggunakan tipe "any" dengan komentar untuk menjelaskan alasannya
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleRequest(auth: any, req: NextRequest) {
+  // Jika URL adalah rute publik, izinkan akses
+  if (isPublicRoute(req)) {
+    return { response: NextResponse.next() }
+  }
+
+  // Jika tidak memiliki sesi dan bukan rute publik, redirect ke halaman unauthorized
+  if (!auth.userId) {
+    const unauthorizedUrl = new URL('/unauthorized', req.url)
+    return { response: NextResponse.redirect(unauthorizedUrl) }
+  }
+
+  try {
+    // Periksa peran pengguna untuk akses admin
+    if (req.nextUrl.pathname.startsWith('/manage-users')) {
+      const user = await prisma.user.findUnique({
+        where: { clerkUserId: auth.userId },
+        select: { role: true },
+      })
+
+      if (!user?.role || user.role !== 'admin') {
+        console.log('Access denied: User is not admin', {
+          userId: auth.userId,
+          role: user?.role,
+        })
+        const unauthorizedUrl = new URL('/unauthorized', req.url)
+        return { response: NextResponse.redirect(unauthorizedUrl) }
+      }
+    }
+
+    // Set role di header untuk digunakan di server components
+    const response = NextResponse.next()
+    if (auth.userId) {
+      const user = await prisma.user.findUnique({
+        where: { clerkUserId: auth.userId },
+        select: { role: true },
+      })
+      response.headers.set('x-user-role', user?.role || '')
+    }
+
+    return { response }
+  } catch (error) {
+    console.error('Error saat mengambil role dari database:', error)
+    return { response: NextResponse.next() }
+  }
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Order matters
+    // Exclude static assets
+    '/((?!.+\\.[\\w]+$|_next).*)',
+    // Exclude common file types
+    '/((?!favicon.ico|robots.txt).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],

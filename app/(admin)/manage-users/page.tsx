@@ -9,6 +9,7 @@ import { getQueryClient } from '@/lib/getQueryClient'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
+import RoleProtected from '@/components/RoleProtected'
 
 interface ClerkMetadata {
   role?: string
@@ -63,11 +64,13 @@ async function StatsPage() {
   ])
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <StatsContainer />
-      <ChartsContainer />
-      <UserTable />
-    </HydrationBoundary>
+    <RoleProtected allowedRoles={['admin']}>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <StatsContainer />
+        <ChartsContainer />
+        <UserTable />
+      </HydrationBoundary>
+    </RoleProtected>
   )
 }
 export default StatsPage

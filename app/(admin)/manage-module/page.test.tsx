@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import ModuleManagementPage from '../page'
+import ModuleManagementPage from './page'
 
 // Mock untuk ModuleTable component
 jest.mock('@/features/manage-module/components/ModuleTable', () => ({

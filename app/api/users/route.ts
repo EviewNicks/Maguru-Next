@@ -1,7 +1,11 @@
 // app/api/users/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { Prisma, UserRole, UserStatus } from '@prisma/client'
+import {
+  Prisma,
+  UserRole,
+  UserStatus,
+} from '@/prisma/app/generated/prisma/client'
 import prisma from '@/lib/prisma'
 import { auth, currentUser } from '@clerk/nextjs/server'
 
@@ -10,7 +14,7 @@ const getUserQuerySchema = z.object({
   role: z.enum(['mahasiswa', 'admin', 'dosen']).optional(),
   status: z.enum(['active', 'inactive', 'pending']).optional(),
   page: z.string().optional().default('1'),
-  limit: z.string().optional().default('10')
+  limit: z.string().optional().default('10'),
 })
 
 export async function GET(req: NextRequest) {

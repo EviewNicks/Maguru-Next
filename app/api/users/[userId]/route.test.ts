@@ -12,9 +12,9 @@ import { UserRole, UserStatus } from '@prisma/client'
 
 // Tipe untuk parameter context
 type MockContext = {
-  params: {
+  params: Promise<{
     userId: string
-  }
+  }>
 }
 
 // Mock modules
@@ -37,7 +37,7 @@ const mockUser: MockUser = createMockUser({
 })
 
 const mockContext: MockContext = {
-  params: { userId: '1' },
+  params: Promise.resolve({ userId: '1' }),
 }
 
 describe('User API Routes', () => {
