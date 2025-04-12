@@ -1,4 +1,4 @@
-import { PrismaClient } from '@/prisma/app/generated/prisma/client'
+import { PrismaClient } from '@/prisma/generated/client'
 
 // Debugging info
 console.log('Prisma file loaded')

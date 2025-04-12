@@ -15,6 +15,33 @@ const nextConfig = {
   // Disable static optimization for all pages
   staticPageGenerationTimeout: 180,
 
+  // Tetap pertahankan konfigurasi tracing untuk keamanan
+  outputFileTracingRoot: process.cwd(),
+  outputFileTracingIncludes: {
+    '*': ['./app/**/*', './components/**/*', './lib/**/*', './prisma/**/*'],
+  },
+  outputFileTracingExcludes: {
+    '*': [
+      '**/Cookies/**',
+      '**/Local Settings/**',
+      '**/Application Data/**',
+      '**/My Documents/**',
+      '**/NetHood/**',
+      '**/PrintHood/**',
+      '**/Recent/**',
+      '**/SendTo/**',
+      '**/Templates/**',
+      '**/Start Menu/**',
+      '**/AppData/**',
+      '**/Temporary Internet Files/**',
+      '**/WinSxS/**',
+      '**/Windows/**',
+      '**/ProgramData/**',
+      '**/Program Files/**',
+      '**/Program Files (x86)/**',
+    ],
+  },
+
   // Enable dynamic rendering
   experimental: {
     serverActions: {
@@ -43,7 +70,31 @@ const nextConfig = {
     ]
   },
 
-  output: 'standalone',
+  // Perbaiki konfigurasi webpack
+  webpack: (config) => {
+    const originalIgnored = Array.isArray(config.watchOptions?.ignored)
+      ? config.watchOptions?.ignored
+      : []
+
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: [
+        ...originalIgnored,
+        '**/Cookies/**',
+        '**/Local Settings/**',
+        '**/Application Data/**',
+        '**/My Documents/**',
+        '**/NetHood/**',
+        '**/PrintHood/**',
+        '**/Recent/**',
+        '**/SendTo/**',
+        '**/Templates/**',
+        '**/Start Menu/**',
+        '**/AppData/**',
+      ],
+    }
+    return config
+  },
 }
 
 export default withBundleAnalyzer({

@@ -16,8 +16,6 @@ const isPublicRoute = createRouteMatcher([
   '/quiz(.*)',
 ])
 
-export const runtime = 'nodejs'
-
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   try {
     const { response } = await handleRequest(auth, req)
