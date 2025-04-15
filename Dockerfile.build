@@ -1,0 +1,28 @@
+# Dockerfile untuk proses build dengan penanganan khusus untuk Prisma
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Menyiapkan Alpine untuk build tools dan binaries
+RUN apk add --no-cache libc6-compat openssl1.1-compat
+
+# Copy package files dan install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy prisma files dan generate client
+COPY prisma ./prisma/
+RUN npx prisma generate
+
+# Copy seluruh aplikasi kecuali yang ada di .dockerignore
+COPY . .
+
+# Set variabel lingkungan
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max_old_space_size=4096"
+
+# Build aplikasi
+RUN npm run build
+
+# Aplikasi tetap di /app karena volume sudah di-mount langsung ke sana
+CMD ["echo", "Build completed successfully!"] 

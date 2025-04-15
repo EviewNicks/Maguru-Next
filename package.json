@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && next build",
+    "build": "next build",
+    "build:docker": "docker-compose -f docker-compose.build.yml up --build",
     "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
@@ -92,6 +93,7 @@
     "@jest/globals": "^29.7.0",
     "@next/bundle-analyzer": "^15.2.4",
     "@playwright/test": "^1.51.1",
+    "@prisma/nextjs-monorepo-workaround-plugin": "^6.6.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",

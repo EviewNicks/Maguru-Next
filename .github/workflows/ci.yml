@@ -85,7 +85,7 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: npm run vercel-build
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v3

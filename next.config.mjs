@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 import withBundleAnalyzer from '@next/bundle-analyzer'
+import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin'
 
 const nextConfig = {
   /* config options here */
@@ -39,6 +40,8 @@ const nextConfig = {
       '**/ProgramData/**',
       '**/Program Files/**',
       '**/Program Files (x86)/**',
+      '**/WindowsApps/**',
+      '**/Microsoft/**',
     ],
   },
 
@@ -70,8 +73,14 @@ const nextConfig = {
     ]
   },
 
-  // Perbaiki konfigurasi webpack
-  webpack: (config) => {
+  // Perbarui konfigurasi webpack
+  webpack: (config, { isServer }) => {
+    // Tambahkan PrismaPlugin jika pada server build
+    if (isServer) {
+      config.plugins = [...config.plugins, new PrismaPlugin()]
+    }
+
+    // Konfigurasi watchOptions yang sudah ada tetap dipertahankan
     const originalIgnored = Array.isArray(config.watchOptions?.ignored)
       ? config.watchOptions?.ignored
       : []
@@ -91,8 +100,11 @@ const nextConfig = {
         '**/Templates/**',
         '**/Start Menu/**',
         '**/AppData/**',
+        '**/WindowsApps/**',
+        '**/AppData/Local/Microsoft/**',
       ],
     }
+
     return config
   },
 }

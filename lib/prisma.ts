@@ -16,6 +16,8 @@ declare global {
   var prisma: PrismaClient | undefined
 }
 
+const globalForPrisma = global as unknown as { prisma: PrismaClient }
+
 const prismaClientSingleton = () => {
   return new PrismaClient({
     log: [
@@ -27,11 +29,7 @@ const prismaClientSingleton = () => {
   })
 }
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
-
-export const prisma = globalForPrisma.prisma ?? prismaClientSingleton()
+const prisma = globalForPrisma.prisma || prismaClientSingleton()
 
 // Setup event listener untuk query
 // @ts-expect-error - Prisma event types are not correctly exposed

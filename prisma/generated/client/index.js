@@ -185,7 +185,11 @@ const config = {
       },
       {
         "fromEnvVar": null,
-        "value": "rhel-openssl-3.0.x"
+        "value": "debian-openssl-3.0.x"
+      },
+      {
+        "fromEnvVar": null,
+        "value": "linux-musl-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -212,8 +216,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider      = \"prisma-client-js\"\n  output        = \"./generated/client\"\n  binaryTargets = [\"native\", \"rhel-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_URL\")\n}\n\nenum UserRole {\n  mahasiswa\n  admin\n}\n\nenum UserStatus {\n  active\n  inactive\n  pending\n}\n\nmodel User {\n  id          String     @id @default(cuid())\n  clerkUserId String     @unique\n  email       String     @unique\n  name        String?\n  role        UserRole   @default(mahasiswa)\n  createdAt   DateTime   @default(now())\n  updatedAt   DateTime   @updatedAt\n  status      UserStatus @default(active)\n\n  @@map(\"users\")\n}\n\nenum ModuleStatus {\n  DRAFT\n  ACTIVE\n  ARCHIVED\n}\n\nmodel Module {\n  id          String       @id @default(uuid())\n  title       String\n  description String?\n  status      ModuleStatus @default(DRAFT)\n  createdAt   DateTime     @default(now())\n  updatedAt   DateTime     @updatedAt\n  createdBy   String\n  updatedBy   String\n\n  pages ModulePage[] // Relasi balik ke ModulePage\n\n  @@index([status])\n  @@index([title])\n  @@map(\"modules\")\n}\n\nmodel ModulePage {\n  id        String   @id @default(uuid())\n  moduleId  String   @map(\"module_id\")\n  order     Int\n  type      String // \"teori\" atau \"kode\"\n  content   String // HTML untuk teori, snippet kode untuk kode\n  language  String? // Hanya diisi jika type = \"kode\" (contoh: \"python\", \"javascript\")\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  version   Int      @default(1) // Untuk optimistic locking\n\n  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)\n\n  @@unique([moduleId, order])\n  @@index([moduleId, order])\n  @@map(\"module_pages\")\n}\n",
-  "inlineSchemaHash": "af243e33edaef0de0a3563599f4c92e357c0f19d66f5d4393b031618c076640b",
+  "inlineSchema": "generator client {\n  provider      = \"prisma-client-js\"\n  output        = \"./generated/client\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\", \"linux-musl-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_URL\")\n}\n\nenum UserRole {\n  mahasiswa\n  admin\n}\n\nenum UserStatus {\n  active\n  inactive\n  pending\n}\n\nmodel User {\n  id          String     @id @default(cuid())\n  clerkUserId String     @unique\n  email       String     @unique\n  name        String?\n  role        UserRole   @default(mahasiswa)\n  createdAt   DateTime   @default(now())\n  updatedAt   DateTime   @updatedAt\n  status      UserStatus @default(active)\n\n  @@map(\"users\")\n}\n\nenum ModuleStatus {\n  DRAFT\n  ACTIVE\n  ARCHIVED\n}\n\nmodel Module {\n  id          String       @id @default(uuid())\n  title       String\n  description String?\n  status      ModuleStatus @default(DRAFT)\n  createdAt   DateTime     @default(now())\n  updatedAt   DateTime     @updatedAt\n  createdBy   String\n  updatedBy   String\n\n  pages ModulePage[] // Relasi balik ke ModulePage\n\n  @@index([status])\n  @@index([title])\n  @@map(\"modules\")\n}\n\nmodel ModulePage {\n  id        String   @id @default(uuid())\n  moduleId  String   @map(\"module_id\")\n  order     Int\n  type      String // \"teori\" atau \"kode\"\n  content   String // HTML untuk teori, snippet kode untuk kode\n  language  String? // Hanya diisi jika type = \"kode\" (contoh: \"python\", \"javascript\")\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  version   Int      @default(1) // Untuk optimistic locking\n\n  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)\n\n  @@unique([moduleId, order])\n  @@index([moduleId, order])\n  @@map(\"module_pages\")\n}\n",
+  "inlineSchemaHash": "dd6eee62550a23951d66526ebf33affbb5886000652c2e03e5bb9e271f812105",
   "copyEngine": true
 }
 
@@ -256,8 +260,12 @@ path.join(__dirname, "query_engine-windows.dll.node");
 path.join(process.cwd(), "prisma/generated/client/query_engine-windows.dll.node")
 
 // file annotations for bundling tools to include these files
-path.join(__dirname, "libquery_engine-rhel-openssl-3.0.x.so.node");
-path.join(process.cwd(), "prisma/generated/client/libquery_engine-rhel-openssl-3.0.x.so.node")
+path.join(__dirname, "libquery_engine-debian-openssl-3.0.x.so.node");
+path.join(process.cwd(), "prisma/generated/client/libquery_engine-debian-openssl-3.0.x.so.node")
+
+// file annotations for bundling tools to include these files
+path.join(__dirname, "libquery_engine-linux-musl-openssl-3.0.x.so.node");
+path.join(process.cwd(), "prisma/generated/client/libquery_engine-linux-musl-openssl-3.0.x.so.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "prisma/generated/client/schema.prisma")

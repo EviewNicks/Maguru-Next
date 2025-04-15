@@ -1,0 +1,18 @@
+services:
+  builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.build
+    volumes:
+      # Mount volume untuk menyimpan hasil build
+      - ./.next:/app/.next
+      - ./prisma:/app/prisma
+      - ./node_modules/.prisma:/app/node_modules/.prisma
+    env_file:
+      - .env.build
+    environment:
+      - NODE_ENV=production
+      - NODE_OPTIONS=--max_old_space_size=4096
+
+volumes:
+  build_node_modules: 

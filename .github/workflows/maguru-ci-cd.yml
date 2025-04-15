@@ -161,7 +161,7 @@ jobs:
 
       # Build aplikasi
       - name: Build Application
-        run: npm run build
+        run: npm run vercel-build
 
       # Upload build artifacts
       - name: Upload Build
