@@ -1,0 +1,120 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Berikut adalah dokumentasi rules dan perintah terkait penggunaan Docker dalam proyek WebApp Anda. Dokumentasi ini mencakup praktik terbaik, perintah dasar, dan panduan untuk pengelolaan kontainer.
+
+# Dokumentasi Penggunaan Docker di Proyek WebApp
+
+## 1. Pendahuluan
+Dokumentasi ini bertujuan untuk memberikan panduan tentang penggunaan Docker dalam proyek WebApp, termasuk praktik terbaik dan perintah yang sering digunakan. Dengan mengikuti panduan ini, tim dapat memastikan bahwa penggunaan Docker efisien, aman, dan mudah dikelola.
+
+## 2. Praktik Terbaik (Best Practices)
+
+### 2.1 Struktur Dockerfile
+- **Minimalkan Layer**: Gabungkan instruksi yang dapat digabungkan untuk mengurangi jumlah layer.
+- **Gunakan Base Image Ringan**: Pilih base image seperti `alpine` untuk mengurangi ukuran image.
+- **Hapus Cache**: Gunakan perintah untuk membersihkan cache setelah instalasi paket.
+
+### 2.2 Pisahkan Layanan
+- **Satu Kontainer, Satu Tanggung Jawab**: Setiap kontainer harus menjalankan satu layanan. Gunakan Docker Compose untuk mengelola multi-kontainer.
+
+### 2.3 Variabel Lingkungan
+- **Gunakan File `.env`**: Simpan variabel lingkungan dalam file `.env` dan referensikan dalam `docker-compose.yml`.
+- **Hindari Hardcoding**: Jangan hardcode informasi sensitif dalam `Dockerfile` atau kode sumber.
+
+### 2.4 Penggunaan Volume
+- **Persistensi Data**: Gunakan volume untuk menyimpan data penting yang perlu dipertahankan.
+- **Hindari Menyimpan Data di Kontainer**: Jangan simpan data penting di dalam kontainer.
+
+### 2.5 Keamanan Kontainer
+- **Gunakan User Non-Root**: Jalankan aplikasi dalam kontainer sebagai user non-root.
+- **Scan Image untuk Kerentanan**: Gunakan alat untuk memindai image Docker dari kerentanan keamanan.
+
+### 2.6 Pengujian dan CI/CD
+- **Automasi Build dan Test**: Gunakan Docker dalam pipeline CI/CD untuk mengautomasi build dan pengujian aplikasi.
+
+### 2.7 Monitoring dan Logging
+- **Integrasi dengan Alat Monitoring**: Gunakan alat monitoring untuk memantau kinerja kontainer.
+- **Logging**: Arahkan log aplikasi ke stdout/stderr untuk pengelolaan yang lebih baik.
+
+## 3. Perintah Dasar Docker
+
+### 3.1 Mengelola Kontainer
+- **Menjalankan Kontainer**:
+  ```bash
+  docker run -d --name <nama_kontainer> -p <port_host>:<port_kontainer> <nama_image>
+  ```
+- **Melihat Daftar Kontainer**:
+  ```bash
+  docker ps
+  ```
+- **Menghentikan Kontainer**:
+  ```bash
+  docker stop <nama_kontainer>
+  ```
+- **Menghapus Kontainer**:
+  ```bash
+  docker rm <nama_kontainer>
+  ```
+
+### 3.2 Mengelola Image
+- **Membangun Image dari Dockerfile**:
+  ```bash
+  docker build -t <nama_image>:<tag> .
+  ```
+- **Melihat Daftar Image**:
+  ```bash
+  docker images
+  ```
+- **Menghapus Image**:
+  ```bash
+  docker rmi <nama_image>
+  ```
+
+### 3.3 Menggunakan Docker Compose
+- **Menjalankan Layanan dengan Docker Compose**:
+  ```bash
+  docker-compose up -d --build
+  ```
+- **Menghentikan Layanan**:
+  ```bash
+  docker-compose down
+  ```
+- **Melihat Status Layanan**:
+  ```bash
+  docker-compose ps
+  ```
+
+## 4. Contoh File Konfigurasi
+
+### 4.1 Dockerfile
+```dockerfile
+# Dockerfile untuk aplikasi
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+CMD ["npm", "start"]
+```
+
+### 4.2 docker-compose.yml
+```yaml
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+```
+
+## 5. Kesimpulan
+Dokumentasi ini memberikan panduan tentang penggunaan Docker dalam proyek WebApp. Dengan mengikuti praktik terbaik dan menggunakan perintah yang tepat, tim dapat memastikan bahwa pengembangan dan pengelolaan aplikasi berjalan dengan lancar dan efisien. Jika ada pertanyaan atau butuh bantuan lebih lanjut, jangan ragu untuk menghubungi tim pengembang.

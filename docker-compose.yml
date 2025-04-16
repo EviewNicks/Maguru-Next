@@ -1,28 +1,39 @@
-version: '3.8'
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: dev
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
       - .:/app
-      - /app/node_modules
+      - node_modules:/app/node_modules
+      - ./.next:/app/.next
+      - prisma:/app/prisma
     environment:
       - NODE_ENV=development
       - DATABASE_URL=${DATABASE_URL}
       - DIRECT_URL=${DIRECT_URL}
     command: npm run dev
+    restart: unless-stopped
 
   test:
     build:
       context: .
-      dockerfile: Dockerfile.test
+      target: test
+      dockerfile: Dockerfile
     volumes:
       - .:/app
-      - /app/node_modules
+      - node_modules:/app/node_modules
+      - prisma:/app/prisma
     environment:
       - NODE_ENV=test
       - DATABASE_URL=${DATABASE_URL}
       - DIRECT_URL=${DIRECT_URL}
       - USE_BABEL=true
     command: npm test
+
+volumes:
+  node_modules:
+  prisma:
