@@ -1,21 +1,5 @@
 import { PrismaClient } from '@/prisma/generated/client'
 
-// Debugging info
-console.log('Prisma file loaded')
-console.log('Environment:', process.env.NODE_ENV)
-console.log('Node version:', process.version)
-console.log('Is browser?', typeof window !== 'undefined')
-console.log('Database URL length:', process.env.DATABASE_URL?.length || 0)
-
-// Tambahkan deklarasi global untuk TypeScript
-declare global {
-  // ESLint menyarankan untuk tidak menggunakan var, tapi dalam kasus ini
-  // kita harus menggunakan var karena itu adalah cara TypeScript
-  // mendefinisikan properti pada objek global
-  // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined
-}
-
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
 
 const prismaClientSingleton = () => {

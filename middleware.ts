@@ -1,8 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import { NextResponse, type NextRequest } from 'next/server'
-import prisma from '@/lib/prisma'
+import { NextResponse } from 'next/server'
 
-// Rute publik yang dapat diakses tanpa autentikasi
+/**
+ * Mendefinisikan rute-rute publik yang dapat diakses tanpa autentikasi
+ */
 const isPublicRoute = createRouteMatcher([
   '/',
   '/sign-in(.*)',
@@ -10,83 +11,91 @@ const isPublicRoute = createRouteMatcher([
   '/sso-callback(.*)',
   '/unauthorized',
   '/verify(.*)',
-  '/module(.*)',
-  '/team/new',
   '/api/webhooks(.*)',
-  '/quiz(.*)',
 ])
 
-export default clerkMiddleware(async (auth, req: NextRequest) => {
-  try {
-    const { response } = await handleRequest(auth, req)
-    return response
-  } catch (error) {
-    console.error('Middleware error:', error)
-    return NextResponse.next({
-      request: {
-        headers: req.headers,
-      },
-    })
-  }
-})
+/**
+ * Mendefinisikan rute-rute yang membutuhkan role admin
+ */
+const isAdminRoute = createRouteMatcher(['/admin(.*)'])
 
-// Menggunakan tipe "any" dengan komentar untuk menjelaskan alasannya
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function handleRequest(auth: any, req: NextRequest) {
-  // Jika URL adalah rute publik, izinkan akses
-  if (isPublicRoute(req)) {
-    return { response: NextResponse.next() }
-  }
-
-  // Jika tidak memiliki sesi dan bukan rute publik, redirect ke halaman unauthorized
-  if (!auth.userId) {
-    const unauthorizedUrl = new URL('/unauthorized', req.url)
-    return { response: NextResponse.redirect(unauthorizedUrl) }
-  }
-
-  try {
-    // Periksa peran pengguna untuk akses admin
-    if (req.nextUrl.pathname.startsWith('/manage-users')) {
-      const user = await prisma.user.findUnique({
-        where: { clerkUserId: auth.userId },
-        select: { role: true },
-      })
-
-      if (!user?.role || user.role !== 'admin') {
-        console.log('Access denied: User is not admin', {
-          userId: auth.userId,
-          role: user?.role,
-        })
-        const unauthorizedUrl = new URL('/unauthorized', req.url)
-        return { response: NextResponse.redirect(unauthorizedUrl) }
-      }
-    }
-
-    // Set role di header untuk digunakan di server components
-    const response = NextResponse.next()
-    if (auth.userId) {
-      const user = await prisma.user.findUnique({
-        where: { clerkUserId: auth.userId },
-        select: { role: true },
-      })
-      response.headers.set('x-user-role', user?.role || '')
-    }
-
-    return { response }
-  } catch (error) {
-    console.error('Error saat mengambil role dari database:', error)
-    return { response: NextResponse.next() }
-  }
+// Tipe untuk metadata Auth0
+interface Auth0Metadata {
+  role?: string
+  [key: string]: unknown
 }
 
+/**
+ * Memeriksa apakah pengguna memiliki peran admin
+ */
+function hasAdminRole(metadata: Auth0Metadata | null | undefined): boolean {
+  return metadata?.role === 'admin'
+}
+
+/**
+ * Middleware Clerk untuk mengelola autentikasi dan otorisasi
+ *
+ * Alur kerja:
+ * 1. Memeriksa apakah rute adalah rute publik, jika ya biarkan akses
+ * 2. Jika bukan rute publik, memeriksa apakah user sudah login, jika tidak redirect ke login
+ * 3. Untuk rute admin, memeriksa apakah user memiliki role admin, jika tidak redirect ke unauthorized
+ */
+export default clerkMiddleware(
+  async (auth, req) => {
+    try {
+      // Dapatkan data autentikasi user
+      const session = await auth()
+
+      // Jika rute publik, izinkan akses
+      if (isPublicRoute(req)) {
+        return NextResponse.next()
+      }
+
+      // Jika user belum login dan bukan rute publik, redirect ke sign-in
+      if (!session.userId) {
+        const signInUrl = new URL('/sign-in', req.url)
+        signInUrl.searchParams.set('redirect_url', req.url)
+        return NextResponse.redirect(signInUrl)
+      }
+
+      // Pemeriksaan untuk rute admin
+      if (isAdminRoute(req)) {
+        // Pemeriksaan role dari session metadata
+        const metadata = session.sessionClaims?.metadata as
+          | Auth0Metadata
+          | undefined
+
+        if (!hasAdminRole(metadata)) {
+          // Redirect ke halaman unauthorized jika bukan admin
+          const unauthorizedUrl = new URL('/unauthorized', req.url)
+          return NextResponse.redirect(unauthorizedUrl)
+        }
+      }
+
+      // Jika semua pemeriksaan berhasil, lanjutkan request
+      return NextResponse.next()
+    } catch (error) {
+      console.error('Middleware error:', error)
+      // Pada kasus error, tetap izinkan request untuk menghindari blocking
+      return NextResponse.next()
+    }
+  },
+  {
+    // Aktifkan debugging pada lingkungan development
+    debug: process.env.NODE_ENV === 'development',
+  }
+)
+
+/**
+ * Konfigurasi matcher untuk middleware
+ * - Mengabaikan aset statis
+ * - Selalu menjalankan untuk rute API
+ */
 export const config = {
   matcher: [
-    // Order matters
-    // Exclude static assets
-    '/((?!.+\\.[\\w]+$|_next).*)',
-    // Exclude common file types
-    '/((?!favicon.ico|robots.txt).*)',
-    // Always run for API routes
+    // Skip Next.js internals dan semua file statis
+    '/((?!_next|[^?]*\\.(html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Selalu jalankan untuk rute API
     '/(api|trpc)(.*)',
   ],
 }
