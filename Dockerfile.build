@@ -8,14 +8,23 @@ WORKDIR /app
 RUN apk update && apk add --no-cache libc6-compat openssl
 
 # Copy prisma files terlebih dahulu
-COPY prisma ./prisma/
+COPY prisma/schema.prisma ./prisma/
+COPY prisma/migrations ./prisma/migrations/
+COPY prisma/seed.ts ./prisma/
 
 # Copy package files dan install dependencies 
 COPY package*.json ./
 RUN npm ci
 
-# Generate Prisma client
-RUN npx prisma generate
+# Generate Prisma client jika folder prisma/generated tidak ada
+# Ini hanya akan berjalan saat pertama kali build
+RUN mkdir -p ./prisma/generated && \
+    if [ ! -d ./prisma/generated/client ]; then \
+    echo "Generating Prisma client..." && \
+    npx prisma generate; \
+    else \
+    echo "Prisma client already exists, skipping generation"; \
+    fi
 
 # Copy seluruh aplikasi kecuali yang ada di .dockerignore
 COPY . .

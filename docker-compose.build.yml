@@ -7,6 +7,7 @@ services:
       # Mount volume untuk menyimpan hasil build
       - ./.next:/app/.next
       - ./prisma:/app/prisma
+      - prisma_generated:/app/prisma/generated  # Named volume untuk Prisma generated
       - ./node_modules/.prisma:/app/node_modules/.prisma
     env_file:
       - .env.build
@@ -15,4 +16,5 @@ services:
       - NODE_OPTIONS=--max_old_space_size=4096
 
 volumes:
+  prisma_generated: # Volume untuk menyimpan hasil Prisma generate
   build_node_modules: 
