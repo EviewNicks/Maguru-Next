@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Dockerfile untuk proses build dengan penanganan khusus untuk Prisma
 FROM node:18-alpine AS builder
 

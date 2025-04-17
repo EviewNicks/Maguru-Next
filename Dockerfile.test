@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Menggunakan image node.js sebagai base
 FROM node:20-alpine
 

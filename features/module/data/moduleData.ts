@@ -38,41 +38,6 @@ Pada modul ini, kita akan fokus pada dasar-dasar front-end development.
 HTML (HyperText Markup Language) adalah bahasa markup standar yang digunakan untuk membuat struktur dasar halaman web. 
 HTML menggunakan tag untuk mendefinisikan elemen-elemen pada halaman web.
 
-## Contoh Struktur HTML Dasar
-
-\`\`\`html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Judul Halaman</title>
-</head>
-<body>
-    <h1>Judul Utama</h1>
-    <p>Ini adalah paragraf teks.</p>
-</body>
-</html>
-\`\`\`
-
-## Tag HTML Umum
-
-- \`<html>\`: Elemen root dari halaman HTML
-- \`<head>\`: Berisi meta-informasi tentang dokumen
-- \`<title>\`: Mendefinisikan judul dokumen
-- \`<body>\`: Berisi konten yang terlihat di browser
-- \`<h1>\` hingga \`<h6>\`: Tag heading
-- \`<p>\`: Tag paragraf
-- \`<a>\`: Tag untuk hyperlink
-- \`<img>\`: Tag untuk menampilkan gambar
-        `,
-        isLastPage: false,
-        pageNumber: 2,
-      },
-      {
-        id: 'page-1-3',
-        title: 'CSS - Styling Halaman Web',
-        content: `
-# CSS - Styling Halaman Web
-
 CSS (Cascading Style Sheets) adalah bahasa yang digunakan untuk mendeskripsikan tampilan dan format dokumen HTML. 
 CSS memungkinkan kita untuk mengontrol warna, font, tata letak, dan aspek visual lainnya dari halaman web.
 

@@ -1,16 +1,25 @@
 # syntax=docker/dockerfile:1
-
 ARG NODE_VERSION=18
 
 FROM node:${NODE_VERSION}-alpine AS base
-WORKDIR /app
-ENV NODE_ENV=production
 
-# Dependencies stage - hanya menginstal dependencies
+WORKDIR /app
+
+# Dependencies stage dengan optimasi untuk Prisma
 FROM base AS deps
+# Tambahkan dependensi yang diperlukan untuk Prisma
+RUN apk update && apk add --no-cache libc6-compat openssl
+
+# Copy prisma files terlebih dahulu
+COPY prisma ./prisma/
+
+# Salin package.json dan package-lock.json
 COPY package.json package-lock.json* ./
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci
+
+RUN npm ci
+
+# Generate Prisma client
+RUN npx prisma generate
 
 # Development stage
 FROM base AS dev

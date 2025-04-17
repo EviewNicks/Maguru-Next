@@ -1,36 +1,37 @@
 services:
   app:
-    build:
+    build: 
       context: .
       target: dev
-      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
-      - .:/app
-      - node_modules:/app/node_modules
-      - ./.next:/app/.next
-      - prisma:/app/prisma
+      - .:/app   
+      - prisma:/app/prisma     
+      - node_modules:/app/node_modules  # Named volume untuk node_modules   
+    env_file:
+      - .env
+      - .env.local
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=${DATABASE_URL}
-      - DIRECT_URL=${DIRECT_URL}
-    command: npm run dev
+      - NODE_OPTIONS=--max_old_space_size=4096
+    command: npm run app
     restart: unless-stopped
 
   test:
     build:
       context: .
       target: test
-      dockerfile: Dockerfile
     volumes:
       - .:/app
-      - node_modules:/app/node_modules
       - prisma:/app/prisma
+      - node_modules:/app/node_modules
+    env_file:
+      - .env
+      - .env.local
     environment:
       - NODE_ENV=test
-      - DATABASE_URL=${DATABASE_URL}
-      - DIRECT_URL=${DIRECT_URL}
+      - NODE_OPTIONS=--max_old_space_size=4096
       - USE_BABEL=true
     command: npm test
 
