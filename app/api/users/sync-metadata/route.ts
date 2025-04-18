@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { clerkClient } from '@clerk/nextjs/server'
-import { auth } from '@clerk/nextjs/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
+
 
 export const dynamic = 'force-dynamic'
 
@@ -61,6 +61,7 @@ export async function GET() {
   }
 }
 
+
 export async function POST() {
   try {
     // Verifikasi autentikasi
@@ -102,6 +103,7 @@ export async function POST() {
         error: 'Gagal menyinkronisasi metadata',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
+
       { status: 500 }
     )
   }

@@ -36,6 +36,7 @@ export default function ModuleRoute() {
     }
   }, [moduleId])
 
+
   // Logging untuk analitik
   useEffect(() => {
     // Hanya lanjutkan jika moduleId ada
@@ -105,5 +106,6 @@ export default function ModuleRoute() {
         <ModulePage moduleId={moduleId} quickViewMode={quickViewMode} />
       </Suspense>
     </>
+
   )
 }

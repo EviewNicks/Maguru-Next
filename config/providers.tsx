@@ -1,5 +1,6 @@
 'use client'
 
+
 import { useState, useEffect, Suspense } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from './theme-provider'
@@ -7,6 +8,7 @@ import { ClerkProvider, useAuth } from '@clerk/nextjs'
 import { Provider } from 'react-redux'
 import { store } from '@/store/store'
 import { useSearchParams } from 'next/navigation'
+
 
 function InitUser() {
   const { isLoaded, userId } = useAuth()
@@ -18,8 +20,6 @@ function InitUser() {
       if (!isLoaded || !userId || hasSynced) return
 
       try {
-        // Mulai proses sinkronisasi user
-
         // Simpan user ke database
         const userResponse = await fetch('/api/users', {
           method: 'POST',

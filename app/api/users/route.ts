@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { Prisma, UserRole, UserStatus } from '@/prisma/generated/client'
+
 import prisma from '@/lib/prisma'
 import { auth, currentUser } from '@clerk/nextjs/server'
 
@@ -11,6 +12,7 @@ const getUserQuerySchema = z.object({
   status: z.enum(['active', 'inactive', 'pending']).optional(),
   page: z.string().optional().default('1'),
   limit: z.string().optional().default('10'),
+
 })
 
 export async function GET(req: NextRequest) {

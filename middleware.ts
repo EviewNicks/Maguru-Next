@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
 
 /**
  * Mendefinisikan rute-rute publik yang dapat diakses tanpa autentikasi

@@ -24,6 +24,7 @@ interface ModuleCompletionData {
 export default function QuizPage() {
   const params = useParams()
   const moduleId = params ? (params.moduleId as string) : ''
+
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthorized, setIsAuthorized] = useState(false)
