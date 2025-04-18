@@ -256,3 +256,71 @@ Untuk mendukung struktur ini, kamu bisa menggunakan beberapa tools dan library b
 - CSS Framework: Tailwind CSS.
 - Testing: Jest, React Testing Library, atau Playwright.
 - GraphQL: Apollo Client jika menggunakan GraphQL.
+
+# Maguru
+
+## Cara Build dengan Docker untuk Mengatasi Masalah Permission
+
+Jika Anda mengalami masalah "Permission Denied" saat menjalankan `next build`, khususnya yang berkaitan dengan Prisma di lingkungan monorepo, Anda dapat menggunakan Docker untuk melakukan build.
+
+### Prasyarat
+
+- Pastikan Docker sudah terinstal di sistem Anda
+- Pastikan Docker Compose sudah terinstal
+- Pastikan environment variables yang dibutuhkan sudah diatur di file `.env`
+
+### Cara Build dengan Docker
+
+#### Untuk Pengguna Windows
+
+1. Jalankan file batch build:
+
+   ```
+   build-docker.bat
+   ```
+
+2. Tunggu hingga proses build selesai. Hasil build akan disimpan di folder `.next`.
+
+3. Setelah build selesai, Anda dapat menjalankan aplikasi dengan:
+   ```
+   npm start
+   ```
+
+#### Untuk Pengguna Linux/macOS
+
+1. Berikan izin eksekusi ke file build.sh:
+
+   ```
+   chmod +x build.sh
+   ```
+
+2. Jalankan script build:
+
+   ```
+   ./build.sh
+   ```
+
+3. Tunggu hingga proses build selesai. Hasil build akan disimpan di folder `.next`.
+
+4. Setelah build selesai, Anda dapat menjalankan aplikasi dengan:
+   ```
+   npm start
+   ```
+
+### Proses Apa yang Terjadi Saat Build dengan Docker
+
+1. Dockerfile.build membuat lingkungan build yang terisolasi dengan semua dependensi
+2. Prisma generate dijalankan di dalam container dengan izin yang tepat
+3. Next.js build dijalankan di dalam container yang sama
+4. Hasil build disalin ke folder lokal melalui volume Docker
+
+### Konfigurasi Tambahan
+
+Jika perlu menyesuaikan konfigurasi build, Anda dapat mengedit file:
+
+- `Dockerfile.build` - untuk mengubah konfigurasi container build
+- `docker-compose.build.yml` - untuk mengubah volume dan environment variables
+
+## Dokumentasi Lainnya
+
+// Dokumentasi yang sudah ada sebelumnya...

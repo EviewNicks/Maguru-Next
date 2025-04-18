@@ -1,28 +1,40 @@
-version: '3.8'
 services:
   app:
-    build: .
+    build: 
+      context: .
+      target: dev
     ports:
       - "3000:3000"
     volumes:
       - .:/app
-      - /app/node_modules
+      - node_modules:/app/node_modules  # Named volume untuk node_modules   
+      - prisma_generated:/app/prisma/generated  # Volume untuk menyimpan hasil generate Prisma
+    env_file:
+      - .env
+      - .env.local
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=${DATABASE_URL}
-      - DIRECT_URL=${DIRECT_URL}
-    command: npm run dev
+      - NODE_OPTIONS=--max_old_space_size=4096
+    command: npm run app
+    restart: unless-stopped
 
   test:
     build:
       context: .
-      dockerfile: Dockerfile.test
+      target: test
     volumes:
       - .:/app
-      - /app/node_modules
+      - node_modules:/app/node_modules
+      - prisma_generated:/app/prisma/generated  # Volume untuk menyimpan hasil generate Prisma
+    env_file:
+      - .env
+      - .env.local
     environment:
       - NODE_ENV=test
-      - DATABASE_URL=${DATABASE_URL}
-      - DIRECT_URL=${DIRECT_URL}
+      - NODE_OPTIONS=--max_old_space_size=4096
       - USE_BABEL=true
     command: npm test
+
+volumes:
+  node_modules:
+  prisma_generated:  # Volume baru untuk menyimpan hasil generate Prisma

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import ModuleManagementError from '../error'
+import ModuleManagementError from './error'
 
 // Mock for console.error to avoid test output pollution
 const originalConsoleError = console.error

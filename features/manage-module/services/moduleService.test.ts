@@ -2,7 +2,7 @@ import { moduleService } from './moduleService';
 import { ModuleStatus } from '../types';
 
 // Mock Prisma Client
-jest.mock('@prisma/client', () => {
+jest.mock('@/prisma/generated/client', () => {
   const mockCreate = jest.fn();
   const mockFindMany = jest.fn();
   const mockFindUnique = jest.fn();
@@ -39,7 +39,7 @@ const {
   mockUpdate,
   mockDelete,
   mockCount,
-} = jest.requireMock('@prisma/client');
+} = jest.requireMock('@/prisma/generated/client');
 
 describe('Module Service', () => {
   beforeEach(() => {

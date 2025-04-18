@@ -1,14 +1,12 @@
-import { PrismaClient } from '@prisma/client';
-import { 
-  Module, 
-  CreateModuleInput, 
-  UpdateModuleInput, 
-  ModuleQueryParams, 
+import prisma from '@/lib/prisma'
+import {
+  Module,
+  CreateModuleInput,
+  UpdateModuleInput,
+  ModuleQueryParams,
   PaginatedResponse,
-  ModuleStatus
-} from '../types';
-
-const prisma = new PrismaClient();
+  ModuleStatus,
+} from '../types'
 
 export const moduleService = {
   /**
@@ -26,14 +24,14 @@ export const moduleService = {
         createdBy: userId,
         updatedBy: userId,
       },
-    });
-    
+    })
+
     // Konversi null menjadi undefined untuk description dan konversi status ke ModuleStatus
     return {
       ...moduleData,
       description: moduleData.description || undefined,
-      status: moduleData.status as unknown as ModuleStatus
-    };
+      status: moduleData.status as unknown as ModuleStatus,
+    }
   },
 
   /**
@@ -41,43 +39,45 @@ export const moduleService = {
    * @param params Parameter query untuk pagination, filter, dan pencarian
    * @returns Daftar modul dengan informasi pagination
    */
-  async getModules(params: ModuleQueryParams): Promise<PaginatedResponse<Module>> {
-    const { page = 1, limit = 10, status, search } = params;
-    const skip = (page - 1) * limit;
+  async getModules(
+    params: ModuleQueryParams
+  ): Promise<PaginatedResponse<Module>> {
+    const { page = 1, limit = 10, status, search } = params
+    const skip = (page - 1) * limit
 
     // Buat filter berdasarkan parameter
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = {}
     if (status) {
-      where.status = status;
+      where.status = status
     }
-    
+
     if (search) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
-      ];
+      ]
     }
-    
+
     // Dapatkan total modul
-    const total = await prisma.module.count({ where });
-    
+    const total = await prisma.module.count({ where })
+
     // Dapatkan daftar modul
     const modules = await prisma.module.findMany({
       where,
       skip,
       take: limit,
-      orderBy: params.sortBy 
-        ? { [params.sortBy]: params.sortOrder || 'asc' } 
+      orderBy: params.sortBy
+        ? { [params.sortBy]: params.sortOrder || 'asc' }
         : { createdAt: 'desc' },
-    });
-    
+    })
+
     // Konversi null menjadi undefined untuk description dan konversi status ke ModuleStatus
-    const formattedModules = modules.map(moduleData => ({
+    const formattedModules = modules.map((moduleData) => ({
       ...moduleData,
       description: moduleData.description || undefined,
-      status: moduleData.status as unknown as ModuleStatus
-    }));
-    
+      status: moduleData.status as unknown as ModuleStatus,
+    }))
+
     return {
       data: formattedModules,
       pagination: {
@@ -86,7 +86,7 @@ export const moduleService = {
         limit,
         totalPages: Math.ceil(total / limit),
       },
-    };
+    }
   },
 
   /**
@@ -97,18 +97,18 @@ export const moduleService = {
   async getModuleById(id: string): Promise<Module | null> {
     const moduleData = await prisma.module.findUnique({
       where: { id },
-    });
-    
+    })
+
     if (!moduleData) {
-      return null;
+      return null
     }
-    
+
     // Konversi null menjadi undefined untuk description dan konversi status ke ModuleStatus
     return {
       ...moduleData,
       description: moduleData.description || undefined,
-      status: moduleData.status as unknown as ModuleStatus
-    };
+      status: moduleData.status as unknown as ModuleStatus,
+    }
   },
 
   /**
@@ -118,7 +118,11 @@ export const moduleService = {
    * @param userId ID pengguna yang memperbarui modul
    * @returns Modul yang telah diperbarui
    */
-  async updateModule(id: string, data: UpdateModuleInput, userId: string): Promise<Module> {
+  async updateModule(
+    id: string,
+    data: UpdateModuleInput,
+    userId: string
+  ): Promise<Module> {
     const moduleData = await prisma.module.update({
       where: { id },
       data: {
@@ -126,16 +130,16 @@ export const moduleService = {
         updatedBy: userId,
         updatedAt: new Date(),
       },
-    });
-    
+    })
+
     // Konversi null menjadi undefined untuk description dan konversi status ke ModuleStatus
     return {
       ...moduleData,
       description: moduleData.description || undefined,
-      status: moduleData.status as unknown as ModuleStatus
-    };
+      status: moduleData.status as unknown as ModuleStatus,
+    }
   },
-  
+
   /**
    * Memperbarui status modul berdasarkan ID
    * @param id ID modul
@@ -143,7 +147,11 @@ export const moduleService = {
    * @param userId ID pengguna yang memperbarui status modul
    * @returns Modul yang telah diperbarui
    */
-  async updateModuleStatus(id: string, status: ModuleStatus, userId: string): Promise<Module | null> {
+  async updateModuleStatus(
+    id: string,
+    status: ModuleStatus,
+    userId: string
+  ): Promise<Module | null> {
     try {
       const moduleData = await prisma.module.update({
         where: { id },
@@ -152,17 +160,17 @@ export const moduleService = {
           updatedBy: userId,
           updatedAt: new Date(),
         },
-      });
-      
+      })
+
       // Konversi null menjadi undefined untuk description dan konversi status ke ModuleStatus
       return {
         ...moduleData,
         description: moduleData.description || undefined,
-        status: moduleData.status as unknown as ModuleStatus
-      };
+        status: moduleData.status as unknown as ModuleStatus,
+      }
     } catch (error) {
-      console.error(`Error updating module status for ID ${id}:`, error);
-      return null;
+      console.error(`Error updating module status for ID ${id}:`, error)
+      return null
     }
   },
 
@@ -174,13 +182,13 @@ export const moduleService = {
   async deleteModule(id: string): Promise<Module> {
     const moduleData = await prisma.module.delete({
       where: { id },
-    });
-    
+    })
+
     // Konversi null menjadi undefined untuk description dan konversi status ke ModuleStatus
     return {
       ...moduleData,
       description: moduleData.description || undefined,
-      status: moduleData.status as unknown as ModuleStatus
-    };
+      status: moduleData.status as unknown as ModuleStatus,
+    }
   },
-};
+}

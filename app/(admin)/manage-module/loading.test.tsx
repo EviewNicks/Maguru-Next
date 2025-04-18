@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import ModuleManagementLoading from '../loading'
+import ModuleManagementLoading from './loading'
 
 // Mock the Skeleton component from UI
 jest.mock('@/components/ui/skeleton', () => ({

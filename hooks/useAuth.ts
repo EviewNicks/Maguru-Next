@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { getCurrentUser } from '@/lib/auth'
-import type { User } from '@prisma/client'
+import type { User } from '@/prisma/generated/client'
 
 export function useAuth() {
   const { user: clerkUser, isLoaded: clerkLoaded } = useUser()

@@ -1,7 +1,7 @@
 // app/api/users/[userId]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { UserRole, UserStatus } from '@prisma/client'
+import { UserRole, UserStatus } from '@/prisma/generated/client'
 import prisma from '@/lib/prisma'
 import { auth, clerkClient } from '@clerk/nextjs/server'
 

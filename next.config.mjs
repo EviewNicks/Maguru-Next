@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 import withBundleAnalyzer from '@next/bundle-analyzer'
+import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin'
 
 const nextConfig = {
   /* config options here */
@@ -14,6 +15,35 @@ const nextConfig = {
 
   // Disable static optimization for all pages
   staticPageGenerationTimeout: 180,
+
+  // Tetap pertahankan konfigurasi tracing untuk keamanan
+  outputFileTracingRoot: process.cwd(),
+  outputFileTracingIncludes: {
+    '*': ['./app/**/*', './components/**/*', './lib/**/*', './prisma/**/*'],
+  },
+  outputFileTracingExcludes: {
+    '*': [
+      '**/Cookies/**',
+      '**/Local Settings/**',
+      '**/Application Data/**',
+      '**/My Documents/**',
+      '**/NetHood/**',
+      '**/PrintHood/**',
+      '**/Recent/**',
+      '**/SendTo/**',
+      '**/Templates/**',
+      '**/Start Menu/**',
+      '**/AppData/**',
+      '**/Temporary Internet Files/**',
+      '**/WinSxS/**',
+      '**/Windows/**',
+      '**/ProgramData/**',
+      '**/Program Files/**',
+      '**/Program Files (x86)/**',
+      '**/WindowsApps/**',
+      '**/Microsoft/**',
+    ],
+  },
 
   // Enable dynamic rendering
   experimental: {
@@ -43,7 +73,40 @@ const nextConfig = {
     ]
   },
 
-  output: 'standalone',
+  // Perbarui konfigurasi webpack
+  webpack: (config, { isServer }) => {
+    // Tambahkan PrismaPlugin jika pada server build
+    if (isServer) {
+      config.plugins = [...config.plugins, new PrismaPlugin()]
+    }
+
+    // Konfigurasi watchOptions yang sudah ada tetap dipertahankan
+    const originalIgnored = Array.isArray(config.watchOptions?.ignored)
+      ? config.watchOptions?.ignored
+      : []
+
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: [
+        ...originalIgnored,
+        '**/Cookies/**',
+        '**/Local Settings/**',
+        '**/Application Data/**',
+        '**/My Documents/**',
+        '**/NetHood/**',
+        '**/PrintHood/**',
+        '**/Recent/**',
+        '**/SendTo/**',
+        '**/Templates/**',
+        '**/Start Menu/**',
+        '**/AppData/**',
+        '**/WindowsApps/**',
+        '**/AppData/Local/Microsoft/**',
+      ],
+    }
+
+    return config
+  },
 }
 
 export default withBundleAnalyzer({

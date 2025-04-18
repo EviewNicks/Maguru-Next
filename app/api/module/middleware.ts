@@ -59,8 +59,6 @@ export function withAuditTrail(handler: (req: NextRequest) => Promise<NextRespon
     const method = req.method;
     const url = req.url;
     
-    // Log aktivitas sebelum menjalankan handler
-    console.log(`[AUDIT] ${new Date().toISOString()} | User: ${userId} | ${method} ${url}`);
     
     try {
       // Jalankan handler
@@ -68,12 +66,10 @@ export function withAuditTrail(handler: (req: NextRequest) => Promise<NextRespon
       
       // Log hasil dan waktu eksekusi
       const duration = Date.now() - startTime;
-      console.log(`[AUDIT] ${new Date().toISOString()} | User: ${userId} | ${method} ${url} | Status: ${response.status} | Duration: ${duration}ms`);
       
       return response;
     } catch (error) {
       // Log error
-      console.error(`[AUDIT] ${new Date().toISOString()} | User: ${userId} | ${method} ${url} | Error: ${error}`);
       
       // Re-throw error untuk ditangani oleh error handler
       throw error;

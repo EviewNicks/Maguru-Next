@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import ModuleTable from '@/features/manage-module/components/ModuleTable'
+import RoleProtected from '@/components/RoleProtected'
 
 export const metadata: Metadata = {
   title: 'Manajemen Modul Akademik',
@@ -14,16 +15,18 @@ export const metadata: Metadata = {
  */
 export default function ModuleManagementPage() {
   return (
-    <div className="container mx-auto py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Manajemen Modul</h1>
-        <p className="text-muted-foreground mt-2">
-          Kelola modul akademik dengan mudah. Tambahkan, edit, dan hapus modul
-          sesuai kebutuhan.
-        </p>
-      </div>
+    <RoleProtected allowedRoles={['admin']}>
+      <div className="container mx-auto py-10">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Manajemen Modul</h1>
+          <p className="text-muted-foreground mt-2">
+            Kelola modul akademik dengan mudah. Tambahkan, edit, dan hapus modul
+            sesuai kebutuhan.
+          </p>
+        </div>
 
-      <ModuleTable />
-    </div>
+        <ModuleTable />
+      </div>
+    </RoleProtected>
   )
 }

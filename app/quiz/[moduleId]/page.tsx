@@ -23,7 +23,8 @@ interface ModuleCompletionData {
 
 export default function QuizPage() {
   const params = useParams()
-  const moduleId = params.moduleId as string
+  const moduleId = params ? (params.moduleId as string) : ''
+
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthorized, setIsAuthorized] = useState(false)
@@ -32,7 +33,23 @@ export default function QuizPage() {
   )
   const [quizStarted, setQuizStarted] = useState(false)
 
+  // Redirect jika moduleId tidak ada
   useEffect(() => {
+    if (!moduleId) {
+      toast({
+        title: 'Error',
+        description: 'ID Modul tidak ditemukan',
+        variant: 'destructive',
+      })
+      router.push('/') // Redirect ke halaman utama jika tidak ada moduleId
+      return
+    }
+  }, [moduleId, router])
+
+  useEffect(() => {
+    // Hanya jalankan jika moduleId valid
+    if (!moduleId) return
+
     // Validasi apakah pengguna telah menyelesaikan modul
     const validateModuleCompletion = () => {
       try {
@@ -102,11 +119,15 @@ export default function QuizPage() {
       setIsAuthorized(isValid)
       setIsLoading(false)
     }, 1500)
-  }, [moduleId])
+  }, [moduleId, router])
 
   // Tampilan loading
   const handleBackToModule = () => {
-    router.push(`/module/${moduleId}`)
+    if (moduleId) {
+      router.push(`/module/${moduleId}`)
+    } else {
+      router.push('/')
+    }
   }
 
   const handleStartQuiz = () => {
@@ -137,6 +158,27 @@ export default function QuizPage() {
         variant: 'destructive',
       })
     }
+  }
+
+  // Jika moduleId kosong, tampilkan loading dan tunggu redirect
+  if (!moduleId) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Card className="w-[400px]">
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+            <CardDescription>
+              ID Modul tidak ditemukan. Mengalihkan...
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <div className="animate-spin">
+              <BookCheck size={48} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (isLoading) {
@@ -171,10 +213,7 @@ export default function QuizPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <Button
-              variant="outline"
-              onClick={() => router.push(`/module/${moduleId}`)}
-            >
+            <Button variant="outline" onClick={handleBackToModule}>
               <ArrowLeft className="mr-2" /> Kembali ke Modul
             </Button>
           </CardContent>
