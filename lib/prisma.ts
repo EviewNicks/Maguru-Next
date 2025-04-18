@@ -5,7 +5,8 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient }
 const prismaClientSingleton = () => {
   return new PrismaClient({
     log: [
-      { level: 'query', emit: 'event' },
+      // Komentar log query untuk mengurangi output log
+      // { level: 'query', emit: 'event' },
       { level: 'error', emit: 'stdout' },
       { level: 'info', emit: 'stdout' },
       { level: 'warn', emit: 'stdout' },
@@ -15,12 +16,8 @@ const prismaClientSingleton = () => {
 
 const prisma = globalForPrisma.prisma || prismaClientSingleton()
 
-// Setup event listener untuk query
-// @ts-expect-error - Prisma event types are not correctly exposed
-prisma.$on('query', (e: { query: string; duration: number }) => {
-  console.log('Query:', e.query)
-  console.log('Duration:', e.duration + 'ms')
-})
+// Logging untuk query dinonaktifkan untuk mengurangi output log
+// Aktifkan kembali hanya untuk keperluan debugging
 
 export default prisma
 

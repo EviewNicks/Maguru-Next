@@ -81,8 +81,8 @@ export default clerkMiddleware(
     }
   },
   {
-    // Aktifkan debugging pada lingkungan development
-    debug: process.env.NODE_ENV === 'development',
+    // Nonaktifkan debugging untuk mengurangi log
+    debug: false,
   }
 )
 
@@ -93,9 +93,15 @@ export default clerkMiddleware(
  */
 export const config = {
   matcher: [
-    // Skip Next.js internals dan semua file statis
-    '/((?!_next|[^?]*\\.(html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Selalu jalankan untuk rute API
-    '/(api|trpc)(.*)',
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     * - public file extensions (.svg, .jpg, etc)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|js|css|ico)).*)',
+    '/api/:path*',
   ],
 }

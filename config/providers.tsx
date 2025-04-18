@@ -18,7 +18,7 @@ function InitUser() {
       if (!isLoaded || !userId || hasSynced) return
 
       try {
-        console.log('Mulai proses sinkronisasi user...')
+        // Mulai proses sinkronisasi user
 
         // Simpan user ke database
         const userResponse = await fetch('/api/users', {
@@ -37,18 +37,13 @@ function InitUser() {
         })
 
         if (!metadataResponse.ok) {
-          console.warn('Gagal sinkronisasi metadata, mencoba lagi...')
           // Coba lagi setelah jeda singkat (mungkin perlu waktu untuk user tersimpan di database)
           setTimeout(async () => {
             try {
               const retryResponse = await fetch('/api/users/sync-metadata', {
                 method: 'POST',
               })
-              if (retryResponse.ok) {
-                console.log(
-                  'Sinkronisasi metadata berhasil pada percobaan kedua'
-                )
-              } else {
+              if (!retryResponse.ok) {
                 console.error(
                   'Gagal sinkronisasi metadata pada percobaan kedua'
                 )
@@ -60,11 +55,8 @@ function InitUser() {
               )
             }
           }, 1000) // Tunggu 1 detik sebelum mencoba lagi
-        } else {
-          console.log('Sinkronisasi metadata berhasil')
         }
 
-        console.log('User berhasil disimpan dan disinkronkan')
         setHasSynced(true)
       } catch (error) {
         console.error('Error saat sinkronisasi user:', error)
@@ -87,7 +79,9 @@ function SearchParamsHandler({
 
   useEffect(() => {
     // Cek parameter reload_session
-    const reloadSession = searchParams.get('reload_session')
+    const reloadSession = searchParams
+      ? searchParams.get('reload_session')
+      : null
     setParamsCallback(reloadSession === 'true')
 
     if (reloadSession === 'true') {
@@ -124,10 +118,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
     setShouldReload(hasReloadParam)
   }
 
+  // Gunakan publishableKey dari environment variable
+  const publishableKey =
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+    'pk_test_ZXhvdGljLWdhemVsbGUtNjAuY2xlcmsuYWNjb3VudHMuZGV2JA'
+
   return (
     <ClerkProvider
-      afterSignInUrl="/"
-      afterSignUpUrl="/"
+      publishableKey={publishableKey}
       appearance={{
         elements: {
           formButtonPrimary: 'bg-sky-500 hover:bg-sky-600',

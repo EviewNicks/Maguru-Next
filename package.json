@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "app": "next dev --turbopack",
-    "app:docker": "DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build app",
+    "app:docker": "docker-compose up -d app",
     "build": "next build",
-    "build:docker": "DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f docker-compose.build.yml up --build",
+    "build:docker": "docker-compose up -d build",
+    "build:app": "cross-env DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose build app",
+    "build:build": "cross-env DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker-compose -f docker-compose.build.yml up --build",
     "build:bake": "docker buildx bake -f docker-bake.hcl",
     "build:bake:app": "docker buildx bake -f docker-bake.hcl app",
     "build:bake:builder": "docker buildx bake -f docker-bake.hcl builder",

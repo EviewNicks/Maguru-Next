@@ -12,7 +12,9 @@ function SearchParamsHandler({
   onParamsReady: (isQuickView: boolean) => void
 }) {
   const searchParams = useSearchParams()
-  const quickViewMode = searchParams.get('mode') === 'quick'
+  const quickViewMode = searchParams
+    ? searchParams.get('mode') === 'quick'
+    : false
 
   useEffect(() => {
     onParamsReady(quickViewMode)
@@ -23,11 +25,22 @@ function SearchParamsHandler({
 
 export default function ModuleRoute() {
   const params = useParams()
-  const moduleId = params.moduleId as string
+  const moduleId = params ? (params.moduleId as string) : ''
   const [quickViewMode, setQuickViewMode] = useState(false)
+
+  // Jika tidak ada moduleId, tampilkan error atau redirect
+  useEffect(() => {
+    if (!moduleId) {
+      console.error('Module ID tidak ditemukan')
+      // Bisa tambahkan redirect ke halaman error di sini jika perlu
+    }
+  }, [moduleId])
 
   // Logging untuk analitik
   useEffect(() => {
+    // Hanya lanjutkan jika moduleId ada
+    if (!moduleId) return
+
     // Catat waktu akses modul
     const timestamp = new Date().toISOString()
     const accessLog = {
@@ -52,6 +65,17 @@ export default function ModuleRoute() {
       console.error('Error menyimpan log akses:', error)
     }
   }, [moduleId, quickViewMode])
+
+  // Jika tidak ada moduleId, tampilkan loading atau error state
+  if (!moduleId) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="flex flex-col gap-6 items-center justify-center min-h-[50vh]">
+          <h2 className="text-xl">Module tidak ditemukan</h2>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
