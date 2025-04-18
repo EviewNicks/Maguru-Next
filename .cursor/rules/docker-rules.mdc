@@ -3,6 +3,11 @@ description:
 globs: 
 alwaysApply: true
 ---
+---
+description: 
+globs: 
+alwaysApply: true
+---
 Berikut adalah dokumentasi rules dan perintah terkait penggunaan Docker dalam proyek WebApp Anda. Dokumentasi ini mencakup praktik terbaik, perintah dasar, dan panduan untuk pengelolaan kontainer.
 
 # Dokumentasi Penggunaan Docker di Proyek WebApp

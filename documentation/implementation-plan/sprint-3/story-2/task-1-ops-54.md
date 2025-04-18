@@ -10,8 +10,8 @@ Berikut adalah deskripsi lengkap dan breakdown untuk **Task OPS-54: Kebutuhan Tr
 **Story Points:** `5` (kompleksitas sedang)  
 **Dependencies:**
 
-- Skema User Prisma sudah diupdate ([OPS-147](link-ke-ops147)).
-- RBAC sudah diperbaiki ([OPS-148](link-ke-ops148)).
+- Skema User Prisma sudah diupdate ([OPS-147](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-147)).
+- RBAC sudah diperbaiki ([OPS-148](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-148)).
 
 ---
 
@@ -124,17 +124,117 @@ Membangun sistem pelacakan riwayat perubahan data user (audit log) untuk memudah
 - **Proteksi RBAC:**  
   Pastikan middleware memeriksa role admin sebelum mengizinkan akses.
 
-#### 4. **Pengujian & Security** _(1 Hari)_
+#### 4. **Implementasi Test-Driven Development** _(1 Hari)_
 
-- **Test Case:**
-  1.  Admin mengubah role user → history tercatat.
-  2.  User non-admin mencoba akses endpoint → error 403.
-  3.  Bulk update → pastikan semua perubahan tercatat.
-- **Security:**
-  - Validasi input untuk mencegah SQL injection.
-  - Enkripsi data sensitif (jika diperlukan).
+- **Unit Testing:**
 
-#### 5. **Dokumentasi** _(0.5 Hari)_
+  ```typescript
+  // services/history.test.ts
+  describe('UserHistoryService', () => {
+    it('should record history when user role is changed', async () => {
+      // Setup
+      const oldUser = { id: 'user_1', role: 'mahasiswa', name: 'Test User' }
+      const updatedData = { role: 'admin', updatedBy: 'admin_1' }
+
+      // Mock prisma methods
+      prisma.user.findUnique.mockResolvedValue(oldUser)
+      prisma.user.update.mockResolvedValue({ ...oldUser, ...updatedData })
+
+      // Execute update with middleware
+      await userService.updateUser('user_1', updatedData)
+
+      // Verify history creation
+      expect(prisma.userHistory.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            userId: 'user_1',
+            field: 'role',
+            oldValue: 'mahasiswa',
+            newValue: 'admin',
+            changedBy: 'admin_1',
+          }),
+        ]),
+      })
+    })
+
+    it('should not create history when no fields changed', async () => {
+      // Setup & mocking
+      // ...
+
+      // Assert no history created
+      expect(prisma.userHistory.createMany).not.toHaveBeenCalled()
+    })
+  })
+  ```
+
+- **Integration Testing:**
+
+  ```typescript
+  // api/admin/history.test.ts
+  describe('History API Endpoints', () => {
+    it('should return 403 for non-admin users', async () => {
+      // Setup non-admin user session
+      // ...
+
+      const response = await request(app)
+        .get('/api/admin/history')
+        .set('Authorization', `Bearer ${nonAdminToken}`)
+
+      expect(response.status).toBe(403)
+    })
+
+    it('should return filtered history by date range', async () => {
+      // Setup admin session
+      // ...
+
+      const response = await request(app)
+        .get('/api/admin/history?startDate=2024-05-01&endDate=2024-05-30')
+        .set('Authorization', `Bearer ${adminToken}`)
+
+      expect(response.status).toBe(200)
+      expect(response.body.length).toBeGreaterThan(0)
+      expect(response.body[0]).toHaveProperty('createdAt')
+      // Verify date is within range
+      expect(new Date(response.body[0].createdAt)).toBeAfter(
+        new Date('2024-05-01')
+      )
+    })
+  })
+  ```
+
+#### 5. **Implementasi Data Retention & Cleaning** _(0.5 Hari)_
+
+- **Strategi Retention:**
+
+  - Implementasi cron job untuk archiving data history yang sudah lama:
+
+  ```typescript
+  // cron/history-cleanup.ts
+  import cron from 'node-cron'
+
+  // Run once a month at midnight on the 1st
+  cron.schedule('0 0 1 * *', async () => {
+    const oneYearAgo = new Date()
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
+
+    // Option 1: Delete old history
+    await prisma.userHistory.deleteMany({
+      where: { createdAt: { lt: oneYearAgo } },
+    })
+
+    // Option 2: Archive to cold storage
+    const oldRecords = await prisma.userHistory.findMany({
+      where: { createdAt: { lt: oneYearAgo } },
+    })
+
+    // Archive to S3 or other storage
+    await archiveService.storeRecords('user_history', oldRecords)
+
+    console.log(`Archived ${oldRecords.length} history records`)
+  })
+  ```
+
+#### 6. **Dokumentasi** _(0.5 Hari)_
 
 - Update `README.md` dengan:
   - Struktur tabel `UserHistory`.
@@ -149,6 +249,8 @@ Membangun sistem pelacakan riwayat perubahan data user (audit log) untuk memudah
 - [x] Admin bisa filter riwayat berdasarkan user, tanggal, atau field.
 - [x] Latency penambahan history <300ms (diukur via logging).
 - [x] 100% akses ilegal ke endpoint history ditolak (test dengan Postman).
+- [x] Unit dan integration tests mencakup minimal 80% kode yang terkait history.
+- [x] Data retention strategy diimplementasikan dan terdokumentasi.
 
 ---
 
@@ -175,10 +277,15 @@ Membangun sistem pelacakan riwayat perubahan data user (audit log) untuk memudah
 1. **Idempotensi:**
    - Pastikan event duplikat (misal: webhook Clerk terkirim 2x) tidak membuat entri duplikat.
 2. **Backup & Retention:**
-   - Diskusikan retention policy (misal: hapus data >1 tahun) untuk task berikutnya.
-3. **Referensi:**
+   - Data history > 1 tahun akan diarsipkan ke cold storage secara otomatis.
+   - Pastikan proses archiving tidak mempengaruhi performa API.
+3. **Testing Strategy:**
+   - Implementasikan TDD dengan menulis test terlebih dahulu sebelum implementasi.
+   - Prioritaskan test untuk handler API dan middleware history.
+4. **Referensi:**
    - [Prisma Middleware](https://www.prisma.io/docs/orm/prisma-client/client-extensions/middleware)
    - [Clerk User Metadata](https://docs.clerk.dev/popular-guides/metadata)
+   - [Jest Testing Best Practices](https://jestjs.io/docs/testing-frameworks)
 
 ---
 

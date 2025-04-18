@@ -7,6 +7,7 @@ import Navbar from '@/components/layouts/Navbar'
 import GlobalModal from '@/components/layouts/GlobalModal'
 import GlobalToast from '@/components/layouts/GlobalToast'
 import { configureDOMPurify } from '@/features/common/utils/sanitize'
+import Footer from '@/features/common/components/Footer'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const playfair = Playfair_Display({
@@ -33,17 +34,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${playfair.variable} ${firaCode.variable} antialiased`}
+        className={`${inter.variable} ${playfair.variable} ${firaCode.variable} antialiased min-h-screen flex flex-col`}
       >
         <Providers>
           <Navbar />
           {/* className="py-20" */}
-          <Container>
+          <Container className="flex-grow">
             {children}
 
             <GlobalModal />
             <GlobalToast />
           </Container>
+          <Footer />
         </Providers>
       </body>
     </html>
