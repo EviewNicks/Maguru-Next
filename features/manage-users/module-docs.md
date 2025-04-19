@@ -156,6 +156,19 @@ Modul ini bertanggung jawab untuk mengelola pengguna aplikasi, termasuk menampil
    - **Estimasi**: 8 Story Points
    - **Status**: In Progress
 
+7. USERMGMT-F007: Integrasi Webhook Clerk
+
+   - **Deskripsi**: Sistem harus menyediakan endpoint webhook untuk menerima dan memproses event dari Clerk Authentication System secara real-time.
+   - **Kriteria Penerimaan**:
+     - Endpoint webhook menerima event `user.created`, `user.updated`, dan `user.deleted` dari Clerk.
+     - Verifikasi signature webhook untuk memastikan keamanan.
+     - Data pengguna di database internal otomatis diperbarui dalam waktu <2 detik setelah perubahan di Clerk.
+     - Error ditangkap dan dicatat dalam sistem monitoring (Sentry).
+   - **Prioritas**: Critical
+   - **Dependensi**: Clerk API, Prisma, Sentry
+   - **Estimasi**: 5 Story Points
+   - **Status**: Completed
+
 ### 2.4 Kebutuhan Non-Fungsional
 
 1. Performa:
@@ -346,6 +359,48 @@ Modul ini bertanggung jawab untuk mengelola pengguna aplikasi, termasuk menampil
    }
    ```
 
+3. **Clerk Webhook API**
+
+   ```typescript
+   /**
+    * @route POST /api/webhooks/clerk
+    * @desc Menerima dan memproses webhook event dari Clerk
+    * @access Public (dengan verifikasi signature)
+    */
+   ```
+
+   **Event Payload Format:**
+
+   ```json
+   // user.created or user.updated event
+   {
+     "type": "user.created",
+     "data": {
+       "id": "clerk_user_id",
+       "email_addresses": [
+         { "email_address": "user@example.com" }
+       ],
+       "first_name": "John",
+       "last_name": "Doe"
+     }
+   }
+
+   // user.deleted event
+   {
+     "type": "user.deleted",
+     "data": {
+       "id": "clerk_user_id"
+     }
+   }
+   ```
+
+   **Implementasi:**
+
+   - Menerima webhook event dari Clerk
+   - Verifikasi signature webhook menggunakan `svix` library
+   - Proses event dan update database via Prisma
+   - Tangkap error dan catat di Sentry
+
 ### 3.4 Antarmuka Pengguna
 
 #### Wireframes
@@ -421,6 +476,61 @@ Modul ini bertanggung jawab untuk mengelola pengguna aplikasi, termasuk menampil
    })
    ```
 
+3. **Webhook Unit Tests**
+
+   ```typescript
+   // __tests__/unit/api/webhooks/clerk.test.ts
+   describe('Clerk Webhook Handler', () => {
+     it('should return 400 if browser-side execution is detected', async () => {
+       // Mocking browser environment
+       const originalWindow = global.window
+       global.window = {}
+
+       const req = new Request('https://example.com/api/webhooks/clerk', {
+         method: 'POST',
+         body: JSON.stringify({ type: 'test' }),
+       })
+
+       const response = await POST(req)
+       expect(response.status).toBe(400)
+
+       // Restore window
+       global.window = originalWindow
+     })
+
+     it('should update existing user on user.updated event', async () => {
+       // Mock successful verification
+       vi.mocked(new Webhook().verify).mockReturnValueOnce({
+         type: 'user.updated',
+         data: {
+           id: 'user_123',
+           email_addresses: [{ email_address: 'test@example.com' }],
+           first_name: 'John',
+           last_name: 'Doe',
+         },
+       })
+
+       // Mock user exists
+       const mockUser = {
+         /* mocked user data */
+       }
+       vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(mockUser)
+       vi.mocked(prisma.user.update).mockResolvedValueOnce({ ...mockUser })
+
+       const req = new Request('https://example.com/api/webhooks/clerk', {
+         method: 'POST',
+         body: JSON.stringify({ type: 'user.updated' }),
+       })
+
+       const response = await POST(req)
+       expect(response.status).toBe(200)
+       expect(prisma.user.update).toHaveBeenCalled()
+     })
+
+     // Additional test cases for user.created and user.deleted events
+   })
+   ```
+
 ### 4.2 Test Coverage
 
 - Target coverage: 85%
@@ -457,6 +567,21 @@ Modul ini bertanggung jawab untuk mengelola pengguna aplikasi, termasuk menampil
    CLERK_WEBHOOK_SECRET="whsec_****"
    ```
 
+### 5.2 Konfigurasi Clerk Webhook
+
+1. **Setup di Clerk Dashboard**
+
+   - Buka Clerk Dashboard di [dashboard.clerk.com](https://dashboard.clerk.com)
+   - Navigasi ke menu **Webhooks** di sidebar
+   - Buat webhook baru dengan endpoint: `https://[YOUR_DOMAIN]/api/webhooks/clerk`
+   - Pilih event yang perlu ditangani: `user.created`, `user.updated`, dan `user.deleted`
+   - Generate webhook secret dan simpan ke environment variable `CLERK_WEBHOOK_SECRET`
+
+2. **Konfigurasi di Next.js**
+   - Pastikan route `/api/webhooks/clerk` ditambahkan sebagai rute publik di middleware
+   - Install library `svix` untuk verifikasi signature webhook: `npm install svix`
+   - Implemen endpoint webhook dengan verifikasi signature
+
 ## 6. Pemeliharaan
 
 ### 6.1 Monitoring
@@ -488,7 +613,16 @@ Modul ini bertanggung jawab untuk mengelola pengguna aplikasi, termasuk menampil
      - Impact: Pengguna mungkin memiliki peran yang berbeda di Clerk dan database lokal
      - Solution: Implementasikan mekanisme retry dan notifikasi untuk sinkronisasi yang gagal
 
-2. **Support Contact**
+2. **Webhook Troubleshooting**
+
+   - Issue: Webhook tidak menangkap perubahan dari Clerk
+     - Impact: Data pengguna tidak sinkron antara Clerk dan database internal
+     - Solution: Verifikasi CLERK_WEBHOOK_SECRET, periksa log Vercel, dan pastikan endpoint webhook dikonfigurasi dengan benar di Clerk
+   - Issue: Webhook menerima event tetapi gagal memproses
+     - Impact: Perubahan data pengguna di Clerk tidak tercermin di database internal
+     - Solution: Periksa log error di Sentry, tes validasi signature, dan debug prisma query
+
+3. **Support Contact**
    - Technical contact: usermgmt-team@example.com
    - Escalation path: Frontend Lead → Backend Lead → CTO
 

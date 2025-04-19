@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import prisma from '@/lib/prisma'
 import { clerkClient } from '@clerk/nextjs/server'
+import * as Sentry from '@sentry/nextjs'
 
 export async function POST(req: Request) {
   // Pastikan ini berjalan di server side
@@ -47,6 +48,12 @@ export async function POST(req: Request) {
       }) as WebhookEvent
     } catch (err) {
       console.error('Error verifying webhook:', err)
+      Sentry.captureException(err, {
+        tags: {
+          component: 'webhook-clerk',
+          action: 'signature-verification',
+        },
+      })
       return new Response('Error verifying webhook signature', {
         status: 400,
       })
@@ -127,6 +134,19 @@ export async function POST(req: Request) {
         }
       } catch (error) {
         console.error('Error processing user:', error)
+        Sentry.captureException(error, {
+          tags: {
+            component: 'webhook-clerk',
+            action: 'process-user',
+            eventType,
+          },
+          contexts: {
+            userInfo: {
+              clerkUserId: id,
+              email,
+            },
+          },
+        })
         return new Response(
           JSON.stringify({
             error: 'Error processing user',
@@ -158,6 +178,18 @@ export async function POST(req: Request) {
         )
       } catch (error) {
         console.error('Error deleting user:', error)
+        Sentry.captureException(error, {
+          tags: {
+            component: 'webhook-clerk',
+            action: 'delete-user',
+            eventType,
+          },
+          contexts: {
+            userInfo: {
+              clerkUserId: evt.data.id,
+            },
+          },
+        })
         return new Response(
           JSON.stringify({
             error: 'Error deleting user',
@@ -183,6 +215,12 @@ export async function POST(req: Request) {
     )
   } catch (error) {
     console.error('Unexpected error:', error)
+    Sentry.captureException(error, {
+      tags: {
+        component: 'webhook-clerk',
+        action: 'unexpected-error',
+      },
+    })
     return new Response(
       JSON.stringify({
         error: 'Unexpected error occurred',
@@ -193,6 +231,5 @@ export async function POST(req: Request) {
         headers: { 'Content-Type': 'application/json' },
       }
     )
-
   }
 }
