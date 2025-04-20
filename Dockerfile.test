@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Menggunakan image node.js sebagai base
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -9,7 +9,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN yarn install
 
 # Copy rest of the application
 COPY . .

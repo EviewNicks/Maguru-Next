@@ -1,7 +1,7 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 interface RoleProtectedProps {
   children: React.ReactNode
@@ -13,12 +13,19 @@ export default function RoleProtected({
   allowedRoles,
 }: RoleProtectedProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
   useEffect(() => {
     async function checkRole() {
       try {
-        const response = await fetch('/api/auth/role')
+        // Tambahkan cache-busting query parameter
+        const response = await fetch(`/api/auth/role?_=${new Date().getTime()}`, {
+          cache: 'no-store',
+          headers: {
+            'x-pathname': pathname || '',
+          },
+        })
         const data = await response.json()
 
         if (!data.success || !allowedRoles.includes(data.user.role)) {
@@ -36,7 +43,7 @@ export default function RoleProtected({
     }
 
     checkRole()
-  }, [allowedRoles, router])
+  }, [allowedRoles, router, pathname])
 
   if (isAuthorized === null) {
     // Loading state

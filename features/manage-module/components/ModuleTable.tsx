@@ -1,6 +1,4 @@
 'use client'
-
-import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { DataTable } from './ModuleTable/DataTable'
 import { Module, ModuleStatus } from '../types/index'

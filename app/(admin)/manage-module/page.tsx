@@ -2,6 +2,10 @@ import { Metadata } from 'next'
 import ModuleTable from '@/features/manage-module/components/ModuleTable'
 import RoleProtected from '@/components/RoleProtected'
 
+// Menambahkan konfigurasi routing untuk mencegah static rendering
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export const metadata: Metadata = {
   title: 'Manajemen Modul Akademik',
   description:

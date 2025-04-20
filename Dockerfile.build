@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Dockerfile untuk proses build dengan penanganan khusus untuk Prisma
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -13,8 +13,8 @@ COPY prisma/migrations ./prisma/migrations/
 COPY prisma/seed.ts ./prisma/
 
 # Copy package files dan install dependencies 
-COPY package*.json ./
-RUN npm ci
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
 # Generate Prisma client jika folder prisma/generated tidak ada
 # Ini hanya akan berjalan saat pertama kali build
@@ -31,10 +31,11 @@ COPY . .
 
 # Set variabel lingkungan
 ENV NODE_ENV=production
-ENV NODE_OPTIONS="--max_old_space_size=4096"
+ENV NODE_OPTIONS="--max_old_space_size=4096 --experimental-global-webcrypto"
 
 # Build aplikasi
-RUN npm run build
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN yarn build
 
 # Aplikasi tetap di /app karena volume sudah di-mount langsung ke sana
-CMD ["echo", "Build completed successfully!"] 
+CMD ["echo", "Build completed successfully!"]
