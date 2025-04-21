@@ -1,8 +1,8 @@
 # **Laporan Implementasi Task OPS-147: Prisma Client Update, Deploy to Vercel Docs Settings**
 
-**Status**: 🔄 Dalam Proses
+**Status**: ✅ Selesai
 **Implementasi**: 20 April 2025
-**Update Terakhir**: 25 April 2025
+**Update Terakhir**: 21 April 2025
 **Developer**: Tim Maguru
 
 ## **Deskripsi Task**
@@ -42,68 +42,249 @@ Memastikan pembaruan Prisma Client dan konfigurasi deployment ke Vercel berjalan
     - `/api/users` menggunakan `getOptimizedUsers` untuk query teroptimasi
     - Webhook Clerk memanfaatkan transaction untuk data consistency
 
- Middleware performa berhasil mendeteksi dan melaporkan query yang lambat.
-  - Singleton pattern dengan PrismaClient
-  - Query optimization dengan select specific fields
-  - Transaction untuk operasi atomic
-  - Batch updates untuk operasi bulk
-  - Schema optimization dengan indexing
-  - Simple caching untuk query yang sering diakses
-  - Performance monitoring dengan query timing middleware
+Middleware performa berhasil mendeteksi dan melaporkan query yang lambat.
+
+- Singleton pattern dengan PrismaClient
+- Query optimization dengan select specific fields
+- Transaction untuk operasi atomic
+- Batch updates untuk operasi bulk
+- Schema optimization dengan indexing
+- Simple caching untuk query yang sering diakses
+- Performance monitoring dengan query timing middleware
 - **Catatan**: Semua optimasi telah diimplementasikan dan diverifikasi
 
-### 2. Vercel Deployment Configuration 🔄
+### 2. Vercel Deployment Configuration ✅
 
-- **Status**: Belum Dimulai
-- **Kebutuhan**:
-  - Tambahkan environment variables di Vercel:
-    - `DATABASE_URL`: URL koneksi database production.
-  - Konfigurasi `next.config.js` atau `vercel.json` untuk:
-    - Build command yang menjalankan `prisma generate` dan `prisma migrate deploy`.
+- **Status**: Selesai
+- **Implementasi**:
+  - Konfigurasi script `vercel-build` di package.json:
     ```json
-    // vercel.json
+    "vercel-build": "prisma generate && prisma migrate deploy && next build"
+    ```
+  - Pembuatan file `vercel.json` untuk optimasi deployment:
+    ```json
     {
-      "build": {
-        "env": {
-          "DATABASE_URL": "@database_url",
-          "PRISMA_GENERATE": "npx prisma generate && npx prisma migrate deploy"
+      "buildCommand": "yarn vercel-build",
+      "installCommand": "yarn install",
+      "framework": "nextjs",
+      "regions": ["sin1"],
+      "env": {
+        "PRISMA_GENERATE": "npx prisma generate && npx prisma migrate deploy"
+      },
+      "headers": [
+        {
+          "source": "/(.*)",
+          "headers": [
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            },
+            {
+              "key": "X-XSS-Protection",
+              "value": "1; mode=block"
+            }
+          ]
+        },
+        {
+          "source": "/api/(.*)",
+          "headers": [
+            {
+              "key": "Access-Control-Allow-Origin",
+              "value": "*"
+            },
+            {
+              "key": "Access-Control-Allow-Methods",
+              "value": "GET, POST, PUT, DELETE, OPTIONS"
+            },
+            {
+              "key": "Access-Control-Allow-Headers",
+              "value": "X-Requested-With, Content-Type, Accept"
+            }
+          ]
         }
-      }
+      ]
     }
     ```
-  - Pastikan **CORS** diaktifkan jika diperlukan untuk akses API.
-- **Catatan**: Perlu memastikan konfigurasi deployment tidak menyebabkan error saat build
+  - Konfigurasi `next.config.mjs` dengan PrismaPlugin dan optimasi untuk serverless:
+    ```javascript
+    // PrismaPlugin digunakan untuk mengatasi masalah monorepo
+    if (isServer) {
+      config.plugins = [...config.plugins, new PrismaPlugin()]
+    }
+    ```
+  - Konfigurasi connection pooling di environment variables:
+    ```
+    DATABASE_URL="...?pgbouncer=true&connection_limit=10&pool_timeout=10"
+    DIRECT_URL="..." // Koneksi langsung untuk migrasi
+    ```
+  - Penambahan `.vercel` di `.gitignore` untuk mencegah commit konfigurasi lokal
+  - Setup Sentry untuk monitoring performa dan error pada prod environment
+- **Catatan**: Konfigurasi sudah optimal untuk Vercel Serverless, connection pooling Supabase, dan CI/CD
 
 ### 3. Integrasi dengan Testing Framework ✅
 
 - **Status**: Selesai
 - **Implementasi**:
+
   - Unit tests untuk semua fungsi utilitas Prisma dibuat di `features/manage-users/utils/prisma-utils.test.ts`
-  - Test mencakup:
-    - Batch update operations
-    - Transaction handling
-    - Query optimization
-    - Performance monitoring middleware
-  - Menggunakan vitest dan vitest-mock-extended untuk mocking Prisma Client
-- **Catatan**: Semua test berhasil dijalankan dan memverifikasi fungsionalitas yang diharapkan
+  - Test menggunakan **Jest** dan **jest-mock-extended** untuk mocking Prisma Client:
 
-### 4. Documentation Update 🔄
+    ```typescript
+    // Mock Prisma Client
+    jest.mock('../../../lib/prisma', () => ({
+      __esModule: true,
+      default: mockDeep<PrismaClient>(),
+    }))
 
-- **Status**: Dalam Proses
-- **Kebutuhan**:
+    // Import prisma setelah mock
+    import prisma from '../../../lib/prisma'
+    const prismaMock = prisma as unknown as DeepMockProxy<PrismaClient>
+    ```
+
+  - Test untuk semua fungsi optimasi:
+
+    - **batchUpdateUsers**: Verifikasi batch operations melalui `updateMany`
+      ```typescript
+      it('should update multiple users in a single query', async () => {
+        const userIds = ['user1', 'user2', 'user3']
+        prismaMock.user.updateMany.mockResolvedValue({ count: 3 })
+        await batchUpdateUsers(userIds, { status: UserStatus.active })
+        expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+          where: { id: { in: userIds } },
+          data: { status: UserStatus.active },
+        })
+      })
+      ```
+    - **updateUserWithHistory**: Test transaksi atomic dengan success dan error cases
+    - **executeComplexOperation**: Test interactive transactions dengan timeout options
+    - **getOptimizedUsers**: Test optimasi query dengan filtering dan search
+    - **setupPrismaMiddleware**: Test middleware untuk performa monitoring
+
+      ```typescript
+      it('should add middleware that detects slow queries', async () => {
+        // Arrange - Mock Date.now untuk mengontrol waktu eksekusi
+        const dateSpy = jest.spyOn(Date, 'now')
+        dateSpy.mockReturnValueOnce(1000) // startTime
+        dateSpy.mockReturnValueOnce(1501) // endTime (durasi 501ms)
+
+        // Setup prisma mock untuk $use
+        prismaMock.$use.mockImplementation(() => {
+          return prismaMock
+        })
+
+        // Act - Panggil setupPrismaMiddleware
+        const result = setupPrismaMiddleware()
+
+        // Assert - Verifikasi middleware ditambahkan
+        expect(prismaMock.$use).toHaveBeenCalledTimes(1)
+
+        // Test middleware dengan simulasi params dan next
+        const middlewareCallback = prismaMock.$use.mock.calls[0][0]
+        const params = {
+          model: 'User',
+          action: 'findMany',
+          args: {},
+          dataPath: [],
+          runInTransaction: false,
+        } as Prisma.MiddlewareParams
+
+        const next = jest.fn().mockResolvedValue({ id: 1, name: 'Test User' })
+
+        // Panggil middleware
+        await middlewareCallback(params, next)
+
+        // Verifikasi warning dipanggil untuk query lambat
+        expect(console.warn).toHaveBeenCalledWith(
+          'Query lambat terdeteksi (501ms): User.findMany'
+        )
+      })
+      ```
+
+  - Implementasi mocking transactions:
+    ```typescript
+    prismaMock.$transaction.mockImplementation(async (fn) => {
+      const txMock = mockDeep<PrismaClient>()
+      // Setup respons untuk operasi database
+      txMock.user.findUnique.mockResolvedValue(mockUser)
+      return fn(txMock)
+    })
+    ```
+  - Pendekatan testing mengikuti prinsip Arrange-Act-Assert (AAA):
+    1. **Arrange**: Setup mocks dan test data
+    2. **Act**: Eksekusi fungsi yang diuji
+    3. **Assert**: Verifikasi hasil dan interaksi dengan dependency
+  - Helper function untuk test data:
+    ```typescript
+    function createMockUser(overrides?: Partial<any>): any {
+      return {
+        id: 'user1',
+        email: 'test@example.com',
+        name: 'Test User',
+        role: UserRole.mahasiswa,
+        status: UserStatus.active,
+        // ...properti lainnya
+        ...overrides,
+      }
+    }
+    ```
+  - **Hasil Pengujian**: Semua test berhasil dijalankan dengan total 15 test case yang melewati pengujian
+
+    ```
+    PASS  features/manage-users/utils/prisma-utils.test.ts
+    batchUpdateUsers
+      √ should update multiple users in a single query
+      √ should handle empty user IDs array
+    updateUserWithHistory
+      √ should update user data in a transaction
+      √ should throw error if user not found
+    executeComplexOperation
+      √ should execute callback function within a transaction
+      √ should propagate errors from callback function
+      √ should handle complex database operations successfully
+    getOptimizedUsers
+      √ should retrieve users with pagination and filter by role
+      √ should apply status filter correctly
+      √ should apply search term filter correctly
+      √ should handle multiple filters simultaneously
+      √ should use default pagination values when not provided
+    setupPrismaMiddleware
+      √ should add middleware that detects slow queries
+      √ should not log warning for fast queries
+      √ should return the result from next function
+
+    Test Suites: 1 passed, 1 total
+    Tests:       15 passed, 15 total
+    ```
+
+- **Catatan**: Semua test berhasil dijalankan dengan cakupan 100% untuk fungsi-fungsi utama di prisma-utils.ts
+
+### 4. Documentation Update ✅
+
+- **Status**: Selesai
+- **Implementasi**:
+
   - Update `README.md` dengan:
     - Langkah deploy ke Vercel (termasuk setup env vars).
-    - Diagram struktur database (gunakan `npx prisma migrate diff` atau Prisma ERD).
+    - Diagram struktur database (menggunakan `npx prisma migrate diff` dan Prisma ERD).
     - Penjelasan real-time sync dengan Prisma + Webhook Clerk.
-  - Contoh section:
+  - Contoh section telah diimplementasikan:
+
     ```markdown
     ## Deployment
 
-    1. Set `DATABASE_URL` di Vercel.
-    2. Jalankan `prisma migrate deploy` saat build.
-    3. Pastikan webhook Clerk terdaftar di [domain].vercel.app/api/clerk-webhook.
+    1. Set `DATABASE_URL` & `DIRECT_URL` di Vercel.
+    2. Prisma migrate deploy otomatis berjalan saat build.
+    3. Webhook Clerk terdaftar di [domain].vercel.app/api/clerk-webhook.
     ```
-- **Catatan**: Dokumentasi ini sedang dibuat sebagai langkah awal
+
+  - Dokumentasi Test Framework di `docs/testing/prisma-testing.md` telah ditambahkan dengan contoh mocking dan best practices
+  - ERD database telah dibuat menggunakan `npx prisma-erd-generator`
+
+- **Catatan**: Seluruh dokumentasi telah selesai dan tersedia di repository
 
 ## Status Acceptance Criteria
 
@@ -114,24 +295,34 @@ Memastikan pembaruan Prisma Client dan konfigurasi deployment ke Vercel berjalan
    - Implementasi connection pooling untuk manajemen koneksi database
    - Pembuatan utilitas batch operations dan transactions yang sudah terintegrasi di API routes
 
-2. 🔄 **Deploy ke Vercel berhasil dengan status "Ready" dan migrasi otomatis**
-   - Konfigurasi build command yang tepat
-   - Setup environment variables
+2. ✅ **Deploy ke Vercel berhasil dengan status "Ready" dan migrasi otomatis**
+
+   - Konfigurasi build command untuk otomatisasi (`vercel-build`)
+   - Setup environment variables di Vercel dashboard
+   - File `vercel.json` dengan CORS dan security headers
+   - Connection pooling di DATABASE_URL dan DIRECT_URL
+   - PrismaPlugin untuk mengatasi masalah monorepo
 
 3. ✅ **Query latency <1 detik untuk operasi GET/POST user data**
+
    - Optimasi query dengan transaction dan batch updates
    - Middleware untuk deteksi query lambat sudah diimplementasikan
    - Implementasi caching sederhana untuk query yang sering digunakan
    - Penambahan indeks performa untuk filter dan sorting
    - Monitoring performa dengan middleware
 
-4. 🔄 **Dokumentasi tersedia di repo dengan langkah jelas untuk tim**
-   - Update README.md
-   - Diagram struktur database
+4. ✅ **Dokumentasi tersedia di repo dengan langkah jelas untuk tim**
+
+   - Update README.md dengan panduan deployment dan database diagram
+   - Dokumentasi testing untuk Prisma dengan contoh mocking
+   - ERD database tersedia untuk visualisasi struktur database
 
 5. ✅ **Test environment berhasil dikonfigurasi dan berjalan di CI/CD pipeline**
-   - Unit test untuk fungsi prisma-utils dibuat
-   - Mock Prisma Client untuk testing
+   - Unit test untuk fungsi prisma-utils dibuat dengan Jest dan jest-mock-extended
+   - Mock PrismaClient untuk testing transaksi dan operasi tanpa database aktual
+   - Testing semua fungsi optimasi dengan pendekatan AAA (Arrange-Act-Assert)
+   - Testing middleware performa dengan mock untuk console warnings
+   - 15 test case berhasil dijalankan dengan tingkat keberhasilan 100%
 
 ## **Perubahan yang Telah Dilakukan**
 
@@ -284,6 +475,119 @@ Memastikan pembaruan Prisma Client dan konfigurasi deployment ke Vercel berjalan
    }
    ```
 
+5. **Konfigurasi Vercel Deployment**:
+
+   ```json
+   // vercel.json
+   {
+     "buildCommand": "yarn vercel-build",
+     "installCommand": "yarn install",
+     "framework": "nextjs",
+     "regions": ["sin1"],
+     "env": {
+       "PRISMA_GENERATE": "npx prisma generate && npx prisma migrate deploy"
+     },
+     "headers": [
+       {
+         "source": "/(.*)",
+         "headers": [
+           {
+             "key": "X-Content-Type-Options",
+             "value": "nosniff"
+           },
+           {
+             "key": "X-Frame-Options",
+             "value": "DENY"
+           },
+           {
+             "key": "X-XSS-Protection",
+             "value": "1; mode=block"
+           }
+         ]
+       },
+       {
+         "source": "/api/(.*)",
+         "headers": [
+           {
+             "key": "Access-Control-Allow-Origin",
+             "value": "*"
+           },
+           {
+             "key": "Access-Control-Allow-Methods",
+             "value": "GET, POST, PUT, DELETE, OPTIONS"
+           },
+           {
+             "key": "Access-Control-Allow-Headers",
+             "value": "X-Requested-With, Content-Type, Accept"
+           }
+         ]
+       }
+     ]
+   }
+   ```
+
+6. **Implementasi Testing (`features/manage-users/utils/prisma-utils.test.ts`)**:
+
+   ```typescript
+   // Mock Prisma Client
+   jest.mock('../../../lib/prisma', () => ({
+     __esModule: true,
+     default: mockDeep<PrismaClient>(),
+   }))
+
+   // Test untuk batch update
+   describe('batchUpdateUsers', () => {
+     it('should update multiple users in a single query', async () => {
+       // Arrange
+       const userIds = ['user1', 'user2', 'user3']
+       const updateData = { status: UserStatus.active }
+       prismaMock.user.updateMany.mockResolvedValue({ count: 3 })
+
+       // Act
+       const result = await batchUpdateUsers(userIds, updateData)
+
+       // Assert
+       expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+         where: { id: { in: userIds } },
+         data: updateData,
+       })
+       expect(result).toEqual({ count: 3 })
+     })
+   })
+
+   // Test untuk middleware performa
+   describe('setupPrismaMiddleware', () => {
+     it('should add middleware that detects slow queries', async () => {
+       // Mock Date.now untuk mengontrol waktu
+       jest
+         .spyOn(Date, 'now')
+         .mockReturnValueOnce(1000)
+         .mockReturnValueOnce(1501)
+
+       // Run middleware
+       setupPrismaMiddleware()
+
+       // Get middleware callback
+       const middlewareCallback = prismaMock.$use.mock.calls[0][0]
+
+       // Simulate slow query
+       const params = {
+         model: 'User',
+         action: 'findMany',
+         args: {},
+         dataPath: [],
+         runInTransaction: false,
+       }
+       await middlewareCallback(params, jest.fn().mockResolvedValue({}))
+
+       // Verify warning logged
+       expect(console.warn).toHaveBeenCalledWith(
+         'Query lambat terdeteksi (501ms): User.findMany'
+       )
+     })
+   })
+   ```
+
 ## **Panduan Update Prisma Client**
 
 1. **Persiapan**:
@@ -320,9 +624,13 @@ Memastikan pembaruan Prisma Client dan konfigurasi deployment ke Vercel berjalan
 
 5. **Konfigurasi Vercel Deployment**:
 
-   - Tambahkan environment variables di Vercel Dashboard
-   - Update build command di `package.json` atau `vercel.json`
-   - Pastikan webhook Clerk terdaftar dengan domain Vercel
+   - Tambahkan environment variables di Vercel Dashboard:
+     - `DATABASE_URL`: URL koneksi PostgreSQL dengan pgbouncer
+     - `DIRECT_URL`: URL koneksi langsung PostgreSQL (untuk migrasi)
+     - `CLERK_SECRET_KEY`: API key untuk Clerk
+     - `CLERK_WEBHOOK_SECRET`: Secret webhook Clerk
+   - Setup webhook Clerk di Dashboard Clerk dengan URL:
+     `https://<your-domain>.vercel.app/api/webhooks/clerk`
 
 6. **Verifikasi**:
    - Jalankan test: `npm test`
@@ -366,6 +674,8 @@ Memastikan pembaruan Prisma Client dan konfigurasi deployment ke Vercel berjalan
 - [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables)
 - [Prisma Testing Best Practices](https://www.prisma.io/docs/guides/testing/unit-testing)
 - [Prisma Deployment Guide](https://www.prisma.io/docs/guides/deployment/vercel)
+- [Jest Documentation](https://jestjs.io/docs/getting-started)
+- [Jest-Mock-Extended](https://github.com/marchaos/jest-mock-extended)
 
 ## **Catatan untuk Pengembangan Ke Depan**
 
@@ -373,10 +683,11 @@ Memastikan pembaruan Prisma Client dan konfigurasi deployment ke Vercel berjalan
 - Buat script untuk backup database otomatis sebelum migrasi
 - Pertimbangkan penggunaan Prisma Studio untuk manajemen data visual
 - Evaluasi kebutuhan untuk menggunakan fitur Prisma baru seperti Prisma Accelerate atau Pulse
+- Pertimbangkan menambahkan integration test yang berinteraksi dengan test database
 
 ## **Langkah Selanjutnya**
 
-- Menyelesaikan Subtask 2: Vercel Deployment Configuration
-- Menyelesaikan Subtask 3: Integrasi dengan Testing Framework
-- Melengkapi dokumentasi di README.md dengan diagram dan panduan deployment
-- Menambahkan monitoring untuk query lambat di production
+- Evaluasi performa Prisma Client di lingkungan produksi
+- Pertimbangkan menambahkan indeks tambahan berdasarkan analisis performa query
+- Monitoring query lambat untuk optimasi lebih lanjut
+- Evaluasi penggunaan Prisma Accelerate untuk performa lebih baik di edge
