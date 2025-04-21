@@ -96,7 +96,7 @@
     "@babel/preset-typescript": "^7.27.0",
     "@eslint/eslintrc": "^3.3.1",
     "@jest/globals": "^29.7.0",
-    "@next/bundle-analyzer": "^15.3.0",
+    "@next/bundle-analyzer": "^15.3.1",
     "@playwright/test": "^1.51.1",
     "@prisma/nextjs-monorepo-workaround-plugin": "^6.6.0",
     "@testing-library/jest-dom": "^6.6.3",
