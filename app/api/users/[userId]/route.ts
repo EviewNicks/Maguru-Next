@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { UserRole, UserStatus } from '@/prisma/generated/client'
 import prisma from '@/lib/prisma'
 import { auth, clerkClient } from '@clerk/nextjs/server'
+import { updateUserWithHistory, executeComplexOperation } from '@/features/manage-users/utils/prisma-utils'
 
 // Skema validasi update user
 const updateUserSchema = z.object({
@@ -71,35 +72,41 @@ export async function PATCH(
     const { role, status } = body
     const { userId } = await params
 
-    // Update user di database lokal
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        role,
-        status,
-      },
-    })
+    // Gunakan executeComplexOperation untuk atomic transaction
+    const updatedUser = await executeComplexOperation(async (tx) => {
+      // Update user di database lokal
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          role,
+          status,
+        },
+      })
 
-    // Dapatkan Clerk user ID dari database
-    const userToUpdate = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { clerkUserId: true },
-    })
+      // Dapatkan Clerk user ID dari database
+      const userToUpdate = await tx.user.findUnique({
+        where: { id: userId },
+        select: { clerkUserId: true },
+      })
 
-    if (!userToUpdate) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
+      if (!userToUpdate) {
+        throw new Error('User not found')
+      }
+
+      // Clerk API call harus dilakukan di luar transaction
+      return { updatedUser, clerkUserId: userToUpdate.clerkUserId }
+    })
 
     // Update metadata di Clerk sesuai dengan data di database
     const clerkClientInstance = await clerkClient()
-    await clerkClientInstance.users.updateUser(userToUpdate.clerkUserId, {
+    await clerkClientInstance.users.updateUser(updatedUser.clerkUserId, {
       publicMetadata: {
-        role: updatedUser.role,
-        status: updatedUser.status,
+        role: updatedUser.updatedUser.role,
+        status: updatedUser.updatedUser.status,
       },
     })
 
-    return NextResponse.json(updatedUser)
+    return NextResponse.json(updatedUser.updatedUser)
   } catch (error) {
     console.error('Error updating user:', error)
     return NextResponse.json(
@@ -176,16 +183,15 @@ export async function PUT(
     const { name, email, role, status } = parsed.data
     const { userId } = await params
 
-    // Update pengguna di database
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        ...(name && { name }),
-        ...(email && { email }),
-        ...(role && { role: role as UserRole }),
-        ...(status && { status: status as UserStatus }),
-      },
-    })
+    // Gunakan updateUserWithHistory untuk mencatat perubahan
+    const data = {
+      ...(name && { name }),
+      ...(email && { email }),
+      ...(role && { role: role as UserRole }),
+      ...(status && { status: status as UserStatus }),
+    }
+
+    const updatedUser = await updateUserWithHistory(userId, data, clerkUserId)
 
     return NextResponse.json(updatedUser)
   } catch (error) {

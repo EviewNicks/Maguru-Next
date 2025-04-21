@@ -19,7 +19,9 @@ export function useUserActions() {
       return response.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({
+        queryKey: ['users'],
+      })
       toast({
         title: 'Success',
         description: 'User has been updated successfully',
@@ -40,7 +42,9 @@ export function useUserActions() {
       if (!response.ok) throw new Error('Failed to delete user')
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({
+        queryKey: ['users'],
+      })
       toast({
         title: 'Success',
         description: 'User has been deleted successfully',

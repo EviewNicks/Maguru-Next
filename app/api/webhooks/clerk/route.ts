@@ -1,9 +1,9 @@
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
-import prisma from '@/lib/prisma'
 import { clerkClient } from '@clerk/nextjs/server'
 import * as Sentry from '@sentry/nextjs'
+import { executeComplexOperation } from '@/features/manage-users/utils/prisma-utils'
 
 export async function POST(req: Request) {
   // Pastikan ini berjalan di server side
@@ -70,68 +70,63 @@ export async function POST(req: Request) {
       }
 
       try {
-        const existingUser = await prisma.user.findUnique({
-          where: { clerkUserId: id },
+        // Gunakan transaction untuk operasi database dan clerk API
+        const result = await executeComplexOperation(async (tx) => {
+          const existingUser = await tx.user.findUnique({
+            where: { clerkUserId: id },
+          })
+
+          let user
+          if (existingUser) {
+            user = await tx.user.update({
+              where: { clerkUserId: id },
+              data: {
+                email,
+                name: `${first_name} ${last_name}`.trim(),
+                updatedAt: new Date(),
+              },
+            })
+          } else {
+            user = await tx.user.create({
+              data: {
+                clerkUserId: id,
+                email,
+                name: `${first_name} ${last_name}`.trim(),
+                role: 'mahasiswa',
+                status: 'active',
+              },
+            })
+          }
+
+          // Perhatikan: clerk API call dilakukan di luar transaction karena bukan bagian dari database
+          // tapi masih dalam executeComplexOperation untuk error handling terintegrasi
+          const client = await clerkClient()
+          await client.users.updateUserMetadata(id, {
+            publicMetadata: {
+              role: user.role,
+              status: user.status,
+            },
+          })
+
+          return {
+            user,
+            action: existingUser ? 'updated' : 'created',
+          }
         })
 
-        if (existingUser) {
-          const updatedUser = await prisma.user.update({
-            where: { clerkUserId: id },
-            data: {
-              email,
-              name: `${first_name} ${last_name}`.trim(),
-              updatedAt: new Date(),
-            },
-          })
-
-          const client = await clerkClient()
-          await client.users.updateUserMetadata(id, {
-            publicMetadata: {
-              role: updatedUser.role,
-              status: updatedUser.status,
-            },
-          })
-
-          return new Response(
-            JSON.stringify({
-              message: 'User berhasil diupdate',
-              user: updatedUser,
-            }),
-            {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' },
-            }
-          )
-        } else {
-          const newUser = await prisma.user.create({
-            data: {
-              clerkUserId: id,
-              email,
-              name: `${first_name} ${last_name}`.trim(),
-              role: 'mahasiswa',
-              status: 'active',
-            },
-          })
-
-          const client = await clerkClient()
-          await client.users.updateUserMetadata(id, {
-            publicMetadata: {
-              role: newUser.role,
-              status: newUser.status,
-            },
-          })
-
-          return new Response(
-            JSON.stringify({
-              message: 'User baru berhasil dibuat',
-              user: newUser,
-            }),
-            {
-              status: 201,
-              headers: { 'Content-Type': 'application/json' },
-            }
-          )
-        }
+        return new Response(
+          JSON.stringify({
+            message:
+              result.action === 'updated'
+                ? 'User berhasil diupdate'
+                : 'User baru berhasil dibuat',
+            user: result.user,
+          }),
+          {
+            status: result.action === 'updated' ? 200 : 201,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
       } catch (error) {
         console.error('Error processing user:', error)
         Sentry.captureException(error, {
@@ -162,8 +157,10 @@ export async function POST(req: Request) {
 
     if (eventType === 'user.deleted') {
       try {
-        await prisma.user.delete({
-          where: { clerkUserId: evt.data.id },
+        await executeComplexOperation(async (tx) => {
+          return await tx.user.delete({
+            where: { clerkUserId: evt.data.id },
+          })
         })
 
         return new Response(
