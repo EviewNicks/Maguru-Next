@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-04-22T15-55-04.492Z",
+  "environment": "test",
+  "numFailedTests": 0,
+  "numPassedTests": 0,
+  "numTotalTests": 0,
+  "executionTime": "1745337300774ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\lib\\auth.test.ts",
+      "failureMessages": [],
+      "testResults": []
+    }
+  ]
+}
