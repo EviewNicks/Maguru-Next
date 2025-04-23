@@ -68,6 +68,7 @@ export async function createUserIfNotExists() {
  * @param user Object user dari berbagai sumber (Clerk, DB, dll)
  * @returns Role dalam format string
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getRoleWithCompat(user: any): string {
   if (!user) {
     return 'mahasiswa' // Default fallback
@@ -125,6 +126,7 @@ export function isRoleAuthorized(
  * @param response Response object
  * @returns Response dengan warning jika diperlukan
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function addRoleDeprecationWarning(response: any): any {
   // Deteksi jika menggunakan format lama
   const isUsingLegacyFormat =

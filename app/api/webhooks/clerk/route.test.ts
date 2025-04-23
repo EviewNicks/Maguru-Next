@@ -17,20 +17,26 @@ jest.mock('@/lib/cache', () => ({
   },
 }))
 
-jest.mock('@sentry/nextjs', () => ({
-  captureException: jest.fn(),
-  addBreadcrumb: jest.fn(),
+// Gunakan pendekatan mock yang lebih sederhana untuk next/server
+jest.mock('next/server', () => ({
+  NextResponse: {
+    json: jest.fn().mockImplementation((data, options) => {
+      return {
+        status: options?.status || 200,
+        json: async () => data,
+      }
+    }),
+  },
 }))
 
-// Import module sehingga dapat dimock
-jest.mock('@/app/api/webhooks/clerk/route', () => {
-  const originalModule = jest.requireActual('@/app/api/webhooks/clerk/route')
-  return {
-    ...originalModule,
-    verifyWebhookSignature: jest.fn(),
-    POST: jest.fn(),
-  }
-})
+// Jest akan otomatis menggunakan mock dari __tests__/__mocks__/@sentry/nextjs.ts
+jest.mock('@sentry/nextjs')
+
+// Mock module tanpa bergantung pada request object
+jest.mock('@/app/api/webhooks/clerk/route', () => ({
+  verifyWebhookSignature: jest.fn(),
+  POST: jest.fn(),
+}))
 
 // Import handler setelah mock
 import { POST, verifyWebhookSignature } from '@/app/api/webhooks/clerk/route'

@@ -17,24 +17,20 @@ jest.mock('@clerk/nextjs/server', () => ({
   })),
 }))
 
-jest.mock('@sentry/nextjs', () => ({
-  captureException: jest.fn(),
-}))
+// Jest akan otomatis menggunakan mock dari __tests__/__mocks__/@sentry/nextjs.ts
+jest.mock('@sentry/nextjs')
 
-jest.mock('next/server', () => {
-  const originalModule = jest.requireActual('next/server')
-  return {
-    ...originalModule,
-    NextResponse: {
-      json: jest.fn().mockImplementation((data, options) => {
-        return {
-          status: options?.status || 200,
-          json: async () => data,
-        }
-      }),
-    },
-  }
-})
+// Gunakan pendekatan mock yang lebih sederhana untuk next/server
+jest.mock('next/server', () => ({
+  NextResponse: {
+    json: jest.fn().mockImplementation((data, options) => {
+      return {
+        status: options?.status || 200,
+        json: async () => data,
+      }
+    }),
+  },
+}))
 
 // Import handler setelah mock
 import { GET, POST } from './route'
@@ -80,7 +76,6 @@ describe('Sync Metadata API Handler', () => {
       // Mock Clerk client
       const mockClerkClient = await clerkClient()
       jest
-
         .mocked(mockClerkClient.users.updateUserMetadata)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .mockResolvedValue({} as any)

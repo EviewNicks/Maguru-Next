@@ -2,6 +2,9 @@ import { PrismaClient } from '@prisma/client'
 import { roleCache, getUserRole, invalidateUserRoles } from './cache'
 import * as Sentry from '@sentry/nextjs'
 
+// Jest akan otomatis menggunakan mock dari __tests__/__mocks__/@sentry/nextjs.ts
+jest.mock('@sentry/nextjs')
+
 // Mock dependencies
 jest.mock('@prisma/client', () => {
   return {
@@ -12,10 +15,6 @@ jest.mock('@prisma/client', () => {
     })),
   }
 })
-
-jest.mock('@sentry/nextjs', () => ({
-  captureException: jest.fn(),
-}))
 
 const mockPrisma = new PrismaClient() as jest.Mocked<PrismaClient>
 

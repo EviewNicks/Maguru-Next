@@ -7,7 +7,7 @@ import { executeComplexOperation } from '@/features/manage-users/utils/prisma-ut
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { roleCache } from '@/lib/cache'
-import { Prisma, UserRole } from '@prisma/client'
+import { Prisma, UserRole } from '@/prisma/generated/client'
 
 // Tipe untuk webhook event dari Clerk
 interface WebhookEvent {

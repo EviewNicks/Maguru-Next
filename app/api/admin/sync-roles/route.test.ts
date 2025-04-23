@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { handlePost } from './route' // Asumsi kita akan mengekspor function ini dari route.ts
 import { roleCache } from '@/lib/cache'
@@ -31,6 +30,23 @@ jest.mock('@clerk/nextjs/server', () => {
   }
 })
 
+// Mock untuk next/server tanpa menggunakan requireActual
+jest.mock('next/server', () => ({
+  NextRequest: jest.fn().mockImplementation((url, options) => ({
+    url,
+    method: options?.method || 'GET',
+    json: jest.fn().mockResolvedValue({}),
+  })),
+  NextResponse: {
+    json: jest.fn().mockImplementation((data, options) => {
+      return {
+        status: options?.status || 200,
+        json: async () => data,
+      }
+    }),
+  },
+}))
+
 jest.mock('@/lib/cache', () => ({
   roleCache: {
     delete: jest.fn(),
@@ -38,12 +54,11 @@ jest.mock('@/lib/cache', () => ({
   },
 }))
 
-jest.mock('@sentry/nextjs', () => ({
-  captureException: jest.fn(),
-}))
-
+// Jest akan otomatis menggunakan mock dari __tests__/__mocks__/@sentry/nextjs.ts
+jest.mock('@sentry/nextjs')
 // Import mocked modules after the mocks are set up
 import { auth, clerkClient } from '@clerk/nextjs/server'
+import { NextRequest } from 'next/server'
 
 const mockPrisma = new PrismaClient() as jest.Mocked<PrismaClient>
 const mockAuth = jest.mocked(auth)

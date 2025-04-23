@@ -2992,7 +2992,7 @@
 
 "@sentry/nextjs@^9.13.0":
   version "9.13.0"
-  resolved "https://registry.npmjs.org/@sentry/nextjs/-/nextjs-9.13.0.tgz"
+  resolved "https://registry.yarnpkg.com/@sentry/nextjs/-/nextjs-9.13.0.tgz#f6ad50c6c59324dd438f16df5d4fc6f5999859a0"
   integrity sha512-7ShYoSewbF3nEeN4JzGlAaWOcQFe3iXOsIb84NXPGoWUv5r378ChRIWeN93CVXOvmG6RIMv0L/yRXKU3qjzkHQ==
   dependencies:
     "@opentelemetry/api" "^1.9.0"

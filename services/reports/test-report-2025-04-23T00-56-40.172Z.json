@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-04-23T00-56-40.172Z",
+  "environment": "test",
+  "numFailedTests": 3,
+  "numPassedTests": 2,
+  "numTotalTests": 5,
+  "executionTime": "1745369798295ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\app\\api\\webhooks\\clerk\\route.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should verify webhook signature successfully",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should throw error for invalid signature",
+          "status": "passed",
+          "duration": 10,
+          "failureMessages": []
+        },
+        {
+          "title": "should update user role in database when receiving user.updated event",
+          "status": "failed",
+          "duration": 1,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'json')"
+          ]
+        },
+        {
+          "title": "should handle webhook verification errors",
+          "status": "failed",
+          "duration": 2,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'status')"
+          ]
+        },
+        {
+          "title": "should handle database errors during update",
+          "status": "failed",
+          "duration": 2,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'status')"
+          ]
+        }
+      ]
+    }
+  ]
+}
