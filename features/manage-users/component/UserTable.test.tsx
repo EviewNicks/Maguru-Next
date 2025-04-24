@@ -111,7 +111,6 @@ jest.mock('@/components/ui/select', () => ({
         onChange={(e) => onValueChange(e.target.value)}
       >
         <option value="admin">Admin</option>
-        <option value="dosen">Dosen</option>
         <option value="mahasiswa">Mahasiswa</option>
       </select>
     </div>
@@ -174,7 +173,6 @@ jest.mock('./UserTable/EditUserDialog', () => ({
           }}
         >
           <option value="admin">Admin</option>
-          <option value="dosen">Dosen</option>
           <option value="mahasiswa">Mahasiswa</option>
         </select>
         <button onClick={() => onOpenChange(false)}>Cancel</button>

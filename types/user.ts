@@ -4,7 +4,7 @@ export type User = {
   clerkUserId?: string // Make optional
   name: string
   email: string
-  role: 'admin' | 'mahasiswa' | 'dosen'
+  role: 'admin' | 'mahasiswa'
   status: 'active' | 'inactive' | 'pending' // Pastikan nilai valid
   createdAt: string | Date // Allow string or Date
   updatedAt?: Date // Make optional
@@ -13,7 +13,7 @@ export type User = {
 // types/user.ts (tambahan untuk action types)
 export type UpdateUserPayload = {
   id: string
-  role?: 'admin' | 'mahasiswa' | 'dosen'
+  role?: 'admin' | 'mahasiswa'
   status?: 'active' | 'inactive' | 'pending'
   lastKnownUpdate?: Date // Add this for version control
 }

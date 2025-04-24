@@ -11,7 +11,7 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 
 const getUserQuerySchema = z.object({
   search: z.string().optional(),
-  role: z.enum(['mahasiswa', 'admin', 'dosen']).optional(),
+  role: z.enum(['mahasiswa', 'admin']).optional(),
   status: z.enum(['active', 'inactive', 'pending']).optional(),
   page: z.string().optional().default('1'),
   limit: z.string().optional().default('10'),

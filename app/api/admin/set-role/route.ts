@@ -35,11 +35,11 @@ export async function handlePost(req: NextRequest, prismaClient = prisma) {
     }
 
     // Cek apakah role valid
-    if (!['admin', 'mahasiswa', 'dosen'].includes(role)) {
+    if (!['admin', 'mahasiswa'].includes(role)) {
       return NextResponse.json(
         {
-          error:
-            'Role tidak valid, harus salah satu dari: admin, mahasiswa, dosen',
+          success: false,
+          error: 'Role tidak valid, harus salah satu dari: admin, mahasiswa',
         },
         { status: 400 }
       )

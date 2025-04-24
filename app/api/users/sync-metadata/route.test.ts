@@ -64,7 +64,7 @@ describe('Sync Metadata API Handler', () => {
         {
           id: '2',
           clerkUserId: 'user_456',
-          role: 'dosen',
+          role: 'mahasiswa',
           status: 'active',
           createdAt: new Date(),
           updatedAt: new Date(),

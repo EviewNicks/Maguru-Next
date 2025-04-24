@@ -1,6 +1,4 @@
-import { useAppDispatch } from '@/store/hooks'
 import { useState } from 'react'
-import { updateUser } from '../../../../store/features/userSlice'
 import { User } from '@/types/user'
 import {
   Tooltip,
@@ -11,37 +9,19 @@ import {
 import { Button } from '@/components/ui/button'
 import { EditUserDialog } from './EditUserDialog'
 import { Check, ChevronDown } from 'lucide-react'
-import { toast } from '@/hooks/use-toast'
 
 // Komponen baru untuk menangani state dan dispatch
 const UserRoleCell = ({ user }: { user: User }) => {
   const [dialogOpen, setDialogOpen] = useState(false)
-  const dispatch = useAppDispatch()
 
-  const handleUpdateUser = async (
-    userId: string,
-    newRole: string,
-    newStatus: string
-  ) => {
-    try {
-      await dispatch(
-        updateUser({
-          id: userId,
-          role: newRole as User['role'],
-          status: newStatus as User['status'],
-        })
-      ).unwrap()
+  // Memastikan user dan user.role selalu ada
+  const safeUser = user || ({ role: 'mahasiswa' } as User)
 
-      toast({ title: 'Success', description: 'User role updated successfully' })
-      setDialogOpen(false)
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update user role',
-        variant: 'destructive',
-      })
-    }
-  }
+  // Memastikan role selalu memiliki nilai valid
+  const safeRole =
+    safeUser.role && ['admin', 'mahasiswa'].includes(safeUser.role)
+      ? safeUser.role
+      : 'mahasiswa'
 
   return (
     <>
@@ -53,9 +33,9 @@ const UserRoleCell = ({ user }: { user: User }) => {
               className="flex items-center gap-2 group"
               onClick={() => setDialogOpen(true)}
             >
-              {user.role}
+              {safeRole}
               <ChevronDown className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-              {user.role === 'admin' && (
+              {safeRole === 'admin' && (
                 <Check className="h-4 w-4 text-green-500 opacity-100 transition-opacity" />
               )}
             </Button>
@@ -67,7 +47,7 @@ const UserRoleCell = ({ user }: { user: User }) => {
       </TooltipProvider>
 
       <EditUserDialog
-        user={user}
+        user={{ ...safeUser, role: safeRole }}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />

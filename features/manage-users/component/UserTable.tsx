@@ -16,8 +16,8 @@ import { Label } from '@/components/ui/label'
 function UsersPage() {
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
-  const [role, setRole] = useState('')
-  const [status, setStatus] = useState('')
+  const [role, setRole] = useState('all')
+  const [status, setStatus] = useState('all')
   const [search, setSearch] = useState('')
 
   const { data, isLoading, error } = useQuery({
@@ -26,8 +26,8 @@ function UsersPage() {
       const params = new URLSearchParams()
       params.set('page', page.toString())
       params.set('limit', limit.toString())
-      if (role) params.set('role', role)
-      if (status) params.set('status', status)
+      if (role && role !== 'all') params.set('role', role)
+      if (status && status !== 'all') params.set('status', status)
       if (search) params.set('search', search)
 
       const response = await fetch(`/api/users?${params.toString()}`)
@@ -57,7 +57,7 @@ function UsersPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Daftar Pengguna</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
           <Label htmlFor="search">Cari</Label>
           <Input
@@ -76,10 +76,9 @@ function UsersPage() {
               <SelectValue placeholder="Semua Role" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Semua Role</SelectItem>
+              <SelectItem value="all">Semua Role</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
               <SelectItem value="mahasiswa">Mahasiswa</SelectItem>
-              <SelectItem value="dosen">Dosen</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -91,7 +90,7 @@ function UsersPage() {
               <SelectValue placeholder="Semua Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Semua Status</SelectItem>
+              <SelectItem value="all">Semua Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>

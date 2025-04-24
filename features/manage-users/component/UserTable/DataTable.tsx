@@ -94,7 +94,7 @@ export function DataTable({
 
   if (isLoading) {
     return (
-      <div className="rounded-md border">
+      <div className="rounded-md border mt-4">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

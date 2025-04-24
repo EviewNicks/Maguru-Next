@@ -23,7 +23,6 @@ export function getRoleFromLegacyFormat(
     case 1:
       return { role: 'admin', warning }
     case 2:
-      return { role: 'dosen', warning }
     case 3:
       return { role: 'mahasiswa', warning }
     default:
@@ -45,7 +44,7 @@ export function getNormalizedRole(role: string | number): RoleConversionResult {
   }
 
   // Jika role valid, gunakan apa adanya
-  if (['admin', 'dosen', 'mahasiswa'].includes(role)) {
+  if (['admin', 'mahasiswa'].includes(role)) {
     return { role }
   }
 
