@@ -14,6 +14,7 @@ const isPublicRoute = createRouteMatcher([
   '/unauthorized',
   '/verify(.*)',
   '/api/webhooks(.*)',
+  '/api/admin/set-role',
 ])
 
 /**
