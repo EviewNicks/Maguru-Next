@@ -6,22 +6,28 @@
  */
 
 export const captureException = jest.fn()
+export const captureMessage = jest.fn()
 export const addBreadcrumb = jest.fn()
-export const withScope = jest.fn((callback) => {
-  // Untuk menangani kasus seperti Sentry.withScope(scope => { ... })
-  const mockScope = {
-    setExtras: jest.fn(),
-    setTags: jest.fn(),
-    setUser: jest.fn(),
-  }
-  callback(mockScope)
-})
+export const startTransaction = jest.fn(() => ({
+  startChild: jest.fn(() => ({
+    finish: jest.fn(),
+  })),
+  finish: jest.fn(),
+}))
 
 // Objek Sentry lengkap untuk kompatibilitas dengan semua metode yang mungkin digunakan
 const Sentry = {
   captureException,
   addBreadcrumb,
-  withScope,
+  withScope: jest.fn((callback) => {
+    // Untuk menangani kasus seperti Sentry.withScope(scope => { ... })
+    const mockScope = {
+      setExtras: jest.fn(),
+      setTags: jest.fn(),
+      setUser: jest.fn(),
+    }
+    callback(mockScope)
+  }),
   init: jest.fn(),
   captureMessage: jest.fn(),
   configureScope: jest.fn(),

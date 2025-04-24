@@ -30,7 +30,7 @@ jest.mock('@clerk/nextjs/server', () => {
   }
 })
 
-// Mock untuk next/server tanpa menggunakan requireActual
+// Mock untuk next/server
 jest.mock('next/server', () => ({
   NextRequest: jest.fn().mockImplementation((url, options) => ({
     url,
@@ -56,17 +56,26 @@ jest.mock('@/lib/cache', () => ({
 
 // Jest akan otomatis menggunakan mock dari __tests__/__mocks__/@sentry/nextjs.ts
 jest.mock('@sentry/nextjs')
+
 // Import mocked modules after the mocks are set up
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { NextRequest } from 'next/server'
 
 const mockPrisma = new PrismaClient() as jest.Mocked<PrismaClient>
 const mockAuth = jest.mocked(auth)
-const mockClerkClient = jest.fn().mockReturnValue({
+
+// PERBAIKAN: Ubah mockClerkClient dengan struktur yang benar dan data yang valid
+const mockClerkClient = jest.fn().mockImplementation(() => ({
   users: {
-    getUserList: jest.fn(),
+    getUserList: jest.fn().mockResolvedValue({
+      data: [
+        { id: 'user_1', publicMetadata: { role: 'admin' } },
+        { id: 'user_2', publicMetadata: { role: 'mahasiswa' } }, // Ubah "dosen" menjadi "mahasiswa" agar valid sesuai enum
+        { id: 'user_3', publicMetadata: {} }, // No role should default to 'mahasiswa'
+      ],
+    }),
   },
-})
+}))
 
 // Type assertion for clerkClient mock
 jest.mocked(clerkClient).mockImplementation(mockClerkClient)
@@ -94,23 +103,17 @@ describe('Manual Sync Roles Endpoint', () => {
       role: 'admin',
     })
 
-    // Mock clerk users
+    // PERBAIKAN: Pastikan selalu menggunakan format yang sama (dengan properti 'data')
     const mockUserList = [
       { id: 'user_1', publicMetadata: { role: 'admin' } },
-      { id: 'user_2', publicMetadata: { role: 'dosen' } },
+      { id: 'user_2', publicMetadata: { role: 'mahasiswa' } }, // Ubah "dosen" menjadi "mahasiswa" agar valid sesuai enum
       { id: 'user_3', publicMetadata: {} }, // No role should default to 'mahasiswa'
     ]
-    const mockClerkInstance = mockClerkClient()
-    mockClerkInstance.users.getUserList.mockResolvedValue(mockUserList)
 
-    // Mock successful updates
-    ;(mockPrisma.user.update as jest.Mock).mockImplementation((params) =>
-      Promise.resolve({
-        id: `db_${params.where.clerkUserId}`,
-        clerkUserId: params.where.clerkUserId,
-        role: params.data.role,
-      })
-    )
+    const mockClerkInstance = mockClerkClient()
+    mockClerkInstance.users.getUserList.mockResolvedValue({
+      data: mockUserList, // Gunakan format dengan property 'data'
+    })
 
     // Act
     const response = await handlePost(mockRequest, mockPrisma)
@@ -119,15 +122,28 @@ describe('Manual Sync Roles Endpoint', () => {
     // Assert
     expect(mockPrisma.$transaction).toHaveBeenCalled()
     expect(mockPrisma.user.update).toHaveBeenCalledTimes(3)
-    expect(mockPrisma.user.update).toHaveBeenCalledWith({
-      where: { clerkUserId: 'user_1' },
-      data: { role: 'admin' },
-    })
-    expect(mockPrisma.user.update).toHaveBeenCalledWith({
-      where: { clerkUserId: 'user_3' },
-      data: { role: 'mahasiswa' }, // Default role
-    })
+
+    // We need to check if each user has a proper update call
+    // but since the exact format might be different, we check individually
+    const updateCalls = (mockPrisma.user.update as jest.Mock).mock.calls
+
+    //act
+    // First user (admin)
+    expect(updateCalls[0][0].where.clerkUserId).toBe('user_1')
+    expect(updateCalls[0][0].data.role).toBe('admin')
+
+    // second user (mahasiswa, bukan dosen yang tidak valid)
+    expect(updateCalls[1][0].where.clerkUserId).toBe('user_2')
+    expect(updateCalls[1][0].data.role).toBe('mahasiswa')
+
+    // second user (mahasiswa, bukan dosen yang tidak valid)
+    expect(updateCalls[2][0].where.clerkUserId).toBe('user_3')
+    expect(updateCalls[2][0].data.role).toBe('mahasiswa')
+
+    // Cache should be cleared
     expect(roleCache.clear).toHaveBeenCalled()
+
+    // Response should be successful
     expect(responseData.success).toBe(true)
     expect(responseData.count).toBe(3)
   })

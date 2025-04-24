@@ -1,5 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+import * as Sentry from '@sentry/nextjs'
+import { getRoleFromClaims } from '@/lib/edge-chache'
 
 /**
  * Mendefinisikan rute-rute publik yang dapat diakses tanpa autentikasi
@@ -19,26 +21,13 @@ const isPublicRoute = createRouteMatcher([
  */
 const isAdminRoute = createRouteMatcher(['/admin(.*)'])
 
-// Tipe untuk metadata Auth0
-interface Auth0Metadata {
-  role?: string
-  [key: string]: unknown
-}
-
-/**
- * Memeriksa apakah pengguna memiliki peran admin
- */
-function hasAdminRole(metadata: Auth0Metadata | null | undefined): boolean {
-  return metadata?.role === 'admin'
-}
-
 /**
  * Middleware Clerk untuk mengelola autentikasi dan otorisasi
  *
  * Alur kerja:
  * 1. Memeriksa apakah rute adalah rute publik, jika ya biarkan akses
  * 2. Jika bukan rute publik, memeriksa apakah user sudah login, jika tidak redirect ke login
- * 3. Untuk rute admin, memeriksa apakah user memiliki role admin, jika tidak redirect ke unauthorized
+ * 3. Untuk rute admin, memeriksa apakah user memiliki role admin melalui cache atau database, jika tidak redirect ke unauthorized
  */
 export default clerkMiddleware(
   async (auth, req) => {
@@ -60,12 +49,10 @@ export default clerkMiddleware(
 
       // Pemeriksaan untuk rute admin
       if (isAdminRoute(req)) {
-        // Pemeriksaan role dari session metadata
-        const metadata = session.sessionClaims?.metadata as
-          | Auth0Metadata
-          | undefined
+        // Gunakan getRoleFromClaims dari edge-cache
+        const role = getRoleFromClaims(session.sessionClaims)
 
-        if (!hasAdminRole(metadata)) {
+        if (role !== 'admin') {
           // Redirect ke halaman unauthorized jika bukan admin
           const unauthorizedUrl = new URL('/unauthorized', req.url)
           return NextResponse.redirect(unauthorizedUrl)
@@ -75,7 +62,11 @@ export default clerkMiddleware(
       // Jika semua pemeriksaan berhasil, lanjutkan request
       return NextResponse.next()
     } catch (error) {
-      console.error('Middleware error:', error)
+      // Log error ke Sentry untuk monitoring
+      Sentry.captureException(error, {
+        tags: { component: 'middleware' },
+      })
+
       // Pada kasus error, tetap izinkan request untuk menghindari blocking
       return NextResponse.next()
     }

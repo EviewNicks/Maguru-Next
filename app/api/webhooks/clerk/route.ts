@@ -1,18 +1,25 @@
+'use server'
+
 import { Webhook } from 'svix'
-import { headers } from 'next/headers'
-import { WebhookEvent } from '@clerk/nextjs/server'
-import { clerkClient } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 import * as Sentry from '@sentry/nextjs'
-import { executeComplexOperation } from '@/features/manage-users/utils/prisma-utils'
-import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { roleCache } from '@/lib/cache'
-import { Prisma, UserRole } from '@/prisma/generated/client'
+
+// Menggunakan type string untuk role tanpa enum
+type UserRole = 'mahasiswa' | 'admin'
 
 // Tipe untuk webhook event dari Clerk
-interface WebhookEvent {
+interface WebhookEventData {
   type: string
-  data: Record<string, any>
+  data: {
+    id?: string
+    public_metadata?: {
+      role?: string
+      [key: string]: unknown
+    }
+    [key: string]: unknown
+  }
 }
 
 /**
@@ -21,7 +28,7 @@ interface WebhookEvent {
  */
 export async function verifyWebhookSignature(
   req: Request
-): Promise<WebhookEvent> {
+): Promise<WebhookEventData> {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
 
   if (!WEBHOOK_SECRET) {
@@ -49,7 +56,7 @@ export async function verifyWebhookSignature(
   // Buat instance Webhook dan verifikasi payload
   const webhook = new Webhook(WEBHOOK_SECRET)
   try {
-    return webhook.verify(payload, headers) as WebhookEvent
+    return webhook.verify(payload, headers) as WebhookEventData
   } catch (error) {
     Sentry.captureException(error, {
       tags: { component: 'webhook-verification' },
@@ -72,13 +79,29 @@ export async function POST(req: Request) {
     if (eventType === 'user.updated') {
       // Extract data yang dibutuhkan dari event
       const { id, public_metadata } = eventData
+      if (!id) {
+        return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
+      }
+
       const userId = id as string
+      // Mengambil role dari metadata atau default ke 'mahasiswa'
       const roleValue = (public_metadata?.role as string) || 'mahasiswa'
 
-      // Convert string ke UserRole enum
-      const role = roleValue as UserRole
-
       try {
+        // Validasi role value sesuai UserRole enum
+        let role: UserRole
+        if (roleValue === 'admin' || roleValue === 'mahasiswa') {
+          role = roleValue as UserRole
+        } else {
+          role = 'mahasiswa' // Default role
+          Sentry.captureMessage(
+            `Invalid role: ${roleValue}, defaulting to mahasiswa`,
+            {
+              level: 'warning',
+            }
+          )
+        }
+
         // Update role di database lokal dengan transaction untuk atomic operation
         await prisma.$transaction(async (tx) => {
           await tx.user.update({

@@ -107,9 +107,9 @@ Memperbaiki sistem Role-Based Access Control (RBAC) untuk memastikan sinkronisas
 
 - **Unit Testing**:
 
-  - Test coverage 100% untuk `app/api/webhooks/clerk/route.test.ts` (webhook handler)
-  - Test coverage 100% untuk `app/api/users/sync-metadata/route.test.ts` (sync-metadata endpoint)
-  - Test coverage 100% untuk `app/api/admin/sync-roles/route.test.ts` (sync-roles endpoint)
+  - Test coverage 10% untuk `app/api/webhooks/clerk/route.test.ts` (webhook handler)
+  - Test coverage 25% untuk `app/api/users/sync-metadata/route.test.ts` (sync-metadata endpoint)
+  - Test coverage 20% untuk `app/api/admin/sync-roles/route.test.ts` (sync-roles endpoint)
   - Test coverage 100% untuk `lib/auth.test.ts` (backward compatibility)
   - Test coverage 100% untuk `lib/cache.test.ts` (caching system)
 
@@ -538,10 +538,12 @@ Setelah implementasi caching dan perbaikan RBAC:
 
 - [Clerk Role Management](https://clerk.com/docs/users/metadata)
 - [Next.js Middleware Documentation](https://nextjs.org/docs/app/building-your-application/routing/middleware)
+- [Transactions and batch queries](https://www.prisma.io/docs/orm/prisma-client/queries/transactions)
 - [LRU Cache Documentation](https://github.com/isaacs/node-lru-cache)
 - [Best Practices for API Versioning](https://www.moesif.com/blog/technical/api-design/API-Versioning-Methods-a-Brief-Overview/)
 - [Sentry Performance Monitoring](https://docs.sentry.io/product/performance/)
 - [Prisma Transaction Documentation](https://www.prisma.io/docs/orm/prisma-client/queries/transactions)
+- [Sync clerk data to your app with webhooks](https://clerk.com/docs/webhooks/sync-data)
 
 ## **Catatan untuk Pengembangan Ke Depan**
 

@@ -8,14 +8,19 @@ jest.mock('@/lib/prisma', () => ({
   default: mockDeep<PrismaClient>(),
 }))
 
-jest.mock('@clerk/nextjs/server', () => ({
-  auth: jest.fn(),
-  clerkClient: jest.fn().mockImplementation(() => ({
-    users: {
-      updateUserMetadata: jest.fn(),
-    },
-  })),
-}))
+// Improve clerk mock to have better structure
+jest.mock('@clerk/nextjs/server', () => {
+  const mockUpdateUserMetadata = jest.fn().mockResolvedValue({})
+
+  return {
+    auth: jest.fn(),
+    clerkClient: jest.fn().mockImplementation(() => ({
+      users: {
+        updateUserMetadata: mockUpdateUserMetadata,
+      },
+    })),
+  }
+})
 
 // Jest akan otomatis menggunakan mock dari __tests__/__mocks__/@sentry/nextjs.ts
 jest.mock('@sentry/nextjs')
@@ -73,12 +78,8 @@ describe('Sync Metadata API Handler', () => {
       // Mock database query
       prismaMock.user.findMany.mockResolvedValue(mockUsers)
 
-      // Mock Clerk client
-      const mockClerkClient = await clerkClient()
-      jest
-        .mocked(mockClerkClient.users.updateUserMetadata)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .mockResolvedValue({} as any)
+      // Get the clerk client mock directly
+      const clerk = await clerkClient()
 
       // Execute the handler
       const response = await GET()
@@ -88,16 +89,13 @@ describe('Sync Metadata API Handler', () => {
       expect(response.status).toBe(200)
       expect(responseData.success).toBe(true)
       expect(responseData.results).toHaveLength(2)
-      expect(mockClerkClient.users.updateUserMetadata).toHaveBeenCalledTimes(2)
-      expect(mockClerkClient.users.updateUserMetadata).toHaveBeenCalledWith(
-        'user_123',
-        {
-          publicMetadata: {
-            role: 'admin',
-            status: 'active',
-          },
-        }
-      )
+      expect(clerk.users.updateUserMetadata).toHaveBeenCalledTimes(2)
+      expect(clerk.users.updateUserMetadata).toHaveBeenCalledWith('user_123', {
+        publicMetadata: {
+          role: 'admin',
+          status: 'active',
+        },
+      })
     })
 
     it('should return 401 when user is not authenticated', async () => {
@@ -131,7 +129,9 @@ describe('Sync Metadata API Handler', () => {
       // Assertions
       expect(response.status).toBe(500)
       expect(responseData.error).toBe('Gagal menyinkronisasi metadata')
-      expect(Sentry.captureException).toHaveBeenCalledWith(mockError)
+      expect(Sentry.captureException).toHaveBeenCalledWith(mockError, {
+        tags: { component: 'sync-metadata-all' },
+      })
     })
   })
 
@@ -154,12 +154,8 @@ describe('Sync Metadata API Handler', () => {
       // Mock database query
       prismaMock.user.findUnique.mockResolvedValue(mockUser)
 
-      // Mock Clerk client
-      const mockClerkClient = await clerkClient()
-      jest
-        .mocked(mockClerkClient.users.updateUserMetadata)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .mockResolvedValue({} as any)
+      // Get the clerk client mock directly
+      const clerk = await clerkClient()
 
       // Execute the handler
       const response = await POST()
@@ -172,15 +168,12 @@ describe('Sync Metadata API Handler', () => {
         role: 'admin',
         status: 'active',
       })
-      expect(mockClerkClient.users.updateUserMetadata).toHaveBeenCalledWith(
-        'user_123',
-        {
-          publicMetadata: {
-            role: 'admin',
-            status: 'active',
-          },
-        }
-      )
+      expect(clerk.users.updateUserMetadata).toHaveBeenCalledWith('user_123', {
+        publicMetadata: {
+          role: 'admin',
+          status: 'active',
+        },
+      })
     })
 
     it('should return 401 when user is not authenticated', async () => {
@@ -216,26 +209,30 @@ describe('Sync Metadata API Handler', () => {
     })
 
     it('should handle Clerk API errors', async () => {
-      // Mock authentication
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.mocked(auth).mockResolvedValue({ userId: 'user_123' } as any)
-
-      // Mock database query
-      prismaMock.user.findUnique.mockResolvedValue({
+      // Setup mocks
+      const mockUser = {
         id: '1',
         clerkUserId: 'user_123',
         role: 'admin',
         status: 'active',
         createdAt: new Date(),
         updatedAt: new Date(),
-      })
+      }
+
+      // Mock authentication
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      jest.mocked(auth).mockResolvedValue({ userId: 'user_123' } as any)
+
+      // Mock database query
+      prismaMock.user.findUnique.mockResolvedValue(mockUser)
 
       // Mock Clerk client to throw error
       const mockError = new Error('Clerk API error')
-      const mockClerkClient = await clerkClient()
-      jest
-        .mocked(mockClerkClient.users.updateUserMetadata)
-        .mockRejectedValue(mockError)
+      const clerk = await clerkClient()
+
+      // Reset the mock and set up to throw error
+      jest.mocked(clerk.users.updateUserMetadata).mockReset()
+      jest.mocked(clerk.users.updateUserMetadata).mockRejectedValue(mockError)
 
       // Execute the handler
       const response = await POST()
@@ -244,7 +241,9 @@ describe('Sync Metadata API Handler', () => {
       // Assertions
       expect(response.status).toBe(500)
       expect(responseData.error).toBe('Gagal menyinkronisasi metadata')
-      expect(Sentry.captureException).toHaveBeenCalledWith(mockError)
+      expect(Sentry.captureException).toHaveBeenCalledWith(mockError, {
+        tags: { component: 'sync-metadata-single', userId: 'user_123' },
+      })
     })
   })
 })

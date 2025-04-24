@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { auth, clerkClient } from '@clerk/nextjs/server'
-
+import * as Sentry from '@sentry/nextjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,13 +20,14 @@ export async function GET() {
     for (const user of users) {
       try {
         // Update metadata di Clerk
-        const client = await clerkClient()
-        await client.users.updateUserMetadata(user.clerkUserId, {
+        const clerk = await clerkClient()
+        await clerk.users.updateUserMetadata(user.clerkUserId, {
           publicMetadata: {
             role: user.role,
             status: user.status,
           },
         })
+
         results.push({
           userId: user.clerkUserId,
           status: 'success',
@@ -36,6 +37,10 @@ export async function GET() {
           },
         })
       } catch (error) {
+        Sentry.captureException(error, {
+          tags: { component: 'sync-metadata', userId: user.clerkUserId },
+        })
+
         results.push({
           userId: user.clerkUserId,
           status: 'error',
@@ -50,7 +55,10 @@ export async function GET() {
       results,
     })
   } catch (error) {
-    console.error('Error syncing all metadata:', error)
+    Sentry.captureException(error, {
+      tags: { component: 'sync-metadata-all' },
+    })
+
     return NextResponse.json(
       {
         error: 'Gagal menyinkronisasi metadata',
@@ -60,7 +68,6 @@ export async function GET() {
     )
   }
 }
-
 
 export async function POST() {
   try {
@@ -80,13 +87,24 @@ export async function POST() {
     }
 
     // Update metadata di Clerk
-    const client = await clerkClient()
-    await client.users.updateUserMetadata(userId, {
-      publicMetadata: {
-        role: user.role,
-        status: user.status,
-      },
-    })
+    try {
+      const clerk = await clerkClient()
+      await clerk.users.updateUserMetadata(userId, {
+        publicMetadata: {
+          role: user.role,
+          status: user.status,
+        },
+      })
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: { component: 'sync-metadata-single', userId },
+      })
+
+      return NextResponse.json(
+        { error: 'Gagal menyinkronisasi metadata' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       success: true,
@@ -97,13 +115,12 @@ export async function POST() {
       },
     })
   } catch (error) {
-    console.error('Error syncing metadata:', error)
-    return NextResponse.json(
-      {
-        error: 'Gagal menyinkronisasi metadata',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
+    Sentry.captureException(error, {
+      tags: { component: 'sync-metadata-single' },
+    })
 
+    return NextResponse.json(
+      { error: 'Gagal menyinkronisasi metadata' },
       { status: 500 }
     )
   }

@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-04-23T00-56-02.616Z",
+  "timestamp": "2025-04-24T00-14-07.140Z",
   "environment": "test",
   "numFailedTests": 1,
   "numPassedTests": 2,
   "numTotalTests": 3,
-  "executionTime": "1745369760326ms",
+  "executionTime": "1745453643576ms",
   "testResults": [
     {
       "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\app\\api\\admin\\sync-roles\\route.test.ts",
@@ -13,21 +13,21 @@
         {
           "title": "should synchronize roles from Clerk to database for all users",
           "status": "failed",
-          "duration": 9,
+          "duration": 49,
           "failureMessages": [
-            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mjest.fn()\u001b[39m\u001b[2m).\u001b[22mtoHaveBeenCalledWith\u001b[2m(\u001b[22m\u001b[32m...expected\u001b[39m\u001b[2m)\u001b[22m"
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m"
           ]
         },
         {
           "title": "should reject non-admin users",
           "status": "passed",
-          "duration": 1,
+          "duration": 2,
           "failureMessages": []
         },
         {
           "title": "should handle database errors and capture them in Sentry",
           "status": "passed",
-          "duration": 1,
+          "duration": 13,
           "failureMessages": []
         }
       ]
