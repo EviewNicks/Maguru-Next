@@ -1,198 +1,149 @@
+'use server'
+
 import { Webhook } from 'svix'
-import { headers } from 'next/headers'
-import { WebhookEvent } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
+import * as Sentry from '@sentry/nextjs'
 import prisma from '@/lib/prisma'
-import { clerkClient } from '@clerk/nextjs/server'
+import { roleCache } from '@/lib/cache'
 
-export async function POST(req: Request) {
-  // Pastikan ini berjalan di server side
-  if (typeof window !== 'undefined') {
-    return new Response('This endpoint can only be called from server side', {
-      status: 400,
-    })
+// Menggunakan type string untuk role tanpa enum
+type UserRole = 'mahasiswa' | 'admin'
+
+// Tipe untuk webhook event dari Clerk
+interface WebhookEventData {
+  type: string
+  data: {
+    id?: string
+    public_metadata?: {
+      role?: string
+      [key: string]: unknown
+    }
+    [key: string]: unknown
   }
+}
 
+/**
+ * Verifikasi signature webhook dari Clerk
+ * Memastikan webhook benar-benar berasal dari Clerk
+ */
+export async function verifyWebhookSignature(
+  req: Request
+): Promise<WebhookEventData> {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
 
   if (!WEBHOOK_SECRET) {
-    throw new Error(
-      'Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local'
-    )
+    throw new Error('CLERK_WEBHOOK_SECRET is not set')
   }
 
+  // Dapatkan headers yang diperlukan untuk verifikasi
+  const svix_id = req.headers.get('svix-id')
+  const svix_timestamp = req.headers.get('svix-timestamp')
+  const svix_signature = req.headers.get('svix-signature')
+
+  // Validasi headers yang diperlukan
+  if (!svix_id || !svix_timestamp || !svix_signature) {
+    throw new Error('Missing svix headers')
+  }
+
+  // Dapatkan payload dari webhook
+  const payload = await req.text()
+  const headers = {
+    'svix-id': svix_id,
+    'svix-timestamp': svix_timestamp,
+    'svix-signature': svix_signature,
+  }
+
+  // Buat instance Webhook dan verifikasi payload
+  const webhook = new Webhook(WEBHOOK_SECRET)
   try {
-    const headerPayload = await headers()
-    const svix_id = headerPayload.get('svix-id')
-    const svix_timestamp = headerPayload.get('svix-timestamp')
-    const svix_signature = headerPayload.get('svix-signature')
+    return webhook.verify(payload, headers) as WebhookEventData
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: { component: 'webhook-verification' },
+    })
+    throw error
+  }
+}
 
-    if (!svix_id || !svix_timestamp || !svix_signature) {
-      return new Response('Error occured -- no svix headers', {
-        status: 400,
-      })
-    }
+/**
+ * Handler untuk webhook Clerk
+ * Memproses event user.updated untuk mengupdate role di database
+ */
+export async function POST(req: Request) {
+  try {
+    // Verifikasi webhook signature
+    const event = await verifyWebhookSignature(req)
+    const { type: eventType, data: eventData } = event
 
-    const payload = await req.json()
-    const body = JSON.stringify(payload)
-
-    const wh = new Webhook(WEBHOOK_SECRET)
-
-    let evt: WebhookEvent
-
-    try {
-      evt = wh.verify(body, {
-        'svix-id': svix_id,
-        'svix-timestamp': svix_timestamp,
-        'svix-signature': svix_signature,
-      }) as WebhookEvent
-    } catch (err) {
-      console.error('Error verifying webhook:', err)
-      return new Response('Error verifying webhook signature', {
-        status: 400,
-      })
-    }
-
-    const eventType = evt.type
-
-    if (eventType === 'user.created' || eventType === 'user.updated') {
-      const { id, email_addresses, first_name, last_name } = evt.data
-      const email = email_addresses[0]?.email_address
-
-      if (!email) {
-        return new Response('Email tidak ditemukan', { status: 400 })
+    // Handle user update event (untuk sinkronisasi role)
+    if (eventType === 'user.updated') {
+      // Extract data yang dibutuhkan dari event
+      const { id, public_metadata } = eventData
+      if (!id) {
+        return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 })
       }
 
+      const userId = id as string
+      // Mengambil role dari metadata atau default ke 'mahasiswa'
+      const roleValue = (public_metadata?.role as string) || 'mahasiswa'
+
       try {
-        const existingUser = await prisma.user.findUnique({
-          where: { clerkUserId: id },
-        })
-
-        if (existingUser) {
-          const updatedUser = await prisma.user.update({
-            where: { clerkUserId: id },
-            data: {
-              email,
-              name: `${first_name} ${last_name}`.trim(),
-              updatedAt: new Date(),
-            },
-          })
-
-          const client = await clerkClient()
-          await client.users.updateUserMetadata(id, {
-            publicMetadata: {
-              role: updatedUser.role,
-              status: updatedUser.status,
-            },
-          })
-
-          return new Response(
-            JSON.stringify({
-              message: 'User berhasil diupdate',
-              user: updatedUser,
-            }),
-            {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' },
-            }
-          )
+        // Validasi role value sesuai UserRole enum
+        let role: UserRole
+        if (roleValue === 'admin' || roleValue === 'mahasiswa') {
+          role = roleValue as UserRole
         } else {
-          const newUser = await prisma.user.create({
-            data: {
-              clerkUserId: id,
-              email,
-              name: `${first_name} ${last_name}`.trim(),
-              role: 'mahasiswa',
-              status: 'active',
-            },
-          })
-
-          const client = await clerkClient()
-          await client.users.updateUserMetadata(id, {
-            publicMetadata: {
-              role: newUser.role,
-              status: newUser.status,
-            },
-          })
-
-          return new Response(
-            JSON.stringify({
-              message: 'User baru berhasil dibuat',
-              user: newUser,
-            }),
+          role = 'mahasiswa' // Default role
+          Sentry.captureMessage(
+            `Invalid role: ${roleValue}, defaulting to mahasiswa`,
             {
-              status: 201,
-              headers: { 'Content-Type': 'application/json' },
+              level: 'warning',
             }
           )
         }
-      } catch (error) {
-        console.error('Error processing user:', error)
-        return new Response(
-          JSON.stringify({
-            error: 'Error processing user',
-            details: error instanceof Error ? error.message : 'Unknown error',
-          }),
-          {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
-      }
-    }
 
-    if (eventType === 'user.deleted') {
-      try {
-        await prisma.user.delete({
-          where: { clerkUserId: evt.data.id },
+        // Update role di database lokal dengan transaction untuk atomic operation
+        await prisma.$transaction(async (tx) => {
+          await tx.user.update({
+            where: { clerkUserId: userId },
+            data: { role },
+          })
         })
 
-        return new Response(
-          JSON.stringify({
-            message: 'User berhasil dihapus',
-            userId: evt.data.id,
-          }),
-          {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        )
+        // Invalidasi cache untuk user yang diupdate
+        roleCache.delete(userId)
+
+        // Log sukses di Sentry untuk monitoring
+        Sentry.addBreadcrumb({
+          category: 'webhook',
+          message: `Updated role for user ${userId} to ${role}`,
+          level: 'info',
+        })
+
+        return NextResponse.json({ success: true })
       } catch (error) {
-        console.error('Error deleting user:', error)
-        return new Response(
-          JSON.stringify({
-            error: 'Error deleting user',
-            details: error instanceof Error ? error.message : 'Unknown error',
-          }),
-          {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-          }
+        // Tangkap dan log error pada database operation
+        Sentry.captureException(error, {
+          tags: {
+            component: 'webhook-handler',
+            userId,
+            role: roleValue,
+          },
+        })
+        return NextResponse.json(
+          { error: 'Internal server error' },
+          { status: 500 }
         )
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        message: 'Webhook processed successfully',
-        eventType,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    )
+    // Kembalikan respons sukses untuk event lain
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return new Response(
-      JSON.stringify({
-        error: 'Unexpected error occurred',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    )
-
+    // Tangkap error pada verifikasi webhook
+    Sentry.captureException(error, {
+      tags: { component: 'webhook-handler' },
+    })
+    return NextResponse.json({ error: 'Invalid webhook' }, { status: 400 })
   }
 }

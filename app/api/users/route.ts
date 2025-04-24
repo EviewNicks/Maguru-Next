@@ -1,18 +1,20 @@
 // app/api/users/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { Prisma, UserRole, UserStatus } from '@/prisma/generated/client'
+import { UserRole, UserStatus } from '@/prisma/generated/client'
 
-import prisma from '@/lib/prisma'
+import {
+  getOptimizedUsers,
+  executeComplexOperation,
+} from '@/features/manage-users/utils/prisma-utils'
 import { auth, currentUser } from '@clerk/nextjs/server'
 
 const getUserQuerySchema = z.object({
   search: z.string().optional(),
-  role: z.enum(['mahasiswa', 'admin', 'dosen']).optional(),
+  role: z.enum(['mahasiswa', 'admin']).optional(),
   status: z.enum(['active', 'inactive', 'pending']).optional(),
   page: z.string().optional().default('1'),
   limit: z.string().optional().default('10'),
-
 })
 
 export async function GET(req: NextRequest) {
@@ -40,28 +42,14 @@ export async function GET(req: NextRequest) {
 
     const { search, role, status, page = '1', limit = '10' } = parsed.data
 
-    const skip = (parseInt(page) - 1) * parseInt(limit)
-
-    const where: Prisma.UserWhereInput = {
-      OR: search
-        ? [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } },
-          ]
-        : undefined,
+    // Gunakan getOptimizedUsers dari prisma-utils
+    const [total, users] = await getOptimizedUsers({
+      page: parseInt(page),
+      limit: parseInt(limit),
       role: role as UserRole | undefined,
       status: status as UserStatus | undefined,
-    }
-
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        skip,
-        take: parseInt(limit),
-        orderBy: { createdAt: 'desc' },
-      }),
-      prisma.user.count({ where }),
-    ])
+      searchTerm: search,
+    })
 
     return NextResponse.json({
       users,
@@ -92,32 +80,36 @@ export async function POST() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Check if user exists in our database
-    let user = await prisma.user.findUnique({
-      where: { clerkUserId: userId },
-    })
-
-    if (user) {
-      // Update existing user if needed
-      user = await prisma.user.update({
+    // Gunakan executeComplexOperation untuk transaksi
+    const user = await executeComplexOperation(async (tx) => {
+      // Check if user exists in our database
+      const existingUser = await tx.user.findUnique({
         where: { clerkUserId: userId },
-        data: {
-          email: clerkUser.emailAddresses[0].emailAddress,
-          name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
-        },
       })
-    } else {
-      // Create new user
-      user = await prisma.user.create({
-        data: {
-          clerkUserId: userId,
-          email: clerkUser.emailAddresses[0].emailAddress,
-          name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
-          role: 'mahasiswa',
-          status: 'active',
-        },
-      })
-    }
+
+      if (existingUser) {
+        // Update existing user if needed
+        return await tx.user.update({
+          where: { clerkUserId: userId },
+          data: {
+            email: clerkUser.emailAddresses[0].emailAddress,
+            name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
+            updatedAt: new Date(), // Pastikan updatedAt diperbarui
+          },
+        })
+      } else {
+        // Create new user
+        return await tx.user.create({
+          data: {
+            clerkUserId: userId,
+            email: clerkUser.emailAddresses[0].emailAddress,
+            name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
+            role: 'mahasiswa',
+            status: 'active',
+          },
+        })
+      }
+    })
 
     return NextResponse.json(user)
   } catch (error) {

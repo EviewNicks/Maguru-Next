@@ -1,6 +1,11 @@
 ---
 description: 
 globs: 
+alwaysApply: false
+---
+---
+description: 
+globs: 
 alwaysApply: true
 ---
 # Template Dokumentasi Modul/Fitur
@@ -282,9 +287,9 @@ Setiap kebutuhan harus mencakup:
 
 ### 7.1 Dokumentasi Teknis
 
-- [API Documentation](./api-docs/endpoints.md)
-- [Authentication](./api-docs/auth.md)
-- [Error Codes](./api-docs/errors.md)
+- [API Documentation](mdc:api-docs/endpoints.md)
+- [Authentication](mdc:api-docs/auth.md)
+- [Error Codes](mdc:api-docs/errors.md)
 
 ## 8. Riwayat Perubahan
 

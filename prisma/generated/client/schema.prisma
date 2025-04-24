@@ -31,6 +31,9 @@ model User {
   updatedAt   DateTime   @updatedAt
   status      UserStatus @default(active)
 
+  // Tambahkan indeks untuk kolom yang sering digunakan dalam filter
+  @@index([role, status]) // Indeks komposit untuk query yang sering memfilter berdasarkan role dan status
+  @@index([createdAt]) // Indeks untuk sorting dan filter berdasarkan tanggal
   @@map("users")
 }
 

@@ -13,7 +13,7 @@ services:
       - .env.build
     environment:
       - NODE_ENV=production
-      - NODE_OPTIONS=--max_old_space_size=4096
+      - NODE_OPTIONS=--max_old_space_size=4096 --no-experimental-fetch --experimental-global-webcrypto
 
 volumes:
   prisma_generated: # Volume untuk menyimpan hasil Prisma generate

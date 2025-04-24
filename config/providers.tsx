@@ -8,7 +8,13 @@ import { ClerkProvider, useAuth } from '@clerk/nextjs'
 import { Provider } from 'react-redux'
 import { store } from '@/store/store'
 import { useSearchParams } from 'next/navigation'
+import { setupPrismaMiddleware } from '@/features/manage-users/utils/prisma-utils'
 
+// Aktifkan middleware Prisma saat aplikasi dimulai
+if (typeof window === 'undefined') {
+  // Hanya jalankan di server side
+  setupPrismaMiddleware()
+}
 
 function InitUser() {
   const { isLoaded, userId } = useAuth()

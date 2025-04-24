@@ -9,13 +9,21 @@ const createJestConfig = nextJest({
 // Add any custom config to be passed to Jest
 const customJestConfig = {
   testEnvironment: 'jsdom',
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js', '<rootDir>/singleton.ts'],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@/(.*)$': '<rootDir>/$1',
     '^@clerk/nextjs$': '<rootDir>/__tests__/__mocks__/@clerk/nextjs.ts',
     '^@clerk/backend$': '<rootDir>/__tests__/__mocks__/@clerk/backend.ts',
     '^@prisma/client$': '<rootDir>/__tests__/__mocks__/@prisma/client.ts',
+    '^@/app/api/auth/check-role/route$':
+      '<rootDir>/__tests__/__mocks__/api/check-role.ts',
+    '^@/app/api/test/check-user-role/route$':
+      '<rootDir>/__tests__/__mocks__/api/check-user-role.ts',
+    '^@/app/api/test/cache-status/route$':
+      '<rootDir>/__tests__/__mocks__/api/cache-status.ts',
+    '^@/app/api/test/check-backward-compat/route$':
+      '<rootDir>/__tests__/__mocks__/api/check-backward-compat.ts',
   },
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],

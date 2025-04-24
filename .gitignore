@@ -16,7 +16,7 @@
 # next.js
 /.next/
 /out/
-
+f
 # production
 /build
 
@@ -180,3 +180,6 @@ dist
 
 # Jangan exclude generated Prisma client
 !prisma/generated/
+
+# Sentry Config File
+.env.sentry-build-plugin

@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1
-ARG NODE_VERSION=18
+ARG NODE_VERSION=20
 
 FROM node:${NODE_VERSION}-alpine AS base
-
 WORKDIR /app
+ENV NODE_ENV=production
 
-# Dependencies stage dengan optimasi untuk Prisma
+# Dependencies stage - hanya menginstal dependencies
 FROM base AS deps
 # Tambahkan dependensi yang diperlukan untuk Prisma
 RUN apk update && apk add --no-cache libc6-compat openssl
@@ -15,10 +15,10 @@ COPY prisma/schema.prisma ./prisma/
 COPY prisma/migrations ./prisma/migrations/
 COPY prisma/seed.ts ./prisma/
 
-# Salin package.json dan package-lock.json
-COPY package.json package-lock.json* ./
-
-RUN npm ci
+# Salin package.json dan yarn.lock
+COPY package.json yarn.lock* ./
+RUN --mount=type=cache,target=/root/.yarn \
+    yarn install --frozen-lockfile
 
 # Generate Prisma client jika folder prisma/generated tidak ada
 # Ini hanya akan berjalan saat pertama kali build
@@ -38,7 +38,7 @@ COPY --from=deps /app/prisma/generated ./prisma/generated
 # Tidak perlu copy source code karena akan menggunakan bind mount
 ENV NODE_ENV=development
 EXPOSE 3000
-CMD ["npm", "run", "dev"]
+CMD ["yarn", "dev"]
 
 # Testing stage
 FROM base AS test
@@ -48,7 +48,7 @@ COPY --from=deps /app/prisma/generated ./prisma/generated
 # Tidak perlu copy source code karena akan menggunakan bind mount
 ENV NODE_ENV=test
 ENV USE_BABEL=true
-CMD ["npm", "test"]
+CMD ["yarn", "test"]
 
 # Production build stage
 FROM base AS builder
@@ -56,7 +56,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/prisma/generated ./prisma/generated
 COPY . .
-RUN npm run build
+RUN yarn build
 
 # Production stage
 FROM base AS production
@@ -68,4 +68,4 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.* ./
 COPY --from=builder /app/package.json ./
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["yarn", "start"]

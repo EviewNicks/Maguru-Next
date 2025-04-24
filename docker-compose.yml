@@ -15,7 +15,7 @@ services:
     environment:
       - NODE_ENV=development
       - NODE_OPTIONS=--max_old_space_size=4096
-    command: npm run app
+    command: yarn dev
     restart: unless-stopped
 
   test:
@@ -33,7 +33,7 @@ services:
       - NODE_ENV=test
       - NODE_OPTIONS=--max_old_space_size=4096
       - USE_BABEL=true
-    command: npm test
+    command: yarn test
 
 volumes:
   node_modules:

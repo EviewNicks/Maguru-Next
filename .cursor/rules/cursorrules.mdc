@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 ---
 description: 
@@ -134,12 +134,36 @@ Dokumentasi ini berisi standar coding, alur sistem, serta aturan proyek.
 ## Tools
 - **Unit**: Jest + React Testing Library (FE) / Jest (BE). 
 - **Integration**: Jest + MSW (FE) / Jest + Supertest (BE).
-- **E2E**: Cypress atau Playwright.
+- **E2E**: Playwright.
 
 ## Best Practices
 - Gunakan mocking untuk API/database.
 - Jalankan test otomatis di CI/CD pipeline.
 - Block commit jika test gagal atau test file tidak ada.
+
+## Co-location Testing (Test Berdampingan dengan Kode)
+
+### Prinsip Co-location
+- **File test ditempatkan berdampingan dengan file kode sumber** yang diuji, bukan di direktori `__tests__` terpisah
+- Contoh pendekatan co-location:
+  ```
+  app/api/webhooks/clerk/
+  ├── route.ts
+  └── route.test.ts
+  ```
+
+### Aturan Implementasi
+- **Penamaan**: File test harus memiliki nama yang sama dengan file yang diuji dengan extension `.test.ts` atau `.test.tsx`
+- **Struktur Import**: Gunakan relative import (`import { Component } from './Component'`) untuk kode yang diuji
+- **Excludes pada Bundler**: Pastikan file test di-exclude dari proses bundling untuk produksi
+- **Konsisten per Modul**: Gunakan pendekatan co-location secara konsisten untuk satu modul/fitur
+- **Prioritas API dan Services**: Prioritaskan pendekatan co-location untuk API endpoints dan services
+
+### Pengecualian
+- **End-to-End Tests**: Tetap disimpan di `__tests__/e2e/`
+- **Integration Tests**: Jika melibatkan banyak modul, simpan di `__tests__/integration/`
+- **Mocks Global**: Simpan mocks yang digunakan oleh banyak test di `__tests__/__mocks__/`
+
 
 # Jenis Testing & Aturan Singkat
 

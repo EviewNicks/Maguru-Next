@@ -32,7 +32,11 @@ export function EditUserDialog({
   open,
   onOpenChange,
 }: EditUserDialogProps) {
-  const [role, setRole] = useState<User['role']>(user.role)
+  // Pastikan role selalu salah satu dari nilai yang valid
+  const validRole =
+    user.role === 'admin' || user.role === 'mahasiswa' ? user.role : 'mahasiswa'
+
+  const [role, setRole] = useState<User['role']>(validRole)
   const [status, setStatus] = useState<User['status']>(
     user.status ?? 'active' // Gunakan nullish coalescing untuk mencegah undefined
   )
@@ -73,7 +77,6 @@ export function EditUserDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="dosen">Dosen</SelectItem>
                 <SelectItem value="mahasiswa">Mahasiswa</SelectItem>
               </SelectContent>
             </Select>
@@ -90,6 +93,7 @@ export function EditUserDialog({
               <SelectContent>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
               </SelectContent>
             </Select>
           </div>

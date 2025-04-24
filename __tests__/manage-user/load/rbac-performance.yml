@@ -1,0 +1,56 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      rampTo: 50
+      name: 'Warm up phase'
+    - duration: 60
+      arrivalRate: 50
+      name: 'Sustained load'
+    - duration: 30
+      arrivalRate: 50
+      rampTo: 100
+      name: 'Peak load'
+  environments:
+    staging:
+      target: 'https://staging.maguru.app'
+  plugins:
+    metrics-by-endpoint: {}
+    expect: {}
+    apdex:
+      threshold: 100
+
+scenarios:
+  - name: 'RBAC Cache Performance'
+    flow:
+      - get:
+          url: '/api/auth/check-role'
+          headers:
+            Authorization: 'Bearer {{$processEnvironment.USER_TOKEN}}'
+          expect:
+            - statusCode: 200
+            - contentType: 'application/json'
+      - think: 1
+      - get:
+          url: '/api/auth/check-role'
+          headers:
+            Authorization: 'Bearer {{$processEnvironment.USER_TOKEN}}'
+          expect:
+            - statusCode: 200
+            - maxResponseTime: 100
+
+  - name: 'Admin Route Access Check'
+    flow:
+      - get:
+          url: '/api/admin/test-access'
+          headers:
+            Authorization: 'Bearer {{$processEnvironment.ADMIN_TOKEN}}'
+          expect:
+            - statusCode: 200
+      - get:
+          url: '/api/admin/test-access'
+          headers:
+            Authorization: 'Bearer {{$processEnvironment.USER_TOKEN}}'
+          expect:
+            - statusCode: 403
