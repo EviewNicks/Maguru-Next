@@ -8,12 +8,24 @@ jest.mock('@prisma/client', () => {
   return {
     PrismaClient: jest.fn().mockImplementation(() => ({
       user: {
-        update: jest.fn(),
+        update: jest.fn().mockImplementation(({ where, data }) => {
+          // Return mock data sesuai dengan yang diharapkan
+          return Promise.resolve({
+            id: `db_${where.clerkUserId}`,
+            clerkUserId: where.clerkUserId,
+            role: data.role,
+          })
+        }),
         findUnique: jest.fn(),
       },
-      $transaction: jest.fn((callbacks: Array<() => Promise<unknown>>) =>
-        Promise.all(callbacks.map((cb) => cb()))
-      ),
+      $transaction: jest.fn((callbacks) => {
+        // Pastikan ini mengembalikan array hasil dari semua update
+        return Promise.resolve(
+          callbacks.map((callback: () => Promise<unknown>) =>
+            Promise.resolve(callback())
+          )
+        )
+      }),
     })),
   }
 })
@@ -22,11 +34,13 @@ jest.mock('@prisma/client', () => {
 jest.mock('@clerk/nextjs/server', () => {
   return {
     auth: jest.fn(),
-    clerkClient: jest.fn().mockImplementation(() => ({
-      users: {
-        getUserList: jest.fn(),
-      },
-    })),
+    clerkClient: jest.fn().mockReturnValue(
+      Promise.resolve({
+        users: {
+          getUserList: jest.fn(),
+        },
+      })
+    ),
   }
 })
 
@@ -41,7 +55,7 @@ jest.mock('next/server', () => ({
     json: jest.fn().mockImplementation((data, options) => {
       return {
         status: options?.status || 200,
-        json: async () => data,
+        json: async () => data, // Pastikan ini mengembalikan data yang sama persis
       }
     }),
   },
@@ -63,19 +77,11 @@ import { NextRequest } from 'next/server'
 
 const mockPrisma = new PrismaClient() as jest.Mocked<PrismaClient>
 const mockAuth = jest.mocked(auth)
-
-// PERBAIKAN: Ubah mockClerkClient dengan struktur yang benar dan data yang valid
-const mockClerkClient = jest.fn().mockImplementation(() => ({
+const mockClerkClient = jest.fn().mockReturnValue({
   users: {
-    getUserList: jest.fn().mockResolvedValue({
-      data: [
-        { id: 'user_1', publicMetadata: { role: 'admin' } },
-        { id: 'user_2', publicMetadata: { role: 'mahasiswa' } }, // Ubah "dosen" menjadi "mahasiswa" agar valid sesuai enum
-        { id: 'user_3', publicMetadata: {} }, // No role should default to 'mahasiswa'
-      ],
-    }),
+    getUserList: jest.fn(),
   },
-}))
+})
 
 // Type assertion for clerkClient mock
 jest.mocked(clerkClient).mockImplementation(mockClerkClient)
@@ -103,17 +109,33 @@ describe('Manual Sync Roles Endpoint', () => {
       role: 'admin',
     })
 
-    // PERBAIKAN: Pastikan selalu menggunakan format yang sama (dengan properti 'data')
+    // Mock clerk users
     const mockUserList = [
       { id: 'user_1', publicMetadata: { role: 'admin' } },
-      { id: 'user_2', publicMetadata: { role: 'mahasiswa' } }, // Ubah "dosen" menjadi "mahasiswa" agar valid sesuai enum
-      { id: 'user_3', publicMetadata: {} }, // No role should default to 'mahasiswa'
+      { id: 'user_2', publicMetadata: { role: 'mahasiswa' } },
+      { id: 'user_3', publicMetadata: {} },
     ]
-
     const mockClerkInstance = mockClerkClient()
     mockClerkInstance.users.getUserList.mockResolvedValue({
-      data: mockUserList, // Gunakan format dengan property 'data'
+      data: mockUserList,
     })
+
+    // Tambahkan implementasi mockPrisma.$transaction
+    const mockResults = [
+      { id: 'db_user_1', clerkUserId: 'user_1', role: 'admin' },
+      { id: 'db_user_2', clerkUserId: 'user_2', role: 'mahasiswa' },
+      { id: 'db_user_3', clerkUserId: 'user_3', role: 'mahasiswa' },
+    ]
+
+    ;(mockPrisma.$transaction as jest.Mock).mockResolvedValue(mockResults)
+    ;(mockPrisma.user.update as jest.Mock).mockImplementation(
+      ({ where, data }) =>
+        Promise.resolve({
+          id: `db_${where.clerkUserId}`,
+          clerkUserId: where.clerkUserId,
+          role: data.role,
+        })
+    )
 
     // Act
     const response = await handlePost(mockRequest, mockPrisma)
@@ -127,16 +149,15 @@ describe('Manual Sync Roles Endpoint', () => {
     // but since the exact format might be different, we check individually
     const updateCalls = (mockPrisma.user.update as jest.Mock).mock.calls
 
-    //act
     // First user (admin)
     expect(updateCalls[0][0].where.clerkUserId).toBe('user_1')
     expect(updateCalls[0][0].data.role).toBe('admin')
 
-    // second user (mahasiswa, bukan dosen yang tidak valid)
+    // Second user (mahasiswa) - pastikan ini sudah sesuai dengan schema.prisma enum UserRole
     expect(updateCalls[1][0].where.clerkUserId).toBe('user_2')
     expect(updateCalls[1][0].data.role).toBe('mahasiswa')
 
-    // second user (mahasiswa, bukan dosen yang tidak valid)
+    // Third user (default mahasiswa)
     expect(updateCalls[2][0].where.clerkUserId).toBe('user_3')
     expect(updateCalls[2][0].data.role).toBe('mahasiswa')
 
@@ -195,11 +216,6 @@ describe('Manual Sync Roles Endpoint', () => {
       clerkUserId: 'admin_user_123',
       role: 'admin',
     })
-
-    // Mock clerk users
-    const mockUserList = [{ id: 'user_1', publicMetadata: { role: 'admin' } }]
-    const mockClerkInstance = mockClerkClient()
-    mockClerkInstance.users.getUserList.mockResolvedValue(mockUserList)
 
     // Mock database transaction failure
     const mockError = new Error('Database transaction failed')

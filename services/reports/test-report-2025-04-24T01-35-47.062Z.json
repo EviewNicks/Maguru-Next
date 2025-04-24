@@ -1,11 +1,137 @@
 {
-  "timestamp": "2025-04-23T02-19-28.249Z",
+  "timestamp": "2025-04-24T01-35-47.062Z",
   "environment": "test",
-  "numFailedTests": 1,
-  "numPassedTests": 30,
+  "numFailedTests": 0,
+  "numPassedTests": 31,
   "numTotalTests": 31,
-  "executionTime": "1745374738266ms",
+  "executionTime": "1745458522158ms",
   "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\lib\\auth.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should get role from publicMetadata",
+          "status": "passed",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "title": "should get role from metaData (old format)",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "should get role directly from user object",
+          "status": "passed",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "title": "should return default role if no role found",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle null or undefined user",
+          "status": "passed",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "title": "should return true when role is in required roles",
+          "status": "passed",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "title": "should return false when role is not in required roles",
+          "status": "passed",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "title": "should add warning when old role format is used (publicMetadata)",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "should add warning when old role format is used (metaData)",
+          "status": "passed",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "title": "should not add warning when new role format is used",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\app\\api\\webhooks\\clerk\\route.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should verify webhook signature successfully",
+          "status": "passed",
+          "duration": 16,
+          "failureMessages": []
+        },
+        {
+          "title": "should throw error for invalid signature",
+          "status": "passed",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "title": "should update user role in database when receiving user.updated event",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle webhook verification errors",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle database errors during update",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\app\\api\\admin\\sync-roles\\route.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should synchronize roles from Clerk to database for all users",
+          "status": "passed",
+          "duration": 77,
+          "failureMessages": []
+        },
+        {
+          "title": "should reject non-admin users",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle database errors and capture them in Sentry",
+          "status": "passed",
+          "duration": 5,
+          "failureMessages": []
+        }
+      ]
+    },
     {
       "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\lib\\cache.test.ts",
       "failureMessages": [],
@@ -13,13 +139,13 @@
         {
           "title": "should return role from cache if available",
           "status": "passed",
-          "duration": 29,
+          "duration": 15,
           "failureMessages": []
         },
         {
           "title": "should query database and cache result when cache misses",
           "status": "passed",
-          "duration": 4,
+          "duration": 3,
           "failureMessages": []
         },
         {
@@ -43,135 +169,7 @@
         {
           "title": "should clear entire cache when no userIds provided",
           "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\lib\\auth.test.ts",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should get role from publicMetadata",
-          "status": "passed",
-          "duration": 32,
-          "failureMessages": []
-        },
-        {
-          "title": "should get role from metaData (old format)",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should get role directly from user object",
-          "status": "passed",
           "duration": 3,
-          "failureMessages": []
-        },
-        {
-          "title": "should return default role if no role found",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle null or undefined user",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should return true when role is in required roles",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should return false when role is not in required roles",
-          "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        },
-        {
-          "title": "should add warning when old role format is used (publicMetadata)",
-          "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        },
-        {
-          "title": "should add warning when old role format is used (metaData)",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should not add warning when new role format is used",
-          "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\app\\api\\webhooks\\clerk\\route.test.ts",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should verify webhook signature successfully",
-          "status": "passed",
-          "duration": 34,
-          "failureMessages": []
-        },
-        {
-          "title": "should throw error for invalid signature",
-          "status": "passed",
-          "duration": 16,
-          "failureMessages": []
-        },
-        {
-          "title": "should update user role in database when receiving user.updated event",
-          "status": "passed",
-          "duration": 9,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle webhook verification errors",
-          "status": "passed",
-          "duration": 2,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle database errors during update",
-          "status": "passed",
-          "duration": 1,
-          "failureMessages": []
-        }
-      ]
-    },
-    {
-      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\app\\api\\admin\\sync-roles\\route.test.ts",
-      "failureMessages": [],
-      "testResults": [
-        {
-          "title": "should synchronize roles from Clerk to database for all users",
-          "status": "failed",
-          "duration": 42,
-          "failureMessages": [
-            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mjest.fn()\u001b[39m\u001b[2m).\u001b[22mtoHaveBeenCalled\u001b[2m()\u001b[22m"
-          ]
-        },
-        {
-          "title": "should reject non-admin users",
-          "status": "passed",
-          "duration": 3,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle database errors and capture them in Sentry",
-          "status": "passed",
-          "duration": 4,
           "failureMessages": []
         }
       ]
@@ -183,31 +181,31 @@
         {
           "title": "should sync all user metadata from database to Clerk",
           "status": "passed",
-          "duration": 34,
-          "failureMessages": []
-        },
-        {
-          "title": "should return 401 when user is not authenticated",
-          "status": "passed",
-          "duration": 6,
-          "failureMessages": []
-        },
-        {
-          "title": "should handle database errors",
-          "status": "passed",
-          "duration": 4,
-          "failureMessages": []
-        },
-        {
-          "title": "should sync current user metadata from database to Clerk",
-          "status": "passed",
-          "duration": 6,
+          "duration": 15,
           "failureMessages": []
         },
         {
           "title": "should return 401 when user is not authenticated",
           "status": "passed",
           "duration": 5,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle database errors",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "should sync current user metadata from database to Clerk",
+          "status": "passed",
+          "duration": 5,
+          "failureMessages": []
+        },
+        {
+          "title": "should return 401 when user is not authenticated",
+          "status": "passed",
+          "duration": 7,
           "failureMessages": []
         },
         {
@@ -219,7 +217,7 @@
         {
           "title": "should handle Clerk API errors",
           "status": "passed",
-          "duration": 9,
+          "duration": 3,
           "failureMessages": []
         }
       ]

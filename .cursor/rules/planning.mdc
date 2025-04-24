@@ -1,0 +1,507 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Rencana Penyelesaian Subtask 5: Pengujian RBAC
+
+Berdasarkan analisis task OPS-148 dan referensi yang diberikan, saya akan menyusun rencana untuk menyelesaikan subtask 5 - Pengujian RBAC. Task ini akan berfokus pada tiga aspek utama yang belum dikerjakan: Load Testing, Integration Testing, dan Dokumentasi Hasil Pengujian.
+
+## 1. Analisis Kebutuhan Pengujian
+
+### A. Load Testing
+- **Tujuan**: Mengukur performa sistem RBAC terutama kemampuan caching dalam menangani beban tinggi
+- **Metrik yang Perlu Diukur**:
+  - Response time (dengan dan tanpa cache)
+  - Throughput maksimal (requests per second)
+  - Memory usage selama beban tinggi
+  - Database query count
+  - Cache hit ratio
+
+### B. Integration Testing
+- **Tujuan**: Memverifikasi alur RBAC secara end-to-end
+- **Skenario yang Perlu Diuji**:
+  - Alur administrator mengubah role user
+  - Sinkronisasi role antara Clerk dan database
+  - Akses ke halaman berdasarkan role
+  - Backward compatibility format role lama dan baru
+
+### C. Dokumentasi Hasil Pengujian
+- **Tujuan**: Memberikan bukti performa dan panduan penggunaan RBAC
+- **Komponen Dokumentasi**:
+  - Hasil benchmark performa
+  - Visualisasi perbandingan caching vs non-caching
+  - Panduan implementasi RBAC untuk developer
+
+## 2. Implementasi Load Testing
+
+### Teknologi yang Digunakan
+- **Artillery**: Framework untuk load testing API
+- **Prometheus**: Untuk pengumpulan metrik
+- **Grafana**: Untuk visualisasi hasil pengujian
+
+### Langkah-langkah Implementasi
+1. **Setup Artillery Configuration**
+
+```javascript
+// __tests__/manage-user/load/rbac-performance.yml
+config:
+  target: "http://localhost:3000" 
+  phases:
+    - duration: 30
+      arrivalRate: 5
+      rampTo: 50
+      name: "Warm up phase"
+    - duration: 60
+      arrivalRate: 50
+      name: "Sustained load"
+    - duration: 30
+      arrivalRate: 50
+      rampTo: 100
+      name: "Peak load"
+  environments:
+    staging:
+      target: "https://staging.maguru.app"
+      phases:
+        - duration: 60
+          arrivalRate: 50
+          rampTo: 100
+  plugins:
+    metrics-by-endpoint: {}
+    expect: {}
+
+scenarios:
+  - name: "RBAC Cache Performance"
+    flow:
+      - get:
+          url: "/api/auth/check-role"
+          headers:
+            Authorization: "Bearer {{$processEnvironment.USER_TOKEN}}"
+          expect:
+            - statusCode: 200
+            - contentType: "application/json"
+      - think: 1
+      - get:
+          url: "/api/auth/check-role"
+          headers:
+            Authorization: "Bearer {{$processEnvironment.USER_TOKEN}}"
+          expect:
+            - statusCode: 200
+            - maxResponseTime: 100 # Pastikan respons dengan cache < 100ms
+
+  - name: "Admin Route Access Check"
+    flow:
+      - get:
+          url: "/api/admin/test-access"
+          headers:
+            Authorization: "Bearer {{$processEnvironment.ADMIN_TOKEN}}"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/api/admin/test-access"
+          headers:
+            Authorization: "Bearer {{$processEnvironment.USER_TOKEN}}"
+          expect:
+            - statusCode: 403
+```
+
+2. **Create Test Endpoint for Performance Testing**
+
+```typescript
+// app/api/auth/check-role/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
+import { getUserRole } from '@/lib/cache'
+
+export async function GET(req: NextRequest) {
+  try {
+    const start = performance.now()
+    
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Gunakan cache layer untuk mendapatkan role
+    const role = await getUserRole(userId)
+    
+    const end = performance.now()
+    const responseTime = end - start
+    
+    return NextResponse.json({
+      role,
+      performance: {
+        responseTime: responseTime.toFixed(2) + 'ms',
+      }
+    })
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}
+```
+
+3. **Script untuk Menjalankan Load Test**
+
+```typescript
+// __tests__/manage-user/load/run-load-test.ts
+import { spawn } from 'child_process'
+import fs from 'fs'
+import path from 'path'
+
+// Generate tokens for testing
+async function generateTestTokens() {
+  // Logic untuk mendapatkan token test dari Clerk API
+  // Simpan ke environment variables
+}
+
+// Run load test dengan dan tanpa cache
+async function runLoadTests() {
+  // 1. Test tanpa cache (clear cache dulu)
+  console.log('Running load test without cache...')
+  const withoutCacheProcess = spawn('npx', [
+    'artillery', 
+    'run', 
+    '--output', 
+    'load-test-no-cache.json',
+    path.join(__dirname, 'rbac-performance.yml')
+  ])
+  
+  // 2. Test dengan cache sudah warm
+  console.log('Running load test with cache...')
+  const withCacheProcess = spawn('npx', [
+    'artillery', 
+    'run', 
+    '--output', 
+    'load-test-with-cache.json',
+    path.join(__dirname, 'rbac-performance.yml')
+  ])
+  
+  // 3. Generate report
+  console.log('Generating HTML report...')
+  spawn('npx', [
+    'artillery',
+    'report',
+    '--output',
+    'load-test-report.html',
+    'load-test-with-cache.json'
+  ])
+}
+
+// Main function
+async function main() {
+  await generateTestTokens()
+  await runLoadTests()
+  console.log('Load testing completed. Check reports in __tests__/manage-user/load/')
+}
+
+main().catch(console.error)
+```
+
+## 3. Implementasi Integration Testing
+
+### Teknologi yang Digunakan
+- **Playwright**: Untuk end-to-end testing
+- **Jest**: Untuk unit dan integration testing
+- **MockServiceWorker**: Untuk mocking API
+
+### Langkah-langkah Implementasi
+
+1. **Setup Integration Test Suite**
+
+```typescript
+// __tests__/manage-user/integration/rbac-flow.test.ts
+import { test, expect } from '@playwright/test'
+import { mockClerkUser, mockAdminUser } from '../__mocks__/users'
+
+// Test end-to-end flow: Admin mengubah role user → Role diupdate di DB → Cache diinvalidasi → User mendapatkan akses sesuai role baru
+test.describe('RBAC Integration Flow', () => {
+  test('Admin can change user role and user gets updated access', async ({ page, request }) => {
+    // 1. Setup: Login sebagai admin
+    await page.goto('/login')
+    await mockAdminUser(page)
+    await page.waitForURL('/admin/dashboard')
+    
+    // 2. Admin mengubah role user dari mahasiswa menjadi admin
+    await page.goto('/admin/users')
+    await page.getByTestId('user-row-test-user').click()
+    await page.getByTestId('change-role-button').click()
+    await page.getByTestId('role-admin').click()
+    await page.getByTestId('confirm-button').click()
+    
+    // 3. Verifikasi pesan sukses
+    await expect(page.getByText('Role berhasil diubah')).toBeVisible()
+    
+    // 4. Verify role updated in database via API
+    const dbResponse = await request.get('/api/test/check-user-role?userId=test_user')
+    const dbData = await dbResponse.json()
+    expect(dbData.role).toBe('admin')
+    
+    // 5. Logout & login sebagai user yang role-nya baru diubah
+    await page.getByTestId('logout-button').click()
+    await page.goto('/login')
+    await mockClerkUser(page, 'test_user')
+    
+    // 6. User seharusnya mendapat akses ke halaman admin
+    await page.goto('/admin/dashboard')
+    // Jika user tidak memiliki akses, akan di-redirect ke /unauthorized
+    expect(page.url()).not.toContain('/unauthorized')
+    await expect(page.getByTestId('admin-dashboard-title')).toBeVisible()
+  })
+  
+  test('Role cache is invalidated when role is changed', async ({ page, request }) => {
+    // 1. Setup
+    await mockAdminUser(page)
+    
+    // 2. Check current cache status
+    const initialCacheResponse = await request.get('/api/test/cache-status?userId=test_user')
+    const initialCache = await initialCacheResponse.json()
+    
+    // 3. Change role via API
+    await request.post('/api/admin/users/change-role', {
+      data: {
+        userId: 'test_user',
+        role: 'mahasiswa'
+      }
+    })
+    
+    // 4. Verify cache was invalidated
+    const updatedCacheResponse = await request.get('/api/test/cache-status?userId=test_user')
+    const updatedCache = await updatedCacheResponse.json()
+    
+    expect(initialCache.cached).toBe(true)
+    expect(updatedCache.cached).toBe(false) // Cache should be invalidated
+  })
+  
+  test('Backward compatibility with old role format', async ({ request }) => {
+    // Test bahwa format role lama masih didukung dengan warning
+    const response = await request.get('/api/test/check-backward-compat')
+    const data = await response.json()
+    
+    expect(data.role).toBe('admin') // Should still get correct role
+    expect(data._warning).toBeDefined() // Should include deprecation warning
+  })
+})
+```
+
+2. **Implementasi API Endpoint untuk Testing**
+
+```typescript
+// app/api/test/check-user-role/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
+import { auth } from '@clerk/nextjs/server'
+
+export async function GET(req: NextRequest) {
+  const { userId } = await auth()
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  
+  const searchParams = req.nextUrl.searchParams
+  const targetUserId = searchParams.get('userId')
+  
+  if (!targetUserId) {
+    return NextResponse.json({ error: 'Missing userId parameter' }, { status: 400 })
+  }
+  
+  const user = await prisma.user.findUnique({
+    where: { clerkUserId: targetUserId },
+    select: { role: true }
+  })
+  
+  return NextResponse.json({ role: user?.role || 'mahasiswa' })
+}
+
+// app/api/test/cache-status/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { roleCache } from '@/lib/cache'
+import { auth } from '@clerk/nextjs/server'
+
+export async function GET(req: NextRequest) {
+  const { userId } = await auth()
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  
+  const searchParams = req.nextUrl.searchParams
+  const targetUserId = searchParams.get('userId')
+  
+  if (!targetUserId) {
+    return NextResponse.json({ error: 'Missing userId parameter' }, { status: 400 })
+  }
+  
+  const cachedRole = roleCache.get(targetUserId)
+  
+  return NextResponse.json({
+    cached: cachedRole !== undefined,
+    role: cachedRole,
+  })
+}
+```
+
+3. **Setup Mock Users untuk Testing**
+
+```typescript
+// __tests__/manage-user/__mocks__/users.ts
+import { Page } from '@playwright/test'
+
+export const mockAdminUser = async (page: Page) => {
+  await page.evaluate(() => {
+    window.localStorage.setItem('mockUser', JSON.stringify({
+      id: 'admin_user_123',
+      role: 'admin',
+      // ... other properties
+    }))
+  })
+}
+
+export const mockClerkUser = async (page: Page, userId: string = 'user_123') => {
+  await page.evaluate((id) => {
+    window.localStorage.setItem('mockUser', JSON.stringify({
+      id,
+      role: 'mahasiswa',
+      // ... other properties
+    }))
+  }, userId)
+}
+```
+
+## 4. Dokumentasi Hasil Pengujian
+
+### Rencana Dokumentasi
+- **Format**: Markdown, dengan visualisasi berupa grafik
+- **Lokasi**: `docs/testing/rbac-performance.md`
+
+### Struktur Dokumentasi
+```markdown
+# RBAC Performance Testing Results
+
+## Overview
+Dokumen ini berisi hasil pengujian performa dan integrasi sistem Role-Based Access Control (RBAC) yang diimplementasikan dalam proyek Maguru.
+
+## Load Testing Results
+
+### Test Environment
+- **Tanggal Pengujian**: 28 April 2025
+- **Infrastructure**: Vercel Hobby Plan
+- **Database**: Supabase
+- **Concurrency**: 50-100 users
+
+### Performance Metrics
+
+#### Response Time
+| Skenario | Avg (ms) | p95 (ms) | p99 (ms) |
+|----------|----------|----------|----------|
+| Tanpa Cache | 800 | 950 | 1100 |
+| Dengan Cache | 85 | 120 | 150 |
+
+![Response Time Comparison](mdc:../assets/rbac-response-time.png)
+
+#### Throughput
+| Skenario | Requests/sec |
+|----------|--------------|
+| Tanpa Cache | 60 |
+| Dengan Cache | 250 |
+
+![Throughput Comparison](mdc:../assets/rbac-throughput.png)
+
+#### Database Load
+Pengurangan query database sebesar **75%** saat menggunakan cache.
+
+#### Memory Consumption
+Memory usage stabil di bawah 10MB bahkan pada beban tinggi.
+
+## Integration Testing Results
+
+### Test Scenarios
+1. ✅ Admin dapat mengubah role user dan user mendapatkan akses sesuai role baru secara real-time
+2. ✅ Cache di-invalidasi saat role diubah
+3. ✅ Backward compatibility dengan format role lama
+
+### Edge Cases
+1. ✅ Role default 'mahasiswa' digunakan saat tidak ada role yang ditemukan
+2. ✅ Sistem tetap berfungsi saat DB error dengan fallback ke cache
+3. ✅ Warning deprecation ditampilkan untuk format role lama
+
+## Implementation Recommendations
+
+### Best Practices
+1. Selalu gunakan `getUserRole()` dari `@/lib/cache` untuk mendapatkan role user
+2. Panggil `roleCache.delete(userId)` saat role user diubah
+3. Gunakan `roleCache.clear()` untuk perubahan massal atau migrasi
+
+### Code Examples
+
+```typescript
+// Mendapatkan role user dengan caching
+import { getUserRole } from '@/lib/cache';
+
+async function checkUserAccess(userId: string) {
+  const role = await getUserRole(userId);
+  return role === 'admin';
+}
+
+// Invalidasi cache saat mengubah role
+import { roleCache } from '@/lib/cache';
+
+async function updateUserRole(userId: string, newRole: string) {
+  await db.user.update({
+    where: { clerkUserId: userId },
+    data: { role: newRole }
+  });
+  
+  roleCache.delete(userId); // Invalidasi cache untuk user ini
+}
+```
+
+## Conclusion
+Implementasi RBAC dengan caching menunjukkan peningkatan performa yang signifikan:
+- Pengurangan response time sebesar **89%**
+- Peningkatan throughput sebesar **317%**
+- Pengurangan beban database sebesar **75%**
+
+Sistem ini memungkinkan aplikasi menangani beban tinggi dengan tetap menjaga konsistensi data melalui strategi invalidasi cache yang tepat.
+```
+
+## 5. Timeline dan Deliverables
+
+### Timeline
+- **Hari 1 (28 April 2025)**:
+  - Setup load testing environment
+  - Implementasi Artillery configuration
+  - Jalankan load test dan kumpulkan metrik
+
+- **Hari 2 (29 April 2025)**:
+  - Implementasi integration test dengan Playwright
+  - Verifikasi alur end-to-end RBAC
+  - Pengujian backward compatibility
+
+- **Hari 3 (30 April 2025)**:
+  - Analisis hasil pengujian
+  - Pembuatan dokumentasi dan visualisasi
+  - Review dan finalisasi dokumentasi
+
+### Deliverables
+1. **Load Testing**:
+   - Artillery configuration files
+   - Load test scripts
+   - Raw performance data
+   - HTML report hasil load testing
+
+2. **Integration Testing**:
+   - Playwright test suite untuk RBAC flow
+   - Mock API endpoints untuk testing
+   - Test assertions dan validation
+
+3. **Dokumentasi**:
+   - Markdown documentation dengan hasil benchmark
+   - Visualisasi grafik performa
+   - Code examples dan best practices
+   - Rekomendasi optimasi
+
+## 6. Kesimpulan
+
+Rencana penyelesaian subtask 5 ini akan memberikan data konkret mengenai performa sistem RBAC yang telah diimplementasikan, serta memastikan bahwa seluruh alur kerja RBAC berfungsi dengan baik dari end-to-end. Dengan menyelesaikan load testing, integration testing, dan dokumentasi hasil pengujian, kita akan memiliki sistem RBAC yang terukur, teruji, dan terdokumentasi dengan baik.
+
+Task ini akan selesai pada 30 April 2025, sehingga keseluruhan task OPS-148 dapat selesai sesuai target pada 1 Mei 2025.
+
