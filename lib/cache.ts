@@ -22,32 +22,53 @@ export async function getUserRole(
   userId: string,
   prismaClient = prisma
 ): Promise<string> {
+  // Default role jika tidak ditemukan
+  const DEFAULT_ROLE = 'mahasiswa'
+
   // Cek cache terlebih dahulu
   const cachedRole = roleCache.get(userId)
   if (cachedRole) {
     return cachedRole
   }
 
-  // Jika tidak ada di cache, ambil dari database
   try {
+    // Jika tidak ada di cache, ambil dari database
     const user = await prismaClient.user.findUnique({
       where: { clerkUserId: userId },
       select: { role: true },
     })
 
-    const role = user?.role || 'mahasiswa'
+    // Jika user tidak ditemukan atau tidak memiliki role, gunakan default
+    const role = user?.role || DEFAULT_ROLE
 
-    // Simpan di cache untuk request berikutnya
+    // Simpan ke cache untuk digunakan selanjutnya
     roleCache.set(userId, role)
 
     return role
   } catch (error) {
-    // Log error dan gunakan default role
-    Sentry.captureException(error, {
-      tags: { component: 'getUserRole', userId },
-    })
-    return 'mahasiswa' // Default fallback role
+   // Log error dan gunakan default role
+   Sentry.captureException(error, {
+    tags: { component: 'getUserRole', userId },
+  })
+    // Dalam kasus error, gunakan default role
+    return DEFAULT_ROLE
   }
+}
+
+/**
+ * Invalidasi cache user ketika role diubah
+ * @param userId - Clerk user ID
+ */
+export function invalidateUserRoleCache(userId: string): void {
+  roleCache.delete(userId)
+}
+
+/**
+ * Invalidasi semua cache role
+ * Gunakan saat migrasi database atau perubahan massal
+ */
+export function clearAllRoleCache(): void {
+  roleCache.clear()
 }
 
 /**

@@ -19,7 +19,7 @@
     "seed": "tsx prisma/seed.ts",
     "test": "cross-env USE_BABEL=true jest",
     "test:watch": "cross-env USE_BABEL=true jest --watch",
-    "test:custome": "jest app/api/admin/sync-roles/route.test.ts app/api/webhooks/clerk/route.test.ts app/api/users/sync-metadata/route.test.ts lib/auth.test.ts lib/cache.test.ts --verbose",
+    "test:custome": "jest app/api/admin/sync-roles/route.test.ts app/api/webhooks/clerk/route.test.ts app/api/users/sync-metadata/route.test.ts lib/auth.test.ts lib/cache.test.ts __tests__/manage-user/integration/rbac-flow.integration.test.ts --verbose",
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:report": "playwright test --reporter=./services/playwrightReporter.js",
