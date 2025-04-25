@@ -1,9 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { fetchStatsData } from '@/features/manage-users/service/stats'
-import ChartsContainer from '@/features/manage-users/component/ChartContainer'
-import StatsContainer from '@/features/manage-users/component/StatsContainer'
-import UserTable from '@/features/manage-users/component/UserTable'
+import DashboardComponent from '@/features/manage-users/new-component'
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { getQueryClient } from '@/lib/getQueryClient'
 import { auth } from '@clerk/nextjs/server'
@@ -66,9 +64,7 @@ async function StatsPage() {
   return (
     <RoleProtected allowedRoles={['admin']}>
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <StatsContainer />
-        <ChartsContainer />
-        <UserTable />
+        <DashboardComponent />
       </HydrationBoundary>
     </RoleProtected>
   )

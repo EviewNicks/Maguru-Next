@@ -1,6 +1,6 @@
-import Sidebar from '@/components/layouts/Sidebar'
+import { ClientSidebar } from '@/features/manage-users/new-component/components/dashboard/ClientSidebar'
 import {
-  ResizableHandle,
+  // ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
@@ -8,34 +8,30 @@ import { createUserIfNotExists } from '@/lib/auth'
 import { PropsWithChildren } from 'react'
 
 async function layout({ children }: PropsWithChildren) {
-
   await createUserIfNotExists()
 
   return (
-    <main className=" w-full">
+    <main className="w-full">
       {/* TAMPILKAN HANYA UNTUK LG KE ATAS */}
       <div className="hidden lg:flex h-full w-full">
-        <ResizablePanelGroup direction="horizontal" className="h-full w-full ">
+        <ResizablePanelGroup direction="horizontal" className="h-full w-full">
           {/* Sidebar */}
           <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-            <div className="h-full">
-              <Sidebar />
+            <div className="h-full my-2 ml-2">
+              <ClientSidebar />
             </div>
           </ResizablePanel>
-          <ResizableHandle withHandle />
           {/* Main Content */}
           <ResizablePanel defaultSize={80} minSize={70}>
-            <div className="h-full w-full p-4 sm:p-8 lg:px-4 py-8">
-              {children}
-            </div>
-          </ResizablePanel>{' '}
+            <div className="h-full w-full">{children}</div>
+          </ResizablePanel>
         </ResizablePanelGroup>
       </div>
 
       {/* TAMPILKAN SAAT MD KE BAWAH */}
-      <div className="block lg:hidden h-full w-full">
+      {/* <div className="block lg:hidden h-full w-full">
         <div className="h-full w-full p-4 sm:p-8 lg:p-16">{children}</div>
-      </div>
+      </div> */}
     </main>
   )
 }
