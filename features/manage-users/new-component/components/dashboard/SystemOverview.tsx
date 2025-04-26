@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MetricCard } from '../ui/MetricCard'
 import { PerformanceChart } from '../ui/PerformanceChart'
+import UserTableNew from '../ui/UserTable'
 import { ProcessRow } from '../ui/ProcessRow'
 import { StorageItem } from '../ui/StorageItem'
 import { useStatsData } from '../../hooks/useStatsData'
@@ -159,6 +160,12 @@ export function SystemOverview({
                   Processes
                 </TabsTrigger>
                 <TabsTrigger
+                  value="users"
+                  className="data-[state=active]:bg-slate-700 data-[state=active]:text-cyan-400"
+                >
+                  Users
+                </TabsTrigger>
+                <TabsTrigger
                   value="storage"
                   className="data-[state=active]:bg-slate-700 data-[state=active]:text-cyan-400"
                 >
@@ -250,6 +257,10 @@ export function SystemOverview({
                   />
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="users" className="mt-0">
+              <UserTableNew />
             </TabsContent>
 
             <TabsContent value="storage" className="mt-0">
