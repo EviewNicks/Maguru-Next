@@ -16,6 +16,7 @@ export const MetricCard = ({
   trend,
   color,
   detail,
+  showPercent = false,
 }: MetricCardProps) => {
   const getColor = () => {
     switch (color) {
@@ -55,7 +56,8 @@ export const MetricCard = ({
       </div>
 
       <div className="text-2xl font-bold mb-1 bg-gradient-to-r bg-clip-text text-transparent from-slate-100 to-slate-300">
-        {value}%
+        {value}
+        {showPercent ? '%' : ''}
       </div>
       <div className="absolute bottom-2 right-4 flex items-center">
         {getTrendIcon()}

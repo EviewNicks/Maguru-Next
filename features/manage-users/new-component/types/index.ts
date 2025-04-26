@@ -22,6 +22,7 @@ export interface MetricCardProps {
   trend: 'up' | 'down' | 'stable'
   color: 'cyan' | 'green' | 'blue' | 'purple'
   detail: string
+  showPercent?: boolean
 }
 
 // Tipe untuk ProcessRow

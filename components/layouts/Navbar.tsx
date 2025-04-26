@@ -13,8 +13,8 @@ function Navbar() {
         <NavSearch />
         <div className="flex gap-4 items-center ">
           <CartButton />
-          <LinksDropdown />
           <DarkMode />
+          <LinksDropdown />
         </div>
       </Container>
     </nav>

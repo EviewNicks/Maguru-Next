@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 interface SystemStatusData {
   systemStatus: number
@@ -11,43 +11,75 @@ interface SystemStatusData {
 
 /**
  * Hook untuk mengelola status sistem dan mensimulasikan data
+ * dengan optimasi untuk mengurangi render berlebihan
  */
 export function useSystemStatus(): SystemStatusData {
-  const [systemStatus, setSystemStatus] = useState(85)
-  const [cpuUsage, setCpuUsage] = useState(42)
-  const [memoryUsage, setMemoryUsage] = useState(68)
-  const [networkStatus, setNetworkStatus] = useState(92)
-  const [securityLevel, setSecurityLevel] = useState(75)
-  const [isLoading, setIsLoading] = useState(true)
+  // Gunakan useRef untuk menyimpan nilai sebelumnya tanpa menyebabkan re-render
+  const dataRef = useRef({
+    systemStatus: 85,
+    cpuUsage: 42,
+    memoryUsage: 68,
+    networkStatus: 92,
+    securityLevel: 75,
+  })
 
-  // Simulate data loading
+  // State hanya untuk data yang perlu menyebabkan re-render
+  const [status, setStatus] = useState<SystemStatusData>({
+    ...dataRef.current,
+    isLoading: true,
+  })
+
+  // Buat fungsi update yang hanya me-render ketika perubahan signifikan
+  const updateDataIfSignificant = useCallback(() => {
+    // Generate nilai baru
+    const newData = {
+      cpuUsage: Math.floor(Math.random() * 30) + 30,
+      memoryUsage: Math.floor(Math.random() * 20) + 60,
+      networkStatus: Math.floor(Math.random() * 15) + 80,
+      systemStatus: Math.floor(Math.random() * 10) + 80,
+      securityLevel: Math.floor(Math.random() * 15) + 70,
+    }
+
+    // Periksa apakah ada perubahan signifikan (> 5%)
+    const hasSignificantChange = Object.keys(newData).some((key) => {
+      const oldValue = dataRef.current[key as keyof typeof dataRef.current]
+      const newValue = newData[key as keyof typeof newData]
+      return Math.abs(newValue - oldValue) > 5 // 5% threshold
+    })
+
+    // Update ref dulu (tidak menyebabkan re-render)
+    dataRef.current = newData
+
+    // Hanya update state jika perubahan signifikan
+    if (hasSignificantChange) {
+      setStatus((prev) => ({
+        ...newData,
+        isLoading: prev.isLoading,
+      }))
+    }
+  }, [])
+
+  // Inisialisasi data saat pertama kali komponen di-mount
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsLoading(false)
+      setStatus((prev) => ({
+        ...prev,
+        isLoading: false,
+      }))
     }, 2000)
 
     return () => clearTimeout(timer)
   }, [])
 
-  // Simulate changing data
+  // Interval polling yang lebih panjang (5000ms) dan optimasi
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCpuUsage(Math.floor(Math.random() * 30) + 30)
-      setMemoryUsage(Math.floor(Math.random() * 20) + 60)
-      setNetworkStatus(Math.floor(Math.random() * 15) + 80)
-      setSystemStatus(Math.floor(Math.random() * 10) + 80)
-      setSecurityLevel(Math.floor(Math.random() * 15) + 70)
-    }, 3000)
+    // Mulai polling setelah loading selesai
+    if (!status.isLoading) {
+      const interval = setInterval(updateDataIfSignificant, 5000)
+      return () => clearInterval(interval)
+    }
+    return undefined
+  }, [status.isLoading, updateDataIfSignificant])
 
-    return () => clearInterval(interval)
-  }, [])
-
-  return {
-    systemStatus,
-    cpuUsage,
-    memoryUsage,
-    networkStatus,
-    securityLevel,
-    isLoading,
-  }
+  return status
 }

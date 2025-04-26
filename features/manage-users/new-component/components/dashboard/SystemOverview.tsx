@@ -1,4 +1,11 @@
-import { Activity, Cpu, HardDrive, RefreshCw, Wifi } from 'lucide-react'
+import {
+  Activity,
+  Cpu,
+  HardDrive,
+  RefreshCw,
+  Wifi,
+  AlertCircle,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -7,6 +14,9 @@ import { MetricCard } from '../ui/MetricCard'
 import { PerformanceChart } from '../ui/PerformanceChart'
 import { ProcessRow } from '../ui/ProcessRow'
 import { StorageItem } from '../ui/StorageItem'
+import { useStatsData } from '../../hooks/useStatsData'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface SystemOverviewProps {
   cpuUsage: number
@@ -15,20 +25,23 @@ interface SystemOverviewProps {
 }
 
 /**
- * Komponen SystemOverview untuk menampilkan overview sistem
+ * Komponen SystemOverview untuk menampilkan overview sistem dan statistics users
  */
 export function SystemOverview({
   cpuUsage,
   memoryUsage,
   networkStatus,
 }: SystemOverviewProps) {
+  // Mengambil data statistik pengguna
+  const { statsMetrics, isLoading, error } = useStatsData()
+
   return (
     <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm overflow-hidden">
       <CardHeader className="border-b border-slate-700/50 pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-slate-100 flex items-center">
             <Activity className="mr-2 h-5 w-5 text-cyan-500" />
-            System Overview
+            System Overview & User Statistics
           </CardTitle>
           <div className="flex items-center space-x-2">
             <Badge
@@ -49,31 +62,84 @@ export function SystemOverview({
         </div>
       </CardHeader>
       <CardContent className="p-6">
+        {/* Tampilan error jika terjadi kesalahan */}
+        {error && (
+          <Alert
+            variant="destructive"
+            className="mb-4 bg-red-900/50 border-red-800"
+          >
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Gagal memuat data statistik pengguna. Silakan coba lagi nanti.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <MetricCard
-            title="CPU Usage"
-            value={cpuUsage}
-            icon={Cpu}
-            trend="up"
-            color="cyan"
-            detail="3.8 GHz | 12 Cores"
-          />
-          <MetricCard
-            title="Memory"
-            value={memoryUsage}
-            icon={HardDrive}
-            trend="stable"
-            color="purple"
-            detail="16.4 GB / 24 GB"
-          />
-          <MetricCard
-            title="Network"
-            value={networkStatus}
-            icon={Wifi}
-            trend="down"
-            color="blue"
-            detail="1.2 GB/s | 42ms"
-          />
+          {/* Loading state */}
+          {isLoading ? (
+            <>
+              <div className="bg-slate-800/50 rounded-lg border border-slate-700/50 p-4">
+                <Skeleton className="h-4 w-24 mb-2 bg-slate-700" />
+                <Skeleton className="h-8 w-16 mb-2 bg-slate-700" />
+                <Skeleton className="h-3 w-32 bg-slate-700" />
+              </div>
+              <div className="bg-slate-800/50 rounded-lg border border-slate-700/50 p-4">
+                <Skeleton className="h-4 w-24 mb-2 bg-slate-700" />
+                <Skeleton className="h-8 w-16 mb-2 bg-slate-700" />
+                <Skeleton className="h-3 w-32 bg-slate-700" />
+              </div>
+              <div className="bg-slate-800/50 rounded-lg border border-slate-700/50 p-4">
+                <Skeleton className="h-4 w-24 mb-2 bg-slate-700" />
+                <Skeleton className="h-8 w-16 mb-2 bg-slate-700" />
+                <Skeleton className="h-3 w-32 bg-slate-700" />
+              </div>
+            </>
+          ) : statsMetrics && statsMetrics.length > 0 ? (
+            statsMetrics.map((metric, index) => (
+              <MetricCard
+                key={index}
+                title={metric.title}
+                value={metric.value}
+                icon={metric.icon}
+                trend={metric.trend}
+                color={metric.color}
+                detail={metric.detail}
+                showPercent={false}
+              />
+            ))
+          ) : (
+            <>
+              {/* Fallback jika data belum tersedia */}
+              <MetricCard
+                title="CPU Usage"
+                value={cpuUsage}
+                icon={Cpu}
+                trend="up"
+                color="cyan"
+                detail="3.8 GHz | 12 Cores"
+                showPercent={true}
+              />
+              <MetricCard
+                title="Memory"
+                value={memoryUsage}
+                icon={HardDrive}
+                trend="stable"
+                color="purple"
+                detail="16.4 GB / 24 GB"
+                showPercent={true}
+              />
+              <MetricCard
+                title="Network"
+                value={networkStatus}
+                icon={Wifi}
+                trend="down"
+                color="blue"
+                detail="1.2 GB/s | 42ms"
+                showPercent={true}
+              />
+            </>
+          )}
         </div>
 
         <div className="mt-8">

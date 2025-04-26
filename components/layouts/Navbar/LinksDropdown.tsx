@@ -1,5 +1,4 @@
 'use client'
-
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -44,7 +43,7 @@ export function LinksDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="flex gap-4 max-w-[100px]">
+        <Button variant="ghost" className="flex gap-4 max-w-[100px]">
           <BarsArrowUpIcon className="w-6 h-6" />
           <UserIcon />
         </Button>

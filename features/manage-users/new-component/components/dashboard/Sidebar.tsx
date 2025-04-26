@@ -45,9 +45,13 @@ export function Sidebar({
             SYSTEM STATUS
           </div>
           <div className="space-y-3">
-            <StatusItem label="Core Systems" value={systemStatus} />
-            <StatusItem label="Security" value={securityLevel} />
-            <StatusItem label="Network" value={networkStatus} />
+            <StatusItem
+              label="Core Systems"
+              value={systemStatus}
+              color={'cyan'}
+            />
+            <StatusItem label="Security" value={securityLevel} color={'blue'} />
+            <StatusItem label="Network" value={networkStatus} color={'green'} />
           </div>
         </div>
       </CardContent>

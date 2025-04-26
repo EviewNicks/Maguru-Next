@@ -1,17 +1,38 @@
 import { useState, useEffect } from 'react'
 
 /**
- * Hook untuk mengelola waktu terkini yang diperbarui setiap detik
+ * Hook untuk mengelola waktu terkini yang diperbarui dengan interval yang lebih optimal
+ * untuk mengurangi render berlebihan
  */
 export function useCurrentTime(): Date {
   const [currentTime, setCurrentTime] = useState(new Date())
 
+  // Menggunakan interval yang lebih lama (10 detik) untuk mengurangi jumlah update
+  // Sesuaikan interval berdasarkan kebutuhan aplikasi
   useEffect(() => {
-    const interval = setInterval(() => {
+    // Update awal hanya pada detik tertentu untuk mengurangi flicker
+    const timeoutId = setTimeout(() => {
       setCurrentTime(new Date())
-    }, 1000)
 
-    return () => clearInterval(interval)
+      // Setelah update awal, mulai interval dengan frekuensi lebih rendah
+      const interval = setInterval(() => {
+        setCurrentTime((prev) => {
+          const newTime = new Date()
+          // Hanya update jika ada perubahan detik/menit
+          if (
+            newTime.getSeconds() !== prev.getSeconds() ||
+            newTime.getMinutes() !== prev.getMinutes()
+          ) {
+            return newTime
+          }
+          return prev
+        })
+      }, 10000) // Update setiap 10 detik
+
+      return () => clearInterval(interval)
+    }, 1000 - new Date().getMilliseconds()) // Sinkronisasi dengan detik penuh
+
+    return () => clearTimeout(timeoutId)
   }, [])
 
   return currentTime

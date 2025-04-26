@@ -1,11 +1,18 @@
 import { StatusItemProps } from '../../types'
 import { Progress } from '@/components/ui/progress'
+import { memo, useMemo } from 'react'
 
 /**
  * Komponen StatusItem untuk menampilkan status dengan progress bar
+ * Di-memoize untuk mengurangi render berlebihan
  */
-export function StatusItem({ label, value, color }: StatusItemProps) {
-  const getGradientClass = () => {
+const StatusItem = memo(function StatusItem({
+  label,
+  value,
+  color,
+}: StatusItemProps) {
+  // Hitung kelas gradient sekali saja untuk nilai color yang sama
+  const gradientClass = useMemo(() => {
     switch (color) {
       case 'cyan':
         return 'bg-gradient-to-r from-cyan-500 to-blue-500'
@@ -18,7 +25,7 @@ export function StatusItem({ label, value, color }: StatusItemProps) {
       default:
         return 'bg-gradient-to-r from-cyan-500 to-blue-500'
     }
-  }
+  }, [color])
 
   return (
     <div>
@@ -28,9 +35,13 @@ export function StatusItem({ label, value, color }: StatusItemProps) {
       </div>
       <Progress
         value={value}
-        className="w-full"
-        indicatorClassName={getGradientClass()}
+        className="w-[60%]"
+        indicatorClassName={gradientClass}
       />
     </div>
   )
-}
+})
+
+StatusItem.displayName = 'StatusItem'
+
+export { StatusItem }
