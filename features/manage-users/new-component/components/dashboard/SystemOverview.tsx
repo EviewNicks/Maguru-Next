@@ -19,18 +19,18 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface SystemOverviewProps {
-  cpuUsage: number
-  memoryUsage: number
-  networkStatus: number
+  cpuUsage?: number
+  memoryUsage?: number
+  networkStatus?: number
 }
 
 /**
  * Komponen SystemOverview untuk menampilkan overview sistem dan statistics users
  */
 export function SystemOverview({
-  cpuUsage,
-  memoryUsage,
-  networkStatus,
+  cpuUsage = 41,
+  memoryUsage = 63,
+  networkStatus = 87,
 }: SystemOverviewProps) {
   // Mengambil data statistik pengguna
   const { statsMetrics, isLoading, error } = useStatsData()
@@ -185,12 +185,6 @@ export function SystemOverview({
             <TabsContent value="performance" className="mt-0">
               <div className="h-64 w-full relative bg-slate-800/30 rounded-lg border-slate-700/50 overflow-hidden">
                 <PerformanceChart />
-                <div className="absolute bottom-4 right-4 bg-slate-900/80 backdrop-blur-sm rounded-md px-3 py-2 border border-slate-700/50">
-                  <div className="text-xs text-slate-400">System Load</div>
-                  <div className="text-lg font-mono text-cyan-400">
-                    {cpuUsage}%
-                  </div>
-                </div>
               </div>
             </TabsContent>
 

@@ -8,8 +8,8 @@ export interface ChartDataPoint {
 
 /**
  * Hook untuk mendapatkan data chart dari API
- * Data akan diambil dalam format yang sama persis dengan ChartContainer lama
- * yaitu hanya month dan users
+ * Data diambil dalam format yang sama persis dengan ChartContainer lama
+ * yaitu month dan users
  */
 export function useChartData() {
   // Menggunakan API yang sama dengan ChartContainer lama
@@ -29,23 +29,23 @@ export function useChartData() {
   // Proses data menggunakan fungsi yang sama persis dengan ChartContainer lama
   const chartData = processChartData(users)
 
-  // Jika tidak ada data, berikan data sample untuk April 2025
+  // Jika tidak ada data, berikan data sample untuk semua bulan tahun 2025
   if (chartData.length === 0) {
-    // Hanya tampilkan data April dengan 5 users, bulan lain 0
+    // Sample data berdasarkan gambar referensi
     return {
       chartData: [
-        { month: 'Jan', users: 12 },
-        { month: 'Feb', users: 15 },
-        { month: 'Mar', users: 19 },
-        { month: 'Apr', users: 5 }, // Bulan April memiliki 5 user sesuai kebutuhan
-        { month: 'May', users: 0 }, // Bulan-bulan selanjutnya belum ada data
-        { month: 'Jun', users: 0 },
-        { month: 'Jul', users: 0 },
-        { month: 'Aug', users: 0 },
-        { month: 'Sep', users: 0 },
-        { month: 'Oct', users: 0 },
-        { month: 'Nov', users: 0 },
-        { month: 'Dec', users: 0 },
+        { month: 'Jan', users: 5 },
+        { month: 'Feb', users: 8 },
+        { month: 'Mar', users: 4 },
+        { month: 'Apr', users: 5 },
+        { month: 'May', users: 3 },
+        { month: 'Jun', users: 6 },
+        { month: 'Jul', users: 3 },
+        { month: 'Aug', users: 5 },
+        { month: 'Sep', users: 3 },
+        { month: 'Oct', users: 5 },
+        { month: 'Nov', users: 2 },
+        { month: 'Dec', users: 4 },
       ],
       isLoading,
       error,
