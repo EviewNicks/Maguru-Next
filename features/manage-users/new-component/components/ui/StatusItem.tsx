@@ -35,7 +35,7 @@ const StatusItem = memo(function StatusItem({
       </div>
       <Progress
         value={value}
-        className="w-[60%]"
+        className="w-full"
         indicatorClassName={gradientClass}
       />
     </div>

@@ -21,9 +21,9 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
 
 ## Status Subtask
 
-### 1. Redesign UI Layout
+### 1. Redesign UI Layout ✅
 
-- **Status**:
+- **Status**: Selesai
 - **Implementasi**:
   - Komponen-komponen yang telah diimplementasikan:
     - **UserTable**: Tabel responsif dengan dukungan sorting, filtering, dan pagination
@@ -61,7 +61,7 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
 
 ### 2. Implementasi Test-Driven Development (TDD) untuk UI
 
-- **Status**:
+- **Status**:Sedang Dikerjakan (20% selesai)
 - **Implementasi**:
 
   - **Unit Tests untuk Komponen**:
@@ -92,7 +92,7 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
 
 ### 3. Integrasi Real-Time Data
 
-- **Status**:
+- **Status**Sedang Dikerjakan (60% selesai)
 - **Implementasi**:
 
   - **Polling Strategy**:
@@ -144,7 +144,7 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
 
 ### 4. Implementasi RBAC di UI
 
-- **Status**:
+- **Status**:Sedang Dikerjakan (80% selesai)
 - **Implementasi**:
 
   - **Proteksi akses halaman**:
@@ -183,7 +183,7 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
 
 ### 5. Integrasi Audit Log (History)
 
-- **Status**:
+- **Status**:Belum Dikerjakan (50% selesai)
 - **Implementasi**:
 
   - **Komponen HistoryModal**:
@@ -248,7 +248,7 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
 
 ### 6. Responsiveness & Accessibility Testing 🔄
 
-- **Status**: Dalam Pengerjaan (70% selesai)
+- **Status**: Dalam Pengerjaan (40% selesai)
 - **Implementasi**:
 
   - **Responsive Design**:
@@ -309,9 +309,9 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
     - Penyempurnaan focus trap untuk modals (10%)
     - Pengujian screen reader compatibility (20%)
 
-### 7. Optimasi Performa Rendering ✅
+### 7. Optimasi Performa Rendering
 
-- **Status**: Selesai (100% selesai)
+- **Status**: Proses (50% selesai)
 - **Implementasi**:
 
   - **Pengelolaan State yang Efisien**:

@@ -253,9 +253,9 @@ function getColumnSpan(columnId: string): number {
     case 'id':
       return 1
     case 'email':
-      return 3
+      return 4
     case 'name':
-      return 3
+      return 2
     case 'role':
       return 2
     case 'status':
