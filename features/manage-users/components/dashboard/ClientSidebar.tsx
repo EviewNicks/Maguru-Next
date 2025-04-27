@@ -1,6 +1,6 @@
 'use client'
 
-import { useSystemStatus } from '@/features/manage-users/new-component/hooks/useSystemStatus'
+import { useSystemStatus } from '@/features/manage-users/hooks/useSystemStatus'
 import { Sidebar } from './Sidebar'
 
 export function ClientSidebar() {

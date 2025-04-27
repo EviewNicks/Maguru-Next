@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { useChartData } from './useChartData'
-import { processChartData } from '../../service/charts'
+import { processChartData } from '../service/charts'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React, { ReactNode, PropsWithChildren } from 'react'
 

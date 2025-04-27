@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { processChartData } from '../../service/charts'
+import { processChartData } from '../service/charts'
 
 export interface ChartDataPoint {
   month: string

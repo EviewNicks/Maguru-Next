@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { fetchStatsData } from '@/features/manage-users/service/stats'
-import DashboardComponent from '@/features/manage-users/new-component'
+import DashboardComponent from '@/features/manage-users'
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
 import { getQueryClient } from '@/lib/getQueryClient'
 import { auth } from '@clerk/nextjs/server'

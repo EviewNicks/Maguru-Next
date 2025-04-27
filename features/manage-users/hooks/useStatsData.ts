@@ -3,7 +3,7 @@ import { MetricCardProps } from '../types'
 import { Users, Shield } from 'lucide-react'
 
 // Import fungsi dari komponen lama
-import { fetchStatsData } from '../../service/stats'
+import { fetchStatsData } from '../service/stats'
 
 /**
  * Hook untuk mengambil data statistik pengguna dan mengkonversinya
