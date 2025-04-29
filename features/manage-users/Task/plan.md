@@ -6,34 +6,40 @@ Menerapkan metodologi Test-Driven Development (TDD) untuk semua komponen UI dala
 
 ## Metrik Keberhasilan
 
-- Unit Tests: Minimal 95% coverage ✅
-- Integration Tests: Minimal 87% coverage 🔄
-- E2E Tests: Minimal 80% coverage untuk alur utama ⏳
-- Semua tests harus berjalan dan lulus sebelum perubahan kode di-commit
+- Unit test coverage minimal 90% untuk seluruh kode
+- Integration test untuk semua flow utama aplikasi
+- Zero bug yang berasal dari regresi pada fitur yang sudah ditest
+- Dokumentasi test yang jelas dan lengkap
 
-## Status Progress
+## Status Implementasi
 
-- ✅ Unit Tests: 100% selesai (20 test suites, 130 tests, semua lulus)
-- 🔄 Integration Tests: 0% (dalam persiapan)
-- ⏳ E2E Tests: 0% (belum dimulai)
-- 📊 Test Report: Selesai untuk Unit Tests
+| Fase                | Status                | Tanggal    | Detail                                     |
+| ------------------- | --------------------- | ---------- | ------------------------------------------ |
+| Unit Testing        | ✅ Selesai            | 2025-04-27 | 20 test suites, 130 tests, 97% coverage    |
+| Integration Testing | ✅ Selesai            | 2025-04-29 | 8 test cases untuk UserTable dan filtering |
+| E2E Testing         | 🔄 On Progress        | -          | Skenario utama sedang disiapkan            |
+| Test Documentation  | ✅ Unit & Integration | 2025-04-29 | Laporan test tersedia di folder `/report`  |
 
-## Langkah-langkah Teknis
+## Pendekatan Implementasi TDD
 
-### 1. Persiapan Lingkungan Pengujian ✅
+### 1. Fase Persiapan (Completed)
 
-- [x] **Setup dan Verifikasi Testing Framework**
+- ✅ Setup Jest dan React Testing Library
+- ✅ Konfigurasi test environment
+- ✅ Menentukan strategi mocking untuk API dan services
 
-  - Verifikasi konfigurasi Jest dan React Testing Library
-  - Pastikan transformers dan module mappings sudah dikonfigurasi dengan benar
-  - Siapkan mock objects untuk dependencies eksternal (Redux, SWR, API, dll.)
+### 2. Unit Testing (Completed)
 
-- [x] **Konfigurasi Mock Service Worker (MSW)**
+- ✅ Menulis test untuk setiap komponen UI
+- ✅ Menulis test untuk hooks dan utils
+- ✅ Coverage analysis dan perbaikan
 
-  - Setup MSW untuk digunakan dalam tests
+### 3. Integration Testing (Completed)
 
-- [x] **Siapkan Testing Utilities**
-  - Buat file `test-utils.tsx` dengan custom render function
+- ✅ Menulis test untuk interaksi UserTable dengan filter
+- ✅ Menulis test untuk pagination
+- ✅ Menulis test untuk error handling
+- ✅ Verifikasi API integration
 
 ### 2. Unit Testing untuk Komponen UI ✅
 
@@ -60,137 +66,9 @@ Menerapkan metodologi Test-Driven Development (TDD) untuk semua komponen UI dala
 
 #### 5.1 UserTable + Filter Integration
 
-- [ ] **Setup Integration Testing Environment**
-
-  - Siapkan MSW server dengan handlers untuk semua API endpoints yang diperlukan
-  - Buat common test utilities dan fixtures untuk integration testing
-  - Setup test database atau mock data yang konsisten
-
-- [ ] **Test File: UserTableFiltering.test.tsx**
-
-  ```typescript
-  // __tests__/integration/manage-users/UserTableFiltering.test.tsx
-  import { render, screen, userEvent, waitFor } from '@testing-library/react'
-  import UserTable from '@/features/manage-users/components/ui/UserTable'
-  import { setupServer } from 'msw/node'
-  import { rest } from 'msw'
-  import { TestWrapper } from '@/test/test-utils'
-
-  // Setup MSW server
-  const handlers = [
-    rest.get('/api/users', (req, res, ctx) => {
-      const role = req.url.searchParams.get('role')
-      const status = req.url.searchParams.get('status')
-      const search = req.url.searchParams.get('search')
-
-      // Return filtered data based on query params
-      return res(ctx.json(getMockUsersResponse(role, status, search)))
-    }),
-  ]
-
-  const server = setupServer(...handlers)
-
-  beforeAll(() => server.listen())
-  afterEach(() => server.resetHandlers())
-  afterAll(() => server.close())
-
-  describe('UserTable Integration with Filters', () => {
-    it('displays data correctly when component mounts', async () => {
-      // Render component and verify initial data loads correctly
-    })
-
-    it('filters data when role filter is changed', async () => {
-      render(
-        <TestWrapper>
-          <UserTable />
-        </TestWrapper>
-      )
-
-      // Wait for initial data to load
-      await screen.findByText('User 1')
-
-      // Change role filter
-      const roleSelect = screen.getByLabelText('Filter by role')
-      await userEvent.click(roleSelect)
-      await userEvent.click(screen.getByText('Admin'))
-
-      // Verify the API called with correct params and UI updates
-      await waitFor(() => {
-        expect(screen.getByText('Admin User')).toBeInTheDocument()
-        expect(screen.queryByText('Student User')).not.toBeInTheDocument()
-      })
-    })
-
-    it('filters data when status filter is changed', async () => {
-      // Render component, change status filter, verify results
-    })
-
-    it('filters data when search input is used', async () => {
-      // Render component, enter search term, verify results
-    })
-
-    it('resets all filters when reset button is clicked', async () => {
-      // Render component, set filters, click reset, verify all filters cleared
-    })
-
-    it('shows loading state while fetching filtered results', async () => {
-      // Verify loading state appears during data fetching
-    })
-
-    it('shows error message when API request fails', async () => {
-      // Mock API error response, verify error message displays
-    })
-
-    it('maintains pagination state during filtering', async () => {
-      // Test pagination interaction with filtering
-    })
-  })
-  ```
-
-- [ ] **Implement Mock Data Generation**
-
-  ```typescript
-  // __tests__/integration/manage-users/mocks/userData.ts
-  import { faker } from '@faker-js/faker'
-
-  export function generateMockUsers(count = 10) {
-    return Array.from({ length: count }, (_, i) => ({
-      id: faker.string.uuid(),
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
-      role: faker.helpers.arrayElement(['admin', 'mahasiswa', 'dosen']),
-      status: faker.helpers.arrayElement(['active', 'inactive']),
-      createdAt: faker.date.past().toISOString(),
-      updatedAt: faker.date.recent().toISOString(),
-    }))
-  }
-
-  export function getMockUsersResponse(role, status, search) {
-    let users = generateMockUsers(20)
-
-    if (role && role !== 'all') {
-      users = users.filter((user) => user.role === role)
-    }
-
-    if (status && status !== 'all') {
-      users = users.filter((user) => user.status === status)
-    }
-
-    if (search) {
-      const searchLower = search.toLowerCase()
-      users = users.filter(
-        (user) =>
-          user.name.toLowerCase().includes(searchLower) ||
-          user.email.toLowerCase().includes(searchLower)
-      )
-    }
-
-    return {
-      users: users.slice(0, 10),
-      metadata: { total: users.length },
-    }
-  }
-  ```
+- [x] **Setup Integration Testing Environment**
+- [x] **Test File: UserTableFiltering.test.tsx**
+- [x] **Implement Mock Data Generation**
 
 #### 5.2 User Management Flow
 

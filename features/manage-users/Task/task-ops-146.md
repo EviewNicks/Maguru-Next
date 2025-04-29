@@ -2,7 +2,7 @@
 
 **Status**: Sedang dikerjakan  
 **Implementasi**: 25 April 2025  
-**Update Terakhir**: 26 April 2025  
+**Update Terakhir**: 29 April 2025  
 **Developer**: Tim Maguru
 
 ## **Deskripsi Task**
@@ -11,13 +11,13 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
 
 ## **Tujuan**
 
-1. Menampilkan data user dengan informasi lengkap (role, status, riwayat perubahan).
-2. Memastikan perubahan data user tercermin di UI secara real-time (dalam 10 detik).
-3. Membatasi akses UI berdasarkan role (hanya admin yang bisa edit/hapus).
-4. Mengintegrasikan sistem audit log untuk transparansi.
-5. Memastikan UI responsif dan memenuhi standar aksesibilitas.
+1. Menampilkan data user dengan informasi yang lebih lengkap dan jelas
+2. Menyediakan filter dan pencarian untuk memudahkan manajemen user
+3. Mengimplementasikan UI yang modern dan performant
+4. Menambahkan fitur real-time updates dan audit log
+5. Menerapkan pendekatan Test-Driven Development (TDD) untuk menjamin kualitas
 
-# Analisis Task OPS-146: Updated UI Design Page Manage-User
+## **Progress dan Status**
 
 ## Status Subtask
 
