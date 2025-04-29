@@ -8,7 +8,7 @@ const createJestConfig = nextJest({
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
-  testEnvironment: 'jsdom',
+  testEnvironment: 'jest-fixed-jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js', '<rootDir>/singleton.ts'],
   moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
@@ -24,6 +24,10 @@ const customJestConfig = {
       '<rootDir>/__tests__/__mocks__/api/cache-status.ts',
     '^@/app/api/test/check-backward-compat/route$':
       '<rootDir>/__tests__/__mocks__/api/check-backward-compat.ts',
+    '^.+\\.module\\.(css|sass|scss)$': 'identity-obj-proxy',
+    '^.+\\.(css|sass|scss)$': '<rootDir>/__mocks__/styleMock.js',
+    '^.+\\.(jpg|jpeg|png|gif|webp|avif|svg)$':
+      '<rootDir>/__mocks__/fileMock.js',
   },
   transform: {
     '^.+\\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
@@ -39,6 +43,8 @@ const customJestConfig = {
   transformIgnorePatterns: [
     'node_modules/(?!(@clerk/nextjs|@clerk/backend)/)',
     '\\.pnp\\.[^\\/]+$',
+    '/node_modules/',
+    '^.+\\.module\\.(css|sass|scss)$',
   ],
   testMatch: [
     '<rootDir>/**/__tests__/**/*.{js,jsx,ts,tsx}',

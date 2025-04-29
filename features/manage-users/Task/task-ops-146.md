@@ -61,7 +61,7 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
 
 ### 2. Implementasi Test-Driven Development (TDD) untuk UI
 
-- **Status**: Sedang Dikerjakan (60% selesai)
+- **Status**: Sedang Dikerjakan (70% selesai)
 - **Implementasi**:
 
   - **Unit Tests untuk Komponen** ✅:
@@ -75,9 +75,11 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
 
   - **Integration Testing** 🔄:
 
-    - Sedang menyiapkan test integrasi ManageUsersPage dengan API dan state management
-    - Perencanaan mock SWR data fetching untuk isolasi testing
-    - Desain test alur user lengkap (load data, filter, edit, view history)
+    - Menyelesaikan pembaruan kode mock MSW dari v1 ke v2
+    - Mengatasi error `TransformStream is not defined` dengan menggunakan `jest-fixed-jsdom`
+    - Pembaruan response resolver pada mock handler menggunakan `HttpResponse.json()` sesuai MSW v2
+    - Memodifikasi mock data flow sesuai dengan API baru MSW v2
+    - Sedang menyelesaikan test integrasi ManageUsersPage dengan API dan state management
     - Target: 10 test suites dengan coverage minimal 87%
 
   - **E2E Testing** ⏳:
@@ -96,14 +98,24 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
 
     - Jest sebagai test runner
     - React Testing Library untuk component testing
-    - MSW (Mock Service Worker) untuk API mocking
-    - Playwright untuk e2e testing
+    - MSW v2 (Mock Service Worker) untuk API mocking
+    - jest-fixed-jsdom untuk mengatasi kompatibilitas JSDOM dengan MSW v2
+    - Playwright untuk e2e testing (direncanakan)
     - jest-axe untuk accessibility testing
+
+  - **Update MSW v2 Integration**:
+
+    - Migrasi dari `rest` ke `http` namespace pada MSW v2
+    - Penggantian pattern resolver dari `(req, res, ctx)` ke object destructuring `({ request, params })`
+    - Implementasi `HttpResponse` API untuk mocking response
+    - Penyesuaian cara mengakses URL parameters melalui `new URL(request.url)`
+    - Instalasi `jest-fixed-jsdom` untuk mengatasi error terkait Web API seperti `TransformStream`
 
   - **Progress Report**:
     - Unit Test Report lengkap tersedia di `features/manage-users/Task/report/unit-test-report.md`
     - Semua saran perbaikan dari hasil unit testing telah diimplementasikan
     - Terjadi peningkatan kualitas kode, terutama dalam penanganan error dan loading state
+    - Framework testing sudah siap dengan MSW v2 untuk mock API calls yang realistis
 
 ### 3. Integrasi Real-Time Data
 
@@ -621,6 +633,134 @@ useEffect(() => {
 }, [cpuUsage])
 ```
 
+## Panduan Integrasi Testing dan Mock API
+
+### MSW Integration v2.x
+
+```tsx
+// File setup untuk mock server
+// features/manage-users/__tests__/integration/mocks/server.ts
+import { setupServer } from 'msw/node'
+import { handlers } from './handlers'
+
+export const server = setupServer(...handlers)
+
+// Lifecycle hooks untuk testing
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+```
+
+```tsx
+// Handler untuk mock API
+// features/manage-users/__tests__/integration/mocks/handlers.ts
+import { http, HttpResponse } from 'msw'
+
+export const handlers = [
+  // GET endpoint dengan query parameters
+  http.get('/api/users', ({ request }) => {
+    const url = new URL(request.url)
+    const role = url.searchParams.get('role')
+    const status = url.searchParams.get('status')
+
+    // Return mocked data
+    return HttpResponse.json(
+      {
+        users: [
+          /* mocked data */
+        ],
+        metadata: {
+          /* pagination data */
+        },
+      },
+      { status: 200 }
+    )
+  }),
+
+  // Endpoint dengan path parameters
+  http.patch('/api/users/:id/role', ({ params }) => {
+    const { id } = params
+
+    return HttpResponse.json(
+      {
+        success: true,
+        message: 'User role updated',
+      },
+      { status: 200 }
+    )
+  }),
+
+  // Mensimulasikan error response
+  http.get('/api/users/error', () => {
+    return HttpResponse.json(
+      { message: 'Server error occurred' },
+      { status: 500 }
+    )
+  }),
+]
+```
+
+```tsx
+// Test file
+// features/manage-users/__tests__/integration/UserTableFiltering.integration.test.tsx
+import { render, screen, fireEvent, waitFor } from '../test-utils'
+import UserTable from '../../components/ui/UserTable'
+import { server } from './mocks/server'
+import { http, HttpResponse } from 'msw'
+
+describe('UserTable Integration - Filtering & Pagination', () => {
+  test('filters data by role', async () => {
+    // Override default handler untuk test spesifik
+    server.use(
+      http.get('/api/users', ({ request }) => {
+        const url = new URL(request.url)
+        const role = url.searchParams.get('role')
+
+        // Return data yang disesuaikan dengan filter
+        return HttpResponse.json({
+          users: [
+            {
+              id: '1',
+              name: 'Test Admin',
+              role: 'admin',
+              // ...other props
+            },
+          ],
+          metadata: { total: 1, page: 1 },
+        })
+      })
+    )
+
+    render(<UserTable />)
+
+    // Interaksi user
+    fireEvent.change(screen.getByTestId('role-filter'), {
+      target: { value: 'admin' },
+    })
+
+    // Verifikasi hasil
+    await waitFor(() => {
+      expect(screen.getByText('Test Admin')).toBeInTheDocument()
+    })
+  })
+})
+```
+
+### Jest Configuration untuk MSW v2
+
+```javascript
+// jest.config.js
+module.exports = {
+  testEnvironment: 'jest-fixed-jsdom',
+  // Atau alternatif jika tidak menggunakan jest-fixed-jsdom:
+  // testEnvironmentOptions: {
+  //   customExportConditions: [''],
+  // },
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  // ... other configs
+}
+```
+
 ## Referensi
 
 - [shadcn/ui Documentation](https://ui.shadcn.com/)
@@ -631,6 +771,9 @@ useEffect(() => {
 - [Compound Component Pattern](https://kentcdodds.com/blog/compound-components-with-react-hooks)
 - [React Performance Optimization](https://reactjs.org/docs/optimizing-performance.html)
 - [Web Vitals](https://web.dev/vitals/)
+- [MSW v2 Documentation](https://mswjs.io/docs/)
+- [MSW v2 Migration Guide](https://mswjs.io/docs/migrations/1.x-to-2.x/)
+- [Jest Integration with MSW](https://jestjs.io/docs/testing-frameworks)
 
 ## Langkah Selanjutnya
 

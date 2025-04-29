@@ -1,0 +1,78 @@
+{
+  "timestamp": "2025-04-29T06-21-55.725Z",
+  "environment": "test",
+  "numFailedTests": 7,
+  "numPassedTests": 1,
+  "numTotalTests": 8,
+  "executionTime": "1745907705096ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\__tests__\\integration\\UserTableFiltering.integration.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "TC-001: Menampilkan data pengguna setelah loading",
+          "status": "failed",
+          "duration": 287,
+          "failureMessages": [
+            "Error: could not find react-redux context value; please ensure the component is wrapped in a <Provider>"
+          ]
+        },
+        {
+          "title": "TC-002: Filter berdasarkan role menampilkan hanya user dengan role tersebut",
+          "status": "failed",
+          "duration": 1111,
+          "failureMessages": [
+            "Error: Unable to find role=\"table\""
+          ]
+        },
+        {
+          "title": "TC-003: Filter berdasarkan status menampilkan hanya user dengan status tersebut",
+          "status": "failed",
+          "duration": 1095,
+          "failureMessages": [
+            "Error: Unable to find role=\"table\""
+          ]
+        },
+        {
+          "title": "TC-004: Search filter menampilkan hasil yang sesuai dengan keyword",
+          "status": "failed",
+          "duration": 1109,
+          "failureMessages": [
+            "Error: Unable to find role=\"table\""
+          ]
+        },
+        {
+          "title": "TC-005: Reset filter mengembalikan ke kondisi awal",
+          "status": "failed",
+          "duration": 52,
+          "failureMessages": [
+            "Error: could not find react-redux context value; please ensure the component is wrapped in a <Provider>"
+          ]
+        },
+        {
+          "title": "TC-006: Menampilkan error message jika API gagal",
+          "status": "passed",
+          "duration": 25,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-007: Navigasi pagination berfungsi dengan benar",
+          "status": "failed",
+          "duration": 51,
+          "failureMessages": [
+            "Error: could not find react-redux context value; please ensure the component is wrapped in a <Provider>"
+          ]
+        },
+        {
+          "title": "TC-008: Pagination reset ke halaman 1 saat filter berubah",
+          "status": "failed",
+          "duration": 1066,
+          "failureMessages": [
+            "Error: Unable to find an element with the text: User Page 2. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+          ]
+        }
+      ]
+    }
+  ]
+}
