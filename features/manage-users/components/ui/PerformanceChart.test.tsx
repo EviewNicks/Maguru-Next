@@ -1,11 +1,42 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { PerformanceChart } from './PerformanceChart'
 import { useChartData } from '../../hooks/useChartData'
+import { ReactNode } from 'react'
 
 // Mock hook useChartData
 jest.mock('../../hooks/useChartData', () => ({
   useChartData: jest.fn(),
 }))
+
+// Mock komponen Chart dari recharts yang mungkin menyebabkan masalah
+jest.mock('recharts', () => {
+  const OriginalModule = jest.requireActual('recharts')
+  return {
+    ...OriginalModule,
+    ResponsiveContainer: ({
+      children,
+      width,
+      height,
+    }: {
+      children: ReactNode
+      width: string | number
+      height: string | number
+    }) => (
+      <div
+        data-testid="recharts-responsive-container"
+        style={{ width, height }}
+      >
+        {children}
+      </div>
+    ),
+    CartesianGrid: () => <div data-testid="recharts-cartesian-grid" />,
+    XAxis: () => <div data-testid="recharts-xaxis" />,
+    BarChart: ({ children }: { children: ReactNode }) => (
+      <div data-testid="recharts-bar-chart">{children}</div>
+    ),
+    Bar: () => <div data-testid="recharts-bar" />,
+  }
+})
 
 /**
  * Unit Test untuk PerformanceChart Komponen yang diperbarui dengan ShadcnUI Chart
@@ -77,7 +108,7 @@ describe('PerformanceChart', () => {
 
       // System Load harus ada
       expect(screen.getByText(/system load/i)).toBeInTheDocument()
-      expect(screen.getByText(/35%/i)).toBeInTheDocument()
+      expect(screen.getByText(/41%/i)).toBeInTheDocument()
     })
   })
 

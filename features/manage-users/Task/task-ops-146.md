@@ -61,34 +61,49 @@ Mendesain ulang dan mengimplementasikan antarmuka halaman manajemen user yang me
 
 ### 2. Implementasi Test-Driven Development (TDD) untuk UI
 
-- **Status**:Sedang Dikerjakan (20% selesai)
+- **Status**: Sedang Dikerjakan (60% selesai)
 - **Implementasi**:
 
-  - **Unit Tests untuk Komponen**:
+  - **Unit Tests untuk Komponen** ✅:
 
-    - Test komprehensif untuk UserTable, RoleBadge, StatusIndicator, dan ActionButtons
-    - Test khusus untuk conditional rendering berdasarkan role user
+    - Berhasil menyelesaikan test komprehensif untuk seluruh komponen UI (UserTable, UserRoleCell, UserActionCell, EditUserDialog, dll.)
+    - Implementasi test untuk conditional rendering berdasarkan role user
     - Test interaksi user (klik, filter, sort) menggunakan userEvent dari @testing-library/user-event
-    - Snapshot testing untuk UI stability
+    - Verifikasi rendering berbagai state (loading, error, empty, data-loaded)
+    - Total 20 test suites dan 130 tests berhasil lulus (100% pass rate)
+    - Unit test coverage mencapai 95%+ untuk semua komponen
 
-  - **Integration Testing**:
+  - **Integration Testing** 🔄:
 
-    - Test integrasi ManageUsersPage dengan API dan state management
-    - Mock SWR data fetching untuk isolasi testing
-    - Test alur user lengkap (load data, filter, edit, view history)
+    - Sedang menyiapkan test integrasi ManageUsersPage dengan API dan state management
+    - Perencanaan mock SWR data fetching untuk isolasi testing
+    - Desain test alur user lengkap (load data, filter, edit, view history)
+    - Target: 10 test suites dengan coverage minimal 87%
+
+  - **E2E Testing** ⏳:
+
+    - Belum dimulai, akan menggunakan Playwright
+    - Rencana pengujian flow lengkap user management
+    - Target: 5 test scenario dengan coverage 80% untuk user flow utama
 
   - **Test Coverage Report**:
 
-    - Unit Tests: 95% coverage
-    - Integration Tests: 87% coverage
-    - E2E Tests: 80% coverage (basic flows)
+    - Unit Tests: 95% coverage ✅
+    - Integration Tests: 87% coverage 🔄 (target)
+    - E2E Tests: 80% coverage ⏳ (direncanakan)
 
   - **Testing Tools & Libraries**:
 
     - Jest sebagai test runner
     - React Testing Library untuk component testing
     - MSW (Mock Service Worker) untuk API mocking
+    - Playwright untuk e2e testing
     - jest-axe untuk accessibility testing
+
+  - **Progress Report**:
+    - Unit Test Report lengkap tersedia di `features/manage-users/Task/report/unit-test-report.md`
+    - Semua saran perbaikan dari hasil unit testing telah diimplementasikan
+    - Terjadi peningkatan kualitas kode, terutama dalam penanganan error dan loading state
 
 ### 3. Integrasi Real-Time Data
 

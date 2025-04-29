@@ -11,7 +11,7 @@ import { fetchStatsData } from '../service/stats'
  */
 export function useStatsData() {
   const {
-    data: statsData = [],
+    data: statsData,
     isLoading,
     error,
   } = useQuery({
@@ -19,40 +19,42 @@ export function useStatsData() {
     queryFn: fetchStatsData,
   })
 
-  // Map data statistik ke props untuk MetricCard
-  const mappedData: MetricCardProps[] = statsData.map((stat) => {
-    let iconComponent = Users
-    let trend: 'up' | 'down' | 'stable' = 'stable'
-    let color: 'cyan' | 'green' | 'blue' | 'purple' = 'blue'
-    let detail = `${stat.value} pengguna`
+  // Map data statistik ke props untuk MetricCard, dengan pengecekan untuk data kosong/null
+  const mappedData: MetricCardProps[] = Array.isArray(statsData)
+    ? statsData.map((stat) => {
+        let iconComponent = Users
+        let trend: 'up' | 'down' | 'stable' = 'stable'
+        let color: 'cyan' | 'green' | 'blue' | 'purple' = 'blue'
+        let detail = `${stat.value} pengguna`
 
-    // Sesuaikan icon, trend, dan color berdasarkan jenis statistik
-    if (stat.title === 'Total Users') {
-      iconComponent = Users
-      trend = 'up'
-      color = 'cyan'
-      detail = `${stat.value} total pengguna`
-    } else if (stat.title.includes('New Users')) {
-      iconComponent = Users
-      trend = 'up'
-      color = 'green'
-      detail = `${stat.value} pengguna baru (7 hari terakhir)`
-    } else if (stat.title.includes('Active Admins')) {
-      iconComponent = Shield
-      trend = 'stable'
-      color = 'purple'
-      detail = `${stat.value} admin aktif`
-    }
+        // Sesuaikan icon, trend, dan color berdasarkan jenis statistik
+        if (stat.title === 'Total Users') {
+          iconComponent = Users
+          trend = 'up'
+          color = 'cyan'
+          detail = `${stat.value} total pengguna`
+        } else if (stat.title.includes('New Users')) {
+          iconComponent = Users
+          trend = 'up'
+          color = 'green'
+          detail = `${stat.value} pengguna baru (7 hari terakhir)`
+        } else if (stat.title.includes('Active Admins')) {
+          iconComponent = Shield
+          trend = 'stable'
+          color = 'purple'
+          detail = `${stat.value} admin aktif`
+        }
 
-    return {
-      title: stat.title,
-      value: stat.value,
-      icon: iconComponent,
-      trend,
-      color,
-      detail,
-    }
-  })
+        return {
+          title: stat.title,
+          value: stat.value,
+          icon: iconComponent,
+          trend,
+          color,
+          detail,
+        }
+      })
+    : [] // Jika statsData bukan array, kembalikan array kosong
 
   return {
     statsMetrics: mappedData,

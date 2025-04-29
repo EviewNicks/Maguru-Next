@@ -14,14 +14,17 @@ interface SystemStatusData {
  * dengan optimasi untuk mengurangi render berlebihan
  */
 export function useSystemStatus(): SystemStatusData {
-  // Gunakan useRef untuk menyimpan nilai sebelumnya tanpa menyebabkan re-render
-  const dataRef = useRef({
+  // Nilai awal status
+  const initialData = {
     systemStatus: 85,
     cpuUsage: 42,
     memoryUsage: 68,
     networkStatus: 92,
     securityLevel: 75,
-  })
+  }
+
+  // Gunakan useRef untuk menyimpan nilai sebelumnya tanpa menyebabkan re-render
+  const dataRef = useRef(initialData)
 
   // State hanya untuk data yang perlu menyebabkan re-render
   const [status, setStatus] = useState<SystemStatusData>({
@@ -40,24 +43,35 @@ export function useSystemStatus(): SystemStatusData {
       securityLevel: Math.floor(Math.random() * 15) + 70,
     }
 
-    // Periksa apakah ada perubahan signifikan (> 5%)
-    const hasSignificantChange = Object.keys(newData).some((key) => {
-      const oldValue = dataRef.current[key as keyof typeof dataRef.current]
-      const newValue = newData[key as keyof typeof newData]
-      return Math.abs(newValue - oldValue) > 5 // 5% threshold
-    })
-
-    // Update ref dulu (tidak menyebabkan re-render)
+    // Untuk tujuan pengujian selama mocking Math.random
+    // kita selalu update data ref agar bisa diakses oleh test
     dataRef.current = newData
 
-    // Hanya update state jika perubahan signifikan
-    if (hasSignificantChange) {
-      setStatus((prev) => ({
-        ...newData,
-        isLoading: prev.isLoading,
-      }))
-    }
-  }, [])
+    // Periksa apakah ada perubahan signifikan (> 5%)
+    setStatus((currentStatus) => {
+      const hasSignificantChange = Object.keys(newData).some((key) => {
+        const keyName = key as keyof typeof currentStatus
+        const oldValue = currentStatus[keyName]
+        const newValue = newData[key as keyof typeof newData]
+        // Memastikan kedua nilai adalah angka sebelum operasi aritmatika
+        return (
+          typeof oldValue === 'number' &&
+          typeof newValue === 'number' &&
+          Math.abs(newValue - oldValue) > 5
+        )
+      })
+
+      // Hanya update state jika perubahan signifikan
+      if (hasSignificantChange) {
+        return {
+          ...newData,
+          isLoading: currentStatus.isLoading,
+        }
+      }
+
+      return currentStatus
+    })
+  }, []) // Hapus dependensi pada status
 
   // Inisialisasi data saat pertama kali komponen di-mount
   useEffect(() => {

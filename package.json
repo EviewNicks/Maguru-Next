@@ -19,7 +19,7 @@
     "seed": "tsx prisma/seed.ts",
     "test": "cross-env USE_BABEL=true jest",
     "test:watch": "cross-env USE_BABEL=true jest --watch",
-    "test:custome": "jest features/manage-users/new-component --verbose",
+    "test:custome": "jest features/manage-users/components features/manage-users/hooks features/manage-users/service features/manage-users/utils  --verbose",
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:report": "playwright test --reporter=./services/playwrightReporter.js",

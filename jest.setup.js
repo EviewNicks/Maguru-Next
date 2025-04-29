@@ -5,6 +5,16 @@ import { TextDecoder, TextEncoder } from 'util'
 global.TextEncoder = TextEncoder
 global.TextDecoder = TextDecoder
 
+// Mock ResizeObserver yang digunakan oleh recharts
+global.ResizeObserver = class ResizeObserver {
+  constructor(callback) {
+    this.callback = callback
+  }
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 // Mock fetch
 global.fetch = jest.fn()
 
