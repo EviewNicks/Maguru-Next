@@ -26,9 +26,7 @@ interface WebhookEventData {
  * Verifikasi signature webhook dari Clerk
  * Memastikan webhook benar-benar berasal dari Clerk
  */
-export async function verifyWebhookSignature(
-  req: Request
-): Promise<WebhookEventData> {
+async function verifyWebhookSignature(req: Request): Promise<WebhookEventData> {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
 
   if (!WEBHOOK_SECRET) {

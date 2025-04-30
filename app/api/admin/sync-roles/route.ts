@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 }
 
 // Export function untuk testing
-export async function handlePost(req: NextRequest, prismaClient = prisma) {
+ async function handlePost(req: NextRequest, prismaClient = prisma) {
   // Cek apakah user terauthentikasi dan admin
   const { userId } = await auth()
 

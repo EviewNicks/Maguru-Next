@@ -2,17 +2,29 @@
 import withBundleAnalyzer from '@next/bundle-analyzer'
 import { withSentryConfig } from '@sentry/nextjs'
 import { PrismaPlugin } from '@prisma/nextjs-monorepo-workaround-plugin'
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const nextConfig = {
   /* config options here */
   images: {
-    remotePatterns: [{ protocol: 'https', hostname: 'img.clerk.com' }],
-    domains: ['img.clerk.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'another-domain.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
   reactStrictMode: false,
   compiler: {
@@ -49,6 +61,26 @@ const nextConfig = {
       '**/WindowsApps/**',
       '**/Microsoft/**',
     ],
+  },
+
+  // Konfigurasi Turbopack terbaru
+  turbopack: {
+    // Menentukan root direktori aplikasi (opsional)
+    // root: path.join(__dirname),
+    // Konfigurasi loader untuk file-file khusus (opsional)
+    rules: {
+      // Contoh: menggunakan @svgr/webpack untuk file SVG
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
+    // Konfigurasi resolveAlias untuk alias path (opsional)
+    resolveAlias: {
+      // contoh: '@components': path.join(__dirname, 'components'),
+    },
+    // Konfigurasi ekstensi file yang didukung (opsional)
+    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json', '.mdx'],
   },
 
   // Pindahkan dari experimental ke root level sesuai pesan error

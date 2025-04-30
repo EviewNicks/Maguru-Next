@@ -32,29 +32,6 @@
 
 #### Task:
 
-- **OPS-54:** Mengembangkan fitur untuk melacak riwayat perubahan data pengguna  
-  🔗 [Link Task](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-54)
-
-  - **Assignee:** [Developer 1]
-  - **Estimasi:** 5 Story Points
-  - **Status:** 🟡 On Progress
-  - **Acceptance Criteria:**
-    - Data perubahan role, status, dan informasi profil pengguna tercatat dalam database
-    - Admin dapat melihat log perubahan dengan filter berdasarkan tanggal
-    - UI menampilkan riwayat perubahan dengan jelas menunjukkan nilai sebelum dan sesudah
-
-- **OPS-55:** Menerapkan sistem izin berbasis peran untuk operasi pembaruan dan penghapusan pengguna  
-  🔗 [Link Task](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-55)
-
-  - **Assignee:** [Developer 2]
-  - **Estimasi:** 8 Story Points
-  - **Status:** 🟡 On Progress
-  - **Acceptance Criteria:**
-    - Admin memiliki akses penuh ke semua operasi CRUD pengguna
-    - Dosen hanya dapat melihat dan memperbarui informasi terkait mahasiswa mereka
-    - Mahasiswa hanya dapat melihat dan mengedit profil mereka sendiri
-    - Upaya akses tidak sah memunculkan pesan error yang sesuai
-
 - **OPS-146:** Memperbarui desain UI halaman manajemen pengguna sesuai dengan kebutuhan navigasi yang lebih baik  
   🔗 [Link Task](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-146)
   - **Assignee:** [Frontend Developer]
@@ -85,6 +62,18 @@
     - Data pengguna baru otomatis tersimpan di database lokal
     - Perubahan profil di Clerk tercermin di database lokal dalam waktu < 5 detik
     - Sistem menangani error dengan retry mechanism dan logging
+
+  - **OPS-55:** Menerapkan sistem izin berbasis peran untuk operasi pembaruan dan penghapusan pengguna  
+  🔗 [Link Task](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-55)
+
+  - **Assignee:** [Developer 2]
+  - **Estimasi:** 8 Story Points
+  - **Status:** 🟡 On Progress
+  - **Acceptance Criteria:**
+    - Admin memiliki akses penuh ke semua operasi CRUD pengguna
+    - Dosen hanya dapat melihat dan memperbarui informasi terkait mahasiswa mereka
+    - Mahasiswa hanya dapat melihat dan mengedit profil mereka sendiri
+    - Upaya akses tidak sah memunculkan pesan error yang sesuai
 
 - **OPS-147:** Memperbarui konfigurasi Prisma Client dan pengaturan deployment di Vercel untuk mendukung integrasi webhook  
   🔗 [Link Task](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-147)

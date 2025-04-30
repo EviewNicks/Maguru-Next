@@ -1,0 +1,910 @@
+{
+  "timestamp": "2025-04-29T01-57-33.402Z",
+  "environment": "test",
+  "numFailedTests": 0,
+  "numPassedTests": 130,
+  "numTotalTests": 130,
+  "executionTime": "1745891809504ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\hooks\\useSystemStatus.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "initializes with loading state",
+          "status": "passed",
+          "duration": 68,
+          "failureMessages": []
+        },
+        {
+          "title": "changes to non-loading state after initial timeout",
+          "status": "passed",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "title": "updates values periodically after loading is complete",
+          "status": "passed",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "title": "cleans up interval when unmounted",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\hooks\\useCurrentTime.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "menginisialisasi waktu dengan benar saat pertama kali dipanggil",
+          "status": "passed",
+          "duration": 72,
+          "failureMessages": []
+        },
+        {
+          "title": "memperbarui waktu setiap 10 detik",
+          "status": "passed",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "title": "hanya memperbarui state jika ada perubahan detik atau menit",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "membersihkan interval saat hook di-unmount",
+          "status": "passed",
+          "duration": 10,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\hooks\\useStatsData.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "mengambil data statistik dari API dengan benar",
+          "status": "passed",
+          "duration": 94,
+          "failureMessages": []
+        },
+        {
+          "title": "memetakan data ke format MetricCard dengan benar",
+          "status": "passed",
+          "duration": 16,
+          "failureMessages": []
+        },
+        {
+          "title": "menangani error dengan benar",
+          "status": "passed",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "title": "mengembalikan data kosong jika tidak ada data dari API",
+          "status": "passed",
+          "duration": 16,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\hooks\\useChartData.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "fetches and processes chart data correctly",
+          "status": "passed",
+          "duration": 25,
+          "failureMessages": []
+        },
+        {
+          "title": "handles empty data gracefully",
+          "status": "passed",
+          "duration": 31,
+          "failureMessages": []
+        },
+        {
+          "title": "handles API errors",
+          "status": "passed",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "title": "provides loading state while fetching data",
+          "status": "passed",
+          "duration": 17,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\ui\\UserTable\\EditUserDialog.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders the dialog with user information when open",
+          "status": "passed",
+          "duration": 164,
+          "failureMessages": []
+        },
+        {
+          "title": "does not render dialog when open is false",
+          "status": "passed",
+          "duration": 10,
+          "failureMessages": []
+        },
+        {
+          "title": "updates role when select value changes",
+          "status": "passed",
+          "duration": 405,
+          "failureMessages": []
+        },
+        {
+          "title": "updates status when select value changes",
+          "status": "passed",
+          "duration": 194,
+          "failureMessages": []
+        },
+        {
+          "title": "closes dialog when cancel button is clicked",
+          "status": "passed",
+          "duration": 90,
+          "failureMessages": []
+        },
+        {
+          "title": "handles form submission successfully",
+          "status": "passed",
+          "duration": 94,
+          "failureMessages": []
+        },
+        {
+          "title": "handles form submission error",
+          "status": "passed",
+          "duration": 122,
+          "failureMessages": []
+        },
+        {
+          "title": "shows loading state when updating",
+          "status": "passed",
+          "duration": 107,
+          "failureMessages": []
+        },
+        {
+          "title": "defaults to valid role for user with invalid role",
+          "status": "passed",
+          "duration": 66,
+          "failureMessages": []
+        },
+        {
+          "title": "defaults to valid status for user with null status",
+          "status": "passed",
+          "duration": 36,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\dashboard\\LoadingOverlay.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders loading overlay when isLoading is true",
+          "status": "passed",
+          "duration": 97,
+          "failureMessages": []
+        },
+        {
+          "title": "renders nothing when isLoading is false",
+          "status": "passed",
+          "duration": 5,
+          "failureMessages": []
+        },
+        {
+          "title": "applies correct styling to loading text",
+          "status": "passed",
+          "duration": 10,
+          "failureMessages": []
+        },
+        {
+          "title": "applies animation classes to spinner elements",
+          "status": "passed",
+          "duration": 8,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\ui\\PerformanceChart.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders loading state correctly",
+          "status": "passed",
+          "duration": 118,
+          "failureMessages": []
+        },
+        {
+          "title": "renders error state correctly",
+          "status": "passed",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "title": "renders chart with data correctly",
+          "status": "passed",
+          "duration": 93,
+          "failureMessages": []
+        },
+        {
+          "title": "handles empty data correctly",
+          "status": "passed",
+          "duration": 21,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\ui\\ActionButton.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders with icon and label",
+          "status": "passed",
+          "duration": 149,
+          "failureMessages": []
+        },
+        {
+          "title": "renders with different icons correctly",
+          "status": "passed",
+          "duration": 118,
+          "failureMessages": []
+        },
+        {
+          "title": "handles click events",
+          "status": "passed",
+          "duration": 214,
+          "failureMessages": []
+        },
+        {
+          "title": "applies correct CSS classes",
+          "status": "passed",
+          "duration": 47,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\ui\\UserTable\\UserActionCell.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders the delete button",
+          "status": "passed",
+          "duration": 248,
+          "failureMessages": []
+        },
+        {
+          "title": "opens confirmation modal when delete button is clicked",
+          "status": "passed",
+          "duration": 155,
+          "failureMessages": []
+        },
+        {
+          "title": "calls deleteUser when modal confirmation is triggered",
+          "status": "passed",
+          "duration": 107,
+          "failureMessages": []
+        },
+        {
+          "title": "shows success toast when delete is successful",
+          "status": "passed",
+          "duration": 65,
+          "failureMessages": []
+        },
+        {
+          "title": "shows error toast when delete fails",
+          "status": "passed",
+          "duration": 71,
+          "failureMessages": []
+        },
+        {
+          "title": "applies correct styling to delete button",
+          "status": "passed",
+          "duration": 15,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\ui\\UserTable\\UserRoleCell.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders admin badge correctly",
+          "status": "passed",
+          "duration": 162,
+          "failureMessages": []
+        },
+        {
+          "title": "renders mahasiswa badge correctly",
+          "status": "passed",
+          "duration": 31,
+          "failureMessages": []
+        },
+        {
+          "title": "opens edit dialog when badge is clicked",
+          "status": "passed",
+          "duration": 303,
+          "failureMessages": []
+        },
+        {
+          "title": "closes edit dialog when close button is clicked",
+          "status": "passed",
+          "duration": 150,
+          "failureMessages": []
+        },
+        {
+          "title": "handles missing user data gracefully",
+          "status": "passed",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "title": "handles invalid role data gracefully",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        },
+        {
+          "title": "has correct icon for each role",
+          "status": "passed",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "title": "should render admin badge with correct icon and text",
+          "status": "passed",
+          "duration": 13,
+          "failureMessages": []
+        },
+        {
+          "title": "should render mahasiswa badge with correct icon and text",
+          "status": "passed",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle uppercase role values",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle empty role value",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\hooks\\useParticleEffect.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "mengembalikan referensi canvas",
+          "status": "passed",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "title": "menginisialisasi canvas dengan benar saat hook dipanggil",
+          "status": "passed",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "title": "menjalankan animasi partikel saat komponen di-mount",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "membersihkan animasi saat hook di-unmount",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        },
+        {
+          "title": "mengatur ulang ukuran canvas saat jendela di-resize",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\service\\charts.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "groups users by month correctly",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "handles empty input",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "only includes months with data",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "handles multiple users in the same month",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "handles invalid dates",
+          "status": "passed",
+          "duration": 0,
+          "failureMessages": []
+        },
+        {
+          "title": "sorts months in calendar order",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\service\\stats.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "fetches and processes stats data correctly",
+          "status": "passed",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "title": "handles API error",
+          "status": "passed",
+          "duration": 15,
+          "failureMessages": []
+        },
+        {
+          "title": "handles empty user list",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "calculates new users correctly",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "counts active admins correctly",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "should fetch stats data successfully",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should throw error when fetch fails",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should calculate new users within the last 7 days correctly",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "should count active admins correctly",
+          "status": "passed",
+          "duration": 5,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\dashboard\\ClientSidebar.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "passes the correct props to Sidebar component",
+          "status": "passed",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "title": "handles loading state correctly",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "handles hook updates correctly",
+          "status": "passed",
+          "duration": 18,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\ui\\NavItem.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders with icon and label",
+          "status": "passed",
+          "duration": 220,
+          "failureMessages": []
+        },
+        {
+          "title": "applies active style when active prop is true",
+          "status": "passed",
+          "duration": 30,
+          "failureMessages": []
+        },
+        {
+          "title": "renders different icons correctly",
+          "status": "passed",
+          "duration": 20,
+          "failureMessages": []
+        },
+        {
+          "title": "handles click events",
+          "status": "passed",
+          "duration": 85,
+          "failureMessages": []
+        },
+        {
+          "title": "has correct base styles",
+          "status": "passed",
+          "duration": 22,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\utils\\prisma-utils.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should update multiple users in a single query",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle empty user IDs array",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "should update user data in a transaction",
+          "status": "passed",
+          "duration": 5,
+          "failureMessages": []
+        },
+        {
+          "title": "should throw error if user not found",
+          "status": "passed",
+          "duration": 59,
+          "failureMessages": []
+        },
+        {
+          "title": "should execute callback function within a transaction",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        },
+        {
+          "title": "should propagate errors from callback function",
+          "status": "passed",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle complex database operations successfully",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "should retrieve users with pagination and filter by role",
+          "status": "passed",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "title": "should apply status filter correctly",
+          "status": "passed",
+          "duration": 14,
+          "failureMessages": []
+        },
+        {
+          "title": "should apply search term filter correctly",
+          "status": "passed",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle multiple filters simultaneously",
+          "status": "passed",
+          "duration": 11,
+          "failureMessages": []
+        },
+        {
+          "title": "should use default pagination values when not provided",
+          "status": "passed",
+          "duration": 10,
+          "failureMessages": []
+        },
+        {
+          "title": "should add middleware that detects slow queries",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "should not log warning for fast queries",
+          "status": "passed",
+          "duration": 23,
+          "failureMessages": []
+        },
+        {
+          "title": "should return the result from next function",
+          "status": "passed",
+          "duration": 16,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\dashboard\\SystemOverview.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders without crashing",
+          "status": "passed",
+          "duration": 354,
+          "failureMessages": []
+        },
+        {
+          "title": "displays loading state correctly",
+          "status": "passed",
+          "duration": 80,
+          "failureMessages": []
+        },
+        {
+          "title": "displays statistics when data is loaded",
+          "status": "passed",
+          "duration": 85,
+          "failureMessages": []
+        },
+        {
+          "title": "displays error message when data fetch fails",
+          "status": "passed",
+          "duration": 69,
+          "failureMessages": []
+        },
+        {
+          "title": "displays fallback metrics when no stats data available",
+          "status": "passed",
+          "duration": 47,
+          "failureMessages": []
+        },
+        {
+          "title": "allows switching between tabs",
+          "status": "passed",
+          "duration": 690,
+          "failureMessages": []
+        },
+        {
+          "title": "renders refresh button",
+          "status": "passed",
+          "duration": 93,
+          "failureMessages": []
+        },
+        {
+          "title": "accepts and displays custom prop values",
+          "status": "passed",
+          "duration": 34,
+          "failureMessages": []
+        },
+        {
+          "title": "displays charts legend correctly",
+          "status": "passed",
+          "duration": 37,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\ui\\StatusItem.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders correctly with label and value",
+          "status": "passed",
+          "duration": 29,
+          "failureMessages": []
+        },
+        {
+          "title": "uses correct gradient class based on color prop",
+          "status": "passed",
+          "duration": 22,
+          "failureMessages": []
+        },
+        {
+          "title": "uses default gradient class when invalid color is provided",
+          "status": "passed",
+          "duration": 8,
+          "failureMessages": []
+        },
+        {
+          "title": "applies the correct value to the progress bar",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\ui\\UserTable\\DataTable.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders loading skeleton when isLoading is true",
+          "status": "passed",
+          "duration": 183,
+          "failureMessages": []
+        },
+        {
+          "title": "renders empty state when no data and not loading",
+          "status": "passed",
+          "duration": 46,
+          "failureMessages": []
+        },
+        {
+          "title": "renders user data correctly",
+          "status": "passed",
+          "duration": 130,
+          "failureMessages": []
+        },
+        {
+          "title": "renders pagination when pagination props provided",
+          "status": "passed",
+          "duration": 148,
+          "failureMessages": []
+        },
+        {
+          "title": "does not render pagination when pagination props not provided",
+          "status": "passed",
+          "duration": 39,
+          "failureMessages": []
+        },
+        {
+          "title": "calls onPageChange when pagination buttons clicked",
+          "status": "passed",
+          "duration": 180,
+          "failureMessages": []
+        },
+        {
+          "title": "disables previous button on first page",
+          "status": "passed",
+          "duration": 43,
+          "failureMessages": []
+        },
+        {
+          "title": "disables next button on last page",
+          "status": "passed",
+          "duration": 63,
+          "failureMessages": []
+        },
+        {
+          "title": "renders limit selection dropdown",
+          "status": "passed",
+          "duration": 59,
+          "failureMessages": []
+        },
+        {
+          "title": "correctly displays page information",
+          "status": "passed",
+          "duration": 36,
+          "failureMessages": []
+        },
+        {
+          "title": "displays proper column headers",
+          "status": "passed",
+          "duration": 19,
+          "failureMessages": []
+        },
+        {
+          "title": "handles large data sets efficiently",
+          "status": "passed",
+          "duration": 506,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\components\\ui\\UserTable.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "renders the user table with title",
+          "status": "passed",
+          "duration": 390,
+          "failureMessages": []
+        },
+        {
+          "title": "allows filtering by search input",
+          "status": "passed",
+          "duration": 681,
+          "failureMessages": []
+        },
+        {
+          "title": "allows filtering by role",
+          "status": "passed",
+          "duration": 46,
+          "failureMessages": []
+        },
+        {
+          "title": "allows filtering by status",
+          "status": "passed",
+          "duration": 46,
+          "failureMessages": []
+        },
+        {
+          "title": "resets all filters when reset button is clicked",
+          "status": "passed",
+          "duration": 372,
+          "failureMessages": []
+        },
+        {
+          "title": "displays error message when API call fails",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "handles pagination changes",
+          "status": "passed",
+          "duration": 37,
+          "failureMessages": []
+        }
+      ]
+    }
+  ]
+}
