@@ -92,67 +92,6 @@ Menerapkan metodologi Test-Driven Development (TDD) untuk semua komponen UI dala
 - [x] **TC-009: Shows success notification after successful deletion**
 - [x] **TC-010: Handles API errors during deletion gracefully**
 
-#### 5.3 Mocks & Utilities yang Berhasil Diimplementasikan
-
-// Setup handlers dan server MSW
-
-describe('User Management Flow', () => {
-describe('Edit User Flow', () => {
-it('allows editing a user role and updates the table', async () => {
-// Setup with MSW mocks for GET and PUT requests
-// 1. Render the UserTable component
-// 2. Find a user and click its role badge
-// 3. Verify edit dialog opens
-// 4. Change role in the dialog
-// 5. Submit the form
-// 6. Verify loading state shows
-// 7. Verify success toast appears
-// 8. Verify table updates with new role
-})
-
-      it('allows editing a user status and updates the table', async () => {
-        // Similar to above but testing status change
-      })
-
-      it('handles API errors gracefully during edit flow', async () => {
-        // Similar flow but with MSW returning error responses
-      })
-
-      it('persists filter and pagination state after editing a user', async () => {
-        // Test that filters and pagination remain after edit
-      })
-
-      it('shows validation errors for invalid input', async () => {
-        // Test form validation in edit dialog
-      })
-    })
-
-    describe('Delete User Flow', () => {
-      it('displays confirmation modal when delete button is clicked', async () => {
-        // Verify confirmation modal appears
-      })
-
-      it('removes user from table when deletion is confirmed', async () => {
-        // Test complete deletion flow
-      })
-
-      it('keeps user in table when deletion is canceled', async () => {
-        // Test cancellation of deletion
-      })
-
-      it('shows success notification after successful deletion', async () => {
-        // Verify toast appears after deletion
-      })
-
-      it('handles API errors during deletion gracefully', async () => {
-        // Test error handling during deletion
-      })
-    })
-
-})
-
-````
-
 #### 5.3 Dashboard Integration
 
 - [ ] **Test File: DashboardIntegration.test.tsx**
@@ -161,8 +100,6 @@ it('allows editing a user role and updates the table', async () => {
 // __tests__/integration/manage-users/DashboardIntegration.test.tsx
 import { render, screen, waitFor, userEvent } from '@testing-library/react'
 import { SystemOverview } from '@/features/manage-users/components/dashboard/SystemOverview'
-import { setupServer } from 'msw/node'
-import { rest } from 'msw'
 import { TestWrapper } from '@/test/test-utils'
 
 describe('Dashboard Integration', () => {
@@ -212,75 +149,7 @@ describe('Dashboard Integration', () => {
 })
 ````
 
-- [ ] **Mock Data untuk Dashboard**
 
-  ```typescript
-  // __tests__/integration/manage-users/mocks/dashboardData.ts
-
-  export function getMockStatsData() {
-    return {
-      statsMetrics: [
-        {
-          title: 'Total Users',
-          value: 120,
-          icon: 'Activity',
-          trend: 'up',
-          color: 'cyan',
-          detail: '15 new this week',
-        },
-        {
-          title: 'Active Users',
-          value: 85,
-          icon: 'Activity',
-          trend: 'stable',
-          color: 'purple',
-          detail: '92% retention rate',
-        },
-        {
-          title: 'User Growth',
-          value: 14.5,
-          icon: 'Activity',
-          trend: 'up',
-          color: 'blue',
-          detail: '+3.2% from last month',
-        },
-      ],
-    }
-  }
-
-  export function getMockSystemStatus() {
-    return {
-      cpuUsage: 65,
-      memoryUsage: 78,
-      networkStatus: 92,
-      diskSpace: 43,
-      processes: [
-        {
-          pid: '1234',
-          name: 'system_core.exe',
-          user: 'System',
-          cpu: 5.2,
-          memory: 345,
-          status: 'Running',
-        },
-        {
-          pid: '2345',
-          name: 'database.exe',
-          user: 'Admin',
-          cpu: 12.5,
-          memory: 1024,
-          status: 'Running',
-        },
-        // ...more processes
-      ],
-      storage: [
-        { name: 'System Drive (C:)', total: 512, used: 256, type: 'SSD' },
-        { name: 'Data Drive (D:)', total: 1024, used: 512, type: 'HDD' },
-        // ...more storage items
-      ],
-    }
-  }
-  ```
 
 ### 6. E2E Testing dengan Playwright ⏳ (DIRENCANAKAN)
 
