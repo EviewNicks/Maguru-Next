@@ -126,6 +126,8 @@
 
 ## 10. Detail Test Case yang Diuji
 
+### User Table + Filtering
+
 1. **TC-001: Menampilkan data pengguna setelah loading**
 
    - **Deskripsi:** Verifikasi bahwa komponen UserTable menampilkan data pengguna setelah loading state.

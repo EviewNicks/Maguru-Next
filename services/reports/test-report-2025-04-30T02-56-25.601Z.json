@@ -1,0 +1,132 @@
+{
+  "timestamp": "2025-04-30T02-56-25.601Z",
+  "environment": "test",
+  "numFailedTests": 1,
+  "numPassedTests": 17,
+  "numTotalTests": 18,
+  "executionTime": "1745981762322ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\__tests__\\integration\\UserTableFiltering.integration.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "TC-001: Menampilkan data pengguna setelah loading",
+          "status": "passed",
+          "duration": 113,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-002: Filter berdasarkan role menampilkan hanya user dengan role tersebut",
+          "status": "passed",
+          "duration": 93,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-003: Filter berdasarkan status menampilkan hanya user dengan status tersebut",
+          "status": "passed",
+          "duration": 47,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-004: Search filter menampilkan hasil yang sesuai dengan keyword",
+          "status": "passed",
+          "duration": 60,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-005: Reset filter mengembalikan ke kondisi awal",
+          "status": "passed",
+          "duration": 82,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-006: Menampilkan error message jika API gagal",
+          "status": "passed",
+          "duration": 8,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-007: Navigasi pagination berfungsi dengan benar",
+          "status": "passed",
+          "duration": 62,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-008: Pagination reset ke halaman 1 saat filter berubah",
+          "status": "passed",
+          "duration": 59,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-users\\__tests__\\integration\\UserManagementFlow.integration.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "TC-001: allows editing a user role and updates the table",
+          "status": "passed",
+          "duration": 377,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-002: allows editing a user status and updates the table",
+          "status": "passed",
+          "duration": 169,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-003: handles API errors gracefully during edit flow",
+          "status": "passed",
+          "duration": 157,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-004: persists filter and pagination state after editing a user",
+          "status": "failed",
+          "duration": 1098,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31melement\u001b[39m\u001b[2m).not.toBeInTheDocument()\u001b[22m"
+          ]
+        },
+        {
+          "title": "TC-005: shows validation errors for invalid input",
+          "status": "passed",
+          "duration": 191,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-006: displays confirmation modal when delete button is clicked",
+          "status": "passed",
+          "duration": 107,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-007: removes user from table when deletion is confirmed",
+          "status": "passed",
+          "duration": 156,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-008: keeps user in table when deletion is canceled",
+          "status": "passed",
+          "duration": 173,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-009: shows success notification after successful deletion",
+          "status": "passed",
+          "duration": 142,
+          "failureMessages": []
+        },
+        {
+          "title": "TC-010: handles API errors during deletion gracefully",
+          "status": "passed",
+          "duration": 181,
+          "failureMessages": []
+        }
+      ]
+    }
+  ]
+}
