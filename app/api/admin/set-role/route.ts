@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 }
 
 // Export function untuk testing
-export async function handlePost(req: NextRequest, prismaClient = prisma) {
+async function handlePost(req: NextRequest, prismaClient = prisma) {
   try {
     // Parse request body
     const body = await req.json()

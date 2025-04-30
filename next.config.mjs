@@ -66,7 +66,7 @@ const nextConfig = {
   // Konfigurasi Turbopack terbaru
   turbopack: {
     // Menentukan root direktori aplikasi (opsional)
-    root: path.join(__dirname),
+    // root: path.join(__dirname),
     // Konfigurasi loader untuk file-file khusus (opsional)
     rules: {
       // Contoh: menggunakan @svgr/webpack untuk file SVG

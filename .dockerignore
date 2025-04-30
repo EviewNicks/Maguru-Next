@@ -78,8 +78,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # Ignore environment files
-.env
-.env.*
+# .env
+# .env.*
 !.env.example
 
 # Ignore test files

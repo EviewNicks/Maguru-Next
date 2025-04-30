@@ -147,9 +147,7 @@ describe('Dashboard Integration', () => {
     })
   })
 })
-````
-
-
+```
 
 ### 6. E2E Testing dengan Playwright ⏳ (DIRENCANAKAN)
 
@@ -258,7 +256,7 @@ describe('Dashboard Integration', () => {
 1. **Data Fetching & State Management Hooks**
    - `/features/manage-users/hooks/useChartData.ts`
    - `/features/manage-users/hooks/useSystemStatus.ts`
-   - `/features/manage-users/hooks/useUsers.ts`
+   <!-- - `/features/manage-users/hooks/useUsers.ts` -->
    - `/features/manage-users/hooks/useUserActions.ts`
    - `/features/manage-users/hooks/useUserHistory.ts`
    - `/features/manage-users/hooks/useFilter.ts`
