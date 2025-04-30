@@ -1010,54 +1010,54 @@
     "@types/tough-cookie" "^4.0.5"
     tough-cookie "^4.1.4"
 
-"@clerk/backend@^1.30.0":
-  version "1.30.0"
-  resolved "https://registry.yarnpkg.com/@clerk/backend/-/backend-1.30.0.tgz#a4b7d406b5a87a9e3a3a70590bf8ef20bfd45ad6"
-  integrity sha512-VB8a0jbfb5eiHENCT9ts8ISozUbKOcREj2rXQaYcOhEQ1EzO6Jng1Pb0nRR4RojsAvPe9XGMQrA4FufHp+dUWQ==
+"@clerk/backend@^1.30.1":
+  version "1.30.1"
+  resolved "https://registry.yarnpkg.com/@clerk/backend/-/backend-1.30.1.tgz#1f573938e4e02b34925dbab08f32264b6ba0b0c8"
+  integrity sha512-DjE52hChJJ8YtgAFuCHnoS4MVOmReOaDO6T60djY6Mhn1zRm2U0235F+Ey/16i87FGC4SwvIjBp40wDLT4DAQA==
   dependencies:
-    "@clerk/shared" "^3.7.4"
-    "@clerk/types" "^4.55.1"
+    "@clerk/shared" "^3.7.5"
+    "@clerk/types" "^4.56.0"
     cookie "1.0.2"
     snakecase-keys "8.0.1"
     tslib "2.8.1"
 
-"@clerk/clerk-react@^5.30.0":
-  version "5.30.0"
-  resolved "https://registry.yarnpkg.com/@clerk/clerk-react/-/clerk-react-5.30.0.tgz#c186e890c74049f03dc26b81d2703baa022afd7a"
-  integrity sha512-ruC8I31wu5vpYFTZ5Qj+avZwHbyzmhY6fatV6EzYMCIu7tOgDK5Af92gerfJ5drbRTL+NM4tDPmSNXiMIdS/nw==
+"@clerk/clerk-react@^5.30.1":
+  version "5.30.1"
+  resolved "https://registry.yarnpkg.com/@clerk/clerk-react/-/clerk-react-5.30.1.tgz#1fee61fdd37ad1f236e17cbd778fb18f553d1e92"
+  integrity sha512-oz9t3VoceJ52tTanY+YSiiCjGGAlT8NqwhHM3VHGhTcdNx4cbvP4dLviMFUxTOTAJK3S9B46Gi4lJyCYnGzNXw==
   dependencies:
-    "@clerk/shared" "^3.7.4"
-    "@clerk/types" "^4.55.1"
+    "@clerk/shared" "^3.7.5"
+    "@clerk/types" "^4.56.0"
     tslib "2.8.1"
 
-"@clerk/nextjs@^6.13.0":
-  version "6.18.0"
-  resolved "https://registry.yarnpkg.com/@clerk/nextjs/-/nextjs-6.18.0.tgz#62f394945a2945e90409f785fa9b6548b30d4f41"
-  integrity sha512-7cWFserYByK65eSX7eCyGXHlDb3ejNTyf3O8nHc4DgDLHjZn5dJA+6J0Hz1XSgUATOCSbnmkKSy1iekNMvSnYA==
+"@clerk/nextjs@^6.18.1":
+  version "6.18.1"
+  resolved "https://registry.yarnpkg.com/@clerk/nextjs/-/nextjs-6.18.1.tgz#8fd229f69e60f98b96c4eb3edfaac058a2b9489f"
+  integrity sha512-HSFoBdPOhDuEv0od4AnGuJIQf+OMaKTputEkwhlR3mad0MUwyJGRIJF5hekKijA+vmf9sPpnJ5bfvoFzCbalkQ==
   dependencies:
-    "@clerk/backend" "^1.30.0"
-    "@clerk/clerk-react" "^5.30.0"
-    "@clerk/shared" "^3.7.4"
-    "@clerk/types" "^4.55.1"
+    "@clerk/backend" "^1.30.1"
+    "@clerk/clerk-react" "^5.30.1"
+    "@clerk/shared" "^3.7.5"
+    "@clerk/types" "^4.56.0"
     server-only "0.0.1"
     tslib "2.8.1"
 
-"@clerk/shared@^3.7.4":
-  version "3.7.4"
-  resolved "https://registry.yarnpkg.com/@clerk/shared/-/shared-3.7.4.tgz#0f901d1eee736f7a2140a7fb87360f472afbe765"
-  integrity sha512-Ua6MyDyXjkfrV4h7ftC5LUsz7YL+0athsiNuMUyYjE3x8r/vmJzhLjZJ7C2C3KhDq2XnMWud0iQ7SGRTop+9WQ==
+"@clerk/shared@^3.7.5":
+  version "3.7.5"
+  resolved "https://registry.yarnpkg.com/@clerk/shared/-/shared-3.7.5.tgz#09ab23ed0911bf2f73f3f9c29c881b6651931913"
+  integrity sha512-XgvCM1KVyCqkObv88Xh0yKiGF6p8T54TNc9GcocevMLjwP9U1ub0/kI0FJ5BwAkSF+3mQBh+QPfWnT6axuRSzA==
   dependencies:
-    "@clerk/types" "^4.55.1"
+    "@clerk/types" "^4.56.0"
     dequal "2.0.3"
     glob-to-regexp "0.4.1"
     js-cookie "3.0.5"
     std-env "^3.9.0"
     swr "^2.3.3"
 
-"@clerk/types@^4.55.1":
-  version "4.55.1"
-  resolved "https://registry.yarnpkg.com/@clerk/types/-/types-4.55.1.tgz#6b0c78695feea9e92f37ce873b7642d1e495c2a5"
-  integrity sha512-BS/shDMWfQ7M8Jlms/RJFH20N8cK1EfAWKTpiIiICFi5e/5H0gpaaWx277x341GQz4gZzVDPGdF+EhoknYOrWQ==
+"@clerk/types@^4.56.0":
+  version "4.56.0"
+  resolved "https://registry.yarnpkg.com/@clerk/types/-/types-4.56.0.tgz#6f6e0f9786f637fdd7a92340b8d74c1bff87e66c"
+  integrity sha512-suMvTWPeUYwu55Ai46siOHpAr36SUx7YfqqLmY96oQvJJFdLVUljockc9V5ZmAzV5gO1CoiXOG3ZGMiJWlCLQQ==
   dependencies:
     csstype "3.1.3"
 
@@ -10265,10 +10265,10 @@ react-remove-scroll@^2.6.3:
     use-callback-ref "^1.3.3"
     use-sidecar "^1.1.3"
 
-react-resizable-panels@^2.1.7:
-  version "2.1.8"
-  resolved "https://registry.yarnpkg.com/react-resizable-panels/-/react-resizable-panels-2.1.8.tgz#4f31057854d93c30a6e221ff8c0ecb7addec55a3"
-  integrity sha512-oDvD0sw34Ecx00cQFLiRJpAE2fCgNLBr8DMrBzkrsaUiLpAycIQoY3eAWfMblDql3pTIMZ60wJ/P89RO1htM2w==
+react-resizable-panels@^2.1.9:
+  version "2.1.9"
+  resolved "https://registry.yarnpkg.com/react-resizable-panels/-/react-resizable-panels-2.1.9.tgz#874847710f4f122df749b5f08ebe9c72a1e338ca"
+  integrity sha512-z77+X08YDIrgAes4jl8xhnUu1LNIRp4+E7cv4xHmLOxxUPO/ML7PSrE813b90vj7xvQ1lcf7g2uA9GeMZonjhQ==
 
 react-smooth@^4.0.4:
   version "4.0.4"
