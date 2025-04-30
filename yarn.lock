@@ -1889,10 +1889,10 @@
   resolved "https://registry.yarnpkg.com/@next/env/-/env-15.3.1.tgz#fca98dcb90d92d555972cdbf03adf9aa982e2115"
   integrity sha512-cwK27QdzrMblHSn9DZRV+DQscHXRuJv6MydlJRpFSqJWZrTYMLzKDeyueJNN9MGd8NNiUKzDQADAf+dMLXX7YQ==
 
-"@next/eslint-plugin-next@15.1.6":
-  version "15.1.6"
-  resolved "https://registry.yarnpkg.com/@next/eslint-plugin-next/-/eslint-plugin-next-15.1.6.tgz#1d6d0fd21f58a650821bafeb3a205b25276ce5e3"
-  integrity sha512-+slMxhTgILUntZDGNgsKEYHUvpn72WP1YTlkmEhS51vnVd7S9jEEy0n9YAMcI21vUG4akTw9voWH02lrClt/yw==
+"@next/eslint-plugin-next@15.3.1":
+  version "15.3.1"
+  resolved "https://registry.yarnpkg.com/@next/eslint-plugin-next/-/eslint-plugin-next-15.3.1.tgz#8f57c6ccb80ae31e40935f70da57be5f03f225d5"
+  integrity sha512-oEs4dsfM6iyER3jTzMm4kDSbrQJq8wZw5fmT6fg2V3SMo+kgG+cShzLfEV20senZzv8VF+puNLheiGPlBGsv2A==
   dependencies:
     fast-glob "3.3.1"
 
@@ -6301,12 +6301,12 @@ escodegen@^2.0.0:
   optionalDependencies:
     source-map "~0.6.1"
 
-eslint-config-next@15.1.6:
-  version "15.1.6"
-  resolved "https://registry.yarnpkg.com/eslint-config-next/-/eslint-config-next-15.1.6.tgz#c056b7325dc70a247895c7c85515ebaae2bab35d"
-  integrity sha512-Wd1uy6y7nBbXUSg9QAuQ+xYEKli5CgUhLjz1QHW11jLDis5vK5XB3PemL6jEmy7HrdhaRFDz+GTZ/3FoH+EUjg==
+eslint-config-next@15.3.1:
+  version "15.3.1"
+  resolved "https://registry.yarnpkg.com/eslint-config-next/-/eslint-config-next-15.3.1.tgz#2ba06a63adfead7c003f224b47c4b778392ce1c4"
+  integrity sha512-GnmyVd9TE/Ihe3RrvcafFhXErErtr2jS0JDeCSp3vWvy86AXwHsRBt0E3MqP/m8ACS1ivcsi5uaqjbhsG18qKw==
   dependencies:
-    "@next/eslint-plugin-next" "15.1.6"
+    "@next/eslint-plugin-next" "15.3.1"
     "@rushstack/eslint-patch" "^1.10.3"
     "@typescript-eslint/eslint-plugin" "^5.4.2 || ^6.0.0 || ^7.0.0 || ^8.0.0"
     "@typescript-eslint/parser" "^5.4.2 || ^6.0.0 || ^7.0.0 || ^8.0.0"
