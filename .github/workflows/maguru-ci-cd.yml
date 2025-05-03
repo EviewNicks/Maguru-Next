@@ -32,28 +32,26 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm' # Mengaktifkan caching
+          cache: 'yarn' # Mengaktifkan caching
 
       - name: Install Dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       # Keamanan: Melakukan audit dependencies
       - name: Security Audit
-        run: npm audit --audit-level=high
-        continue-on-error: true # Lanjutkan meskipun ada warning
+        run: yarn audit --groups dependencies --level high || true
 
       # Linting untuk memastikan kualitas kode
       - name: Lint Code
-        run: npm run lint
+        run: yarn lint
 
       # Pengecekan format kode
       - name: Format Check
-        run: npm run format
-        continue-on-error: true
+        run: yarn format:check || true
 
       # Validasi tipe TypeScript
       - name: TypeScript Check
-        run: npx tsc --noEmit
+        run: yarn tsc --noEmit
 
   # ===== Job 2: Unit & Integration Testing =====
   test:
@@ -74,23 +72,23 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install Dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       # Cache node_modules untuk mempercepat build
-      - name: Cache Node Modules
+      - name: Cache Yarn
         uses: actions/cache@v3
         with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          path: .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-node-
+            ${{ runner.os }}-yarn-
 
       # Menjalankan unit test dengan coverage
       - name: Run Unit Tests
-        run: npm run test
+        run: yarn test
 
       # Upload hasil test coverage untuk analisis
       - name: Upload Coverage Report
@@ -113,18 +111,18 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install Dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       # Install Playwright browsers
       - name: Install Playwright
-        run: npx playwright install --with-deps
+        run: yarn playwright install --with-deps
 
       # Menjalankan E2E tests dengan Playwright
       - name: Run E2E Tests
-        run: npm run test:e2e
+        run: yarn test:e2e
 
       # Menyimpan hasil test jika gagal
       - name: Upload Test Results
@@ -147,21 +145,21 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
+          cache: 'yarn'
 
       - name: Install Dependencies
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       # Menggunakan cache untuk mempercepat build
       - name: Cache Next.js Build
         uses: actions/cache@v3
         with:
           path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/yarn.lock') }}
 
       # Build aplikasi
       - name: Build Application
-        run: npm run vercel-build
+        run: yarn vercel-build
 
       # Upload build artifacts
       - name: Upload Build

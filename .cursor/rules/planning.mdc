@@ -3,571 +3,64 @@ description:
 globs: 
 alwaysApply: false
 ---
-# Rencana Implementasi Sub-task 2: Test-Driven Development (TDD) untuk UI
+# Rencana Migrasi Style & Struktur Header ke Navbar
 
-## Ringkasan Tujuan
+## 1. Ringkasan Tujuan Task
 
-Menerapkan metodologi Test-Driven Development (TDD) untuk semua komponen UI dalam modul `manage-users`, termasuk hooks, services, dan utils. Pendekatan ini akan memastikan bahwa setiap komponen memiliki test yang komprehensif, meningkatkan kualitas kode, dan meminimalisir regresi atau bug dalam pengembangan modul pengelolaan pengguna.
+- Mengadopsi style dan struktur modern dari `features/common/components/Header.tsx` ke dalam komponen utama navigasi `components/layouts/Navbar.tsx`.
+- Menyatukan keunggulan UX: sticky, responsive, dark/light mode, animasi, dan mobile menu.
+- Menjaga konsistensi branding, navigasi, dan aksesibilitas sesuai guideline frontend Maguru.
 
-## Metrik Keberhasilan
+---
 
-- Unit Tests: Minimal 95% coverage
-- Integration Tests: Minimal 87% coverage
-- E2E Tests: Minimal 80% coverage untuk alur utama
-- Semua tests harus berjalan dan lulus sebelum perubahan kode di-commit
+## 2. Langkah-Langkah Teknis
 
-## Langkah-langkah Teknis
+1. **Analisis Perbedaan & Kebutuhan**
+   - Identifikasi fitur utama di `Header.tsx` (sticky, mobile menu, dark mode, animasi, dsb).
+   - Bandingkan dengan struktur dan fitur di `Navbar.tsx` (Logo, Search, Cart, DarkMode, LinksDropdown).
 
-### 1. Persiapan Lingkungan Pengujian (1 hari)
+2. **Desain Struktur Baru**
+   - Tentukan bagian mana dari `Header.tsx` yang akan diadopsi penuh (misal: sticky, mobile menu, animasi, theme toggle).
+   - Integrasikan elemen spesifik Maguru (Logo, Search, Cart, dsb) ke dalam struktur baru.
 
-- [ ] **Setup dan Verifikasi Testing Framework**
+3. **Refactor Komponen**
+   - Refactor `Navbar.tsx` agar menggunakan struktur dan class Tailwind dari `Header.tsx`.
+   - Tambahkan state & logic untuk mobile menu, theme toggle, dan animasi (gunakan framer-motion jika perlu).
+   - Pastikan komponen tetap modular: Logo, Search, Cart, dsb tetap sebagai sub-komponen.
 
-  - Verifikasi konfigurasi Jest dan React Testing Library
-  - Pastikan transformers dan module mappings sudah dikonfigurasi dengan benar
-  - Siapkan mock objects untuk dependencies eksternal (Redux, SWR, API, dll.)
+4. **Integrasi Navigasi & Link**
+   - Update navigasi utama agar menggunakan sistem link dari `Header.tsx` (NavLinks) dan/atau LinksDropdown.
+   - Pastikan navigasi mudah diakses di desktop & mobile.
 
-- [ ] **Konfigurasi Mock Service Worker (MSW)**
+5. **Testing & Responsiveness**
+   - Uji tampilan di berbagai ukuran layar.
+   - Pastikan dark/light mode berjalan baik.
+   - Pastikan animasi dan interaksi mobile menu berjalan mulus.
 
-  - Buat handlers untuk endpoint API users:
-    ```typescript
-    // __mocks__/handlers.ts
-    rest.get('/api/users', (req, res, ctx) => {
-      return res(ctx.json({
-        users: [/* mock data */],
-        metadata: { total: 100 }
-      }))
-    }),
-    rest.patch('/api/users/:id', (req, res, ctx) => {
-      return res(ctx.json({ success: true }))
-    }),
-    // ... dan endpoint lainnya
-    ```
-  - Setup MSW untuk digunakan dalam tests
+6. **Unit Test & Linting**
+   - Tambahkan/Update unit test untuk Navbar.
+   - Jalankan linting dan pastikan tidak ada error.
 
-- [ ] **Siapkan Testing Utilities**
+7. **Update Dokumentasi**
+   - Update dokumentasi komponen Navbar di folder dokumentasi terkait.
 
-  - Buat file `test-utils.tsx` dengan custom render function:
+---
 
-    ```typescript
-    // test-utils.tsx
-    import { render } from '@testing-library/react'
-    import { QueryClientProvider, QueryClient } from '@tanstack/react-query'
-  Provider } from 'react-redux'
-    import { store } from '@/store'
+## 3. Perkiraan File/Komponen yang Perlu Diubah/Dibuat
 
-    const customRender = (ui, options = {}) => {
-      const queryClient = new QueryClient({
-        defaultOptions: { queries: { retry: false } }
-      })
+- `components/layouts/Navbar.tsx` (refactor utama)
+- Sub-komponen di `components/layouts/Navbar/` (Logo, DarkMode, CartButton, NavSearch, LinksDropdown)
+- (Opsional) Utility baru untuk theme/mode
+- (Opsional) Tambahan test: `Navbar.test.tsx`
+- Dokumentasi: update di `/documentation/task/module/` atau sesuai modul navigasi
 
-      return render(ui, {
-        wrapper: ({ children }) => (
-          <Provider store={store}>
-            <QueryClientProvider client={queryClient}>
-              {children}
-            </QueryClientProvider>
-          </Provider>
-        ),
-        ...options,
-      })
-    }
+---
 
-    export * from '@testing-library/react'
-    export { customRender as render }
-    ```
+**Catatan:**  
+- Pastikan tidak ada duplikasi logic (misal: theme toggle hanya satu sumber).
+- Gunakan class Tailwind dan animasi dari Header agar tampilan modern dan konsisten.
+- Jika ada fitur yang tidak relevan (misal: “Get Started” button), sesuaikan dengan kebutuhan Maguru.
 
-### 2. Unit Testing untuk Komponen UI (2 hari)
+---
 
-#### 2.1 Komponen DataTable
-
-- [ ] **Test Case DataTable: Rendering & Loading States**
-
-  ```typescript
-  // DataTable.test.tsx
-  import { render, screen } from '../../../test-utils'
-  import { DataTableNew } from './DataTable'
-
-  describe('DataTableNew', () => {
-    it('renders loading skeleton correctly', () => {
-      render(<DataTableNew data={[]} isLoading={true} />)
-      expect(screen.getAllByTestId('skeleton-row')).toHaveLength(5)
-    })
-
-    it('renders empty state correctly', () => {
-      render(<DataTableNew data={[]} isLoading={false} />)
-      expect(screen.getByText('Tidak ada data.')).toBeInTheDocument()
-    })
-
-    it('renders data correctly', () => {
-      const mockData = [/* mock user data */]
-      render(<DataTableNew data={mockData} isLoading={false} />)
-      // Assert on rendered user data
-    })
-  })
-  ```
-
-- [ ] **Test Case DataTable: Pagination**
-
-  ```typescript
-  it('handles pagination correctly', async () => {
-    const mockPagination = {
-      page: 1,
-      limit: 10,
-      total: 100,
-      onPageChange: jest.fn(),
-      onLimitChange: jest.fn()
-    }
-
-    render(
-      <DataTableNew
-        data={mockData}
-        isLoading={false}
-        pagination={mockPagination}
-      />
-    )
-
-    // Test pagination rendering & interactions
-    const nextButton = screen.getByRole('button', { name: /next/i })
-    await userEvent.click(nextButton)
-    expect(mockPagination.onPageChange).toHaveBeenCalledWith(2)
-  })
-  ```
-
-#### 2.2 Komponen UserRoleCell
-
-- [ ] **Test Case UserRoleCell: Rendering & Interaksi**
-
-  ```typescript
-  // UserRoleCell.test.tsx
-  import { render, screen, userEvent } from '../../../test-utils'
-  import { UserRoleCellNew } from './UserRoleCell'
-
-  describe('UserRoleCellNew', () => {
-    const mockUser = {
-      id: 'user_1',
-      name: 'Test User',
-      email: 'test@example.com',
-      role: 'admin',
-      status: 'active',
-      createdAt: new Date()
-    }
-
-    it('renders role badge correctly', () => {
-      render(<UserRoleCellNew user={mockUser} />)
-      expect(screen.getByText('Admin')).toBeInTheDocument()
-      // Test icon and styling
-    })
-
-    it('opens edit dialog on click', async () => {
-      render(<UserRoleCellNew user={mockUser} />)
-      const roleButton = screen.getByRole('button')
-      await userEvent.click(roleButton)
-      expect(screen.getByText('Edit User')).toBeInTheDocument()
-    })
-  })
-  ```
-
-#### 2.3 Komponen EditUserDialog
-
-- [ ] **Test Case EditUserDialog: Rendering & Form Validation**
-
-  ```typescript
-  // EditUserDialog.test.tsx
-  import { render, screen, userEvent } from '../../../test-utils'
-  import { EditUserDialogNew } from './EditUserDialog'
-
-  // Mock useUserActions
-  jest.mock('@/hooks/useUserActions', () => ({
-    useUserActions: () => ({
-      updateUser: {
-        mutateAsync: jest.fn().mockResolvedValue({}),
-        isPending: false
-      }
-    })
-  }))
-
-  describe('EditUserDialogNew', () => {
-    const mockUser = {/* mock user */}
-    const mockOnOpenChange = jest.fn()
-
-    it('renders form fields correctly', () => {
-      render(
-        <EditUserDialogNew
-          user={mockUser}
-          open={true}
-          onOpenChange={mockOnOpenChange}
-        />
-      )
-      // Check fields present
-    })
-
-    it('handles form submission correctly', async () => {
-      const { useUserActions } = require('@/hooks/useUserActions')
-      const mockUpdateUser = useUserActions().updateUser.mutateAsync
-
-      render(
-        <EditUserDialogNew
-          user={mockUser}
-          open={true}
-          onOpenChange={mockOnOpenChange}
-        />
-      )
-
-      // Change role
-      const roleSelect = screen.getByDisplayValue('admin')
-      await userEvent.click(roleSelect)
-      await userEvent.click(screen.getByText('Mahasiswa'))
-
-      // Submit form
-      const saveButton = screen.getByRole('button', { name: /save changes/i })
-      await userEvent.click(saveButton)
-
-      expect(mockUpdateUser).toHaveBeenCalledWith({
-        id: mockUser.id,
-        role: 'mahasiswa',
-        status: 'active',
-        lastKnownUpdate: mockUser.updatedAt
-      })
-    })
-  })
-  ```
-
-#### 2.4 Komponen Dashboard & UI Elements
-
-- [ ] Test cases untuk komponen-komponen dashboard (Sidebar, SystemOverview, SecurityAndAlerts, dll.)
-- [ ] Test cases untuk UI elements (StatusItem, MetricCard, AlertItem, dll.)
-
-### 3. Testing untuk Hooks (1.5 hari)
-
-#### 3.1 useChartData Hook
-
-- [ ] **Test Case useChartData: Pengambilan Data & Transformasi**
-
-  ```typescript
-  // useChartData.test.ts - refine existing test
-  import { renderHook, waitFor } from '@testing-library/react'
-  import { useChartData } from './useChartData'
-  import { processChartData } from '../service/charts'
-
-  // Enhance the test with more detailed assertions
-  // Ensure proper error handling
-  ```
-
-#### 3.2 useSystemStatus Hook
-
-- [ ] **Test Case useSystemStatus: Status Sistem & Updates**
-
-  ```typescript
-  // useSystemStatus.test.ts
-  import { renderHook, act, waitFor } from '@testing-library/react'
-  import { useSystemStatus } from './useSystemStatus'
-
-  describe('useSystemStatus', () => {
-    // Test initial values
-    // Test update threshold logic
-    // Test periodic updates (if applicable)
-  })
-  ```
-
-#### 3.3 Test Hooks Lainnya
-
-- [ ] Test cases untuk hooks data fetching lainnya (useUserActions, useUsers, dll.)
-
-### 4. Testing untuk Services & Utilities (1 hari)
-
-#### 4.1 chart service
-
-- [ ] **Test Case processChartData: Transformasi Data**
-
-  ```typescript
-  // charts.test.ts
-  import { processChartData } from '../service/charts'
-
-  describe('processChartData', () => {
-    it('groups users by month correctly', () => {
-      const mockUsers = [
-        { id: '1', createdAt: '2023-01-15T00:00:00.000Z' },
-        { id: '2', createdAt: '2023-01-20T00:00:00.000Z' },
-        { id: '3', createdAt: '2023-02-10T00:00:00.000Z' },
-      ]
-
-      const result = processChartData(mockUsers)
-
-      expect(result).toEqual([
-        { month: 'Jan', users: 2 },
-        { month: 'Feb', users: 1 },
-      ])
-    })
-
-    it('handles empty input', () => {
-      expect(processChartData([])).toEqual([])
-    })
-
-    it('handles invalid dates', () => {
-      const mockUsers = [{ id: '1', createdAt: 'invalid-date' }]
-
-      expect(processChartData(mockUsers)).toEqual([])
-    })
-  })
-  ```
-
-#### 4.2 formatter utils
-
-- [ ] **Test Cases untuk Utility Functions**
-
-  ```typescript
-  // formatters.test.ts
-  import { formatDate, formatTime } from '../utils/formatters'
-
-  describe('formatDate', () => {
-    it('formats date correctly', () => {
-      const date = new Date('2023-01-15T00:00:00.000Z')
-      expect(formatDate(date)).toBe('15 Jan 2023')
-    })
-  })
-
-  describe('formatTime', () => {
-    it('formats time correctly', () => {
-      const date = new Date('2023-01-15T14:30:00.000Z')
-      expect(formatTime(date)).toBe('14:30:00')
-    })
-  })
-  ```
-
-### 5. Integration Testing (1.5 hari)
-
-#### 5.1 UserTable + Filter Integration
-
-- [ ] **Test Case: UserTable dengan Filter & Search**
-
-  ```typescript
-  // __tests__/integration/manage-users/UserTableFiltering.test.tsx
-  import { render, screen, userEvent, waitFor } from '@testing-library/react'
-  import UserTableNew from '@/features/manage-users/components/ui/UserTable'
-  import { setupServer } from 'msw/node'
-  import { rest } from 'msw'
-
-  // Setup MSW server
-  const server = setupServer(
-    rest.get('/api/users', (req, res, ctx) => {
-      const role = req.url.searchParams.get('role')
-      const status = req.url.searchParams.get('status')
-      const search = req.url.searchParams.get('search')
-
-      // Return filtered mock data based on params
-      return res(ctx.json({
-        users: /* filtered mock data */,
-        metadata: { total: 10 }
-      }))
-    })
-  )
-
-  beforeAll(() => server.listen())
-  afterEach(() => server.resetHandlers())
-  afterAll(() => server.close())
-
-  describe('UserTable Integration with Filters', () => {
-    it('filters data when role filter is changed', async () => {
-      render(<UserTableNew />)
-
-      // Wait for initial data to load
-      await screen.findByText('User 1')
-
-      // Change role filter
-      const roleSelect = screen.getByDisplayValue('Semua Role')
-      await userEvent.click(roleSelect)
-      await userEvent.click(screen.getByText('Admin'))
-
-      // Verify the API called with correct params
-      // Verify UI updates with filtered data
-      await waitFor(() => {
-        expect(screen.getByText('Admin User')).toBeInTheDocument()
-        expect(screen.queryByText('Student User')).not.toBeInTheDocument()
-      })
-    })
-
-    // Add tests for status filter
-    // Add tests for search functionality
-  })
-  ```
-
-#### 5.2 User Management Flow
-
-- [ ] **Test Case: Edit User Flow**
-  ```typescript
-  // __tests__/integration/manage-users/EditUserFlow.test.tsx
-  // Test the complete flow of:
-  // 1. Loading user table
-  // 2. Clicking edit on a user
-  // 3. Changing role/status
-  // 4. Submitting the form
-  // 5. Verifying the table updates with the new data
-  ```
-
-### 6. E2E Testing dengan Playwright (1.5 hari)
-
-#### 6.1 User Management E2E
-
-- [ ] **Test Case: User Management Workflow**
-
-  ```typescript
-  // __tests__/e2e/manage-users/user-management.spec.ts
-  import { test, expect } from '@playwright/test'
-
-  test('complete user management workflow', async ({ page }) => {
-    // Login (if required)
-    await page.goto('/login')
-    await page.fill('input[name="email"]', 'admin@example.com')
-    await page.fill('input[name="password"]', 'password')
-    await page.click('button[type="submit"]')
-
-    // Navigate to user management
-    await page.goto('/manage-users')
-
-    // Verify table loads
-    await expect(page.locator('h2:has-text("User Management")')).toBeVisible()
-
-    // Test filtering
-    await page.selectOption('select#role', 'admin')
-    await expect(page.locator('text=Admin')).toBeVisible()
-
-    // Test editing user
-    await page.click('button:has-text("Admin")')
-    await expect(page.locator('h2:has-text("Edit User")')).toBeVisible()
-
-    // Change role
-    await page.selectOption('select[name="role"]', 'mahasiswa')
-    await page.click('button:has-text("Save changes")')
-
-    // Verify changes applied
-    await expect(page.locator('text=Mahasiswa')).toBeVisible()
-
-    // Test search
-    await page.fill('input[placeholder="Cari nama atau email..."]', 'test')
-    await expect(page.locator('text=test@example.com')).toBeVisible()
-  })
-  ```
-
-#### 6.2 Dashboard View E2E
-
-- [ ] **Test Case: Dashboard Navigation & Display**
-
-  ```typescript
-  // __tests__/e2e/manage-users/dashboard.spec.ts
-  import { test, expect } from '@playwright/test'
-
-  test('dashboard displays and functions correctly', async ({ page }) => {
-    // Setup and login
-    // Test navigation
-    // Test system status display
-    // Test interactive elements
-  })
-  ```
-
-### 7. Test Coverage & Documentation (1 hari)
-
-- [ ] **Setup dan Run Coverage Reports**
-
-  ```bash
-  # Command untuk generate coverage report
-  jest --coverage
-  ```
-
-- [ ] **Dokumentasi Pattern dan Strategy Testing**
-
-  - Buat dokumentasi panduan testing di `/documentation/task/manage-users/report-test/test-plan-Unit.md`
-  - Jelaskan pattern yang digunakan (mocking, fixtures, utilities)
-  - Dokumentasi test strategy (white-box vs black-box, boundary testing)
-
-- [ ] **Update Modul Dokumentasi**
-  - Update dokumentasi modul dengan status testing di `/documentation/task/manage-users/manage-users-docs.md`
-  - Tambahkan hasil coverage test
-
-## File dan Komponen yang Perlu Diuji
-
-### Komponen UI
-
-1. **User Table & Komponennya**
-
-   - `/features/manage-users/components/ui/UserTable.tsx`
-   - `/features/manage-users/components/ui/UserTable/DataTable.tsx`
-   - `/features/manage-users/components/ui/UserTable/UserRoleCell.tsx`
-   - `/features/uiionCres/pone.tsxsers/components/ui/UserTable/columns.tsx`
-
-2. **Dashboard Components**
-
-   - `/features/manage-users/components/dashboard/ClientSidebar.tsx`
-   - `/features/manage-users/components/dashboard/CommunicationsLog.tsx`
-   - `/features/manage-users/components/dashboard/Header.tsx`
-   - `/features/manage-users/components/dashboard/LoadingOverlay.tsx`
-   - `/features/manage-users/components/dashboard/RightSidebar.tsx`
-   - `/features/manage-users/components/dashboard/SecurityAndAlerts.tsx`
-   - `/features/manage-users/components/dashboard/Sidebar.tsx`
-   - `/features/manage-users/components/dashboard/SystemOverview.tsx`
-
-3. **UI Elements**
-   - `/features/manage-users/components/ui/ActionButton.tsx`
-   - `/features/manage-users/components/ui/AlertItem.tsx`
-   - `/features/manage-users/components/ui/CommunicationItem.tsx`
-   - `/features/manage-users/components/ui/MetricCard.tsx`
-   - `/features/manage-users/components/ui/NavItem.tsx`
-   - `/features/manage-users/components/ui/PerformanceChart.tsx`
-   - `/features/manage-users/components/ui/ProcessRow.tsx`
-   - `/features/manage-users/components/ui/StatusItem.tsx`
-   - `/features/manage-users/components/ui/StorageItem.tsx`
-
-### Hooks
-
-1. **Data Fetching & State Management Hooks**
-   - `/features/manage-users/hooks/useChartData.ts`
-   - `/features/manage-users/hooks/useSystemStatus.ts`
-   - `/features/manage-users/hooks/useUsers.ts`
-   - `/features/manage-users/hooks/useUserActions.ts`
-   - `/features/manage-users/hooks/useUserHistory.ts`
-   - `/features/manage-users/hooks/useFilter.ts`
-   - `/features/manage-users/hooks/usePagination.ts`
-
-### Services & Utils
-
-1. **Services**
-
-   - `/features/manage-users/service/charts.ts`
-   - `/features/manage-users/service/userService.ts`
-
-2. **Utils**
-   - `/features/manage-users/utils/formatters.ts`
-   - `/features/manage-users/utils/validators.ts`
-   - `/features/manage-users/utils/dataTransformers.ts`
-
-## Hasil yang Diharapkan
-
-1. **Test Coverage yang Tinggi**
-
-   - Unit Tests: >95% coverage
-   - Integration Tests: >87% coverage
-   - E2E Tests: Minimal coverage untuk semua user flow utama
-
-2. **Improved Code Quality**
-
-   - Kode yang lebih maintainable dan robust
-   - Refaktorisasi kode bermasalah yang ditemukan saat testing
-   - Dokumentasi pattern testing yang jelas
-
-3. **Test Report yang Komprehensif**
-
-   - Laporan coverage test yang mendetail
-   - Dokumentasi test cases yang dapat digunakan sebagai referensi
-
-4. **Knowledge Transfer**
-   - Tim memahami prinsip TDD dan dapat menerapkannya pada pengembangan selanjutnya
-   - Standarisasi approach testing di seluruh modul aplikasi
-
-## Jadwal Implementasi
-
-| Hari | Task                           | Milestone                                     |
-| ---- | ------------------------------ | --------------------------------------------- |
-| 1    | Persiapan Lingkungan Pengujian | MSW, Test Utils setup selesai                 |
-| 2-3  | Unit Testing Komponen UI       | Semua komponen UI teruji dengan coverage >90% |
-| 4-5  | Testing Hooks, Services, Utils | Semua hooks dan services teruji               |
-| 6-7  | Integration & E2E Testing      | Semua test alur user selesai                  |
-| 7    | Dokumentasi & Finalisasi       | Laporan coverage & dokumentasi lengkap        |
+Apakah ada bagian dari Header yang ingin dipertahankan/diubah secara spesifik (misal: branding, warna, urutan menu)? Jika tidak, saya akan lanjutkan dengan rencana di atas.

@@ -1,0 +1,25 @@
+# File CODEOWNERS untuk penentuan reviewer otomatis
+
+# Workflow GitHub Actions
+
+/.github/workflows/ @EviewNicks
+
+# Config files utama
+
+_.yml @EviewNicks
+_.json @EviewNicks
+
+# Security-related files
+
+/.github/dependabot.yml @EviewNicks
+/.github/security-best-practices.md @EviewNicks
+
+# Documentation files
+
+/docs/ @EviewNicks
+
+# Source code utama (sesuaikan dengan struktur tim)
+
+/features/ @EviewNicks
+/app/ @EviewNicks
+/components/ @EviewNicks

@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@clerk/nextjs'
-import { UserCircleIcon } from '@heroicons/react/24/outline'
+import { User } from 'lucide-react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
@@ -20,16 +20,18 @@ function UserIcon() {
       <Image
         alt="User Profile"
         src={profileImage}
-        width={20}
-        height={20}
-        className="w-5 h-5 rounded-full object-cover"
+        width={24}
+        height={24}
+        className="size-6 rounded-full object-cover"
       />
     )
   }
 
   // Return fallback icon when no profile image
   return (
-    <UserCircleIcon className="w-6 h-6 bg-primary rounded-full text-white" />
+    <div className="size-6 rounded-full bg-primary/10 flex items-center justify-center">
+      <User className="size-4 text-primary" />
+    </div>
   )
 }
 

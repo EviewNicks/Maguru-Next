@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import Link from 'next/link'
 import { dropdownLinks } from '@/config/links'
-import { BarsArrowUpIcon } from '@heroicons/react/24/outline'
+import { ChevronDown } from 'lucide-react'
 import {
   SignedIn,
   SignedOut,
@@ -43,22 +43,25 @@ export function LinksDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex gap-4 max-w-[100px]">
-          <BarsArrowUpIcon className="w-6 h-6" />
+        <Button
+          variant="ghost"
+          className="rounded-full flex items-center gap-2"
+        >
           <UserIcon />
+          <ChevronDown className="size-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="min-w-48">
         <SignedOut>
           <DropdownMenuItem>
             <SignInButton mode="modal">
-              <button className="w-full text-center">Login</button>
+              <button className="w-full text-left">Masuk</button>
             </SignInButton>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem>
             <SignUpButton mode="modal">
-              <button className="w-full text-center">register</button>
+              <button className="w-full text-left">Daftar</button>
             </SignUpButton>
           </DropdownMenuItem>
         </SignedOut>
@@ -66,7 +69,7 @@ export function LinksDropdown() {
         {/* Signin Button untuk User yang sudah login */}
         <SignedIn>
           <DropdownMenuLabel>
-            <h6 className="text-center font-inter text-lg">My Account</h6>
+            <h6 className="text-center font-inter text-base">Akun Saya</h6>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           {dropdownLinks.map((group, index) => (
