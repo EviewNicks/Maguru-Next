@@ -1,4 +1,5 @@
 'use client'
+
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -28,20 +29,17 @@ function CartButton() {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative text-slate-400 hover:text-slate-100"
-          >
-            <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-2 w-2 bg-cyan-500 rounded-full animate-pulse"></span>
+          <Button variant="ghost" size="icon" className="relative rounded-full">
+            <Bell className="size-[18px]" />
+            <span className="absolute -top-1 -right-1 size-2 bg-primary rounded-full animate-pulse"></span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Notifications</p>
+          <p>Notifikasi</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )
 }
+
 export default CartButton
