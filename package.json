@@ -110,7 +110,7 @@
     "tailwind-merge": "^3.1.0",
     "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.19.3",
-    "webpack": "^5.99.6",
+    "webpack": "^5.99.7",
     "zod": "^3.24.2"
   },
   "devDependencies": {
