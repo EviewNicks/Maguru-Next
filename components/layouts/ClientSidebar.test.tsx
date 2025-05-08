@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react'
-import { ClientSidebar } from './ClientSidebar'
+import { ClientSidebar } from '../../features/manage-users/components/dashboard/ClientSidebar'
 import { useSystemStatus } from '@/features/manage-users/hooks/useSystemStatus'
 import * as SidebarModule from './Sidebar'
 

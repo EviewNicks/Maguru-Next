@@ -1,4 +1,4 @@
-import { ClientSidebar } from '@/features/manage-users/components/dashboard/ClientSidebar'
+import { ClientSidebar } from '@/components/layouts/ClientSidebar'
 import {
   // ResizableHandle,
   ResizablePanel,

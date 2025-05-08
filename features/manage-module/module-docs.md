@@ -1,0 +1,603 @@
+# Modul Manage-Module
+
+> Template ini mengikuti praktik terbaik dari IEEE 829, ISO/IEC/IEEE 29148:2018, dan standar dokumentasi perangkat lunak lainnya.
+
+## 1. Informasi Umum
+
+### 1.1 Identifikasi Modul
+
+- **Nama Modul**: Manajemen Modul Pembelajaran (Manage Module)
+- **Kode Modul**: MODMGMT-001
+- **Versi**: 1.2.0
+- **Tanggal Terakhir Update**: 14-03-2025
+- **Penulis**: Tim Maguru
+- **Status**: Implemented (Sprint 2)
+
+### 1.2 Ringkasan
+
+Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan admin membuat, mengedit, menghapus, dan mengatur status modul (aktif, draft, diarsipkan). Implementasi mencakup komponen UI dengan DataTable, form modal, validasi input Zod, integrasi React Query, middleware autentikasi & audit, serta unit testing komprehensif.
+
+## 2. Spesifikasi Kebutuhan
+
+### 2.1 Tujuan dan Sasaran
+
+#### Tujuan Utama
+
+- Implementasi CRUD modul akademik dan manajemen status modul dengan UI admin yang user-friendly.
+- Memastikan validasi data yang ketat dan audit trail untuk perubahan modul.
+- Memberikan antarmuka yang mempermudah admin dalam mengelola modul pembelajaran.
+- Menerapkan Test-Driven Development (TDD) dengan unit testing komprehensif.
+
+#### Masalah yang Diselesaikan
+
+- Kesulitan admin dalam membuat dan mengatur modul pembelajaran secara terstruktur.
+- Keterbatasan dalam mengelola status modul (aktif, draft, diarsipkan) yang mempengaruhi visibilitas modul.
+- Kebutuhan validasi input dan audit trail untuk menjaga integritas data.
+- Proses manajemen modul yang manual dan tidak terstruktur.
+
+#### Manfaat yang Diharapkan
+
+- **Untuk Pengguna**: Admin dapat membuat dan mengelola modul dengan interface yang intuitif.
+- **Untuk Sistem**: Struktur data modul yang terorganisir dengan status yang jelas dan terdokumentasi.
+- **Untuk Bisnis**: Meningkatkan efisiensi dan kualitas konten pembelajaran.
+- **Tidak Langsung**:
+  - Peningkatan keamanan dengan validasi ketat & audit trail.
+  - Efisiensi operasional dengan UI yang mudah digunakan.
+  - Mengurangi error data dengan validasi terpusat.
+
+### 2.2 Ruang Lingkup
+
+#### Yang Termasuk dalam Modul
+
+1. Komponen Inti:
+
+   - CRUD modul pembelajaran (title, description, status)
+   - DataTable untuk tampilan & manajemen modul
+   - Form modal untuk create/edit modul
+   - Status management (DRAFT, ACTIVE, ARCHIVED)
+   - Validasi input dengan Zod
+   - Integrasi React Query untuk state management
+   - Middleware autentikasi & audit trail
+
+2. Fungsionalitas:
+   - Menampilkan daftar modul dengan filtering & sorting
+   - Menambah modul baru via modal form
+   - Mengedit informasi modul yang ada
+   - Mengubah status modul (draft ke active/archived)
+   - Menghapus modul dengan konfirmasi
+   - Pencarian modul berdasarkan judul/deskripsi
+
+#### Yang Tidak Termasuk dalam Modul
+
+1. Batasan Teknis:
+
+   - Manajemen konten multi-page (akan diimplementasi di Sprint 4)
+   - Version control modul (akan diimplementasi di Sprint 4)
+   - Export/import konten modul
+   - Upload dan manajemen aset media (gambar, video)
+
+2. Batasan Bisnis:
+   - Analitik pembelajaran modul dan engagement metrics
+   - Reviewer workflow dan approval multi-level
+   - Monetisasi modul dan pembatasan akses premium
+
+### 2.3 Kebutuhan Fungsional
+
+1. MODMGMT-F001: CRUD Modul Pembelajaran
+
+   - **Deskripsi**: Admin dapat membuat, melihat, memperbarui dan menghapus modul pembelajaran.
+   - **Kriteria Penerimaan**:
+     - Form dengan validasi untuk create/edit modul (title, description)
+     - DataTable yang menampilkan judul, deskripsi, status, tanggal pembuatan/update
+     - Action button (edit/delete) untuk masing-masing modul
+     - Tombol create untuk menambah modul baru
+     - Konfirmasi sebelum delete modul
+   - **Prioritas**: Critical
+   - **Dependensi**: Prisma, React Query, Zod
+   - **Estimasi**: 8 Story Points
+   - **Status**: Completed
+
+2. MODMGMT-F002: Manajemen Status Modul
+
+   - **Deskripsi**: Admin dapat mengubah status modul (DRAFT, ACTIVE, ARCHIVED).
+   - **Kriteria Penerimaan**:
+     - Dropdown atau button untuk mengubah status
+     - Visual indicator yang menunjukkan status saat ini
+     - Perubahan status terekam di audit trail
+     - Hanya modul dengan status ACTIVE yang terlihat oleh user
+   - **Prioritas**: High
+   - **Dependensi**: Status Enum, UI Components
+   - **Estimasi**: 5 Story Points
+   - **Status**: Completed
+
+3. MODMGMT-F003: Validasi Input dan Error Handling
+
+   - **Deskripsi**: Validasi input form dan penanganan error yang user-friendly.
+   - **Kriteria Penerimaan**:
+     - Validasi title (required, min/max length)
+     - Validasi description (optional, max length)
+     - Error message yang jelas dan informatif
+     - Loading state saat form submit
+     - Success notification setelah operasi berhasil
+   - **Prioritas**: High
+   - **Dependensi**: Zod, UI Components
+   - **Estimasi**: 3 Story Points
+   - **Status**: Completed
+
+4. MODMGMT-F004: Filtering dan Sorting Modul
+
+   - **Deskripsi**: Tampilan daftar modul dengan kemampuan filter dan sort.
+   - **Kriteria Penerimaan**:
+     - Filter berdasarkan status modul
+     - Pencarian berdasarkan judul/deskripsi
+     - Sorting berdasarkan kolom (judul, tanggal, status)
+     - Pagination untuk data yang banyak
+   - **Prioritas**: Medium
+   - **Dependensi**: DataTable, API
+   - **Estimasi**: 5 Story Points
+   - **Status**: Completed
+
+5. MODMGMT-F005: Audit Trail dan Authentication
+   - **Deskripsi**: Mencatat setiap perubahan modul dan memastikan hanya admin yang memiliki akses.
+   - **Kriteria Penerimaan**:
+     - Middleware autentikasi untuk route admin
+     - Audit log untuk create/update/delete modul
+     - User information tercatat (siapa yang membuat/update)
+     - Timestamp untuk setiap perubahan
+   - **Prioritas**: High
+   - **Dependensi**: Auth Middleware, Audit Middleware
+   - **Estimasi**: 5 Story Points
+   - **Status**: Completed
+
+### 2.4 Kebutuhan Non-Fungsional
+
+1. Performa:
+
+   - Waktu respons API < 500ms untuk operasi CRUD
+   - Loading state UI yang responsive < 300ms
+   - Pagination efisien untuk dataset besar (> 100 modul)
+   - Debounce search untuk optimasi request
+
+2. Keamanan:
+
+   - Middleware autentikasi berbasis Clerk untuk otorisasi admin
+   - Validasi input server-side untuk mencegah injeksi
+   - Audit trail untuk semua perubahan modul
+   - Verifikasi permission sebelum operasi sensitif
+
+3. Skalabilitas:
+
+   - Struktur data yang mendukung penambahan field di masa depan
+   - Query optimization untuk dataset yang bertumbuh
+   - Modular component-based approach untuk kemudahan ekstensi
+
+4. Testabilitas:
+   - Unit test coverage > 80% untuk komponen dan services
+   - Integration test untuk flow CRUD
+   - Mock services untuk testing independen
+
+## 3. Desain dan Implementasi
+
+### 3.1 Arsitektur
+
+#### Diagram Arsitektur
+
+- **High-Level Architecture**
+  ```
+  ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+  │                 │      │                 │      │                 │
+  │  React UI       │◄────►│  Next.js API    │◄────►│  PostgreSQL DB  │
+  │  Components     │      │  Routes         │      │  (Prisma ORM)   │
+  │                 │      │                 │      │                 │
+  └─────────────────┘      └────────┬────────┘      └─────────────────┘
+          ▲                         │
+          │                         ▼
+  ┌───────┴───────┐      ┌─────────────────┐
+  │               │      │                 │
+  │  React Query  │      │  Auth & Audit   │
+  │  Tanstack     │      │  Middleware     │
+  │               │      │                 │
+  └───────────────┘      └─────────────────┘
+  ```
+
+#### Komponen Utama
+
+1. **Frontend Components**
+
+   - **ModuleTable**: Komponen utama untuk menampilkan daftar modul dengan DataTable
+   - **ModuleFormModal**: Form modal untuk create/edit modul
+   - **ErrorNotifier**: Komponen untuk menampilkan error message
+   - State management dengan React Query
+
+2. **Backend Services**
+   - **moduleService**: Service untuk operasi database via Prisma
+   - **moduleClientService**: Client service untuk API call dari frontend
+   - **API Routes**: Next.js API routes untuk CRUD operations
+   - Middleware untuk autentikasi dan audit trail
+
+### 3.2 Database
+
+#### Skema Database
+
+1. **Entity Relationship Diagram (ERD)**
+
+   ```
+   ┌──────────────┐
+   │   Module     │
+   ├──────────────┤
+   │ id           │
+   │ title        │
+   │ description  │
+   │ status       │
+   │ createdAt    │
+   │ updatedAt    │
+   │ createdBy    │
+   │ updatedBy    │
+   └──────────────┘
+   ```
+
+2. **Model Data**
+
+   ```typescript
+   // Module model dari types/index.ts
+   export enum ModuleStatus {
+     DRAFT = 'DRAFT',
+     ACTIVE = 'ACTIVE',
+     ARCHIVED = 'ARCHIVED',
+   }
+
+   export interface Module {
+     id: string
+     title: string
+     description?: string
+     status: ModuleStatus
+     createdAt: Date
+     updatedAt: Date
+     createdBy: string
+     updatedBy: string
+   }
+
+   // Input models
+   export interface CreateModuleInput {
+     title: string
+     description?: string
+     status?: ModuleStatus
+   }
+
+   export interface UpdateModuleInput {
+     title?: string
+     description?: string
+     status?: ModuleStatus
+   }
+
+   // Query params model
+   export interface ModuleQueryParams {
+     page?: number
+     limit?: number
+     status?: string
+     search?: string
+     sortBy?: string
+     sortOrder?: 'asc' | 'desc'
+   }
+   ```
+
+### 3.3 API
+
+#### Endpoint Definitions
+
+1. **REST Endpoints**
+
+   ```typescript
+   /**
+    * @route GET /api/modules
+    * @desc Ambil daftar modul dengan pagination, filter, dan searching
+    * @access Private (Admin)
+    */
+
+   /**
+    * @route POST /api/modules
+    * @desc Buat modul baru
+    * @access Private (Admin)
+    */
+
+   /**
+    * @route GET /api/modules/:id
+    * @desc Ambil detail modul berdasarkan ID
+    * @access Private (Admin)
+    */
+
+   /**
+    * @route PUT /api/modules/:id
+    * @desc Update modul berdasarkan ID
+    * @access Private (Admin)
+    */
+
+   /**
+    * @route PATCH /api/modules/:id/status
+    * @desc Update status modul
+    * @access Private (Admin)
+    */
+
+   /**
+    * @route DELETE /api/modules/:id
+    * @desc Hapus modul berdasarkan ID
+    * @access Private (Admin)
+    */
+   ```
+
+2. **Request/Response Format**
+
+   ```json
+   // GET /api/modules response
+   {
+     "data": [
+       {
+         "id": "uuid",
+         "title": "Pengenalan Matematika Dasar",
+         "description": "Modul ini membahas konsep dasar matematika",
+         "status": "ACTIVE",
+         "createdAt": "2025-01-15T00:00:00.000Z",
+         "updatedAt": "2025-02-20T00:00:00.000Z",
+         "createdBy": "user-id",
+         "updatedBy": "user-id"
+       }
+     ],
+     "pagination": {
+       "page": 1,
+       "limit": 10,
+       "total": 100,
+       "totalPages": 10
+     }
+   }
+
+   // POST/PUT /api/modules request
+   {
+     "title": "Pengenalan Matematika Dasar",
+     "description": "Modul ini membahas konsep dasar matematika",
+     "status": "DRAFT"
+   }
+
+   // PATCH /api/modules/:id/status request
+   {
+     "status": "ACTIVE"
+   }
+   ```
+
+### 3.4 Antarmuka Pengguna
+
+#### Komponen UI Utama
+
+1. **ModuleTable**
+
+   - Tampilan tabel modul dengan kolom (title, description, status, actions)
+   - Fitur sorting per kolom
+   - Action buttons (edit, delete, change status)
+   - Filter berdasarkan status dan search query
+
+2. **ModuleFormModal**
+
+   - Form modal responsive dengan validasi
+   - Fields: title, description, status
+   - Error validasi real-time
+   - Loading state saat submit
+
+3. **ErrorNotifier**
+   - Notifikasi error yang user-friendly
+   - Auto-dismiss timer
+   - Style berbeda berdasarkan severity (error, warning, success)
+
+#### Wireframes
+
+1. **List View Modul**
+
+   ```
+   ┌─────────────────────────────────────────────────┐
+   │ Manage Modules                          + Add   │
+   ├─────────┬─────────────┬────────┬────────┬───────┤
+   │ Title   │ Description │ Status │ Date   │ Action│
+   ├─────────┼─────────────┼────────┼────────┼───────┤
+   │ Modul 1 │ Deskripsi.. │ ACTIVE │ 01/01  │ ✏️ 🗑️ │
+   ├─────────┼─────────────┼────────┼────────┼───────┤
+   │ Modul 2 │ Deskripsi.. │ DRAFT  │ 01/02  │ ✏️ 🗑️ │
+   ├─────────┼─────────────┼────────┼────────┼───────┤
+   │ Modul 3 │ Deskripsi.. │ARCHIVED│ 01/03  │ ✏️ 🗑️ │
+   └─────────┴─────────────┴────────┴────────┴───────┘
+   ```
+
+2. **Module Form Modal**
+   ```
+   ┌───────────────────────────────────┐
+   │ Add/Edit Module                 ✖️ │
+   ├───────────────────────────────────┤
+   │ Title*                            │
+   │ ┌─────────────────────────────┐   │
+   │ │                             │   │
+   │ └─────────────────────────────┘   │
+   │                                   │
+   │ Description                       │
+   │ ┌─────────────────────────────┐   │
+   │ │                             │   │
+   │ │                             │   │
+   │ └─────────────────────────────┘   │
+   │                                   │
+   │ Status                            │
+   │ ┌─────────────────────────────┐   │
+   │ │ DRAFT                     ▼ │   │
+   │ └─────────────────────────────┘   │
+   │                                   │
+   │       ┌─────────┐ ┌─────────┐     │
+   │       │ Cancel  │ │  Save   │     │
+   │       └─────────┘ └─────────┘     │
+   └───────────────────────────────────┘
+   ```
+
+## 4. Pengujian
+
+### 4.1 Test Cases
+
+1. **Unit Tests**
+
+   ```typescript
+   // moduleService.test.ts
+   describe('moduleService', () => {
+     describe('createModule', () => {
+       it('should create a new module with correct data', async () => {
+         // Test implementation
+       })
+
+       it('should set default status to DRAFT if not provided', async () => {
+         // Test implementation
+       })
+     })
+
+     describe('getModules', () => {
+       it('should return paginated modules with correct filters', async () => {
+         // Test implementation
+       })
+     })
+
+     // Additional test cases
+   })
+
+   // useModuleForm.test.tsx
+   describe('useModuleForm', () => {
+     it('should validate title as required', () => {
+       // Test implementation
+     })
+
+     it('should handle form submission correctly', async () => {
+       // Test implementation
+     })
+   })
+   ```
+
+2. **Integration Tests**
+
+   ```typescript
+   // ModuleTable integration tests
+   describe('ModuleTable Integration', () => {
+     it('should render modules from API', async () => {
+       // Test implementation
+     })
+
+     it('should handle status filter correctly', async () => {
+       // Test implementation
+     })
+   })
+   ```
+
+3. **API Endpoint Tests**
+
+   ```typescript
+   // modules/[id].test.ts
+   describe('Module API Endpoints', () => {
+     describe('GET /api/modules/:id', () => {
+       it('should return module by id', async () => {
+         // Test implementation
+       })
+
+       it('should return 404 for non-existent module', async () => {
+         // Test implementation
+       })
+     })
+   })
+   ```
+
+### 4.2 Test Coverage
+
+- **Unit Test Coverage**: > 85% untuk komponen dan services
+- **Critical Path Testing**: Create, Edit, Delete modul dan filter/sort DataTable
+- **Edge Cases**:
+  - Validasi input dengan berbagai skenario (empty, too long, invalid)
+  - Error handling (network, server, validation)
+  - Permission checks untuk admin-only routes
+
+## 5. Deployment
+
+### 5.1 Prasyarat
+
+1. **Dependencies**
+
+   ```json
+   {
+     "dependencies": {
+       "@tanstack/react-query": "^5.0.0",
+       "@tanstack/react-table": "^8.10.0",
+       "zod": "^3.22.4",
+       "next": "14.0.4",
+       "prisma": "^5.8.1",
+       "@prisma/client": "^5.8.1",
+       "@clerk/nextjs": "^4.29.3",
+       "react-hook-form": "^7.49.3"
+     },
+     "devDependencies": {
+       "@testing-library/react": "^14.1.2",
+       "@testing-library/jest-dom": "^6.1.5",
+       "jest": "^29.7.0",
+       "msw": "^2.0.13"
+     }
+   }
+   ```
+
+2. **Environment Variables**
+
+   ```bash
+   # Database
+   DATABASE_URL="postgresql://..."
+
+   # Auth
+   CLERK_SECRET_KEY="..."
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="..."
+   ```
+
+## 6. Pemeliharaan
+
+### 6.1 Monitoring
+
+1. **Metrics**
+
+   - API Response Time: < 300ms (p95)
+   - Client-side rendering time: < 200ms
+   - Error rate: < 1%
+   - Jumlah modul dibuat/diedit per hari
+
+2. **Alert Thresholds**
+   ```json
+   {
+     "error_rate": "5%",
+     "response_time": "1s",
+     "failed_operations": "3 in 10 minutes"
+   }
+   ```
+
+### 6.2 Troubleshooting
+
+1. **Known Issues**
+
+   - Search dengan unicode/special characters mungkin tidak berfungsi sempurna
+   - Paginasi reset saat mengubah filter
+   - React Query refetch interval mungkin menyebabkan flicker UI
+
+2. **Support Contact**
+   - Technical contact: maguru-dev@example.com
+   - Escalation path: Frontend Lead → Backend Lead → CTO
+
+## 7. Referensi
+
+### 7.1 Dokumentasi Teknis
+
+- [React Query Documentation](https://tanstack.com/query/latest)
+- [TanStack Table Documentation](https://tanstack.com/table/latest)
+- [Zod Validation](https://zod.dev/)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [Clerk Authentication](https://clerk.com/docs)
+- [React Hook Form](https://react-hook-form.com/)
+- [Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
+
+## 8. Riwayat Perubahan
+
+| Tanggal    | Versi | Deskripsi Perubahan                           | Penulis    |
+| ---------- | ----- | --------------------------------------------- | ---------- |
+| 01-03-2025 | 1.0.0 | Initial draft & struktur blueprint            | Tim Maguru |
+| 07-03-2025 | 1.1.0 | Implementasi UI, services & test case awal    | Tim Maguru |
+| 14-03-2025 | 1.2.0 | Completed CRUD & status management with tests | Tim Maguru |

@@ -24,9 +24,11 @@ export function withAdminAuth(
     // Periksa apakah pengguna memiliki role admin
     // Catatan: Ini bergantung pada bagaimana role disimpan di Clerk
     // Mungkin perlu disesuaikan berdasarkan implementasi sebenarnya
-    const userRole = sessionClaims?.role as string
+    const userRole = (sessionClaims?.metadata?.role as string) || ''
+    console.log('API middleware role check:', userRole)
 
-    if (userRole !== 'ADMIN') {
+    // Periksa role case insensitive
+    if (userRole.toLowerCase() !== 'admin') {
       return NextResponse.json(
         { error: 'Akses ditolak. Hanya admin yang dapat mengakses fitur ini.' },
         { status: 403 }

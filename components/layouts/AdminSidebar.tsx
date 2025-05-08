@@ -1,12 +1,23 @@
-'use client'
-
 import { Card, CardContent } from '@/components/ui/card'
 import { usePathname } from 'next/navigation'
-import { NavItem } from '../ui/NavItem'
-import { StatusItem } from '../ui/StatusItem'
+import { NavItem } from '../../features/manage-users/components/ui/NavItem'
+import { StatusItem } from '../../features/manage-users/components/ui/StatusItem'
 import adminLinks from '@/components/layouts/adminSidebarLinks'
 
-function Sidebar() {
+interface SidebarProps {
+  systemStatus: number
+  securityLevel: number
+  networkStatus: number
+}
+
+/**
+ * Komponen Sidebar untuk menampilkan menu navigasi dan status sistem
+ */
+export function AdminSidebar({
+  systemStatus,
+  securityLevel,
+  networkStatus,
+}: SidebarProps) {
   const pathname = usePathname()
 
   return (
@@ -19,7 +30,7 @@ function Sidebar() {
               icon={link.icon}
               label={link.label}
               href={link.href}
-              active={pathname === link.href || link.active}
+              active={pathname === link.href}
             />
           ))}
         </nav>
@@ -29,14 +40,16 @@ function Sidebar() {
             STATUS SISTEM
           </div>
           <div className="space-y-3">
-            <StatusItem label="Core Systems" value={85} color="cyan" />
-            <StatusItem label="Security" value={90} color="blue" />
-            <StatusItem label="Network" value={75} color="green" />
+            <StatusItem
+              label="Core Systems"
+              value={systemStatus}
+              color="cyan"
+            />
+            <StatusItem label="Security" value={securityLevel} color="blue" />
+            <StatusItem label="Network" value={networkStatus} color="green" />
           </div>
         </div>
       </CardContent>
     </Card>
   )
 }
-
-export default Sidebar
