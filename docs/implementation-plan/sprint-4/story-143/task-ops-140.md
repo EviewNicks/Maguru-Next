@@ -10,74 +10,73 @@
 - Database schema modul (Prisma)
 - UI/UX multi-page (Figma/Design System)
 - Middleware autentikasi admin (Clerk)
+- react-markdown, @tiptap
 
 ---
 
-## Deskripsi Task
+## Deskripsi Task (Update)
 
-Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. Admin dapat membuat, mengedit, menghapus, dan mengelola halaman konten (teori & kode) sebagai bagian dari satu modul. Setiap halaman memiliki metadata (judul, tipe, urutan, dsb) dan dapat diatur secara dinamis.
+Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. Admin dapat membuat, mengedit, menghapus, dan mengelola halaman konten (teks, kode, gambar, video) secara dinamis dalam satu modul. Setiap halaman dapat diisi dengan berbagai tipe konten menggunakan slash command (misal: `/image`, `/code`) seperti di Confluence/Notion. Editor mendukung markdown dan toolbar sederhana untuk formatting dasar. Navigasi antar halaman tersedia di RightSidebar/bagian bawah. Batasan upload gambar maksimal 2MB/file dan video maksimal 20MB/file. Semua perubahan halaman langsung terlihat di UI.
 
-**Tujuan:**
+### Breakdown Subtask
 
-1. Memungkinkan admin mengelola struktur dan isi modul secara fleksibel.
-2. Mendukung tipe konten berbeda (teori, kode, quiz, dsb).
-3. Menjamin validasi, audit trail, dan feedback real-time di UI.
+1. **Desain & Implementasi Model Database** _(1 Hari)_
 
----
+   - Tambahkan relasi antara modul dan halaman (one-to-many).
+   - Field: `id`, `moduleId`, `title`, `type`, `order`, `content`, `createdAt`, `updatedAt`.
 
-## Breakdown Subtask
+2. **API CRUD Multi-Page** _(2 Hari)_
 
-### 1. **Desain & Implementasi Model Database** _(1 Hari)_
+   - Endpoint: `POST /api/modules/:id/pages` (create), `PUT /api/pages/:id` (update), `DELETE /api/pages/:id` (delete), `GET /api/modules/:id/pages` (list).
+   - Validasi input dengan Zod.
+   - Middleware autentikasi & otorisasi admin.
+   - Audit trail untuk setiap operasi CRUD (future task).
 
-- Tambahkan relasi antara modul dan halaman (one-to-many).
-- Field: `id`, `moduleId`, `title`, `type`, `order`, `content`, `createdAt`, `updatedAt`.
-- Enum untuk tipe halaman (`THEORY`, `CODE`, `QUIZ`).
+3. **Integrasi UI Multi-Page** _(2 Hari)_
 
-### 2. **API CRUD Multi-Page** _(2 Hari)_
+   - Komponen form CRUD halaman (inline form/editor).
+   - Editor mendukung markdown dan toolbar sederhana.
+   - Penambahan konten dengan slash command (`/image`, `/code`, dsb).
+   - Daftar halaman dengan navigasi di RightSidebar/bawah.
+   - Indikator status simpan & notifikasi sukses/error.
+   - Integrasi dengan React Query untuk data fetching & mutasi.
+   - Batasan upload gambar maksimal 2MB/file, video maksimal 20MB/file.
 
-- Endpoint: `POST /api/modules/:id/pages` (create), `PUT /api/pages/:id` (update), `DELETE /api/pages/:id` (delete), `GET /api/modules/:id/pages` (list).
-- Validasi input dengan Zod.
-- Middleware autentikasi & otorisasi admin.
-- Audit trail untuk setiap operasi CRUD.
+4. **Testing & Validasi** _(1 Hari)_
 
-### 3. **Integrasi UI Multi-Page** _(2 Hari)_
+   - Unit test untuk fungsi CRUD halaman.
+   - Integration test untuk API & UI.
+   - E2E test untuk alur admin mengelola halaman modul.
 
-- Komponen form CRUD halaman (modal atau inline form).
-- Daftar halaman dengan drag & drop untuk urutan.
-- Indikator status simpan & notifikasi sukses/error.
-- Integrasi dengan React Query untuk data fetching & mutasi.
-
-#### Contoh Struktur Komponen:
-
-```tsx
-<ModulePagesManager moduleId={id} />
-// di dalamnya:
-<PageList pages={pages} onReorder={handleReorder} />
-<PageForm onSubmit={handleCreateOrUpdate} />
-```
-
-### 4. **Testing & Validasi** _(1 Hari)_
-
-- Unit test untuk fungsi CRUD halaman.
-- Integration test untuk API & UI.
-- E2E test untuk alur admin mengelola halaman modul.
-
-### 5. **Dokumentasi & User Guide** _(0.5 Hari)_
-
-- Update README/module docs untuk instruksi penggunaan fitur multi-page.
-- Contoh payload API & skenario penggunaan.
+5. **Dokumentasi & User Guide** _(0.5 Hari)_
+   - Update README/module docs untuk instruksi penggunaan fitur multi-page.
+   - Contoh payload API & skenario penggunaan.
 
 ---
 
 ## Acceptance Criteria
 
 - [x] Admin dapat membuat, mengedit, menghapus halaman konten pada modul.
-- [x] Setiap halaman memiliki metadata (judul, tipe, urutan, dsb).
+- [x] Setiap halaman dapat berisi campuran teks, kode, gambar, dan video.
+- [x] Penambahan konten menggunakan slash command.
+- [x] Editor mendukung markdown dan toolbar sederhana.
+- [x] Navigasi antar halaman mudah diakses.
 - [x] Perubahan halaman langsung terlihat di UI (real-time update).
 - [x] Validasi input & error handling berjalan baik.
-- [x] Audit trail mencatat setiap perubahan.
-- [x] UI mendukung drag & drop urutan halaman.
+- [x] Mahasiswa hanya bisa melihat halaman dari modul berstatus ACTIVE.
 - [x] Unit, integration, dan E2E test coverage minimal 80%.
+- [x] Batasan upload gambar maksimal 2MB/file, video maksimal 20MB/file.
+
+---
+
+## Future Task (Sprint Berikutnya)
+
+- **Drag & Drop Urutan Halaman**: Fitur untuk mengubah urutan halaman secara visual.
+- **Quiz Page**: Halaman khusus untuk quiz/interaktif.
+- **Preview Halaman**: Fitur untuk melihat tampilan halaman sebelum publish.
+- **Audit Trail**: Pencatatan detail perubahan setiap halaman.
+- **Import/Export & Duplikasi**: Mendukung ekspor, impor, dan duplikasi halaman.
+- **Versioning**: Menyimpan riwayat perubahan konten halaman.
 
 ---
 
@@ -105,3 +104,4 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. A
 - [shadcn/ui Docs](https://ui.shadcn.com/)
 - [Zod Validation](https://zod.dev/)
 - [Prisma Relations](https://www.prisma.io/docs/concepts/components/prisma-relations)
+

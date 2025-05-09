@@ -30,6 +30,7 @@ export default function ModuleManagementPage() {
         </div>
 
         <ModuleTable />
+        
       </div>
     </RoleProtected>
   )

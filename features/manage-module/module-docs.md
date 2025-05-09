@@ -97,57 +97,37 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
    - **Estimasi**: 8 Story Points
    - **Status**: Completed
 
-2. MODMGMT-F002: Manajemen Status Modul
+2. MODMGMT-F002: Manajemen Konten Multi-Page
 
-   - **Deskripsi**: Admin dapat mengubah status modul (DRAFT, ACTIVE, ARCHIVED).
+   - **Deskripsi**: Admin dapat membuat, mengedit, menghapus, dan mengelola halaman konten (teks, kode, gambar, video) sebagai bagian dari satu modul pembelajaran. Setiap halaman dapat diisi dengan berbagai tipe konten menggunakan slash command (misal: `/image`, `/code`) seperti di Confluence/Notion. Editor mendukung markdown (lihat package.json: react-markdown, @tiptap) dan toolbar sederhana untuk formatting dasar. Pengelolaan halaman dilakukan di satu halaman khusus dengan navigasi antar halaman di RightSidebar/bagian bawah. Batasan upload gambar maksimal 2MB/file dan video maksimal 20MB/file.
    - **Kriteria Penerimaan**:
-     - Dropdown atau button untuk mengubah status
-     - Visual indicator yang menunjukkan status saat ini
-     - Perubahan status terekam di audit trail
-     - Hanya modul dengan status ACTIVE yang terlihat oleh user
+     - Admin dapat CRUD halaman konten pada modul.
+     - Satu halaman dapat berisi campuran teks, kode, gambar, dan video.
+     - Penambahan konten menggunakan slash command.
+     - Navigasi antar halaman mudah diakses.
+     - Toolbar sederhana untuk formatting.
+     - Editor mendukung markdown.
+     - Perubahan halaman langsung terlihat di UI (real-time update).
+     - Mahasiswa hanya bisa melihat halaman dari modul berstatus ACTIVE.
+     - Unit, integration, dan E2E test coverage minimal 80%.
+     - Batasan upload gambar maksimal 2MB/file, video maksimal 20MB/file.
+   - **Catatan**:
+     - Fitur drag & drop urutan halaman, quiz, preview halaman, audit trail, import/export, duplikasi, dan versioning akan dikerjakan di task/sprint terpisah.
    - **Prioritas**: High
-   - **Dependensi**: Status Enum, UI Components
-   - **Estimasi**: 5 Story Points
-   - **Status**: Completed
+   - **Dependensi**: API CRUD Multi-Page, React Query, Zod, Prisma, react-markdown, @tiptap
+   - **Estimasi**: 8 Story Points
+   - **Status**: In Progress
 
-3. MODMGMT-F003: Validasi Input dan Error Handling
+3. MODMGMT-F003: Future Tasks Multi-Page Management
+   - **Deskripsi**: Pengembangan lanjutan untuk fitur multi-page, meliputi:
 
-   - **Deskripsi**: Validasi input form dan penanganan error yang user-friendly.
-   - **Kriteria Penerimaan**:
-     - Validasi title (required, min/max length)
-     - Validasi description (optional, max length)
-     - Error message yang jelas dan informatif
-     - Loading state saat form submit
-     - Success notification setelah operasi berhasil
-   - **Prioritas**: High
-   - **Dependensi**: Zod, UI Components
-   - **Estimasi**: 3 Story Points
-   - **Status**: Completed
-
-4. MODMGMT-F004: Filtering dan Sorting Modul
-
-   - **Deskripsi**: Tampilan daftar modul dengan kemampuan filter dan sort.
-   - **Kriteria Penerimaan**:
-     - Filter berdasarkan status modul
-     - Pencarian berdasarkan judul/deskripsi
-     - Sorting berdasarkan kolom (judul, tanggal, status)
-     - Pagination untuk data yang banyak
-   - **Prioritas**: Medium
-   - **Dependensi**: DataTable, API
-   - **Estimasi**: 5 Story Points
-   - **Status**: Completed
-
-5. MODMGMT-F005: Audit Trail dan Authentication
-   - **Deskripsi**: Mencatat setiap perubahan modul dan memastikan hanya admin yang memiliki akses.
-   - **Kriteria Penerimaan**:
-     - Middleware autentikasi untuk route admin
-     - Audit log untuk create/update/delete modul
-     - User information tercatat (siapa yang membuat/update)
-     - Timestamp untuk setiap perubahan
-   - **Prioritas**: High
-   - **Dependensi**: Auth Middleware, Audit Middleware
-   - **Estimasi**: 5 Story Points
-   - **Status**: Completed
+- **Drag & Drop Urutan Halaman**: Fitur untuk mengubah urutan halaman secara visual.
+- **Quiz Page**: Halaman khusus untuk quiz/interaktif.
+- **Preview Halaman**: Fitur untuk melihat tampilan halaman sebelum publish.
+- **Audit Trail**: Pencatatan detail perubahan setiap halaman.
+- **Import/Export & Duplikasi**: Mendukung ekspor, impor, dan duplikasi halaman.
+- **Versioning**: Menyimpan riwayat perubahan konten halaman.
+  - **Status**: To Do
 
 ### 2.4 Kebutuhan Non-Fungsional
 
