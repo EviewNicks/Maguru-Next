@@ -56,16 +56,16 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. A
 
 ## Acceptance Criteria
 
-- [x] Admin dapat membuat, mengedit, menghapus halaman konten pada modul.
-- [x] Setiap halaman dapat berisi campuran teks, kode, gambar, dan video.
-- [x] Penambahan konten menggunakan slash command.
-- [x] Editor mendukung markdown dan toolbar sederhana.
-- [x] Navigasi antar halaman mudah diakses.
-- [x] Perubahan halaman langsung terlihat di UI (real-time update).
-- [x] Validasi input & error handling berjalan baik.
-- [x] Mahasiswa hanya bisa melihat halaman dari modul berstatus ACTIVE.
-- [x] Unit, integration, dan E2E test coverage minimal 80%.
-- [x] Batasan upload gambar maksimal 2MB/file, video maksimal 20MB/file.
+- [ ] Admin dapat membuat, mengedit, menghapus halaman konten pada modul.
+- [ ] Setiap halaman dapat berisi campuran teks, kode, gambar, dan video.
+- [ ] Penambahan konten menggunakan slash command.
+- [ ] Editor mendukung markdown dan toolbar sederhana.
+- [ ] Navigasi antar halaman mudah diakses.
+- [ ] Perubahan halaman langsung terlihat di UI (real-time update).
+- [ ] Validasi input & error handling berjalan baik.
+- [ ] Mahasiswa hanya bisa melihat halaman dari modul berstatus ACTIVE.
+- [ ] Unit, integration, dan E2E test coverage minimal 80%.
+- [ ] Batasan upload gambar maksimal 2MB/file, video maksimal 20MB/file.
 
 ---
 

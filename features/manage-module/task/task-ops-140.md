@@ -8,7 +8,7 @@
 
 ## Deskripsi Task
 
-Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. Fitur ini memungkinkan admin untuk membuat, mengedit, menghapus, dan mengelola halaman-halaman konten (teori, kode, quiz) dalam satu modul secara dinamis dan terstruktur.
+Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. Fitur ini memungkinkan admin untuk membuat, mengedit, menghapus, dan mengelola halaman-halaman konte dalam satu modul secara dinamis dan terstruktur.
 
 ## Tujuan
 
@@ -20,35 +20,6 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
 
 ## Status Subtask
 
-### 1. Desain & Implementasi Model Database
-
-- [ ] Relasi modul-halaman (one-to-many)
-- [ ] Enum tipe halaman (`THEORY`, `CODE`, `QUIZ`)
-
-### 2. API CRUD Multi-Page
-
-- [ ] Endpoint create/update/delete/list halaman
-- [ ] Validasi input (Zod)
-- [ ] Middleware autentikasi admin
-- [ ] Audit trail CRUD
-
-### 3. Integrasi UI Multi-Page
-
-- [ ] Komponen form CRUD halaman
-- [ ] Daftar halaman dengan drag & drop
-- [ ] Notifikasi sukses/error
-- [ ] Integrasi React Query
-
-### 4. Testing & Validasi
-
-- [ ] Unit test fungsi CRUD
-- [ ] Integration test API & UI
-- [ ] E2E test alur admin
-
-### 5. Dokumentasi & User Guide
-
-- [ ] Update README/module docs
-- [ ] Contoh payload API
 
 ---
 
