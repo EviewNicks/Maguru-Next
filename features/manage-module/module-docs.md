@@ -8,14 +8,14 @@
 
 - **Nama Modul**: Manajemen Modul Pembelajaran (Manage Module)
 - **Kode Modul**: MODMGMT-001
-- **Versi**: 1.2.0
-- **Tanggal Terakhir Update**: 14-03-2025
+- **Versi**: 1.2.1
+- **Tanggal Terakhir Update**: 14-06-2024 [update+2024-06-14]
 - **Penulis**: Tim Maguru
 - **Status**: Implemented (Sprint 2)
 
 ### 1.2 Ringkasan
 
-Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan admin membuat, mengedit, menghapus, dan mengatur status modul (aktif, draft, diarsipkan). Implementasi mencakup komponen UI dengan DataTable, form modal, validasi input Zod, integrasi React Query, middleware autentikasi & audit, serta unit testing komprehensif.
+Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan admin membuat, mengedit, menghapus, dan mengatur status modul (aktif, draft, diarsipkan). Pada update terbaru, telah dilakukan perbaikan pada fitur filter status modul agar menampilkan semua status (ACTIVE, DRAFT, ARCHIVED) secara benar, serta penambahan dan perbaikan pengujian unit & integrasi untuk memastikan filter status berjalan sesuai kebutuhan. [update+2024-06-14]
 
 ## 2. Spesifikasi Kebutuhan
 
@@ -27,6 +27,7 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
 - Memastikan validasi data yang ketat dan audit trail untuk perubahan modul.
 - Memberikan antarmuka yang mempermudah admin dalam mengelola modul pembelajaran.
 - Menerapkan Test-Driven Development (TDD) dengan unit testing komprehensif.
+- Memastikan filter status modul dapat menampilkan semua status (ACTIVE, DRAFT, ARCHIVED) dan tidak hanya DRAFT. [update+2024-06-14]
 
 #### Masalah yang Diselesaikan
 
@@ -34,6 +35,7 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
 - Keterbatasan dalam mengelola status modul (aktif, draft, diarsipkan) yang mempengaruhi visibilitas modul.
 - Kebutuhan validasi input dan audit trail untuk menjaga integritas data.
 - Proses manajemen modul yang manual dan tidak terstruktur.
+- Bug pada filter status modul yang hanya menampilkan DRAFT, kini sudah diperbaiki sehingga semua status dapat difilter dan ditampilkan. [update+2024-06-14]
 
 #### Manfaat yang Diharapkan
 
@@ -44,6 +46,7 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
   - Peningkatan keamanan dengan validasi ketat & audit trail.
   - Efisiensi operasional dengan UI yang mudah digunakan.
   - Mengurangi error data dengan validasi terpusat.
+  - Pengalaman pengguna lebih baik karena filter status berjalan sesuai ekspektasi. [update+2024-06-14]
 
 ### 2.2 Ruang Lingkup
 
@@ -58,6 +61,7 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
    - Validasi input dengan Zod
    - Integrasi React Query untuk state management
    - Middleware autentikasi & audit trail
+   - Filter status modul yang kini menampilkan semua status dengan benar. [update+2024-06-14]
 
 2. Fungsionalitas:
    - Menampilkan daftar modul dengan filtering & sorting
@@ -66,6 +70,7 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
    - Mengubah status modul (draft ke active/archived)
    - Menghapus modul dengan konfirmasi
    - Pencarian modul berdasarkan judul/deskripsi
+   - Pengujian unit & integrasi untuk filter status. [update+2024-06-14]
 
 #### Yang Tidak Termasuk dalam Modul
 
@@ -153,7 +158,7 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
 
 4. Testabilitas:
    - Unit test coverage > 80% untuk komponen dan services
-   - Integration test untuk flow CRUD
+   - Integration test untuk flow CRUD & filter status [update+2024-06-14]
    - Mock services untuk testing independen
 
 ## 3. Desain dan Implementasi
@@ -182,18 +187,20 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
 
 #### Komponen Utama
 
-1. **Frontend Components**
+- **ModuleTable**: Komponen utama untuk menampilkan daftar modul dengan DataTable dan filter status
+- **ModuleFormModal**: Form modal untuk create/edit modul
+- **ErrorNotifier**: Komponen untuk menampilkan error message
+- **State management**: React Query
+- **Filter status**: Dropdown filter status yang terhubung ke query API [update+2024-06-14]
 
-   - **ModuleTable**: Komponen utama untuk menampilkan daftar modul dengan DataTable
-   - **ModuleFormModal**: Form modal untuk create/edit modul
-   - **ErrorNotifier**: Komponen untuk menampilkan error message
-   - State management dengan React Query
+#### Alur Filter Status Modul [update+2024-06-14]
 
-2. **Backend Services**
-   - **moduleService**: Service untuk operasi database via Prisma
-   - **moduleClientService**: Client service untuk API call dari frontend
-   - **API Routes**: Next.js API routes untuk CRUD operations
-   - Middleware untuk autentikasi dan audit trail
+- State filter status diatur pada komponen ModuleTable
+- Nilai default status adalah 'all' (menampilkan semua status)
+- Fungsi getStatusFilter mengubah string status menjadi enum untuk API
+- Query ke API akan mengirim status sesuai filter, atau undefined untuk semua status
+- Perbaikan bug: sebelumnya default status adalah DRAFT, kini sudah undefined sehingga ALL status tampil
+- Pengujian dilakukan untuk memastikan filter status berjalan baik (unit & integration test)
 
 ### 3.2 Database
 
@@ -415,73 +422,14 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
 
 ### 4.1 Test Cases
 
-1. **Unit Tests**
-
-   ```typescript
-   // moduleService.test.ts
-   describe('moduleService', () => {
-     describe('createModule', () => {
-       it('should create a new module with correct data', async () => {
-         // Test implementation
-       })
-
-       it('should set default status to DRAFT if not provided', async () => {
-         // Test implementation
-       })
-     })
-
-     describe('getModules', () => {
-       it('should return paginated modules with correct filters', async () => {
-         // Test implementation
-       })
-     })
-
-     // Additional test cases
-   })
-
-   // useModuleForm.test.tsx
-   describe('useModuleForm', () => {
-     it('should validate title as required', () => {
-       // Test implementation
-     })
-
-     it('should handle form submission correctly', async () => {
-       // Test implementation
-     })
-   })
-   ```
-
-2. **Integration Tests**
-
-   ```typescript
-   // ModuleTable integration tests
-   describe('ModuleTable Integration', () => {
-     it('should render modules from API', async () => {
-       // Test implementation
-     })
-
-     it('should handle status filter correctly', async () => {
-       // Test implementation
-     })
-   })
-   ```
-
-3. **API Endpoint Tests**
-
-   ```typescript
-   // modules/[id].test.ts
-   describe('Module API Endpoints', () => {
-     describe('GET /api/modules/:id', () => {
-       it('should return module by id', async () => {
-         // Test implementation
-       })
-
-       it('should return 404 for non-existent module', async () => {
-         // Test implementation
-       })
-     })
-   })
-   ```
+- **Unit Test**: ModuleTable.test.tsx
+  - Memastikan filter status menampilkan data sesuai status yang dipilih
+  - Test untuk loading, error, dan empty state
+- **Integration Test**: moduleFilterStatus.test.tsx
+  - Simulasi interaksi user pada filter status
+  - Memastikan API dipanggil dengan parameter status yang benar
+  - Memastikan data yang tampil sesuai filter
+- **Test Coverage**: > 85% untuk komponen utama dan filter status [update+2024-06-14]
 
 ### 4.2 Test Coverage
 
@@ -573,11 +521,13 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
 - [Clerk Authentication](https://clerk.com/docs)
 - [React Hook Form](https://react-hook-form.com/)
 - [Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
+- [Jest Documentation](https://jestjs.io/docs/getting-started)
 
 ## 8. Riwayat Perubahan
 
-| Tanggal    | Versi | Deskripsi Perubahan                           | Penulis    |
-| ---------- | ----- | --------------------------------------------- | ---------- |
-| 01-03-2025 | 1.0.0 | Initial draft & struktur blueprint            | Tim Maguru |
-| 07-03-2025 | 1.1.0 | Implementasi UI, services & test case awal    | Tim Maguru |
-| 14-03-2025 | 1.2.0 | Completed CRUD & status management with tests | Tim Maguru |
+| Tanggal    | Versi | Deskripsi Perubahan                                                   | Penulis    |
+| ---------- | ----- | --------------------------------------------------------------------- | ---------- | ------------------- |
+| 01-03-2025 | 1.0.0 | Initial draft & struktur blueprint                                    | Tim Maguru |
+| 07-03-2025 | 1.1.0 | Implementasi UI, services & test case awal                            | Tim Maguru |
+| 14-03-2025 | 1.2.0 | Completed CRUD & status management with tests                         | Tim Maguru |
+| 14-06-2024 | 1.2.1 | Perbaikan filter status modul, update test unit & integrasi, coverage | Tim Maguru | [update+2024-06-14] |
