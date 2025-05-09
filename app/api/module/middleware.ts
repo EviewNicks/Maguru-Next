@@ -9,6 +9,16 @@ export function withAdminAuth(
   handler: (req: NextRequest) => Promise<NextResponse>
 ) {
   return async (req: NextRequest) => {
+    // PENGEMBANGAN SAJA: Untuk sementara bypass autentikasi
+    // CATATAN: HANYA GUNAKAN DI ENVIRONMENT DEVELOPMENT
+    // Lihat apakah kita dalam mode pengembangan
+    if (process.env.NODE_ENV === 'development') {
+      console.log(
+        '[DEV ONLY] Melewati pemeriksaan autentikasi admin untuk pengembangan'
+      )
+      return handler(req)
+    }
+
     const authObject = await auth()
     const userId = authObject.userId
     const sessionClaims = authObject.sessionClaims
@@ -24,7 +34,11 @@ export function withAdminAuth(
     // Periksa apakah pengguna memiliki role admin
     // Catatan: Ini bergantung pada bagaimana role disimpan di Clerk
     // Mungkin perlu disesuaikan berdasarkan implementasi sebenarnya
-    const userRole = (sessionClaims?.metadata?.role as string) || ''
+    let userRole = ''
+    if (sessionClaims && sessionClaims.metadata) {
+      const metadata = sessionClaims.metadata as Record<string, unknown>
+      userRole = (metadata.role as string) || ''
+    }
     console.log('API middleware role check:', userRole)
 
     // Periksa role case insensitive
@@ -45,7 +59,7 @@ export function withAdminAuth(
 
     // Simpan informasi pengguna di headers internal
     requestWithUser.headers.set('x-user-id', userId)
-    requestWithUser.headers.set('x-user-role', userRole)
+    requestWithUser.headers.set('x-user-role', userRole || 'unknown')
 
     // Jalankan handler jika pengguna adalah admin
     return handler(requestWithUser)

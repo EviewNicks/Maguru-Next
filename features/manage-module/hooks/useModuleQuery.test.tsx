@@ -60,9 +60,9 @@ describe('useModuleQuery', () => {
       },
     })
     
-    const Wrapper = ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    )
+    function Wrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    }
     Wrapper.displayName = 'QueryClientWrapper';
     
     return Wrapper;
@@ -99,7 +99,7 @@ describe('useModuleQuery', () => {
         page: 1,
         pageSize: 10,
         search: '',
-        status: ModuleStatus.DRAFT,
+        status: undefined,
         sortBy: 'createdAt',
         sortOrder: 'desc',
       })

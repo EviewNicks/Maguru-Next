@@ -24,7 +24,7 @@ export function useModuleQuery(params: QueryParams = {}) {
     page: params.page || 1,
     pageSize: params.pageSize || 10,
     search: params.search || '',
-    status: params.status || ModuleStatus.DRAFT,
+    status: params.status,
     sortBy: params.sortBy || 'createdAt',
     sortOrder: params.sortOrder || 'desc',
   }

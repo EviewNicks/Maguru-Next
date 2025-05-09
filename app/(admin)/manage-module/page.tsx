@@ -1,7 +1,10 @@
 import { Metadata } from 'next'
 import RoleProtected from '@/components/RoleProtected'
-import { ModuleOverview } from '@/features/manage-module/componentsNew/ModuleOverview'
-import { ModuleTable } from '@/features/manage-module/componentsNew/ModuleTable'
+import {
+  ModuleLayout,
+  ModuleOverview,
+  ModuleTable,
+} from '@/features/manage-module/components'
 
 // Menambahkan konfigurasi routing untuk mencegah static rendering
 export const dynamic = 'force-dynamic'
@@ -21,10 +24,12 @@ export const metadata: Metadata = {
 export default function ModuleManagementPage() {
   return (
     <RoleProtected allowedRoles={['admin']}>
-      <div className="space-y-4 max-w-7xl mx-auto my-4">
-        <ModuleOverview />
-        <ModuleTable />
-      </div>
+      <ModuleLayout>
+        <div className="space-y-8 min-h-[calc(100vh-4rem)]">
+          <ModuleOverview />
+          <ModuleTable />
+        </div>
+      </ModuleLayout>
     </RoleProtected>
   )
 }

@@ -57,8 +57,6 @@
 
 **Silakan jawab pertanyaan di atas jika ingin menyesuaikan detail UI. Jika tidak, saya akan lanjut dengan asumsi default (summary total modul, breakdown status, dan layout mirip SystemOverview).**
 
-
-
 # Planning Update UI & Backend Integration: Halaman Manage-Module
 
 ## 1. Ringkasan Tujuan
@@ -72,54 +70,188 @@
 ### A. Analisis & Mapping Fitur
 
 - Identifikasi seluruh fitur utama di komponen lama:
+
   - Data fetching (React Query)
   - CRUD (Create, Read, Update, Delete)
   - Filter, search, dan pagination
   - Error & loading state
-  - Modularisasi cell/action (misal: ModuleActionCell, ModuleDescriptionCell)
-- Mapping fitur-fitur tersebut ke struktur dan UI baru:
-  - Pastikan semua fitur tetap tersedia di UI baru
-  - Tentukan bagian mana yang perlu refactor (misal: hooks, context, dsb)
+  - Modularisasi cell/rendering lainnya
 
-### B. Refactor Data Logic
+- Mapping dengan file-file utama:
+  - `useModuleQuery.ts` - Fetch data dengan React Query
+  - `useModuleMutation.ts` - Operasi CRUD dengan React Query
+  - `ModuleTable/ErrorNotifier.tsx` - Handling error
+  - `ModuleTable/SearchAndFilter.tsx` - Filter dan search
+  - `ModuleFormModal/` - Modal create & edit
+  - `ModuleTable/columns.tsx` - Definisi kolom dan rendering cell
+  - `ModuleTable/ModuleActionCell.tsx` - Button aksi (edit, delete, dll)
 
-- Pindahkan logic data fetching (React Query) dari komponen lama ke komponen baru (`componentsNew/ModuleTable.tsx`)
-- Integrasikan state loading, error, dan data ke dalam Card/Table baru
-- Pastikan data dummy diganti dengan data dari backend/API (mock/real)
-- Refactor handler aksi (edit, delete, dsb) agar sesuai dengan UI baru (misal: pakai modal, toast, dsb)
+### B. Strategi Refactoring
 
-### C. Integrasi Fitur CRUD & Interaksi
+1. **Pendekatan "Cut & Transform"**:
 
-- Integrasikan fitur tambah/edit/hapus modul ke dalam UI baru:
-  - Gunakan modal atau drawer untuk form tambah/edit
-  - Gunakan toast/alert untuk feedback aksi
-  - Pastikan aksi update data otomatis refresh table (optimistic update/react query invalidate)
-- Integrasikan filter, search, dan pagination ke UI baru
-- Pastikan semua aksi tetap accessible dan responsif
+   - Tidak langsung replace file lama
+   - Buat komponen baru dengan UI baru di folder `componentsNew/`
+   - Migrasi logic secara bertahap sambil menyesuaikan dengan UI baru
 
-### D. Testing & QA
+2. **File-file yang Tetap Dipertahankan**:
 
-- Buat/ubah unit test & integration test untuk komponen baru
-- Pastikan semua fitur berjalan baik (CRUD, filter, dsb)
-- Lakukan review visual dan UX
-- Siapkan fallback/error state yang user-friendly
+   - `hooks/useModuleQuery.ts`
+   - `hooks/useModuleMutation.ts`
+   - `services/moduleClientService.ts`
 
-## 3. Estimasi File/Komponen yang Perlu Diubah/Dibuat
+3. **Struktur Komponen Baru**
+   - `ModuleTable.tsx` - Main table dengan aksi dan view modes
+   - `ModuleFormModal.tsx` - Modal create/edit
+   - `ModuleActionCell.tsx` - Cell aksi (edit, delete)
+   - `ModuleDescriptionCell.tsx` - Cell description dengan expand/collapse
+   - `ErrorNotifier.tsx` - Handling error
 
-- `features/manage-module/componentsNew/ModuleTable.tsx` (logic utama + UI baru)
-- `features/manage-module/componentsNew/ModuleFormModal.tsx` (modal tambah/edit)
-- `features/manage-module/componentsNew/ModuleActionCell.tsx` (aksi per modul)
-- `features/manage-module/services/moduleService.ts` (API service, jika perlu update)
-- `features/manage-module/types/index.ts` (update tipe data jika ada perubahan)
-- `features/manage-module/hooks/useModuleData.ts` (refactor hooks data, jika perlu)
-- `features/manage-module/components/__tests__/ModuleTable.test.tsx` (unit/integration test)
+### C. UI/UX Enhancement
 
-## 4. Catatan & Klarifikasi
+1. **Card View vs Table View**
 
-- Jika ada fitur baru yang ingin ditambahkan, tambahkan ke planning ini.
-- Jika ingin mengubah cara data fetching (misal: pakai SWR, context, dsb), tambahkan di bagian refactor.
-- Pastikan dokumentasi dan test selalu diupdate setiap perubahan signifikan.
+   - Tambahkan opsi melihat modul dalam bentuk card grid
+   - Toggle antara table view dan card view
 
----
+2. **Loading State**
 
-**Silakan review dan tambahkan feedback jika ada kebutuhan khusus atau fitur tambahan yang diinginkan.**
+   - Table skeleton
+   - Card skeleton
+   - Disabled buttons saat loading
+
+3. **Error Handling**
+
+   - Toast berbasis error code
+   - Fallback UI saat error
+   - Mekanisme retry
+
+4. **Filter & Search**
+
+   - Debounce search
+   - Filter status (Aktif, Draft, Diarsipkan)
+   - Pagination & item count
+
+5. **Responsiveness**
+   - Layout responsif untuk mobile & desktop
+   - Penyesuaian grid untuk card view
+
+### D. Testing
+
+1. **Unit Test Updates**
+
+   - Update semua test untuk menyesuaikan dengan UI baru
+   - Test fitur baru (card view, dll)
+
+2. **Integration Test**
+   - Pastikan data flow tetap berfungsi end-to-end
+
+## 3. Timeline
+
+1. **Phase 1: Component Building** ✅
+
+   - Struktur UI dasar untuk table dan card view
+   - Static state (hardcoded data)
+
+2. **Phase 2: Data Integration** ✅
+
+   - Integrasi hooks data fetching
+   - Error handling komprehensif
+   - Filter, search, pagination
+
+3. **Phase 3: UI Enhancement**
+
+   - Polish animasi & transisi
+   - Accessibility improvements
+   - Ekspor data & bulk actions
+   - Konfirmasi batch delete
+
+4. **Phase 4: Testing & Deployment**
+   - Memperbarui unit test
+   - Integration test
+   - Deployment ke staging
+
+## 4. Checklist Implementasi
+
+### A. Files to Create/Modify:
+
+- ✅ `features/manage-module/componentsNew/ModuleTable.tsx` (main container)
+- ✅ `features/manage-module/componentsNew/ModuleFormModal.tsx` (modal tambah/edit)
+- ✅ `features/manage-module/componentsNew/ModuleActionCell.tsx` (cell aksi)
+- ✅ `features/manage-module/componentsNew/ModuleDescriptionCell.tsx` (cell deskripsi)
+- ✅ `features/manage-module/componentsNew/ErrorNotifier.tsx` (error handler)
+- ✅ `app/(admin)/manage-module/page.tsx` (page container)
+
+### B. Required Tests:
+
+- `features/manage-module/componentsNew/__tests__/ModuleTable.test.tsx`
+- `features/manage-module/componentsNew/__tests__/ModuleFormModal.test.tsx`
+- `features/manage-module/componentsNew/__tests__/ModuleActionCell.test.tsx`
+
+## 5. Rekap Perubahan yang Sudah Dilakukan
+
+### Komponen yang Sudah Dibuat
+
+1. **ModuleTable.tsx** ✅
+
+   - Implementasi tampilan tabel modern dengan dukungan filter dan pencarian
+   - Integrasi dengan API data via React Query
+   - Fitur mode tampilan card/table
+   - Skeletons loading state
+   - Pagination dengan kontrol halaman dan item per halaman
+
+2. **ModuleFormModal.tsx** ✅
+
+   - Form modal untuk menambah/edit modul
+   - Validasi input menggunakan zod
+   - Integrasi dengan API via mutasi React Query
+   - Menampilkan error form dengan format yang konsisten
+   - Loading state saat submit
+
+3. **ModuleActionCell.tsx** ✅
+
+   - Tombol aksi untuk edit dan hapus modul
+   - Konfirmasi dialog untuk hapus modul
+   - Error handling terintegrasi
+
+4. **ModuleDescriptionCell.tsx** ✅
+
+   - Tampilan deskripsi dengan fitur expand/collapse
+   - Sanitasi HTML untuk mencegah XSS
+
+5. **ErrorNotifier.tsx** ✅
+   - Sistem penanganan error yang konsisten
+   - Format toast dengan kode dan pesan error
+   - Utilitas untuk menampilkan error di berbagai konteks
+
+### Integrasi dan Perubahan Lainnya
+
+1. **Layout dan Navigasi** ✅
+
+   - Integrasi dengan ModuleLayout
+   - Header dan judul halaman
+
+2. **Struktur Ekspor** ✅
+
+   - File index.ts untuk ekspor terpusat
+   - Modularisasi untuk penggunaan ulang komponen
+
+3. **Peningkatan UX** ✅
+   - Filter status yang intuitif
+   - Indikator loading state
+   - Feedback saat operasi CRUD
+
+### Langkah Berikutnya
+
+1. **Pengujian (Testing)** 🔄
+
+   - Menambahkan unit tests untuk komponen baru
+   - Memastikan semua fungsi bekerja sesuai ekspektasi
+
+2. **UI/UX Enhancement** 🔄
+   - Fine-tuning animasi dan transisi
+   - Peningkatan responsivitas
+3. **Fitur Tambahan** 🔄
+   - Bulk actions (hapus banyak, ubah status)
+   - Ekspor data ke CSV/Excel
+   - Filter dan pencarian tambahan

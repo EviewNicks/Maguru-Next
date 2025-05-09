@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Module } from '../../types/index'
+import { Module } from '@/features/manage-module/types'
 import { Button } from '@/components/ui/button'
-import { sanitizedMarkup } from '@/features/common/utils/sanitize'
+import DOMPurify from 'isomorphic-dompurify'
 
 interface ModuleDescriptionCellProps {
   module: Module
@@ -22,14 +22,20 @@ export default function ModuleDescriptionCell({
       ? description.substring(0, 100) + '...'
       : description
 
+  // Sanitasi untuk mencegah XSS attack
+  const sanitizedDescription = DOMPurify.sanitize(truncatedDescription)
+
   return (
     <div>
-      <div dangerouslySetInnerHTML={sanitizedMarkup(truncatedDescription)} />
+      <div
+        className="text-sm text-slate-300"
+        dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+      />
       {isTruncated && (
         <Button
           variant="link"
           size="sm"
-          className="p-0 h-auto text-blue-600"
+          className="p-0 h-auto text-cyan-500 hover:text-cyan-400"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {isExpanded ? 'Sembunyikan' : 'Lihat Selengkapnya'}
