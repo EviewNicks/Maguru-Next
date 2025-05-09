@@ -1,0 +1,34 @@
+{
+  "timestamp": "2025-05-09T12-29-38.747Z",
+  "environment": "test",
+  "numFailedTests": 0,
+  "numPassedTests": 3,
+  "numTotalTests": 3,
+  "executionTime": "1746793776458ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\models\\ModulePage.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "harus dapat membuat module page dengan semua field yang diperlukan",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "harus dapat mengambil semua halaman yang terkait dengan modul tertentu",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "harus mendukung berbagai tipe konten (teks, kode, gambar, video)",
+          "status": "passed",
+          "duration": 5,
+          "failureMessages": []
+        }
+      ]
+    }
+  ]
+}

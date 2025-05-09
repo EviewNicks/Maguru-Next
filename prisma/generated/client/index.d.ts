@@ -3292,6 +3292,7 @@ export namespace Prisma {
   export type ModulePageMinAggregateOutputType = {
     id: string | null
     moduleId: string | null
+    title: string | null
     order: number | null
     type: string | null
     content: string | null
@@ -3304,6 +3305,7 @@ export namespace Prisma {
   export type ModulePageMaxAggregateOutputType = {
     id: string | null
     moduleId: string | null
+    title: string | null
     order: number | null
     type: string | null
     content: string | null
@@ -3316,6 +3318,7 @@ export namespace Prisma {
   export type ModulePageCountAggregateOutputType = {
     id: number
     moduleId: number
+    title: number
     order: number
     type: number
     content: number
@@ -3340,6 +3343,7 @@ export namespace Prisma {
   export type ModulePageMinAggregateInputType = {
     id?: true
     moduleId?: true
+    title?: true
     order?: true
     type?: true
     content?: true
@@ -3352,6 +3356,7 @@ export namespace Prisma {
   export type ModulePageMaxAggregateInputType = {
     id?: true
     moduleId?: true
+    title?: true
     order?: true
     type?: true
     content?: true
@@ -3364,6 +3369,7 @@ export namespace Prisma {
   export type ModulePageCountAggregateInputType = {
     id?: true
     moduleId?: true
+    title?: true
     order?: true
     type?: true
     content?: true
@@ -3463,6 +3469,7 @@ export namespace Prisma {
   export type ModulePageGroupByOutputType = {
     id: string
     moduleId: string
+    title: string
     order: number
     type: string
     content: string
@@ -3494,6 +3501,7 @@ export namespace Prisma {
   export type ModulePageSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     moduleId?: boolean
+    title?: boolean
     order?: boolean
     type?: boolean
     content?: boolean
@@ -3507,6 +3515,7 @@ export namespace Prisma {
   export type ModulePageSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     moduleId?: boolean
+    title?: boolean
     order?: boolean
     type?: boolean
     content?: boolean
@@ -3520,6 +3529,7 @@ export namespace Prisma {
   export type ModulePageSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     moduleId?: boolean
+    title?: boolean
     order?: boolean
     type?: boolean
     content?: boolean
@@ -3533,6 +3543,7 @@ export namespace Prisma {
   export type ModulePageSelectScalar = {
     id?: boolean
     moduleId?: boolean
+    title?: boolean
     order?: boolean
     type?: boolean
     content?: boolean
@@ -3542,7 +3553,7 @@ export namespace Prisma {
     version?: boolean
   }
 
-  export type ModulePageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "moduleId" | "order" | "type" | "content" | "language" | "createdAt" | "updatedAt" | "version", ExtArgs["result"]["modulePage"]>
+  export type ModulePageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "moduleId" | "title" | "order" | "type" | "content" | "language" | "createdAt" | "updatedAt" | "version", ExtArgs["result"]["modulePage"]>
   export type ModulePageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     module?: boolean | ModuleDefaultArgs<ExtArgs>
   }
@@ -3561,6 +3572,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       moduleId: string
+      title: string
       order: number
       type: string
       content: string
@@ -3994,6 +4006,7 @@ export namespace Prisma {
   interface ModulePageFieldRefs {
     readonly id: FieldRef<"ModulePage", 'String'>
     readonly moduleId: FieldRef<"ModulePage", 'String'>
+    readonly title: FieldRef<"ModulePage", 'String'>
     readonly order: FieldRef<"ModulePage", 'Int'>
     readonly type: FieldRef<"ModulePage", 'String'>
     readonly content: FieldRef<"ModulePage", 'String'>
@@ -4460,6 +4473,7 @@ export namespace Prisma {
   export const ModulePageScalarFieldEnum: {
     id: 'id',
     moduleId: 'moduleId',
+    title: 'title',
     order: 'order',
     type: 'type',
     content: 'content',
@@ -4745,6 +4759,7 @@ export namespace Prisma {
     NOT?: ModulePageWhereInput | ModulePageWhereInput[]
     id?: StringFilter<"ModulePage"> | string
     moduleId?: StringFilter<"ModulePage"> | string
+    title?: StringFilter<"ModulePage"> | string
     order?: IntFilter<"ModulePage"> | number
     type?: StringFilter<"ModulePage"> | string
     content?: StringFilter<"ModulePage"> | string
@@ -4758,6 +4773,7 @@ export namespace Prisma {
   export type ModulePageOrderByWithRelationInput = {
     id?: SortOrder
     moduleId?: SortOrder
+    title?: SortOrder
     order?: SortOrder
     type?: SortOrder
     content?: SortOrder
@@ -4775,6 +4791,7 @@ export namespace Prisma {
     OR?: ModulePageWhereInput[]
     NOT?: ModulePageWhereInput | ModulePageWhereInput[]
     moduleId?: StringFilter<"ModulePage"> | string
+    title?: StringFilter<"ModulePage"> | string
     order?: IntFilter<"ModulePage"> | number
     type?: StringFilter<"ModulePage"> | string
     content?: StringFilter<"ModulePage"> | string
@@ -4788,6 +4805,7 @@ export namespace Prisma {
   export type ModulePageOrderByWithAggregationInput = {
     id?: SortOrder
     moduleId?: SortOrder
+    title?: SortOrder
     order?: SortOrder
     type?: SortOrder
     content?: SortOrder
@@ -4808,6 +4826,7 @@ export namespace Prisma {
     NOT?: ModulePageScalarWhereWithAggregatesInput | ModulePageScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"ModulePage"> | string
     moduleId?: StringWithAggregatesFilter<"ModulePage"> | string
+    title?: StringWithAggregatesFilter<"ModulePage"> | string
     order?: IntWithAggregatesFilter<"ModulePage"> | number
     type?: StringWithAggregatesFilter<"ModulePage"> | string
     content?: StringWithAggregatesFilter<"ModulePage"> | string
@@ -4977,6 +4996,7 @@ export namespace Prisma {
 
   export type ModulePageCreateInput = {
     id?: string
+    title: string
     order: number
     type: string
     content: string
@@ -4990,6 +5010,7 @@ export namespace Prisma {
   export type ModulePageUncheckedCreateInput = {
     id?: string
     moduleId: string
+    title: string
     order: number
     type: string
     content: string
@@ -5001,6 +5022,7 @@ export namespace Prisma {
 
   export type ModulePageUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5014,6 +5036,7 @@ export namespace Prisma {
   export type ModulePageUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     moduleId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5026,6 +5049,7 @@ export namespace Prisma {
   export type ModulePageCreateManyInput = {
     id?: string
     moduleId: string
+    title: string
     order: number
     type: string
     content: string
@@ -5037,6 +5061,7 @@ export namespace Prisma {
 
   export type ModulePageUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5049,6 +5074,7 @@ export namespace Prisma {
   export type ModulePageUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     moduleId?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5305,6 +5331,7 @@ export namespace Prisma {
   export type ModulePageCountOrderByAggregateInput = {
     id?: SortOrder
     moduleId?: SortOrder
+    title?: SortOrder
     order?: SortOrder
     type?: SortOrder
     content?: SortOrder
@@ -5322,6 +5349,7 @@ export namespace Prisma {
   export type ModulePageMaxOrderByAggregateInput = {
     id?: SortOrder
     moduleId?: SortOrder
+    title?: SortOrder
     order?: SortOrder
     type?: SortOrder
     content?: SortOrder
@@ -5334,6 +5362,7 @@ export namespace Prisma {
   export type ModulePageMinOrderByAggregateInput = {
     id?: SortOrder
     moduleId?: SortOrder
+    title?: SortOrder
     order?: SortOrder
     type?: SortOrder
     content?: SortOrder
@@ -5641,6 +5670,7 @@ export namespace Prisma {
 
   export type ModulePageCreateWithoutModuleInput = {
     id?: string
+    title: string
     order: number
     type: string
     content: string
@@ -5652,6 +5682,7 @@ export namespace Prisma {
 
   export type ModulePageUncheckedCreateWithoutModuleInput = {
     id?: string
+    title: string
     order: number
     type: string
     content: string
@@ -5693,6 +5724,7 @@ export namespace Prisma {
     NOT?: ModulePageScalarWhereInput | ModulePageScalarWhereInput[]
     id?: StringFilter<"ModulePage"> | string
     moduleId?: StringFilter<"ModulePage"> | string
+    title?: StringFilter<"ModulePage"> | string
     order?: IntFilter<"ModulePage"> | number
     type?: StringFilter<"ModulePage"> | string
     content?: StringFilter<"ModulePage"> | string
@@ -5764,6 +5796,7 @@ export namespace Prisma {
 
   export type ModulePageCreateManyModuleInput = {
     id?: string
+    title: string
     order: number
     type: string
     content: string
@@ -5775,6 +5808,7 @@ export namespace Prisma {
 
   export type ModulePageUpdateWithoutModuleInput = {
     id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5786,6 +5820,7 @@ export namespace Prisma {
 
   export type ModulePageUncheckedUpdateWithoutModuleInput = {
     id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5797,6 +5832,7 @@ export namespace Prisma {
 
   export type ModulePageUncheckedUpdateManyWithoutModuleInput = {
     id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string

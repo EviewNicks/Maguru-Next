@@ -63,10 +63,9 @@ model Module {
 model ModulePage {
   id        String   @id @default(uuid())
   moduleId  String   @map("module_id")
+  title     String // Nama/judul halaman
   order     Int
-  type      String // "teori" atau "kode"
-  content   String // HTML untuk teori, snippet kode untuk kode
-  language  String? // Hanya diisi jika type = "kode" (contoh: "python", "javascript")
+  content   Json // Array dari blok konten (type, content, language, caption)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   version   Int      @default(1) // Untuk optimistic locking

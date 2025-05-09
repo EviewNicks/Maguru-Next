@@ -142,6 +142,7 @@ exports.Prisma.ModuleScalarFieldEnum = {
 exports.Prisma.ModulePageScalarFieldEnum = {
   id: 'id',
   moduleId: 'moduleId',
+  title: 'title',
   order: 'order',
   type: 'type',
   content: 'content',

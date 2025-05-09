@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ModuleTable } from './ModuleTable'
 import { useModuleQuery } from '../hooks/useModuleQuery'
-import { ModuleStatus, Module } from '../types'
+import { ModuleStatus } from '../types'
 
 // Mock hook useModuleQuery
 jest.mock('../hooks/useModuleQuery', () => ({

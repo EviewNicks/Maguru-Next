@@ -3,20 +3,40 @@
 ## 1. Ringkasan Tujuan
 
 - Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran.
-- Admin dapat membuat, mengedit, menghapus, dan mengelola halaman konten (teks, kode, gambar, video) secara dinamis dalam satu modul.
-- Setiap halaman dapat diisi dengan berbagai tipe konten menggunakan slash command (misal: `/image`, `/code`) seperti di Confluence/Notion.
-- Editor mendukung markdown dan toolbar sederhana untuk formatting dasar.
+- Admin dapat membuat, mengedit, menghapus, dan mengelola halaman konten secara dinamis dalam satu modul.
+- **Setiap halaman dapat berisi berbagai tipe konten (teks, kode, gambar, video) secara fleksibel dalam satu halaman yang sama.**
+- Editor mendukung penambahan blok konten menggunakan slash command (misal: `/image`, `/code`) seperti di Confluence/Notion.
+- Blok teks mendukung format markdown dan toolbar sederhana untuk formatting dasar.
 - Navigasi antar halaman tersedia di RightSidebar/bagian bawah.
 - Batasan upload gambar maksimal 2MB/file dan video maksimal 20MB/file.
 - Semua perubahan halaman langsung terlihat di UI.
 
 ## 2. Langkah-Langkah Teknis
 
-### A. Database & Model
+### A. Database & Model [update+2024-06-14]
 
 - Update skema Prisma:
   - Tambahkan tabel `ModulePage` (relasi one-to-many ke `Module`)
-  - Field: `id`, `moduleId`, `title`, `order`, `content`, `createdAt`, `updatedAt`
+  - Field: `id`, `moduleId`, `title`, `order`, `content` (sebagai JSON), `createdAt`, `updatedAt`
+  - Field `content` menyimpan array dari blok konten dengan struktur:
+    ```json
+    [
+      {
+        "type": "text",
+        "content": "<p>Konten HTML/markdown</p>"
+      },
+      {
+        "type": "code",
+        "content": "function example() { return 'hello'; }",
+        "language": "javascript"
+      },
+      {
+        "type": "image",
+        "content": "https://url-to-image.jpg",
+        "caption": "Deskripsi gambar"
+      }
+    ]
+    ```
 - Jalankan migrasi database
 
 ### B. API Backend
@@ -37,7 +57,9 @@
   - Komponen utama: `ModulePagesManager`
 - **Komponen Utama**
   - `PageList` (daftar & navigasi halaman di RightSidebar/bawah)
-  - `PageEditor` (editor konten markdown, toolbar, slash command)
+  - `BlockEditor` (editor untuk setiap blok konten dengan toolbar yang sesuai)
+  - `PageEditor` (container untuk semua blok dalam halaman)
+  - `SlashCommandMenu` (menu untuk menambahkan blok konten baru)
   - `PageForm` (form judul halaman, validasi)
   - `ImageUpload` (batasan 2MB/file)
   - `VideoUpload` (batasan 20MB/file)
@@ -49,8 +71,9 @@
 ### D. Validasi & Batasan
 
 - Validasi judul halaman (minimal 5 karakter)
+- Validasi blok konten (minimal 1 blok)
 - Validasi ukuran file gambar/video
-- Validasi konten markdown
+- Validasi format konten untuk setiap tipe blok
 
 ### E. Testing
 
@@ -67,10 +90,10 @@
 
 ### Backend
 
-- `prisma/schema.prisma`
+- `prisma/schema.prisma` [update+2024-06-14]
 - `app/api/modules/[id]/pages/route.ts`
 - `app/api/pages/[id]/route.ts`
-- `lib/validation/modulePageSchema.ts`
+- `lib/validation/modulePageSchema.ts` [update+2024-06-14]
 - `middleware.ts` (jika perlu update otorisasi)
 
 ### Frontend
@@ -78,11 +101,14 @@
 - `features/manage-module/pages/ModulePagesManager.tsx`
 - `features/manage-module/pages/PageList.tsx`
 - `features/manage-module/pages/PageEditor.tsx`
+- `features/manage-module/pages/BlockEditor.tsx`
+- `features/manage-module/pages/SlashCommandMenu.tsx`
 - `features/manage-module/pages/PageForm.tsx`
 - `features/manage-module/pages/ImageUpload.tsx`
 - `features/manage-module/pages/VideoUpload.tsx`
 - `features/manage-module/services/modulePageService.ts`
-- `features/manage-module/types/modulePageTypes.ts`
+- `features/manage-module/types/modulePageSchema.ts` [update+2024-06-14]
+- `features/manage-module/types/index.ts` [update+2024-06-14]
 - `features/manage-module/hooks/useModulePages.ts`
 - `features/manage-module/__tests__/` (unit, integration, e2e)
 
