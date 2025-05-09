@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
-import ModuleTable from '@/features/manage-module/components/ModuleTable'
 import RoleProtected from '@/components/RoleProtected'
+import { ModuleOverview } from '@/features/manage-module/componentsNew/ModuleOverview'
+import { ModuleTable } from '@/features/manage-module/componentsNew/ModuleTable'
 
 // Menambahkan konfigurasi routing untuk mencegah static rendering
 export const dynamic = 'force-dynamic'
@@ -20,17 +21,9 @@ export const metadata: Metadata = {
 export default function ModuleManagementPage() {
   return (
     <RoleProtected allowedRoles={['admin']}>
-      <div className="container mx-auto py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Manajemen Modul</h1>
-          <p className="text-muted-foreground mt-2">
-            Kelola modul akademik dengan mudah. Tambahkan, edit, dan hapus modul
-            sesuai kebutuhan.
-          </p>
-        </div>
-
+      <div className="space-y-4 max-w-7xl mx-auto my-4">
+        <ModuleOverview />
         <ModuleTable />
-        
       </div>
     </RoleProtected>
   )

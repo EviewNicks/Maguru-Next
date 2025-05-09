@@ -61,7 +61,7 @@ export default function Dashboard() {
         {/* Main content - Tanpa sidebar */}
         <div className="grid grid-cols-12 gap-2">
           {/* Main dashboard */}
-          <div className="col-span-12 lg:col-span-9">{mainContent}</div>
+          <div className="col-span-12 lg:col-span-9 ml-4 ">{mainContent}</div>
 
           {/* Right sidebar */}
           <div className="col-span-12 lg:col-span-3">
