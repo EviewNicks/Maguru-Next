@@ -97,7 +97,8 @@ export const modulePageService = {
     })
 
     // Transform hasil untuk response API
-    const transformedPages = pages.map((page) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedPages = pages.map((page: any) => ({
       id: page.id,
       moduleId: page.moduleId,
       title: page.title,
