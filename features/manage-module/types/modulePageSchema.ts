@@ -34,89 +34,79 @@ export const contentBlockSchema = z.object({
 export type ContentBlock = z.infer<typeof contentBlockSchema>
 
 /**
- * Schema validasi untuk pembuatan halaman modul
+ * Schema untuk create module page
  */
 export const createModulePageSchema = z.object({
-  moduleId: z.string().uuid({
-    message: 'ID Modul tidak valid',
-  }),
+  moduleId: z.string().uuid('ID modul harus berupa UUID valid'),
   title: z
     .string()
-    .min(5, 'Judul halaman minimal 5 karakter')
-    .max(100, 'Judul halaman maksimal 100 karakter'),
-  order: z.number().int().positive().optional(),
-  blocks: z
-    .array(contentBlockSchema)
-    .min(1, 'Halaman harus memiliki minimal satu blok konten'),
+    .min(1, 'Judul tidak boleh kosong')
+    .max(255, 'Judul terlalu panjang'),
+  order: z.number().int().min(1, 'Urutan minimal 1'),
+  blocks: z.array(contentBlockSchema).min(1, 'Minimal harus ada 1 blok konten'),
 })
 
 /**
- * Schema validasi untuk pembaruan halaman modul
- */
-export const updateModulePageSchema = createModulePageSchema
-  .partial()
-  .extend({
-    id: z.string().uuid({
-      message: 'ID halaman tidak valid',
-    }),
-  })
-  .refine(
-    (data) => {
-      // Setidaknya satu field yang akan diupdate
-      return (
-        data.title !== undefined ||
-        data.order !== undefined ||
-        data.blocks !== undefined
-      )
-    },
-    {
-      message: 'Tidak ada data yang diubah',
-      path: ['_errors'],
-    }
-  )
-
-/**
- * Type untuk create module page
+ * Type untuk input create module page
  */
 export type CreateModulePageInput = z.infer<typeof createModulePageSchema>
 
 /**
- * Type untuk update module page
+ * Schema untuk update module page
+ */
+export const updateModulePageSchema = z.object({
+  title: z
+    .string()
+    .min(1, 'Judul tidak boleh kosong')
+    .max(255, 'Judul terlalu panjang')
+    .optional(),
+  order: z.number().int().min(1, 'Urutan minimal 1').optional(),
+  blocks: z
+    .array(contentBlockSchema)
+    .min(1, 'Minimal harus ada 1 blok konten')
+    .optional(),
+})
+
+/**
+ * Type untuk input update module page
  */
 export type UpdateModulePageInput = z.infer<typeof updateModulePageSchema>
 
 /**
- * Schema validasi untuk file upload
+ * Schema untuk validasi image upload
  */
 export const imageUploadSchema = z.object({
   file: z
-    .instanceof(File)
-    .refine((file) => file.size <= MAX_IMAGE_SIZE_BYTES, {
-      message: `Ukuran gambar maksimal 2MB`,
-    })
+    .instanceof(File, { message: 'File tidak valid' })
+    .refine(
+      (file) => file.size <= MAX_IMAGE_SIZE_BYTES,
+      `Ukuran maksimal file adalah ${MAX_IMAGE_SIZE_BYTES / (1024 * 1024)}MB`
+    )
     .refine(
       (file) =>
-        ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(
+        ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(
           file.type
         ),
-      {
-        message: 'Format file harus jpeg, png, gif, atau webp',
-      }
+      'Format file harus JPEG, PNG, WebP, atau GIF'
     ),
+  alt: z.string().optional(),
 })
 
+/**
+ * Schema untuk validasi video upload
+ */
 export const videoUploadSchema = z.object({
   file: z
-    .instanceof(File)
-    .refine((file) => file.size <= MAX_VIDEO_SIZE_BYTES, {
-      message: `Ukuran video maksimal 20MB`,
-    })
+    .instanceof(File, { message: 'File tidak valid' })
     .refine(
-      (file) => ['video/mp4', 'video/webm', 'video/ogg'].includes(file.type),
-      {
-        message: 'Format file harus mp4, webm, atau ogg',
-      }
+      (file) => file.size <= MAX_VIDEO_SIZE_BYTES,
+      `Ukuran maksimal file adalah ${MAX_VIDEO_SIZE_BYTES / (1024 * 1024)}MB`
+    )
+    .refine(
+      (file) => ['video/mp4', 'video/webm'].includes(file.type),
+      'Format file harus MP4 atau WebM'
     ),
+  alt: z.string().optional(),
 })
 
 /**

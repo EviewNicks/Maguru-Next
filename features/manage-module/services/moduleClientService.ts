@@ -5,11 +5,11 @@ import { Module, ModuleStatus } from '../types'
 interface ModuleResponse {
   data: Module[]
   meta: {
-    currentPage: number
-    totalPages: number
-    pageSize: number
-    totalItems: number
-  }
+  currentPage: number
+  totalPages: number
+  pageSize: number
+  totalItems: number
+}
 }
 
 interface QueryParams {
@@ -26,7 +26,7 @@ export async function getModules(params: QueryParams): Promise<ModuleResponse> {
   try {
     // Buat query string dari parameter
     const queryParams = new URLSearchParams()
-
+    
     if (params.page) queryParams.append('page', params.page.toString())
     if (params.pageSize) queryParams.append('limit', params.pageSize.toString())
     if (params.search) queryParams.append('search', params.search)
@@ -36,7 +36,7 @@ export async function getModules(params: QueryParams): Promise<ModuleResponse> {
 
     const url = `/api/module?${queryParams.toString()}`
     console.log('[Client] Fetching modules from:', url)
-
+    
     // Panggil API dengan axios
     const response = await axios.get(url)
 
@@ -129,9 +129,9 @@ export async function createModule(moduleData: {
 export async function updateModule(
   id: string,
   moduleData: {
-    title?: string
-    description?: string
-    status?: ModuleStatus
+  title?: string
+  description?: string
+  status?: ModuleStatus
   }
 ): Promise<Module> {
   try {

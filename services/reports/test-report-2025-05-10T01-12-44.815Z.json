@@ -1,0 +1,114 @@
+{
+  "timestamp": "2025-05-10T01-12-44.815Z",
+  "environment": "test",
+  "numFailedTests": 4,
+  "numPassedTests": 11,
+  "numTotalTests": 15,
+  "executionTime": "1746839562731ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\ModulePageAPI.integration.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should return list of pages for a module",
+          "status": "passed",
+          "duration": 29,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle query parameters correctly",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle error gracefully",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "should create a new page",
+          "status": "failed",
+          "duration": 11,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mjest.fn()\u001b[39m\u001b[2m).\u001b[22mtoHaveBeenCalledWith\u001b[2m(\u001b[22m\u001b[32m...expected\u001b[39m\u001b[2m)\u001b[22m"
+          ]
+        },
+        {
+          "title": "should handle module not found error",
+          "status": "failed",
+          "duration": 9,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mjest.fn()\u001b[39m\u001b[2m).\u001b[22mtoHaveBeenCalledWith\u001b[2m(\u001b[22m\u001b[32m...expected\u001b[39m\u001b[2m)\u001b[22m"
+          ]
+        },
+        {
+          "title": "should handle other errors gracefully",
+          "status": "failed",
+          "duration": 4,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mjest.fn()\u001b[39m\u001b[2m).\u001b[22mtoHaveBeenCalledWith\u001b[2m(\u001b[22m\u001b[32m...expected\u001b[39m\u001b[2m)\u001b[22m"
+          ]
+        },
+        {
+          "title": "should return a page by id",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should return 404 if page not found",
+          "status": "passed",
+          "duration": 5,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle error gracefully",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "should update a page",
+          "status": "failed",
+          "duration": 3,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mjest.fn()\u001b[39m\u001b[2m).\u001b[22mtoHaveBeenCalledWith\u001b[2m(\u001b[22m\u001b[32m...expected\u001b[39m\u001b[2m)\u001b[22m"
+          ]
+        },
+        {
+          "title": "should return 404 if page not found",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle error gracefully",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "should delete a page",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should return 404 if page not found",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle error gracefully",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        }
+      ]
+    }
+  ]
+}

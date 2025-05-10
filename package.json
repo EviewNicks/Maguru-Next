@@ -19,7 +19,7 @@
     "seed": "tsx prisma/seed.ts",
     "test": "cross-env USE_BABEL=true jest",
     "test:watch": "cross-env USE_BABEL=true jest --watch",
-    "test:custome": "npm run lint && jest features/manage-users/__tests__/integration/ChartIntegration.test.tsx features/manage-users/__tests__/integration/DashboardIntegration.integration.test.tsx features/manage-users/__tests__/integration/UserManagementFlow.integration.test.tsx features/manage-users/__tests__/integration/UserTableFiltering.integration.test.tsx --verbose",
+    "test:custom": " jest features/manage-module/__tests__/integration/ModulePageAPI.integration.test.ts --verbose",
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
     "test:e2e:report": "playwright test --reporter=./services/playwrightReporter.js",

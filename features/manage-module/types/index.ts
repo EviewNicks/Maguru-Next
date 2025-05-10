@@ -95,3 +95,19 @@ export interface ApiListResponse<T> {
 export interface ApiEntityResponse<T> {
   data: T
 }
+
+// API Response Types
+export interface ApiResponse {
+  success: boolean
+  message?: string
+  error?: string
+}
+
+export interface ApiEntityResponse<T> extends ApiResponse {
+  data: T
+}
+
+export interface ApiListResponse<T> extends ApiResponse {
+  data: T[]
+  meta: PaginationMeta
+}

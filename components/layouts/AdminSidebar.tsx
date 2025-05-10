@@ -29,10 +29,10 @@ export function AdminSidebar() {
       </div>
 
       <div className="flex flex-col space-y-1 mt-2 px-2">
-        {adminLinks.map((link) => (
+          {adminLinks.map((link) => (
           <Link
-            key={link.href}
-            href={link.href}
+              key={link.href}
+              href={link.href}
             className={`flex items-center rounded-lg p-2 ${
               pathname === link.href
                 ? 'text-[#06b6d4]' + (isHovered ? ' bg-[#27272a]' : '')
