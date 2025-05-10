@@ -1,0 +1,556 @@
+{
+  "timestamp": "2025-05-10T02-48-36.867Z",
+  "environment": "test",
+  "numFailedTests": 45,
+  "numPassedTests": 23,
+  "numTotalTests": 68,
+  "executionTime": "1746845283484ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\services\\modulePageService.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should create a new module page",
+          "status": "passed",
+          "duration": 28,
+          "failureMessages": []
+        },
+        {
+          "title": "should throw error if module does not exist",
+          "status": "passed",
+          "duration": 30,
+          "failureMessages": []
+        },
+        {
+          "title": "should return list of pages for a module",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "should handle pagination correctly",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should return a module page by id",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should return null if page does not exist",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "should update a module page",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should return null if page does not exist",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should delete a module page",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "should return false if page does not exist",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\types\\modulePageSchema.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "harus valid dengan data yang benar",
+          "status": "failed",
+          "duration": 23,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'TEXT')"
+          ]
+        },
+        {
+          "title": "harus menerima type code dengan language",
+          "status": "failed",
+          "duration": 3,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'CODE')"
+          ]
+        },
+        {
+          "title": "harus menolak judul yang terlalu pendek",
+          "status": "failed",
+          "duration": 1,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'TEXT')"
+          ]
+        },
+        {
+          "title": "harus menolak tipe konten yang tidak valid",
+          "status": "failed",
+          "duration": 12,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m"
+          ]
+        },
+        {
+          "title": "harus menolak moduleId yang tidak valid",
+          "status": "failed",
+          "duration": 2,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'TEXT')"
+          ]
+        },
+        {
+          "title": "harus menolak konten kosong",
+          "status": "failed",
+          "duration": 1,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'TEXT')"
+          ]
+        },
+        {
+          "title": "harus valid untuk update sebagian",
+          "status": "passed",
+          "duration": 2,
+          "failureMessages": []
+        },
+        {
+          "title": "harus valid untuk update penuh",
+          "status": "failed",
+          "duration": 1,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'CODE')"
+          ]
+        },
+        {
+          "title": "harus menolak jika tidak ada field yang diubah",
+          "status": "failed",
+          "duration": 3,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m"
+          ]
+        },
+        {
+          "title": "harus menolak jika id tidak valid",
+          "status": "failed",
+          "duration": 2,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m"
+          ]
+        },
+        {
+          "title": "harus menerima file gambar valid",
+          "status": "passed",
+          "duration": 12,
+          "failureMessages": []
+        },
+        {
+          "title": "harus menolak file gambar terlalu besar",
+          "status": "failed",
+          "duration": 10,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m"
+          ]
+        },
+        {
+          "title": "harus menolak file dengan tipe yang tidak valid",
+          "status": "passed",
+          "duration": 4,
+          "failureMessages": []
+        },
+        {
+          "title": "harus menerima file video valid",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        },
+        {
+          "title": "harus menolak file video terlalu besar",
+          "status": "failed",
+          "duration": 6,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m"
+          ]
+        },
+        {
+          "title": "harus menolak file dengan tipe yang tidak valid",
+          "status": "passed",
+          "duration": 3,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\services\\moduleService.test.ts",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should create a new module with provided data",
+          "status": "failed",
+          "duration": 35,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'description')"
+          ]
+        },
+        {
+          "title": "should set default status to DRAFT if not provided",
+          "status": "failed",
+          "duration": 6,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'description')"
+          ]
+        },
+        {
+          "title": "should return paginated modules",
+          "status": "failed",
+          "duration": 5,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'map')"
+          ]
+        },
+        {
+          "title": "should apply status filter if provided",
+          "status": "failed",
+          "duration": 10,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'map')"
+          ]
+        },
+        {
+          "title": "should apply search filter if provided",
+          "status": "failed",
+          "duration": 12,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'map')"
+          ]
+        },
+        {
+          "title": "should calculate correct pagination values",
+          "status": "failed",
+          "duration": 17,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'map')"
+          ]
+        },
+        {
+          "title": "should return module by id if found",
+          "status": "failed",
+          "duration": 15,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mjest.fn()\u001b[39m\u001b[2m).\u001b[22mtoHaveBeenCalledWith\u001b[2m(\u001b[22m\u001b[32m...expected\u001b[39m\u001b[2m)\u001b[22m"
+          ]
+        },
+        {
+          "title": "should return null if module not found",
+          "status": "failed",
+          "duration": 25,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mjest.fn()\u001b[39m\u001b[2m).\u001b[22mtoHaveBeenCalledWith\u001b[2m(\u001b[22m\u001b[32m...expected\u001b[39m\u001b[2m)\u001b[22m"
+          ]
+        },
+        {
+          "title": "should update module with all provided fields",
+          "status": "failed",
+          "duration": 13,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'description')"
+          ]
+        },
+        {
+          "title": "should update only provided fields",
+          "status": "failed",
+          "duration": 28,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'description')"
+          ]
+        },
+        {
+          "title": "should handle empty description correctly",
+          "status": "failed",
+          "duration": 9,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'description')"
+          ]
+        },
+        {
+          "title": "should delete module by id",
+          "status": "failed",
+          "duration": 36,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'description')"
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ErrorNotifier\\ErrorNotifier.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should have correct predefined error types",
+          "status": "passed",
+          "duration": 21,
+          "failureMessages": []
+        },
+        {
+          "title": "should not allow other types of error",
+          "status": "passed",
+          "duration": 1,
+          "failureMessages": []
+        },
+        {
+          "title": "should render error toast with default message for validation error",
+          "status": "passed",
+          "duration": 158,
+          "failureMessages": []
+        },
+        {
+          "title": "should render error toast with network error message",
+          "status": "passed",
+          "duration": 6,
+          "failureMessages": []
+        },
+        {
+          "title": "should render error toast with server error message",
+          "status": "passed",
+          "duration": 9,
+          "failureMessages": []
+        },
+        {
+          "title": "should render error toast with permission error message",
+          "status": "passed",
+          "duration": 7,
+          "failureMessages": []
+        },
+        {
+          "title": "should render error toast with unknown error message",
+          "status": "passed",
+          "duration": 11,
+          "failureMessages": []
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\hooks\\useModuleMutation.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should call createModule with correct data",
+          "status": "failed",
+          "duration": 31,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeDefined\u001b[2m()\u001b[22m"
+          ]
+        },
+        {
+          "title": "should handle errors when creating module",
+          "status": "failed",
+          "duration": 8,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'mutate')"
+          ]
+        },
+        {
+          "title": "should call updateModule with correct data",
+          "status": "failed",
+          "duration": 5,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'mutate')"
+          ]
+        },
+        {
+          "title": "should call deleteModule with correct id",
+          "status": "failed",
+          "duration": 3,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'mutate')"
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\hooks\\useModuleForm.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should initialize form with default values in create mode",
+          "status": "failed",
+          "duration": 145,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'isPending')"
+          ]
+        },
+        {
+          "title": "should call createModule service with form data",
+          "status": "failed",
+          "duration": 11,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'isPending')"
+          ]
+        },
+        {
+          "title": "should handle errors when creating module",
+          "status": "failed",
+          "duration": 15,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'isPending')"
+          ]
+        },
+        {
+          "title": "should initialize form with module values in edit mode",
+          "status": "failed",
+          "duration": 22,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'isPending')"
+          ]
+        },
+        {
+          "title": "should call updateModule service with form data",
+          "status": "failed",
+          "duration": 14,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'isPending')"
+          ]
+        },
+        {
+          "title": "should throw error when updating module without ID",
+          "status": "failed",
+          "duration": 10,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'isPending')"
+          ]
+        },
+        {
+          "title": "should handle errors when updating module",
+          "status": "failed",
+          "duration": 12,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'isPending')"
+          ]
+        },
+        {
+          "title": "should track loading state during mutations",
+          "status": "failed",
+          "duration": 14,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'isPending')"
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModuleTable.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should render table with all modules by default",
+          "status": "failed",
+          "duration": 205,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'error')"
+          ]
+        },
+        {
+          "title": "should show only ACTIVE modules when filtering by active status",
+          "status": "failed",
+          "duration": 44,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'error')"
+          ]
+        },
+        {
+          "title": "should show only DRAFT modules when filtering by draft status",
+          "status": "failed",
+          "duration": 57,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'error')"
+          ]
+        },
+        {
+          "title": "should show only ARCHIVED modules when filtering by archived status",
+          "status": "failed",
+          "duration": 50,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'error')"
+          ]
+        },
+        {
+          "title": "should show loading state correctly",
+          "status": "failed",
+          "duration": 80,
+          "failureMessages": [
+            "TestingLibraryElementError: Unable to find an element by: [data-testid=\"skeleton\"]"
+          ]
+        },
+        {
+          "title": "should show error state correctly",
+          "status": "passed",
+          "duration": 46,
+          "failureMessages": []
+        },
+        {
+          "title": "should filter modules by status",
+          "status": "failed",
+          "duration": 48,
+          "failureMessages": [
+            "TypeError: Cannot read properties of undefined (reading 'error')"
+          ]
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\hooks\\useModuleQuery.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "should fetch modules with default params",
+          "status": "failed",
+          "duration": 1051,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m"
+          ]
+        },
+        {
+          "title": "should fetch modules with custom params",
+          "status": "failed",
+          "duration": 1007,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m"
+          ]
+        },
+        {
+          "title": "should fetch module by id",
+          "status": "failed",
+          "duration": 1009,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m"
+          ]
+        },
+        {
+          "title": "should handle error when fetching module by id",
+          "status": "failed",
+          "duration": 1004,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m"
+          ]
+        }
+      ]
+    }
+  ]
+}

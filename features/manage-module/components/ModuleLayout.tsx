@@ -1,6 +1,5 @@
 import { ReactNode } from 'react'
 import { AdminSidebar } from '../../../components/layouts/AdminSidebar'
-
 interface ModuleLayoutProps {
   children: ReactNode
 }

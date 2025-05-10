@@ -22,11 +22,11 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { useModuleQuery } from '@/features/manage-module/hooks/useModuleQuery'
 import { ModuleStatus, Module } from '@/features/manage-module/types'
-import ModuleFormModal from './ModuleFormModal'
+import ModuleFormModal from './ModuleTable/ModuleFormModal'
 import { Skeleton } from '@/components/ui/skeleton'
-import ModuleActionCell from './ModuleActionCell'
+import ModuleActionCell from './ModuleTable/ModuleActionCell'
 import { showErrorNotification } from './ErrorNotifier'
-import ModuleDescriptionCell from './ModuleDescriptionCell'
+import ModuleDescriptionCell from './ModuleTable/ModuleDescriptionCell'
 
 export function ModuleTable() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)

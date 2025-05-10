@@ -1,152 +1,180 @@
-# Planning Subtask 2: API CRUD Multi-Page
+# Rencana Implementasi Subtask 3: Integrasi UI Multi-Page (OPS-140)
 
 ## 1. Ringkasan Tujuan
 
-- Mengimplementasikan endpoint API CRUD untuk manajemen halaman multi-page pada modul.
-- Setiap halaman dapat berisi array blok konten (text, code, image, video) dalam satu halaman.
-- Validasi input menggunakan Zod.
-- Middleware autentikasi & otorisasi admin.
-- Menulis unit test & integration test sebelum implementasi kode (TDD).
+Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dalam UI admin modul pembelajaran. Admin dapat membuat, mengedit, menghapus, dan menavigasi halaman konten (teks, kode, gambar, video) secara dinamis dalam satu modul. Editor mendukung markdown, toolbar sederhana, dan slash command (`/image`, `/code`, dll). Navigasi antar halaman tersedia di RightSidebar/bagian bawah. Semua perubahan halaman langsung terlihat di UI.
 
----
+## 2. Langkah-Langkah Teknis
 
-## 2. Langkah-Langkah Teknis [update+2025-05-15]
+### a. Analisis & Desain UI
 
-### A. Analisis & Desain
+- Review desain visual referensi (Confluence Editor) untuk layout multi-page.
+- Implementasikan layout 3-kolom:
+  - **Kolom Kiri**: AdminSidebar (navigasi utama)
+  - **Kolom Tengah**: Editor konten (main content area)
+  - **Kolom Kanan**: ModulePageList (navigasi halaman modul)
+- Desain UI sesuai dengan tema gelap yang konsisten dengan UI saat ini.
+- Implementasikan navigasi bottom untuk berpindah antar halaman (Previous/Next).
 
-- [x] Review kebutuhan endpoint:
-  - `POST /api/module/[id]/pages` → Create page untuk modul tertentu.
-  - `GET /api/module/[id]/pages` → List semua page dalam modul.
-  - `PUT /api/pages/[pageId]` → Update page by id.
-  - `DELETE /api/pages/[pageId]` → Delete page by id.
-- [x] Setiap page menyimpan array blok konten di field `content` (JSON).
+### b. Pembuatan/Integrasi Komponen
 
-### B. Test-Driven Development (TDD)
+- Buat komponen **ModulePageList**:
+  - Tampilan daftar halaman dengan indikator halaman aktif
+  - Indikator status halaman (draft/published) seperti pada referensi Confluence
+  - Tombol tambah halaman baru
+  - Opsi expandable/collapsible untuk perangkat mobile
+- Buat/extend komponen **ModulePageEditor**:
+  - Toolbar formatting di bagian atas editor (Bold, Italic, Headers, Link, dll)
+  - Implementasi slash command menu (`/image`, `/code`, `/video`, dll)
+  - Rich text editor dengan dukungan markdown (via TipTap)
+  - Area drop untuk upload gambar/video dengan preview
+  - Indikator status perubahan (saved, saving, unsaved)
+- Buat komponen **ModulePageFooterNav**:
+  - Tombol Previous/Next untuk navigasi antar halaman
+  - Indikator progres (halaman x dari y)
+- Integrasi komponen ke dalam layout utama (ModuleLayout/page.tsx).
 
-1. **Unit Test (Co-location)**
+### c. Integrasi Data & State Management
 
-   - [x] Buat file test berdampingan dengan handler API (misal: `route.test.ts`).
-   - [x] Test validasi Zod untuk create/update page (judul, blok konten, dsb).
-   - [x] Test service logic: create, get, update, delete page (mock prisma).
+- Gunakan React Query untuk fetch, create, update, delete halaman (integrasi dengan modulePageService).
+- Implementasi state management untuk:
+  - Daftar halaman dalam modul
+  - Halaman aktif yang sedang dibuka
+  - Status konten editor (unsaved changes)
+  - Status upload file
+- Optimasi update UI secara real-time setelah operasi CRUD.
+- Implementasi autosave dengan debounce (2000ms).
 
-2. **Integration Test**
-   - [x] Simulasi request ke endpoint API (menggunakan supertest/Jest).
-   - [x] Test skenario sukses & error (validasi gagal, unauthorized, dsb).
-   - [x] Test integrasi dengan middleware autentikasi.
-   - [x] **Perbaikan:** Memperbaiki 4 test yang gagal terkait konsistensi response format dan metode HTTP. [update+2025-05-15]
-   - [x] **Sukses:** Semua 15 integration test telah berhasil lulus. [update+2025-05-16]
+### d. Navigasi & UX
 
-### C. Implementasi API Handler [update+2025-05-16]
+- Implementasi navigasi antar halaman via:
+  - RightSidebar (klik pada judul halaman)
+  - Tombol Previous/Next di bagian bawah
+  - Shortcut keyboard (Alt+Left/Right Arrow)
+- Indikator status simpan, loading, dan error (gunakan shadcn/ui toast/snackbar).
+- Indikator visual halaman aktif di sidebar (highlight, perubahan warna background).
+- Konfirmasi sebelum meninggalkan halaman dengan perubahan yang belum disimpan.
 
-- [x] Buat handler Next.js API route:
-  - `app/api/module/[id]/pages/route.ts` (GET, POST)
-  - `app/api/pages/[pageId]/route.ts` (PUT, DELETE)
-- [x] Implementasi service CRUD:
-  - `createModulePage`
-  - `getModulePagesByModuleId`
-  - `updateModulePage`
-  - `deleteModulePage`
-- [x] Gunakan validasi Zod pada setiap handler.
-- [x] Pastikan response format konsisten (success/error).
-- [x] Perbaikan format response untuk konsistensi:
-  - Format sukses: `{ success: true, data: {...}, meta: {...} }`
-  - Format error: `{ success: false, error: "Pesan error", details: {...} }`
-- [x] **Perbaikan 4 Test Gagal [update+2025-05-16]:**
-  1. Perbaiki mocking NextRequest/NextResponse untuk menangani body dengan lebih baik
-  2. Mengubah HTTP method pada test dari GET menjadi POST/PUT sesuai dengan API yang diuji
-  3. Standardisasi format response di semua handler API untuk konsistensi
-  4. Perbaiki assertion test untuk memperhatikan format response yang tepat
-  5. Skip validasi dalam mode test untuk memudahkan pengujian skenario error
+### e. Validasi & Error Handling
 
-### D. Middleware & Security
+- Validasi input judul (min 5 karakter), tipe konten, dan batasan file upload.
+- Validasi ukuran file:
+  - Maksimal 2MB untuk gambar (format: JPEG, PNG, WebP, GIF)
+  - Maksimal 20MB untuk video (format: MP4, WebM)
+- Tampilkan notifikasi error/sukses di UI dengan pesan yang jelas.
+- Fallback UI untuk jenis konten yang tidak didukung atau gagal dimuat.
 
-- [x] Pastikan endpoint hanya bisa diakses oleh admin (middleware Clerk).
-- [x] Validasi ownership/akses modul jika diperlukan.
+### f. Accessibility (A11y)
 
-### E. Dokumentasi & Contoh Payload [update+2025-05-16]
+- Pastikan navigasi halaman dan editor dapat diakses keyboard.
+- Tambahkan ARIA label pada elemen interaktif.
+- Implementasi fokus manajemen yang tepat saat berpindah antar halaman.
+- Pastikan kontras warna sesuai standar WCAG AA minimal.
 
-- [x] Format response standar untuk semua endpoint API:
+### g. Testing
 
-  ```typescript
-  // Success response
-  {
-    success: true,
-    data: { ... },  // Data utama response
-    meta?: { ... }  // Metadata (opsional, biasanya untuk pagination)
-  }
+- Tulis unit test untuk komponen utama (editor, page list, navigasi).
+- Integration test untuk alur CRUD halaman dan navigasi.
+- E2E test untuk alur admin mengelola halaman modul (simulasi user flow).
+- Test A11y menggunakan axe atau similar tools.
 
-  // Error response
-  {
-    success: false,
-    error: "Pesan error",
-    details?: { ... } // Detail error (opsional, biasanya untuk validasi)
-  }
-  ```
+### h. Dokumentasi
 
-- [x] Gunakan status HTTP yang sesuai dengan operasi dan response:
-  - 200: Sukses (GET, PUT, DELETE)
-  - 201: Created (POST)
-  - 400: Bad Request (Validasi gagal)
-  - 404: Not Found (Resource tidak ditemukan)
-  - 500: Server Error
-- [x] Implementasi special handling untuk test environment
-- [ ] Tambahkan contoh payload untuk setiap endpoint.
-- [ ] Buat dokumentasi format validasi error untuk developer.
+- Update module-docs.md dan user guide terkait fitur multi-page.
+- Tambahkan contoh payload API & skenario penggunaan di dokumentasi.
+- Buat dokumentasi cara penggunaan editor dan shortcut keyboard.
 
----
+## 3. Perkiraan File/Komponen yang Perlu Diubah/Dibuat
 
-## 3. Estimasi File/Komponen yang Perlu Diubah/Dibuat [update+2025-05-16]
+- `features/manage-module/components/ModulePageList.tsx` _(baru)_ - Navigasi sidebar kanan
+- `features/manage-module/components/ModulePageEditor.tsx` _(baru)_ - Editor utama dengan toolbar
+- `features/manage-module/components/ModulePageFooterNav.tsx` _(baru)_ - Navigasi bawah (prev/next)
+- `features/manage-module/components/ModulePageLayout.tsx` _(baru)_ - Layout 3-kolom untuk page editor
+- `features/manage-module/components/SlashCommandMenu.tsx` _(baru)_ - Menu pop-up untuk slash commands
+- `features/manage-module/components/page.tsx` _(update integrasi)_ - Update untuk menggunakan ModulePageLayout
+- `features/manage-module/components/ModuleLayout.tsx` _(update)_ - Menyesuaikan layout untuk sidebar tambahan
+- `features/manage-module/services/modulePageService.ts` _(pastikan CRUD ready)_ - Service untuk operasi CRUD halaman
+- `features/manage-module/hooks/useModulePageQuery.ts` _(baru)_ - Custom hook untuk query halaman
+- `features/manage-module/hooks/useModulePageMutation.ts` _(baru)_ - Custom hook untuk mutasi halaman
+- `features/manage-module/hooks/useModulePageEditor.ts` _(baru)_ - Custom hook untuk state editor dan autosave
+- `features/manage-module/__tests__/unit/ModulePageEditor.test.tsx` _(unit test)_
+- `features/manage-module/__tests__/unit/ModulePageList.test.tsx` _(unit test)_
+- `features/manage-module/__tests__/integration/ModulePageUI.integration.test.tsx` _(integration test)_
+- `features/manage-module/__tests__/e2e/ModulePage.e2e.spec.ts` _(E2E test)_
+- `features/manage-module/module-docs.md` _(update dokumentasi)_
 
-- [x] `app/api/module/[id]/pages/route.ts` (handler + test)
-- [x] `app/api/pages/[pageId]/route.ts` (handler + test)
-- [x] `features/manage-module/services/modulePageService.ts` (service logic + test)
-- [x] `features/manage-module/types/modulePageSchema.ts` (validasi Zod, update jika perlu)
-- [x] `features/manage-module/__tests__/integration/ModulePageAPI.integration.test.ts` (integration test)
-- [x] `features/manage-module/__tests__/models/ModulePage.test.ts` (update/extend unit test jika perlu)
-- [x] `__tests__/__mocks__/next-server.ts` (perbaikan mock NextRequest/NextResponse)
-- [ ] Dokumentasi API (README/module-docs.md)
-- [x] Test report: [test-report-2025-05-16T10-18-22.546Z.json]
-- [x] Test helper: Perbaikan createRequest helper untuk mocking HTTP request
+## 4. UI Referensi & Wireframes
 
----
+### ModulePageLayout (3-kolom)
 
-## 4. Checklist TDD [update+2025-05-16]
+```
+┌─────────────────┬───────────────────────────────┬─────────────────┐
+│                 │                               │                 │
+│                 │       ToolBar Editor          │                 │
+│  AdminSidebar   │                               │  ModulePageList │
+│                 │                               │                 │
+│   (Navigasi     │       ModulePageEditor        │   (Daftar       │
+│    Utama App)   │       (Area Konten)           │    Halaman)     │
+│                 │                               │                 │
+│                 │                               │                 │
+│                 │                               │                 │
+│                 │                               │                 │
+│                 ├───────────────────────────────┤                 │
+│                 │       ModulePageFooterNav     │                 │
+│                 │ [Prev]    Hal 3 dari 5 [Next] │                 │
+└─────────────────┴───────────────────────────────┴─────────────────┘
+```
 
-- [x] Buat & review test case (unit & integration) sebelum implementasi kode.
-- [x] Implementasi minimal kode agar test lulus (status green).
-- [x] Refactor kode jika perlu, pastikan test tetap lulus.
-- [x] Lint & format kode sebelum commit.
-- [x] Fix 4 test case yang gagal:
-  - [x] POST: create page (metode HTTP & response format)
-  - [x] POST: module not found (format error response)
-  - [x] POST: error handling (format error response)
-  - [x] PUT: update page (metode HTTP & response format)
-- [ ] Update dokumentasi setelah implementasi (payload, error response, contoh request/response di module-docs.md).
+### ModulePageList (RightSidebar)
 
----
+```
+┌─────────────────────────────┐
+│ Daftar Halaman              │
+├─────────────────────────────┤
+│ ● Introduction   [ACTIVE]   │
+│                             │
+│ ○ Getting Started           │
+│                             │
+│ ○ Basic Syntax    [DRAFT]   │
+│                             │
+│ ○ Advanced Features         │
+│                             │
+│ + Tambah Halaman            │
+└─────────────────────────────┘
+```
 
-## 5. Langkah Selanjutnya [update+2025-05-16]
+### ModulePageEditor dengan SlashCommand
 
-1. **Sebelum Lanjut Subtask 3**
+```
+┌─────────────────────────────────────────────────────────────┐
+│ [B] [I] [Code] [Link] [Image] [H1] [H2] ...                 │
+├─────────────────────────────────────────────────────────────┤
+│ # Judul Halaman                                             │
+│                                                             │
+│ Ini adalah paragraf teks yang menjelaskan tentang...        │
+│                                                             │
+│ /                                                           │
+│ ┌─────────────────────┐                                     │
+│ │ /text               │                                     │
+│ │ /heading            │                                     │
+│ │ /code               │                                     │
+│ │ /image              │                                     │
+│ │ /video              │                                     │
+│ └─────────────────────┘                                     │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
 
-   - [ ] Update `module-docs.md` dengan contoh payload dan response untuk semua endpoint
-   - [ ] Dokumentasikan format response standar di dokumentasi API
+## 5. Referensi
 
-2. **Persiapan untuk Subtask 3**
-   - [ ] Desain UI untuk ModulePagesManager dan PageEditor
-   - [ ] Setup base component untuk navigasi antar halaman
-   - [ ] Persiapkan integrasi BlockEditor dengan slash command
-
----
-
-**Catatan [update+2025-05-16]:**
-
-- ✅ API endpoint CRUD sudah diimplementasikan dan **semua integration test telah berhasil lulus**.
-- ✅ Format response sudah distandardisasi ke format `{ success: true/false, data/error: {...} }`.
-- ✅ Perbaikan utama yang berhasil:
-  1. Standardisasi format response di semua handler API
-  2. Perbaikan mock untuk NextRequest/NextResponse untuk menangani body request
-  3. Koreksi HTTP method pada test case (dari GET ke POST/PUT)
-  4. Skip validasi dalam mode test untuk memudahkan pengujian skenario error
-  5. Format assertion dengan format response yang benar
-- ✅ **Subtask 2 telah selesai** dan siap untuk dilanjutkan ke Subtask 3 (UI Multi-Page Editor)
+- [shadcn/ui Docs](https://ui.shadcn.com/docs)
+- [TanStack React Query](https://tanstack.com/query/latest)
+- [Prisma Relations](https://www.prisma.io/docs/concepts/components/prisma-relations)
+- [TipTap Editor](https://tiptap.dev/) - Editor rich text extensible
+- [Visual Reference: Confluence Editor](https://confluence.atlassian.com/) - Inspirasi layout dan navigasi
+- [Visual Reference: hasil_modulePageList.png](path/to/image) - Contoh tampilan daftar halaman
+- [Visual Reference: modulePageEditorWithSideBar.png](path/to/image) - Layout dengan sidebar
+- [Visual Reference: ui_modulePageEditor.png](path/to/image) - Referensi UI editor
+- [features/manage-module/module-docs.md](./module-docs.md)
+- [features/manage-module/services/modulePageService.ts](./services/modulePageService.ts)
+- [features/manage-module/types/modulePageSchema.ts](./types/modulePageSchema.ts)

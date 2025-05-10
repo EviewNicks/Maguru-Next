@@ -14,7 +14,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { useModuleMutation } from '@/features/manage-module/hooks/useModuleMutation'
-import { showErrorNotification } from './ErrorNotifier'
+import { showErrorNotification } from '../ErrorNotifier'
 
 interface ModuleActionCellProps {
   module: Module

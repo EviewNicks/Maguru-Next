@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/form'
 import { Module, ModuleStatus } from '@/features/manage-module/types'
 import { useModuleMutation } from '@/features/manage-module/hooks/useModuleMutation'
-import { showErrorNotification } from './ErrorNotifier'
+import { showErrorNotification } from '../ErrorNotifier'
 
 // Schema validasi untuk form
 const moduleSchema = z.object({
