@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Module } from '@/features/manage-module/types'
-import { Edit, Trash2 } from 'lucide-react'
+import { Edit, Trash2, FileText } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import ModuleFormModal from './ModuleFormModal'
 import {
@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog'
 import { useModuleMutation } from '@/features/manage-module/hooks/useModuleMutation'
 import { showErrorNotification } from '../ErrorNotifier'
+import { useRouter } from 'next/navigation'
 
 interface ModuleActionCellProps {
   module: Module
@@ -23,6 +24,7 @@ interface ModuleActionCellProps {
 export default function ModuleActionCell({ module }: ModuleActionCellProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const router = useRouter()
 
   // Gunakan hook useModuleMutation
   const { deleteModuleMutation } = useModuleMutation()
@@ -48,14 +50,30 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
     setIsDeleteModalOpen(false)
   }
 
+  // Navigasi ke halaman editor konten modul
+  const handleManagePages = () => {
+    router.push(`/manage-module/pages/${module.id}`)
+  }
+
   return (
     <>
       <div className="flex justify-center space-x-2">
         <Button
           variant="ghost"
           size="sm"
+          onClick={handleManagePages}
+          className="h-8 w-8 p-0 text-blue-400 hover:bg-indigo-600/20 hover:text-blue-300"
+          title="Kelola Halaman"
+        >
+          <FileText className="h-4 w-4" />
+          <span className="sr-only">Kelola Halaman</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={handleEdit}
           className="h-8 w-8 p-0 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300"
+          title="Edit Modul"
         >
           <Edit className="h-4 w-4" />
           <span className="sr-only">Edit</span>
@@ -66,6 +84,7 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
           onClick={handleDelete}
           className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/10 hover:text-red-300"
           disabled={deleteModuleMutation.isPending}
+          title="Hapus Modul"
         >
           <Trash2 className="h-4 w-4" />
           <span className="sr-only">Hapus</span>

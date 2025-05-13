@@ -8,6 +8,7 @@ export enum ContentBlockType {
   CODE = 'code',
   IMAGE = 'image',
   VIDEO = 'video',
+  HEADING = 'heading',
 }
 
 /**
@@ -19,58 +20,107 @@ export const MAX_VIDEO_SIZE_BYTES = 20 * 1024 * 1024 // 20MB
 /**
  * Schema untuk blok konten
  */
-export const contentBlockSchema = z.object({
-  type: z.nativeEnum(ContentBlockType, {
-    errorMap: () => ({ message: 'Tipe konten tidak valid' }),
-  }),
-  content: z.string().min(1, 'Konten tidak boleh kosong'),
-  language: z.string().optional(), // Untuk blok kode
-  caption: z.string().optional(), // Untuk gambar/video
+export const ContentBlockSchema = z.object({
+  type: z.nativeEnum(ContentBlockType),
+  content: z.string(),
+  caption: z.string().optional(),
+  language: z.string().optional(), // untuk blok kode
 })
 
 /**
  * Type untuk blok konten
  */
-export type ContentBlock = z.infer<typeof contentBlockSchema>
+export type ContentBlock = z.infer<typeof ContentBlockSchema>
 
 /**
  * Schema untuk create module page
  */
-export const createModulePageSchema = z.object({
-  moduleId: z.string().uuid('ID modul harus berupa UUID valid'),
-  title: z
-    .string()
-    .min(1, 'Judul tidak boleh kosong')
-    .max(255, 'Judul terlalu panjang'),
-  order: z.number().int().min(1, 'Urutan minimal 1'),
-  blocks: z.array(contentBlockSchema).min(1, 'Minimal harus ada 1 blok konten'),
+export const CreateModulePageSchema = z.object({
+  title: z.string().min(5, 'Judul harus minimal 5 karakter'),
+  moduleId: z.string().uuid(),
+  order: z.number().int().min(0),
+  blocks: z
+    .array(ContentBlockSchema)
+    .min(1, 'Halaman harus memiliki minimal 1 blok konten'),
 })
 
 /**
  * Type untuk input create module page
  */
-export type CreateModulePageInput = z.infer<typeof createModulePageSchema>
+export type CreateModulePageInput = z.infer<typeof CreateModulePageSchema>
 
 /**
  * Schema untuk update module page
  */
-export const updateModulePageSchema = z.object({
-  title: z
-    .string()
-    .min(1, 'Judul tidak boleh kosong')
-    .max(255, 'Judul terlalu panjang')
-    .optional(),
-  order: z.number().int().min(1, 'Urutan minimal 1').optional(),
+export const UpdateModulePageSchema = z.object({
+  title: z.string().min(5, 'Judul harus minimal 5 karakter').optional(),
+  order: z.number().int().min(0).optional(),
   blocks: z
-    .array(contentBlockSchema)
-    .min(1, 'Minimal harus ada 1 blok konten')
+    .array(ContentBlockSchema)
+    .min(1, 'Halaman harus memiliki minimal 1 blok konten')
     .optional(),
+  content: z.string().optional(), // Untuk update konten editor langsung
 })
 
 /**
  * Type untuk input update module page
  */
-export type UpdateModulePageInput = z.infer<typeof updateModulePageSchema>
+export type UpdateModulePageInput = z.infer<typeof UpdateModulePageSchema>
+
+/**
+ * Alias untuk kompatibilitas dengan kode yang sudah ada
+ */
+export type CreateModulePageDto = CreateModulePageInput
+export type UpdateModulePageDto = UpdateModulePageInput
+
+/**
+ * Schema untuk ModulePage (seperti yang ada di database)
+ */
+export const ModulePageSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  moduleId: z.string().uuid(),
+  order: z.number().int(),
+  content: z.string().optional(), // Untuk editor sederhana
+  blocks: z.array(ContentBlockSchema).optional(), // Untuk editor multi-block (future)
+  status: z.enum(['DRAFT', 'PUBLISHED']).default('DRAFT'),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+})
+
+/**
+ * Type untuk ModulePage
+ */
+export type ModulePage = z.infer<typeof ModulePageSchema>
+
+/**
+ * Schema untuk response API list
+ */
+export const ModulePageListResponseSchema = z.object({
+  pages: z.array(ModulePageSchema),
+  total: z.number(),
+})
+
+/**
+ * Type untuk response API list
+ */
+export type ModulePageListResponse = z.infer<
+  typeof ModulePageListResponseSchema
+>
+
+/**
+ * Tipe untuk API response generik
+ */
+export type ApiResponse<T> = {
+  data: T
+  error?: string
+}
+
+export type ApiListResponse<T> = {
+  data: T[]
+  total: number
+  error?: string
+}
 
 /**
  * Schema untuk validasi image upload

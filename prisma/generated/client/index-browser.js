@@ -122,9 +122,9 @@ exports.Prisma.UserScalarFieldEnum = {
   clerkUserId: 'clerkUserId',
   email: 'email',
   name: 'name',
-  role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
+  role: 'role',
   status: 'status'
 };
 
@@ -142,14 +142,14 @@ exports.Prisma.ModuleScalarFieldEnum = {
 exports.Prisma.ModulePageScalarFieldEnum = {
   id: 'id',
   moduleId: 'moduleId',
-  title: 'title',
   order: 'order',
   type: 'type',
   content: 'content',
   language: 'language',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  version: 'version'
+  version: 'version',
+  title: 'title'
 };
 
 exports.Prisma.SortOrder = {

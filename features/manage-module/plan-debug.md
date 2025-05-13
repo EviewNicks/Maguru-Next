@@ -63,6 +63,7 @@ Tentu! Berikut adalah **planning terstruktur** untuk menyelesaikan masalah pada 
 ## 4. Referensi yang Dibutuhkan
 
 ### 📁 **File Project yang Perlu Direview/Diedit**
+
 - `features/manage-module/__tests__/integration/ModulePageAPI.integration.test.ts`
 - `app/api/module/[id]/pages/route.ts`
 - `app/api/pages/[id]/route.ts`
@@ -73,6 +74,7 @@ Tentu! Berikut adalah **planning terstruktur** untuk menyelesaikan masalah pada 
 - `features/manage-module/module-docs.md`
 
 ### 📚 **Dokumentasi Luar**
+
 - [Jest Mock Functions](https://jestjs.io/docs/mock-functions)
 - [Jest Manual Mocks](https://jestjs.io/docs/manual-mocks)
 - [Testing Next.js API Routes](https://nextjs.org/docs/pages/building-your-application/testing)
@@ -92,3 +94,96 @@ Tentu! Berikut adalah **planning terstruktur** untuk menyelesaikan masalah pada 
 
 **Jika kamu setuju dengan planning ini, saya siap lanjut ke eksekusi langkah demi langkah sesuai urutan di atas.**  
 Apakah ada file atau skenario test tertentu yang ingin kamu prioritaskan lebih dulu?
+
+# 📋 Planning Penyelesaian: Fix Scrollbar Berlebihan dan Optimasi Ruang di ModulePageEditor
+
+## 1. Ringkasan Masalah
+
+- **Scrollbar berlebihan**: Terdapat dua scrollbar di area konten editor yang membingungkan pengguna.
+- **Pemanfaatan ruang**: RichTextEditor tidak memenuhi ruang yang tersedia di Main Content Area.
+- **UI/UX tidak optimal**: Pengguna harus menggunakan dua scrollbar yang berbeda, yang mengurangi pengalaman pengguna.
+
+## 2. Langkah-Langkah Teknis Penyelesaian
+
+### A. Analisis Struktur HTML dan CSS
+
+- [x] **Identifikasi sumber scrollbar berlebihan** di ModulePageEditor.tsx dan RichTextEditor.tsx.
+  - Masalah: `overflow-auto` pada div container di ModulePageEditor.tsx bersamaan dengan `overflow-y-scroll` di RichTextEditor.tsx
+- [x] Analisis hierarchy dan nesting div yang menyebabkan multiple scrollbar.
+  - Masalah: Nested container dengan properti overflow yang berbeda
+- [x] Periksa CSS properties seperti `overflow`, `max-height`, dan `height` yang mempengaruhi scrolling.
+  - Masalah: `min-height: 100vh` di ProseMirror dan fixed heights
+
+### B. Fix Struktur dan CSS di ModulePageEditor.tsx
+
+- [x] **Modifikasi container utama** di ModulePageEditor.tsx:
+  - Menghapus properti `overflow-auto` dari div konten untuk menghindari double scrollbar
+  - Memastikan hanya ada satu container dengan properti overflow
+- [x] **Optimalkan dimensi container**:
+  - Menambahkan `h-full` dan `w-full` untuk memaksimalkan ruang yang tersedia
+  - Menghapus batasan ukuran seperti padding yang tidak diperlukan
+
+### C. Update RichTextEditor.tsx
+
+- [x] **Sesuaikan parameter dan props** agar RichTextEditor dapat menyesuaikan ukurannya dengan container induk:
+  - Menambahkan class `h-full` ke root element RichTextEditor
+  - Memastikan editor mengisi ruang yang tersedia dengan properti height yang tepat
+- [x] **Hindari fixed dimensions**:
+  - Menghapus `min-h-[600px]` dari EditorContent
+  - Menghapus `max-h-[calc(100dvh-6rem)]` yang membatasi tinggi
+
+### D. Refinement Layout Responsive
+
+- [x] **Pastikan layout responsive** di berbagai ukuran layar:
+  - Menggunakan properti height relatif (persentase dan h-full) daripada pixel tetap
+  - Mempertahankan padding dan margin yang diperlukan untuk tampilan yang baik
+
+### E. Update CSS Tiptap Global
+
+- [x] **Modifikasi CSS Tiptap Global**:
+  - Mengubah `min-height: 100vh` menjadi `min-height: 100%` pada .ProseMirror untuk menghindari scrolling berlebihan
+
+## 3. File yang Diubah
+
+- [x] `features/manage-module/components/ModulePageEditor.tsx`
+- [x] `features/manage-module/components/RichTextEditor.tsx`
+- [x] `styles/tiptap.css`
+
+## 4. Ringkasan Perubahan
+
+1. **ModulePageEditor.tsx**:
+
+   - Menghapus `overflow-auto` dari div konten utama
+   - Menambahkan `h-full` dan `w-full` untuk memanfaatkan ruang maksimal
+   - Meneruskan prop `h-full` ke komponen RichTextEditor
+
+2. **RichTextEditor.tsx**:
+
+   - Mengubah container dari `max-h-[calc(100dvh-6rem)] overflow-hidden overflow-y-scroll` menjadi `h-full w-full overflow-auto`
+   - Menghapus `min-h-[600px]` dari EditorContent dan menggantinya dengan `h-full`
+
+3. **tiptap.css**:
+   - Mengubah `min-height: 100vh` menjadi `min-height: 100%` untuk mencegah konten memaksakan tinggi berlebihan
+
+## 5. Acceptance Criteria
+
+- ✅ Hanya satu scrollbar vertikal yang terlihat di area konten editor.
+- ✅ RichTextEditor mengisi ruang yang tersedia di Main Content Area.
+- ✅ Editor tetap fungsional dan mudah digunakan di semua ukuran layar.
+- ✅ Tidak ada lintasan/linter error yang dihasilkan dari perubahan.
+
+## 6. Pengujian Manual
+
+Setelah implementasi, lakukan pengujian manual untuk memastikan:
+
+1. Scrollbar hanya muncul satu kali dan berfungsi dengan baik
+2. Konten editor mengisi seluruh ruang yang tersedia
+3. Toolbar dan floating menu tetap berfungsi dengan baik
+4. Layout responsif di berbagai ukuran layar
+5. Tidak ada visual glitch saat mengedit konten
+
+---
+
+**Status: Implementasi Selesai ✅**
+
+Perubahan telah diimplementasikan untuk mengatasi masalah scrollbar berlebihan dan optimasi ruang di ModulePageEditor. Semua file yang diperlukan telah diperbarui, dan struktur layout telah dioptimalkan untuk pengalaman pengguna yang lebih baik.

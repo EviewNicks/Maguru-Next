@@ -1,17 +1,10 @@
-import { PrismaClient } from '@prisma/client'
 import {
   ContentBlock,
   CreateModulePageInput,
   UpdateModulePageInput,
 } from '../types/modulePageSchema'
-import {
-  ModulePage,
-  ApiListResponse,
-  ApiEntityResponse,
-  PaginationMeta,
-} from '../types'
-
-const prisma = new PrismaClient()
+import { ModulePage, ApiListResponse, ApiEntityResponse } from '../types'
+import prisma from '@/lib/prisma'
 
 /**
  * Service untuk operasi CRUD halaman modul
@@ -26,11 +19,11 @@ export const modulePageService = {
     data: CreateModulePageInput
   ): Promise<ApiEntityResponse<ModulePage>> {
     // Validasi keberadaan modul
-    const module = await prisma.module.findUnique({
+    const moduleData = await prisma.module.findUnique({
       where: { id: data.moduleId },
     })
 
-    if (!module) {
+    if (!moduleData) {
       throw new Error('Modul tidak ditemukan')
     }
 
@@ -112,9 +105,9 @@ export const modulePageService = {
       success: true,
       data: transformedPages,
       meta: {
-        page,
-        limit,
-        total,
+        currentPage: page,
+        pageSize: limit,
+        totalItems: total,
         totalPages: Math.ceil(total / limit),
       },
     }
@@ -239,5 +232,57 @@ export const modulePageService = {
     })
 
     return true
+  },
+
+  /**
+   * Mengubah urutan halaman
+   * @param moduleId - ID modul
+   * @param pageIds - Array of page IDs in the desired order
+   * @returns True jika berhasil diperbarui
+   */
+  async reorderModulePages(
+    moduleId: string,
+    pageIds: string[]
+  ): Promise<boolean> {
+    try {
+      // Ensure the module exists
+      const moduleExists = await prisma.module.findUnique({
+        where: { id: moduleId },
+      })
+
+      if (!moduleExists) {
+        throw new Error('Modul tidak ditemukan')
+      }
+
+      // Ensure all pages exist and belong to the module
+      const existingPages = await prisma.modulePage.findMany({
+        where: { moduleId },
+        select: { id: true },
+      })
+
+      const existingPageIds = existingPages.map((page) => page.id)
+      const allPagesExist = pageIds.every((id) => existingPageIds.includes(id))
+
+      if (!allPagesExist) {
+        throw new Error(
+          'Beberapa halaman tidak ditemukan atau tidak dimiliki oleh modul ini'
+        )
+      }
+
+      // Update the order of pages in a transaction
+      await prisma.$transaction(
+        pageIds.map((pageId, index) =>
+          prisma.modulePage.update({
+            where: { id: pageId },
+            data: { order: index + 1 },
+          })
+        )
+      )
+
+      return true
+    } catch (error) {
+      console.error('Error reordering pages:', error)
+      throw error
+    }
   },
 }

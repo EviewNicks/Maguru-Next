@@ -1139,9 +1139,9 @@ export namespace Prisma {
     clerkUserId: string | null
     email: string | null
     name: string | null
-    role: $Enums.UserRole | null
     createdAt: Date | null
     updatedAt: Date | null
+    role: $Enums.UserRole | null
     status: $Enums.UserStatus | null
   }
 
@@ -1150,9 +1150,9 @@ export namespace Prisma {
     clerkUserId: string | null
     email: string | null
     name: string | null
-    role: $Enums.UserRole | null
     createdAt: Date | null
     updatedAt: Date | null
+    role: $Enums.UserRole | null
     status: $Enums.UserStatus | null
   }
 
@@ -1161,9 +1161,9 @@ export namespace Prisma {
     clerkUserId: number
     email: number
     name: number
-    role: number
     createdAt: number
     updatedAt: number
+    role: number
     status: number
     _all: number
   }
@@ -1174,9 +1174,9 @@ export namespace Prisma {
     clerkUserId?: true
     email?: true
     name?: true
-    role?: true
     createdAt?: true
     updatedAt?: true
+    role?: true
     status?: true
   }
 
@@ -1185,9 +1185,9 @@ export namespace Prisma {
     clerkUserId?: true
     email?: true
     name?: true
-    role?: true
     createdAt?: true
     updatedAt?: true
+    role?: true
     status?: true
   }
 
@@ -1196,9 +1196,9 @@ export namespace Prisma {
     clerkUserId?: true
     email?: true
     name?: true
-    role?: true
     createdAt?: true
     updatedAt?: true
+    role?: true
     status?: true
     _all?: true
   }
@@ -1280,9 +1280,9 @@ export namespace Prisma {
     clerkUserId: string
     email: string
     name: string | null
-    role: $Enums.UserRole
     createdAt: Date
     updatedAt: Date
+    role: $Enums.UserRole
     status: $Enums.UserStatus
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
@@ -1308,9 +1308,9 @@ export namespace Prisma {
     clerkUserId?: boolean
     email?: boolean
     name?: boolean
-    role?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    role?: boolean
     status?: boolean
   }, ExtArgs["result"]["user"]>
 
@@ -1319,9 +1319,9 @@ export namespace Prisma {
     clerkUserId?: boolean
     email?: boolean
     name?: boolean
-    role?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    role?: boolean
     status?: boolean
   }, ExtArgs["result"]["user"]>
 
@@ -1330,9 +1330,9 @@ export namespace Prisma {
     clerkUserId?: boolean
     email?: boolean
     name?: boolean
-    role?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    role?: boolean
     status?: boolean
   }, ExtArgs["result"]["user"]>
 
@@ -1341,13 +1341,13 @@ export namespace Prisma {
     clerkUserId?: boolean
     email?: boolean
     name?: boolean
-    role?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    role?: boolean
     status?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "clerkUserId" | "email" | "name" | "role" | "createdAt" | "updatedAt" | "status", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "clerkUserId" | "email" | "name" | "createdAt" | "updatedAt" | "role" | "status", ExtArgs["result"]["user"]>
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
@@ -1357,9 +1357,9 @@ export namespace Prisma {
       clerkUserId: string
       email: string
       name: string | null
-      role: $Enums.UserRole
       createdAt: Date
       updatedAt: Date
+      role: $Enums.UserRole
       status: $Enums.UserStatus
     }, ExtArgs["result"]["user"]>
     composites: {}
@@ -1788,9 +1788,9 @@ export namespace Prisma {
     readonly clerkUserId: FieldRef<"User", 'String'>
     readonly email: FieldRef<"User", 'String'>
     readonly name: FieldRef<"User", 'String'>
-    readonly role: FieldRef<"User", 'UserRole'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
+    readonly role: FieldRef<"User", 'UserRole'>
     readonly status: FieldRef<"User", 'UserStatus'>
   }
     
@@ -3292,7 +3292,6 @@ export namespace Prisma {
   export type ModulePageMinAggregateOutputType = {
     id: string | null
     moduleId: string | null
-    title: string | null
     order: number | null
     type: string | null
     content: string | null
@@ -3300,12 +3299,12 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     version: number | null
+    title: string | null
   }
 
   export type ModulePageMaxAggregateOutputType = {
     id: string | null
     moduleId: string | null
-    title: string | null
     order: number | null
     type: string | null
     content: string | null
@@ -3313,12 +3312,12 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     version: number | null
+    title: string | null
   }
 
   export type ModulePageCountAggregateOutputType = {
     id: number
     moduleId: number
-    title: number
     order: number
     type: number
     content: number
@@ -3326,6 +3325,7 @@ export namespace Prisma {
     createdAt: number
     updatedAt: number
     version: number
+    title: number
     _all: number
   }
 
@@ -3343,7 +3343,6 @@ export namespace Prisma {
   export type ModulePageMinAggregateInputType = {
     id?: true
     moduleId?: true
-    title?: true
     order?: true
     type?: true
     content?: true
@@ -3351,12 +3350,12 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     version?: true
+    title?: true
   }
 
   export type ModulePageMaxAggregateInputType = {
     id?: true
     moduleId?: true
-    title?: true
     order?: true
     type?: true
     content?: true
@@ -3364,12 +3363,12 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     version?: true
+    title?: true
   }
 
   export type ModulePageCountAggregateInputType = {
     id?: true
     moduleId?: true
-    title?: true
     order?: true
     type?: true
     content?: true
@@ -3377,6 +3376,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     version?: true
+    title?: true
     _all?: true
   }
 
@@ -3469,7 +3469,6 @@ export namespace Prisma {
   export type ModulePageGroupByOutputType = {
     id: string
     moduleId: string
-    title: string
     order: number
     type: string
     content: string
@@ -3477,6 +3476,7 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     version: number
+    title: string
     _count: ModulePageCountAggregateOutputType | null
     _avg: ModulePageAvgAggregateOutputType | null
     _sum: ModulePageSumAggregateOutputType | null
@@ -3501,7 +3501,6 @@ export namespace Prisma {
   export type ModulePageSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     moduleId?: boolean
-    title?: boolean
     order?: boolean
     type?: boolean
     content?: boolean
@@ -3509,13 +3508,13 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     version?: boolean
+    title?: boolean
     module?: boolean | ModuleDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["modulePage"]>
 
   export type ModulePageSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     moduleId?: boolean
-    title?: boolean
     order?: boolean
     type?: boolean
     content?: boolean
@@ -3523,13 +3522,13 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     version?: boolean
+    title?: boolean
     module?: boolean | ModuleDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["modulePage"]>
 
   export type ModulePageSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     moduleId?: boolean
-    title?: boolean
     order?: boolean
     type?: boolean
     content?: boolean
@@ -3537,13 +3536,13 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     version?: boolean
+    title?: boolean
     module?: boolean | ModuleDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["modulePage"]>
 
   export type ModulePageSelectScalar = {
     id?: boolean
     moduleId?: boolean
-    title?: boolean
     order?: boolean
     type?: boolean
     content?: boolean
@@ -3551,9 +3550,10 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     version?: boolean
+    title?: boolean
   }
 
-  export type ModulePageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "moduleId" | "title" | "order" | "type" | "content" | "language" | "createdAt" | "updatedAt" | "version", ExtArgs["result"]["modulePage"]>
+  export type ModulePageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "moduleId" | "order" | "type" | "content" | "language" | "createdAt" | "updatedAt" | "version" | "title", ExtArgs["result"]["modulePage"]>
   export type ModulePageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     module?: boolean | ModuleDefaultArgs<ExtArgs>
   }
@@ -3572,7 +3572,6 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       moduleId: string
-      title: string
       order: number
       type: string
       content: string
@@ -3580,6 +3579,7 @@ export namespace Prisma {
       createdAt: Date
       updatedAt: Date
       version: number
+      title: string
     }, ExtArgs["result"]["modulePage"]>
     composites: {}
   }
@@ -4006,7 +4006,6 @@ export namespace Prisma {
   interface ModulePageFieldRefs {
     readonly id: FieldRef<"ModulePage", 'String'>
     readonly moduleId: FieldRef<"ModulePage", 'String'>
-    readonly title: FieldRef<"ModulePage", 'String'>
     readonly order: FieldRef<"ModulePage", 'Int'>
     readonly type: FieldRef<"ModulePage", 'String'>
     readonly content: FieldRef<"ModulePage", 'String'>
@@ -4014,6 +4013,7 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"ModulePage", 'DateTime'>
     readonly updatedAt: FieldRef<"ModulePage", 'DateTime'>
     readonly version: FieldRef<"ModulePage", 'Int'>
+    readonly title: FieldRef<"ModulePage", 'String'>
   }
     
 
@@ -4447,9 +4447,9 @@ export namespace Prisma {
     clerkUserId: 'clerkUserId',
     email: 'email',
     name: 'name',
-    role: 'role',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
+    role: 'role',
     status: 'status'
   };
 
@@ -4473,14 +4473,14 @@ export namespace Prisma {
   export const ModulePageScalarFieldEnum: {
     id: 'id',
     moduleId: 'moduleId',
-    title: 'title',
     order: 'order',
     type: 'type',
     content: 'content',
     language: 'language',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
-    version: 'version'
+    version: 'version',
+    title: 'title'
   };
 
   export type ModulePageScalarFieldEnum = (typeof ModulePageScalarFieldEnum)[keyof typeof ModulePageScalarFieldEnum]
@@ -4530,20 +4530,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'UserRole'
-   */
-  export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>
-    
-
-
-  /**
-   * Reference to a field of type 'UserRole[]'
-   */
-  export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole[]'>
-    
-
-
-  /**
    * Reference to a field of type 'DateTime'
    */
   export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -4554,6 +4540,20 @@ export namespace Prisma {
    * Reference to a field of type 'DateTime[]'
    */
   export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'UserRole'
+   */
+  export type EnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole'>
+    
+
+
+  /**
+   * Reference to a field of type 'UserRole[]'
+   */
+  export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UserRole[]'>
     
 
 
@@ -4624,9 +4624,9 @@ export namespace Prisma {
     clerkUserId?: StringFilter<"User"> | string
     email?: StringFilter<"User"> | string
     name?: StringNullableFilter<"User"> | string | null
-    role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
     status?: EnumUserStatusFilter<"User"> | $Enums.UserStatus
   }
 
@@ -4635,9 +4635,9 @@ export namespace Prisma {
     clerkUserId?: SortOrder
     email?: SortOrder
     name?: SortOrderInput | SortOrder
-    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    role?: SortOrder
     status?: SortOrder
   }
 
@@ -4649,9 +4649,9 @@ export namespace Prisma {
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
     name?: StringNullableFilter<"User"> | string | null
-    role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    role?: EnumUserRoleFilter<"User"> | $Enums.UserRole
     status?: EnumUserStatusFilter<"User"> | $Enums.UserStatus
   }, "id" | "clerkUserId" | "email">
 
@@ -4660,9 +4660,9 @@ export namespace Prisma {
     clerkUserId?: SortOrder
     email?: SortOrder
     name?: SortOrderInput | SortOrder
-    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    role?: SortOrder
     status?: SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
@@ -4677,9 +4677,9 @@ export namespace Prisma {
     clerkUserId?: StringWithAggregatesFilter<"User"> | string
     email?: StringWithAggregatesFilter<"User"> | string
     name?: StringNullableWithAggregatesFilter<"User"> | string | null
-    role?: EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    role?: EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
     status?: EnumUserStatusWithAggregatesFilter<"User"> | $Enums.UserStatus
   }
 
@@ -4759,7 +4759,6 @@ export namespace Prisma {
     NOT?: ModulePageWhereInput | ModulePageWhereInput[]
     id?: StringFilter<"ModulePage"> | string
     moduleId?: StringFilter<"ModulePage"> | string
-    title?: StringFilter<"ModulePage"> | string
     order?: IntFilter<"ModulePage"> | number
     type?: StringFilter<"ModulePage"> | string
     content?: StringFilter<"ModulePage"> | string
@@ -4767,13 +4766,13 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"ModulePage"> | Date | string
     updatedAt?: DateTimeFilter<"ModulePage"> | Date | string
     version?: IntFilter<"ModulePage"> | number
+    title?: StringFilter<"ModulePage"> | string
     module?: XOR<ModuleScalarRelationFilter, ModuleWhereInput>
   }
 
   export type ModulePageOrderByWithRelationInput = {
     id?: SortOrder
     moduleId?: SortOrder
-    title?: SortOrder
     order?: SortOrder
     type?: SortOrder
     content?: SortOrder
@@ -4781,6 +4780,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     version?: SortOrder
+    title?: SortOrder
     module?: ModuleOrderByWithRelationInput
   }
 
@@ -4791,7 +4791,6 @@ export namespace Prisma {
     OR?: ModulePageWhereInput[]
     NOT?: ModulePageWhereInput | ModulePageWhereInput[]
     moduleId?: StringFilter<"ModulePage"> | string
-    title?: StringFilter<"ModulePage"> | string
     order?: IntFilter<"ModulePage"> | number
     type?: StringFilter<"ModulePage"> | string
     content?: StringFilter<"ModulePage"> | string
@@ -4799,13 +4798,13 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"ModulePage"> | Date | string
     updatedAt?: DateTimeFilter<"ModulePage"> | Date | string
     version?: IntFilter<"ModulePage"> | number
+    title?: StringFilter<"ModulePage"> | string
     module?: XOR<ModuleScalarRelationFilter, ModuleWhereInput>
   }, "id" | "moduleId_order">
 
   export type ModulePageOrderByWithAggregationInput = {
     id?: SortOrder
     moduleId?: SortOrder
-    title?: SortOrder
     order?: SortOrder
     type?: SortOrder
     content?: SortOrder
@@ -4813,6 +4812,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     version?: SortOrder
+    title?: SortOrder
     _count?: ModulePageCountOrderByAggregateInput
     _avg?: ModulePageAvgOrderByAggregateInput
     _max?: ModulePageMaxOrderByAggregateInput
@@ -4826,7 +4826,6 @@ export namespace Prisma {
     NOT?: ModulePageScalarWhereWithAggregatesInput | ModulePageScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"ModulePage"> | string
     moduleId?: StringWithAggregatesFilter<"ModulePage"> | string
-    title?: StringWithAggregatesFilter<"ModulePage"> | string
     order?: IntWithAggregatesFilter<"ModulePage"> | number
     type?: StringWithAggregatesFilter<"ModulePage"> | string
     content?: StringWithAggregatesFilter<"ModulePage"> | string
@@ -4834,6 +4833,7 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"ModulePage"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ModulePage"> | Date | string
     version?: IntWithAggregatesFilter<"ModulePage"> | number
+    title?: StringWithAggregatesFilter<"ModulePage"> | string
   }
 
   export type UserCreateInput = {
@@ -4841,9 +4841,9 @@ export namespace Prisma {
     clerkUserId: string
     email: string
     name?: string | null
-    role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: $Enums.UserRole
     status?: $Enums.UserStatus
   }
 
@@ -4852,9 +4852,9 @@ export namespace Prisma {
     clerkUserId: string
     email: string
     name?: string | null
-    role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: $Enums.UserRole
     status?: $Enums.UserStatus
   }
 
@@ -4863,9 +4863,9 @@ export namespace Prisma {
     clerkUserId?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   }
 
@@ -4874,9 +4874,9 @@ export namespace Prisma {
     clerkUserId?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   }
 
@@ -4885,9 +4885,9 @@ export namespace Prisma {
     clerkUserId: string
     email: string
     name?: string | null
-    role?: $Enums.UserRole
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: $Enums.UserRole
     status?: $Enums.UserStatus
   }
 
@@ -4896,9 +4896,9 @@ export namespace Prisma {
     clerkUserId?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   }
 
@@ -4907,9 +4907,9 @@ export namespace Prisma {
     clerkUserId?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: NullableStringFieldUpdateOperationsInput | string | null
-    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     status?: EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   }
 
@@ -4996,7 +4996,6 @@ export namespace Prisma {
 
   export type ModulePageCreateInput = {
     id?: string
-    title: string
     order: number
     type: string
     content: string
@@ -5004,13 +5003,13 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     version?: number
+    title: string
     module: ModuleCreateNestedOneWithoutPagesInput
   }
 
   export type ModulePageUncheckedCreateInput = {
     id?: string
     moduleId: string
-    title: string
     order: number
     type: string
     content: string
@@ -5018,11 +5017,11 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     version?: number
+    title: string
   }
 
   export type ModulePageUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5030,13 +5029,13 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
     module?: ModuleUpdateOneRequiredWithoutPagesNestedInput
   }
 
   export type ModulePageUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     moduleId?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5044,12 +5043,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
   }
 
   export type ModulePageCreateManyInput = {
     id?: string
     moduleId: string
-    title: string
     order: number
     type: string
     content: string
@@ -5057,11 +5056,11 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     version?: number
+    title: string
   }
 
   export type ModulePageUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5069,12 +5068,12 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
   }
 
   export type ModulePageUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     moduleId?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5082,6 +5081,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -5114,13 +5114,6 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
-  export type EnumUserRoleFilter<$PrismaModel = never> = {
-    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
-  }
-
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -5130,6 +5123,13 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type EnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
   }
 
   export type EnumUserStatusFilter<$PrismaModel = never> = {
@@ -5149,9 +5149,9 @@ export namespace Prisma {
     clerkUserId?: SortOrder
     email?: SortOrder
     name?: SortOrder
-    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    role?: SortOrder
     status?: SortOrder
   }
 
@@ -5160,9 +5160,9 @@ export namespace Prisma {
     clerkUserId?: SortOrder
     email?: SortOrder
     name?: SortOrder
-    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    role?: SortOrder
     status?: SortOrder
   }
 
@@ -5171,9 +5171,9 @@ export namespace Prisma {
     clerkUserId?: SortOrder
     email?: SortOrder
     name?: SortOrder
-    role?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    role?: SortOrder
     status?: SortOrder
   }
 
@@ -5213,16 +5213,6 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
-  export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumUserRoleFilter<$PrismaModel>
-    _max?: NestedEnumUserRoleFilter<$PrismaModel>
-  }
-
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -5235,6 +5225,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type EnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserRoleFilter<$PrismaModel>
+    _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
   export type EnumUserStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -5331,7 +5331,6 @@ export namespace Prisma {
   export type ModulePageCountOrderByAggregateInput = {
     id?: SortOrder
     moduleId?: SortOrder
-    title?: SortOrder
     order?: SortOrder
     type?: SortOrder
     content?: SortOrder
@@ -5339,6 +5338,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     version?: SortOrder
+    title?: SortOrder
   }
 
   export type ModulePageAvgOrderByAggregateInput = {
@@ -5349,7 +5349,6 @@ export namespace Prisma {
   export type ModulePageMaxOrderByAggregateInput = {
     id?: SortOrder
     moduleId?: SortOrder
-    title?: SortOrder
     order?: SortOrder
     type?: SortOrder
     content?: SortOrder
@@ -5357,12 +5356,12 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     version?: SortOrder
+    title?: SortOrder
   }
 
   export type ModulePageMinOrderByAggregateInput = {
     id?: SortOrder
     moduleId?: SortOrder
-    title?: SortOrder
     order?: SortOrder
     type?: SortOrder
     content?: SortOrder
@@ -5370,6 +5369,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     version?: SortOrder
+    title?: SortOrder
   }
 
   export type ModulePageSumOrderByAggregateInput = {
@@ -5401,12 +5401,12 @@ export namespace Prisma {
     set?: string | null
   }
 
-  export type EnumUserRoleFieldUpdateOperationsInput = {
-    set?: $Enums.UserRole
-  }
-
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
+  }
+
+  export type EnumUserRoleFieldUpdateOperationsInput = {
+    set?: $Enums.UserRole
   }
 
   export type EnumUserStatusFieldUpdateOperationsInput = {
@@ -5509,13 +5509,6 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
-  export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
-    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
-  }
-
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -5525,6 +5518,13 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type NestedEnumUserRoleFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleFilter<$PrismaModel> | $Enums.UserRole
   }
 
   export type NestedEnumUserStatusFilter<$PrismaModel = never> = {
@@ -5590,16 +5590,6 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
-  export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
-    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
-    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumUserRoleFilter<$PrismaModel>
-    _max?: NestedEnumUserRoleFilter<$PrismaModel>
-  }
-
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -5612,6 +5602,16 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+
+  export type NestedEnumUserRoleWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.UserRole | EnumUserRoleFieldRefInput<$PrismaModel>
+    in?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    notIn?: $Enums.UserRole[] | ListEnumUserRoleFieldRefInput<$PrismaModel>
+    not?: NestedEnumUserRoleWithAggregatesFilter<$PrismaModel> | $Enums.UserRole
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumUserRoleFilter<$PrismaModel>
+    _max?: NestedEnumUserRoleFilter<$PrismaModel>
   }
 
   export type NestedEnumUserStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -5670,7 +5670,6 @@ export namespace Prisma {
 
   export type ModulePageCreateWithoutModuleInput = {
     id?: string
-    title: string
     order: number
     type: string
     content: string
@@ -5678,11 +5677,11 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     version?: number
+    title: string
   }
 
   export type ModulePageUncheckedCreateWithoutModuleInput = {
     id?: string
-    title: string
     order: number
     type: string
     content: string
@@ -5690,6 +5689,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     version?: number
+    title: string
   }
 
   export type ModulePageCreateOrConnectWithoutModuleInput = {
@@ -5724,7 +5724,6 @@ export namespace Prisma {
     NOT?: ModulePageScalarWhereInput | ModulePageScalarWhereInput[]
     id?: StringFilter<"ModulePage"> | string
     moduleId?: StringFilter<"ModulePage"> | string
-    title?: StringFilter<"ModulePage"> | string
     order?: IntFilter<"ModulePage"> | number
     type?: StringFilter<"ModulePage"> | string
     content?: StringFilter<"ModulePage"> | string
@@ -5732,6 +5731,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"ModulePage"> | Date | string
     updatedAt?: DateTimeFilter<"ModulePage"> | Date | string
     version?: IntFilter<"ModulePage"> | number
+    title?: StringFilter<"ModulePage"> | string
   }
 
   export type ModuleCreateWithoutPagesInput = {
@@ -5796,7 +5796,6 @@ export namespace Prisma {
 
   export type ModulePageCreateManyModuleInput = {
     id?: string
-    title: string
     order: number
     type: string
     content: string
@@ -5804,11 +5803,11 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     version?: number
+    title: string
   }
 
   export type ModulePageUpdateWithoutModuleInput = {
     id?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5816,11 +5815,11 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
   }
 
   export type ModulePageUncheckedUpdateWithoutModuleInput = {
     id?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5828,11 +5827,11 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
   }
 
   export type ModulePageUncheckedUpdateManyWithoutModuleInput = {
     id?: StringFieldUpdateOperationsInput | string
-    title?: StringFieldUpdateOperationsInput | string
     order?: IntFieldUpdateOperationsInput | number
     type?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
@@ -5840,6 +5839,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
+    title?: StringFieldUpdateOperationsInput | string
   }
 
 

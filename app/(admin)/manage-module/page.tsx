@@ -20,6 +20,10 @@ export const metadata: Metadata = {
  * Halaman Manajemen Modul Akademik
  * Menampilkan datatable untuk mengelola modul akademik
  * dengan fitur CRUD, filter, search, dan pagination
+ *
+ * Navigasi ke halaman editor modul:
+ * - Gunakan tombol "Kelola Halaman" yang akan mengarahkan ke /manage-module/pages/[moduleId]
+ * - Di halaman editor, kita dapat mengelola konten modul dengan rich text editor
  */
 export default function ModuleManagementPage() {
   return (
