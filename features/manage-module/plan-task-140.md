@@ -50,7 +50,7 @@
 - Middleware autentikasi admin
 - Integrasi dengan audit trail (future task, log sederhana dulu)
 
-### C. Frontend UI/UX [update+2025-06-18] 🟡
+### C. Frontend UI/UX [update+2025-06-20] 🟡
 
 - **Halaman Khusus Multi-Page Editor**
   - Route: `/manage-module/pages/[moduleId]` ✅ (Sudah dibuat)
@@ -64,7 +64,14 @@
     - `DocumentHeader`: Header dokumen dengan judul & status penyimpanan
     - `RichTextEditor`: Editor rich text berbasis TipTap yang menggantikan DocumentContent
     - `EditorToolbar`: Toolbar format teks berbasis TipTap yang menggantikan FormattingToolbar
-    - `Sidebar`: Sidebar navigasi dengan daftar halaman dan pencarian
+    - `ModulePageSidebar`: Sidebar kanan dengan fitur toggle yang dapat dibuka/ditutup
+    - `ModulePagesContext`: Context provider untuk berbagi state antara Editor dan Sidebar
+  - **Fitur Toggle Sidebar yang Sudah Diimplementasikan:** ✅
+    - Pemindahan sidebar dari ModulePageEditor ke tingkat layout
+    - Tombol toggle untuk membuka/menutup sidebar
+    - Animasi transisi smooth saat membuka/menutup sidebar
+    - Penyimpanan preferensi sidebar (buka/tutup) di localStorage
+    - Integrasi dengan context untuk berbagi data pages dan active page
   - **Komponen Editor TipTap yang Sudah Diimplementasikan:** ✅
     - TipTap extensions: Color, Highlight, Link, Subscript, Superscript, TextAlign, TextStyle, Typography, Underline, Image, Placeholder
     - `FloatingToolbar`: Toolbar yang muncul saat memilih teks

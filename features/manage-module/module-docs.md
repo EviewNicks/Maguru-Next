@@ -104,12 +104,13 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
 
 2. MODMGMT-F002: Manajemen Konten Multi-Page
 
-   - **Deskripsi**: Admin dapat membuat, mengedit, menghapus, dan mengelola halaman konten (teks, kode, gambar, video) sebagai bagian dari satu modul pembelajaran. Setiap halaman dapat diisi dengan berbagai tipe konten menggunakan slash command (misal: `/image`, `/code`) seperti di Confluence/Notion. Editor mendukung markdown (lihat package.json: react-markdown, @tiptap) dan toolbar sederhana untuk formatting dasar. Pengelolaan halaman dilakukan di satu halaman khusus dengan navigasi antar halaman di RightSidebar/bagian bawah. Batasan upload gambar maksimal 2MB/file dan video maksimal 20MB/file.
+   - **Deskripsi**: Admin dapat membuat, mengedit, menghapus, dan mengelola halaman konten (teks, kode, gambar, video) sebagai bagian dari satu modul pembelajaran. Setiap halaman dapat diisi dengan berbagai tipe konten menggunakan slash command (misal: `/image`, `/code`) seperti di Confluence/Notion. Editor mendukung markdown (lihat package.json: react-markdown, @tiptap) dan toolbar sederhana untuk formatting dasar. Pengelolaan halaman dilakukan di satu halaman khusus dengan navigasi antar halaman di RightSidebar/bagian bawah. Sidebar kanan dapat di-toggle (dibuka/ditutup) untuk memaksimalkan area editing. Batasan upload gambar maksimal 2MB/file dan video maksimal 20MB/file.
    - **Kriteria Penerimaan**:
      - Admin dapat CRUD halaman konten pada modul.
      - Satu halaman dapat berisi campuran teks, kode, gambar, dan video.
      - Penambahan konten menggunakan slash command.
      - Navigasi antar halaman mudah diakses.
+     - Toggle sidebar kanan untuk memaksimalkan area editing.
      - Toolbar sederhana untuk formatting.
      - Editor mendukung markdown.
      - Perubahan halaman langsung terlihat di UI (real-time update).

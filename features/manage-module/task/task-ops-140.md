@@ -65,7 +65,7 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
     - Menambahkan test helper untuk membuat request mock yang lebih robust
     - Dokumentasikan struktur payload API endpoint di module-docs.md setelah test berhasil
 
-### 3. Integrasi UI Multi-Page [update+2025-06-18]
+### 3. Integrasi UI Multi-Page [update+2025-06-20]
 
 - **Status:** 🟡 On Progress
 - **Ringkasan:**
@@ -76,8 +76,9 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
     - `ModulePageFooterNav`: Tombol navigasi bawah untuk berpindah antar halaman (prev/next) (sudah dibuat)
     - `TopNavigation`: Navigasi atas aplikasi (sudah dibuat)
     - `DocumentHeader`: Header dokumen dengan status penyimpanan (sudah diperbarui)
-    - `Sidebar`: Sidebar kanan untuk navigasi halaman dengan fitur pencarian (sudah diperbarui)
-    - `ModulePageLayout`: Layout halaman editor (sudah dibuat)
+    - `ModulePageSidebar`: Sidebar kanan untuk navigasi halaman dengan fitur toggling (baru dibuat)
+    - `ModulePagesContext`: Context untuk sharing state antara ModulePageEditor dan ModulePageSidebar (baru dibuat)
+    - `ModulePageLayout`: Layout halaman editor (sudah diperbarui)
   - **Implementasi TipTap Editor [update+2025-06-18]:** ✅
     - Integrasi TipTap sebagai editor rich text yang kuat dan ekstensibel, menggantikan editor sederhana sebelumnya
     - Extension yang diimplementasikan: StarterKit, Color, Highlight, Link, TextAlign, Typography, Image, Placeholder, SearchAndReplace
@@ -88,9 +89,19 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
     - Dukungan untuk format teks (bold, italic, underline), heading, list, blockquote, alignment, dll.
     - Integrasi penyimpanan otomatis dengan debounce 2000ms
     - Status penyimpanan (saved, saving, unsaved) yang terlihat pada DocumentHeader
+  - **Implementasi Toggle Right Sidebar [update+2025-06-20]:** ✅
+    - Memindahkan sidebar dari ModulePageEditor ke layout untuk konsistensi dengan sidebar admin
+    - Mengimplementasikan ModulePageSidebar dengan fitur toggle: dapat dibuka/ditutup dengan tombol
+    - Menambahkan animasi transisi smooth saat membuka/menutup sidebar
+    - Penyimpanan preferensi sidebar (buka/tutup) di localStorage untuk konsistensi pengalaman pengguna
+    - Mengintegrasikan ModulePagesContext untuk berbagi state antara ModulePageEditor dan ModulePageSidebar
+    - Memastikan z-index yang tepat agar sidebar tidak tertimpa oleh komponen lain
+    - Memodifikasi page skeleton untuk beradaptasi dengan struktur baru
+    - Menambahkan tombol navigasi ke halaman editor di ModuleActionCell
   - **File Routing yang Diimplementasikan:**
-    - `app/(admin)/manage-module/pages/[moduleId]/page.tsx`: Halaman utama editor multi-page (sudah dibuat)
-    - `app/(admin)/manage-module/pages/[moduleId]/layout.tsx`: Layout untuk halaman editor (sudah dibuat)
+    - `app/(admin)/manage-module/pages/[moduleId]/page.tsx`: Halaman utama editor multi-page (sudah diperbarui)
+    - `app/(admin)/manage-module/pages/[moduleId]/layout.tsx`: Layout untuk halaman editor (sudah diperbarui)
+    - `app/(admin)/manage-module/layout.tsx`: Layout parent dengan ModulePagesProvider (sudah diperbarui)
   - **Custom Hooks yang Diimplementasikan:**
     - `useModulePageQuery`: Hook untuk query data halaman (sudah dibuat)
     - `useModulePageMutation`: Hook untuk mutasi data halaman (sudah dibuat)
@@ -108,8 +119,8 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
     - Konfirmasi saat meninggalkan halaman dengan perubahan belum disimpan.
     - Status simpan (saved, saving, unsaved) untuk feedback visual.
     - Floating toolbar dan floating menu untuk pengalaman editing yang lebih baik.
+    - Toggle sidebar yang memungkinkan pengguna memaksimalkan area editor.
   - **Yang Masih Dikerjakan:**
-    - Menyelesaikan integrasi komponen-komponen yang sudah dibuat.
     - Memperbaiki error tipe data pada komponen dan custom hooks.
     - Implementasi slash command menu untuk menambahkan berbagai tipe konten.
     - Fitur upload dan preview gambar/video dalam editor.
@@ -119,9 +130,10 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
     - Unit dan integration test untuk komponen TipTap editor.
     - Penyempurnaan aksesibilitas (A11y) dengan ARIA label dan fokus manajemen.
 - **Catatan:**
-  - Desain UI menggunakan pendekatan 3-kolom yang mirip dengan Confluence: navigasi admin di kiri, area konten di tengah, dan daftar halaman di kanan.
+  - Desain UI menggunakan pendekatan 3-kolom yang mirip dengan Confluence: navigasi admin di kiri, area konten di tengah, dan daftar halaman di kanan (dapat ditoggle untuk memaksimalkan area konten).
   - Implementasi UI mengikuti tema gelap yang konsisten dengan aplikasi, dengan penyesuaian untuk konsistensi visual.
   - TipTap memberikan pengalaman editing yang lebih kaya dengan dukungan untuk berbagai format dan ekstensi.
+  - Toggle sidebar meningkatkan UX dengan memungkinkan pengguna memaksimalkan area editing saat diperlukan.
   - Perbaikan tipe data ModulePage sedang dilakukan untuk menyelesaikan error TypeScript.
 
 ---
@@ -133,7 +145,7 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
 - [x] Halaman dapat berisi berbagai tipe konten sekaligus (**model baru mendukung**)
 - [x] Editor mendukung markdown dan toolbar sederhana (**TipTap editor telah diimplementasikan**)
 - [x] Penambahan konten menggunakan slash command (**TipTap FloatingMenu diimplementasikan**)
-- [x] Navigasi antar halaman di sidebar/bottom (**komponen sudah dibuat**)
+- [x] Navigasi antar halaman di sidebar/bottom (**komponen sudah dibuat & sidebar dapat ditoggle**)
 - [x] Perubahan halaman langsung terlihat di UI (real-time update) (**integrasi dengan React Query**)
 - [x] Validasi input & error handling berjalan baik (**schema & test siap**)
 - [x] Batasan upload gambar/video (2MB/20MB) (**implementasi dasarnya sudah ada**)
@@ -147,24 +159,24 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
 
 Implementasi UI Multi-Page menggunakan referensi visual berikut:
 
-1. **Layout 3-kolom dengan Sidebar Navigasi** - Terinspirasi dari Confluence Editor:
+1. **Layout 3-kolom dengan Sidebar Navigasi yang Dapat Ditoggle** - Terinspirasi dari Confluence Editor:
 
 ```
-┌─────────────────┬───────────────────────────────┬─────────────────┐
-│                 │                               │                 │
-│                 │       ToolBar Editor          │                 │
-│  AdminSidebar   │                               │  ModulePageList │
-│                 │                               │                 │
-│   (Navigasi     │       ModulePageEditor        │   (Daftar       │
-│    Utama App)   │       (Area Konten)           │    Halaman)     │
-│                 │                               │                 │
-│                 │                               │                 │
-│                 │                               │                 │
-│                 │                               │                 │
-│                 ├───────────────────────────────┤                 │
-│                 │       ModulePageFooterNav     │                 │
-│                 │ [Prev]    Hal 3 dari 5 [Next] │                 │
-└─────────────────┴───────────────────────────────┴─────────────────┘
+┌─────────────────┬───────────────────────────────┬──┐
+│                 │                               │ │
+│                 │       ToolBar Editor          │ │
+│  AdminSidebar   │                               │ │
+│                 │                               │ │
+│   (Navigasi     │       ModulePageEditor        │◄►  ModulePageSidebar
+│    Utama App)   │       (Area Konten)           │ │   (Toggle)
+│                 │                               │ │
+│                 │                               │ │
+│                 │                               │ │
+│                 │                               │ │
+│                 ├───────────────────────────────┤ │
+│                 │       ModulePageFooterNav     │ │
+│                 │ [Prev]    Hal 3 dari 5 [Next] │ │
+└─────────────────┴───────────────────────────────┴──┘
 ```
 
 2. **Editor dengan TipTap dan Toolbar** - Toolbar komprehensif dan menu slash command:
@@ -189,14 +201,15 @@ Implementasi UI Multi-Page menggunakan referensi visual berikut:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Catatan Terbaru [update+2025-06-18]
+## Catatan Terbaru [update+2025-06-20]
 
 - API endpoint CRUD sudah berfungsi dengan baik, dan stabil untuk digunakan oleh UI components.
 - UI Multi-Page sedang dalam pengembangan dengan referensi visual dari Confluence Editor untuk meningkatkan usability.
 - TipTap Editor telah diintegrasikan dengan sukses sebagai rich text editor yang mendukung berbagai format dan ekstensi.
 - Autosave dengan debounce 2000ms telah diimplementasikan untuk menyimpan perubahan secara otomatis.
 - Status penyimpanan (saved, saving, unsaved) sudah diimplementasikan dengan indikator visual.
-- Sidebar daftar halaman dengan fitur pencarian sudah selesai diimplementasikan.
+- Sidebar kanan dengan fitur toggle sudah diimplementasikan, memungkinkan pengguna memaksimalkan area editing saat diperlukan.
+- Context state management (ModulePagesContext) telah diimplementasikan untuk berbagi state antara ModulePageEditor dan ModulePageSidebar.
 - Fokus saat ini adalah memperbaiki error TypeScript dan implementasi unit test.
 - Styling mengikuti tema gelap yang konsisten dengan UI yang ada.
 - Rencana untuk menyelesaikan semua komponen UI dalam sprint ini, dengan drag & drop dan fitur audit trail ditunda ke sprint berikutnya.

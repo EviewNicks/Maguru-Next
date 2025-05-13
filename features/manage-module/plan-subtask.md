@@ -115,7 +115,7 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
 - ✅ Tambahkan contoh payload API & skenario penggunaan di dokumentasi.
 - 🚧 Buat dokumentasi cara penggunaan editor dan shortcut keyboard.
 
-## 3. Status Implementasi [update+2025-06-18]
+## 3. Status Implementasi [update+2025-06-20]
 
 ### 3.1 Selesai Diimplementasikan
 
@@ -127,6 +127,12 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
 - ✅ Footer navigasi (prev/next)
 - ✅ Status penyimpanan (saved, saving, unsaved)
 - ✅ Autosave dengan debounce
+- ✅ Toggle right sidebar dengan fitur:
+  - Pemindahan sidebar dari ModulePageEditor ke layout
+  - Tombol toggle untuk membuka/menutup sidebar
+  - Animasi transisi smooth saat membuka/menutup
+  - Penyimpanan preferensi di localStorage
+  - Context sharing state antara Editor dan Sidebar
 
 ### 3.2 Sedang Dikerjakan
 

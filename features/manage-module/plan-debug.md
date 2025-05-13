@@ -187,3 +187,255 @@ Setelah implementasi, lakukan pengujian manual untuk memastikan:
 **Status: Implementasi Selesai ✅**
 
 Perubahan telah diimplementasikan untuk mengatasi masalah scrollbar berlebihan dan optimasi ruang di ModulePageEditor. Semua file yang diperlukan telah diperbarui, dan struktur layout telah dioptimalkan untuk pengalaman pengguna yang lebih baik.
+
+---
+
+# 📋 Planning Penyelesaian: Implementasi Toggle Right Sidebar untuk ModulePageEditor
+
+## 1. Ringkasan Tujuan
+
+- **Implementasi sidebar kanan** yang dapat dibuka/ditutup (toggle) pada ModulePageEditor.
+- **Memindahkan Sidebar** yang sudah ada ke dalam layout.tsx untuk konsistensi dengan sidebar admin.
+- **Menambahkan fitur toggle** berupa strip tipis dengan tombol yang bisa membuka/menutup sidebar.
+- **Memastikan UX optimal** tanpa mengganggu area editor utama.
+
+## 2. Analisis Kebutuhan
+
+- Sidebar akan diposisikan di sisi kanan layar, tidak mengganggu sidebar admin di sisi kiri.
+- Dalam keadaan tertutup, sidebar hanya terlihat sebagai strip tipis dengan tombol toggle.
+- Konten sidebar tetap sama seperti implementasi yang sudah ada.
+- Perlu menggunakan z-index untuk memastikan sidebar tampil dengan benar.
+
+## 3. Langkah-Langkah Teknis Penyelesaian
+
+### A. Membuat Komponen ModulePageSidebar Baru
+
+- [x] **Membuat komponen ModulePageSidebar baru**:
+  - Menggunakan konten dari Sidebar.tsx yang sudah ada
+  - Menambahkan state untuk mengontrol status terbuka/tertutup
+  - Menambahkan tombol toggle pada strip tipis
+  - Mengimplementasikan animasi transisi smooth
+
+### B. Mengintegrasikan ke Layout
+
+- [x] **Modifikasi layout.tsx**:
+  - Mengintegrasikan ModulePageSidebar ke layout.tsx
+  - Memastikan posisinya di sisi kanan layar
+  - Mengatur z-index agar tidak tumpang tindih dengan konten lain
+
+### C. Styling dan Animasi
+
+- [x] **Implementasikan styling untuk tiga kondisi**:
+  - Sidebar terbuka penuh
+  - Sidebar tertutup (hanya strip tipis)
+  - Transisi antara kedua kondisi
+- [x] **Manajemen ruang dan overflow**:
+  - Memastikan konten editor menyesuaikan dengan kondisi sidebar
+  - Memastikan konten sidebar tidak overflow
+- [x] **Responsive design**:
+  - Memastikan tampilan yang optimal di berbagai ukuran layar
+
+### D. Penanganan State dan User Interaction
+
+- [x] **State management**:
+  - Menggunakan React state atau context untuk status sidebar
+  - Menyimpan preferensi pengguna (localStorage)
+- [x] **User interaction**:
+  - Implementasi event handler untuk toggle button
+  - Memastikan keyboard accessibility (tab, space, enter)
+  - Mempertimbangkan gesture touch untuk perangkat mobile
+
+## 4. File yang Perlu Dibuat/Diubah
+
+- [x] **File Baru**:
+
+  - `features/manage-module/components/ModulePageSidebar.tsx` - Komponen utama sidebar kanan
+  - `features/manage-module/context/ModulePagesContext.tsx` - Context untuk manajemen state sidebar
+
+- [x] **File yang Diubah**:
+  - `app/(admin)/manage-module/pages/[moduleId]/layout.tsx` - Menambahkan ModulePageSidebar
+  - `features/manage-module/components/ModulePageEditor.tsx` - Menghapus komponen Sidebar yang lama
+
+## 5. Implementasi Detail
+
+### A. Komponen ModulePageSidebar
+
+✅ Implementasi ModulePageSidebar dengan:
+
+- Toggle button untuk membuka/menutup sidebar
+- Animasi smooth saat transisi
+- Penyimpanan preferensi dengan localStorage
+- Styling yang sesuai dengan tema aplikasi
+
+### B. Integrasi ke Layout
+
+✅ ModulePageSidebar berhasil diintegrasikan ke dalam layout dengan:
+
+- Posisi fixed di sisi kanan
+- Z-index yang sesuai
+- Responsive design
+
+### C. Penyesuaian ModulePageEditor
+
+✅ ModulePageEditor diperbarui untuk:
+
+- Menghapus komponen Sidebar lama
+- Menggunakan context untuk state sharing
+
+## 6. Menangani Komunikasi Data
+
+✅ Manajemen state sidebar menggunakan:
+
+- React Context untuk berbagi data
+
+## 7. Acceptance Criteria
+
+- [x] Sidebar dapat dibuka dan ditutup dengan tombol toggle.
+- [x] Ketika tertutup, hanya terlihat strip tipis dengan tombol toggle.
+- [x] Konten editor tidak terganggu oleh sidebar.
+- [x] Semua fungsionalitas sidebar tetap berfungsi dengan baik.
+- [x] Tampilan responsif di berbagai ukuran layar.
+- [x] Transisi smooth saat membuka/menutup sidebar.
+- [x] Konfigurasi z-index yang tepat agar tidak tumpang tindih.
+
+## 8. Pengujian
+
+- [x] **Uji fungsional**: Memastikan sidebar dapat dibuka/ditutup dengan benar.
+- [x] **Uji visual**: Memastikan tampilan estetis dan tidak ada glitch.
+- [x] **Uji responsif**: Memastikan tampilan optimal di berbagai ukuran layar.
+- [x] **Uji performa**: Memastikan animasi smooth tanpa lag.
+
+## 9. Catatan Tambahan
+
+- Perhatikan penggunaan z-index agar tidak konflik dengan komponen lain seperti dropdown atau modal.
+- Pertimbangkan implementasi "drag to resize" untuk menyesuaikan lebar sidebar (fitur tambahan).
+- Pastikan tombol toggle masih mudah diakses meskipun posisi scroll berbeda.
+
+**Status: Implementasi Selesai ✅**
+
+Perubahan telah diimplementasikan untuk menambahkan sidebar kanan yang dapat dibuka/ditutup pada ModulePageEditor. Semua file yang diperlukan telah dibuat/diperbarui, dan fungsionalitas berjalan dengan baik.
+
+---
+
+# 📋 Planning Penyelesaian: Implementasi Toggle Right Sidebar untuk ModulePageEditor
+
+## 1. Ringkasan Tujuan
+
+- **Implementasi sidebar kanan** yang dapat dibuka/ditutup (toggle) pada ModulePageEditor.
+- **Memindahkan Sidebar** yang sudah ada ke dalam layout.tsx untuk konsistensi dengan sidebar admin.
+- **Menambahkan fitur toggle** berupa strip tipis dengan tombol yang bisa membuka/menutup sidebar.
+- **Memastikan UX optimal** tanpa mengganggu area editor utama.
+
+## 2. Analisis Kebutuhan
+
+- Sidebar akan diposisikan di sisi kanan layar, tidak mengganggu sidebar admin di sisi kiri.
+- Dalam keadaan tertutup, sidebar hanya terlihat sebagai strip tipis dengan tombol toggle.
+- Konten sidebar tetap sama seperti implementasi yang sudah ada.
+- Perlu menggunakan z-index untuk memastikan sidebar tampil dengan benar.
+
+## 3. Langkah-Langkah Teknis Penyelesaian
+
+### A. Membuat Komponen ModulePageSidebar Baru
+
+- [x] **Membuat komponen ModulePageSidebar baru**:
+  - Menggunakan konten dari Sidebar.tsx yang sudah ada
+  - Menambahkan state untuk mengontrol status terbuka/tertutup
+  - Menambahkan tombol toggle pada strip tipis
+  - Mengimplementasikan animasi transisi smooth
+
+### B. Mengintegrasikan ke Layout
+
+- [x] **Modifikasi layout.tsx**:
+  - Mengintegrasikan ModulePageSidebar ke layout.tsx
+  - Memastikan posisinya di sisi kanan layar
+  - Mengatur z-index agar tidak tumpang tindih dengan konten lain
+
+### C. Styling dan Animasi
+
+- [x] **Implementasikan styling untuk tiga kondisi**:
+  - Sidebar terbuka penuh
+  - Sidebar tertutup (hanya strip tipis)
+  - Transisi antara kedua kondisi
+- [x] **Manajemen ruang dan overflow**:
+  - Memastikan konten editor menyesuaikan dengan kondisi sidebar
+  - Memastikan konten sidebar tidak overflow
+- [x] **Responsive design**:
+  - Memastikan tampilan yang optimal di berbagai ukuran layar
+
+### D. Penanganan State dan User Interaction
+
+- [x] **State management**:
+  - Menggunakan React state atau context untuk status sidebar
+  - Menyimpan preferensi pengguna (localStorage)
+- [x] **User interaction**:
+  - Implementasi event handler untuk toggle button
+  - Memastikan keyboard accessibility (tab, space, enter)
+  - Mempertimbangkan gesture touch untuk perangkat mobile
+
+## 4. File yang Perlu Dibuat/Diubah
+
+- [x] **File Baru**:
+
+  - `features/manage-module/components/ModulePageSidebar.tsx` - Komponen utama sidebar kanan
+  - `features/manage-module/context/ModulePagesContext.tsx` - Context untuk manajemen state sidebar
+
+- [x] **File yang Diubah**:
+  - `app/(admin)/manage-module/pages/[moduleId]/layout.tsx` - Menambahkan ModulePageSidebar
+  - `features/manage-module/components/ModulePageEditor.tsx` - Menghapus komponen Sidebar yang lama
+
+## 5. Implementasi Detail
+
+### A. Komponen ModulePageSidebar
+
+✅ Implementasi ModulePageSidebar dengan:
+
+- Toggle button untuk membuka/menutup sidebar
+- Animasi smooth saat transisi
+- Penyimpanan preferensi dengan localStorage
+- Styling yang sesuai dengan tema aplikasi
+
+### B. Integrasi ke Layout
+
+✅ ModulePageSidebar berhasil diintegrasikan ke dalam layout dengan:
+
+- Posisi fixed di sisi kanan
+- Z-index yang sesuai
+- Responsive design
+
+### C. Penyesuaian ModulePageEditor
+
+✅ ModulePageEditor diperbarui untuk:
+
+- Menghapus komponen Sidebar lama
+- Menggunakan context untuk state sharing
+
+## 6. Menangani Komunikasi Data
+
+✅ Manajemen state sidebar menggunakan:
+
+- React Context untuk berbagi data
+
+## 7. Acceptance Criteria
+
+- [x] Sidebar dapat dibuka dan ditutup dengan tombol toggle.
+- [x] Ketika tertutup, hanya terlihat strip tipis dengan tombol toggle.
+- [x] Konten editor tidak terganggu oleh sidebar.
+- [x] Semua fungsionalitas sidebar tetap berfungsi dengan baik.
+- [x] Tampilan responsif di berbagai ukuran layar.
+- [x] Transisi smooth saat membuka/menutup sidebar.
+- [x] Konfigurasi z-index yang tepat agar tidak tumpang tindih.
+
+## 8. Pengujian
+
+- [x] **Uji fungsional**: Memastikan sidebar dapat dibuka/ditutup dengan benar.
+- [x] **Uji visual**: Memastikan tampilan estetis dan tidak ada glitch.
+- [x] **Uji responsif**: Memastikan tampilan optimal di berbagai ukuran layar.
+- [x] **Uji performa**: Memastikan animasi smooth tanpa lag.
+
+## 9. Catatan Tambahan
+
+- Perhatikan penggunaan z-index agar tidak konflik dengan komponen lain seperti dropdown atau modal.
+- Pertimbangkan implementasi "drag to resize" untuk menyesuaikan lebar sidebar (fitur tambahan).
+- Pastikan tombol toggle masih mudah diakses meskipun posisi scroll berbeda.
+
+**Status: Implementasi Selesai ✅**

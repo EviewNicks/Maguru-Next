@@ -1,15 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 // import TopNavigation from './ModulePageEditor/navigation/TopNavigation'
 import DocumentHeader from './ModulePageEditor/document/DocumentHeader'
-import Sidebar from './ModulePageEditor/sidebar/Sidebar'
 import ModulePageFooterNav from './ModulePageFooterNav'
 import { useModulePageQuery } from '../hooks/useModulePageQuery'
 import { useModulePageEditor } from '../hooks/useModulePageEditor'
-import { ModulePage } from '../types'
 import { RichTextEditor } from './RichTextEditor'
 import { useDebounce } from '../hooks/useDebounce'
+import { useModulePagesContext } from '../context/ModulePagesContext'
 
 interface ModulePageEditorProps {
   moduleId: string
@@ -20,11 +19,15 @@ export default function ModulePageEditor({
   moduleId,
   initialPageId,
 }: ModulePageEditorProps) {
-  // State untuk expanded items di sidebar
-  const [expandedItems, setExpandedItems] = useState({
-    SPRINT: true,
-    ModulePages: true,
-  })
+  // Get context
+  const {
+    setPages,
+    setActivePage,
+    pages: contextPages,
+    activePage: contextActivePage,
+    expandedItems,
+    toggleExpand,
+  } = useModulePagesContext()
 
   // State untuk halaman aktif
   const [activePageId, setActivePageId] = useState<string | undefined>(
@@ -54,14 +57,6 @@ export default function ModulePageEditor({
   const { title, saveStatus, handleContentChange, handleTitleChange } =
     useModulePageEditor(moduleId, activePage)
 
-  // Function untuk toggle expand item di sidebar
-  const toggleExpand = (item: keyof typeof expandedItems) => {
-    setExpandedItems((prev) => ({
-      ...prev,
-      [item]: !prev[item],
-    }))
-  }
-
   // Handle navigasi ke halaman sebelum/berikutnya
   const handleNavigation = (direction: 'prev' | 'next') => {
     if (!pages || !activePageIdToUse) return
@@ -77,9 +72,19 @@ export default function ModulePageEditor({
   }
 
   // Function untuk memilih halaman dari sidebar
-  const handleSelectPage = (page: ModulePage) => {
+  const handleSelectPage = (page: any) => {
     setActivePageId(page.id)
   }
+
+  // Update context whenever data changes
+  useEffect(() => {
+    if (pages.length > 0) {
+      setPages(pages)
+    }
+    if (activePage) {
+      setActivePage(activePage)
+    }
+  }, [pages, activePage, setPages, setActivePage])
 
   // Debounce title untuk mengurangi request update
   useDebounce(title, 500)
@@ -91,7 +96,6 @@ export default function ModulePageEditor({
 
   return (
     <div className="flex flex-col h-screen bg-[#121212] text-[#e3e4f2]">
-      {/* <TopNavigation /> */}
       <DocumentHeader
         title={title}
         onTitleChange={handleTitleChange}
@@ -100,7 +104,7 @@ export default function ModulePageEditor({
 
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Editor Area - Menghapus overflow-auto di sini untuk menghindari double scrollbar */}
+        {/* Editor Area */}
         <div className="flex-1">
           <div className="h-full w-full">
             <RichTextEditor
@@ -112,13 +116,6 @@ export default function ModulePageEditor({
             />
           </div>
         </div>
-        {/* <Sidebar
-          expandedItems={expandedItems}
-          toggleExpand={toggleExpand}
-          pages={pages}
-          activePage={activePage}
-          onSelectPage={handleSelectPage}
-        /> */}
       </div>
 
       {/* Footer Navigation */}

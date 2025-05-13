@@ -45,11 +45,6 @@ function ModulePageEditorSkeleton() {
           <Skeleton className="h-24 w-full mb-4 bg-[#1f1f21]" />
           <Skeleton className="h-24 w-full bg-[#1f1f21]" />
         </div>
-
-        {/* Sidebar Skeleton */}
-        <div className="w-64 border-l border-[#3b3b3b]">
-          <Skeleton className="h-full w-full bg-[#1f1f21]" />
-        </div>
       </div>
 
       {/* Footer Skeleton */}

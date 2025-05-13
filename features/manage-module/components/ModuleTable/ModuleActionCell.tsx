@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Module } from '@/features/manage-module/types'
-import { Edit, Trash2, FileText } from 'lucide-react'
+import { Edit, Trash2, FileText, BookOpen } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import ModuleFormModal from './ModuleFormModal'
 import {
@@ -62,10 +62,10 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
           variant="ghost"
           size="sm"
           onClick={handleManagePages}
-          className="h-8 w-8 p-0 text-blue-400 hover:bg-indigo-600/20 hover:text-blue-300"
+          className="h-8 w-8 p-0 text-green-400 hover:bg-green-600/20 hover:text-green-300"
           title="Kelola Halaman"
         >
-          <FileText className="h-4 w-4" />
+          <BookOpen className="h-4 w-4" />
           <span className="sr-only">Kelola Halaman</span>
         </Button>
         <Button
