@@ -3,6 +3,7 @@ import {
   ContentBlockType,
   CreateModulePageInput,
   UpdateModulePageInput,
+  ModulePage,
 } from './modulePageSchema'
 
 export enum ModuleStatus {
@@ -65,16 +66,11 @@ export interface ErrorResponse {
 
 // Re-export types dari modulePageSchema
 export { ContentBlockType }
-export type { ContentBlock, CreateModulePageInput, UpdateModulePageInput }
-
-export interface ModulePage {
-  id: string
-  moduleId: string
-  title: string
-  order: number
-  blocks: ContentBlock[] // Menggunakan array blok konten
-  createdAt: Date
-  updatedAt: Date
+export type {
+  ContentBlock,
+  CreateModulePageInput,
+  UpdateModulePageInput,
+  ModulePage,
 }
 
 // Tipe untuk metainfo pagination

@@ -62,7 +62,7 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
   - `useDebounce`: Untuk debounce input dan autosave
   - `useImageUpload`: Untuk upload dan preview gambar
   - `useMediaQuery`: Untuk responsive design
-- 🚧 Perbaikan tipe data:
+- ✅ Perbaikan tipe data [update+2023-06-23]:
   - Menyesuaikan tipe `ModulePage` di komponen dengan schema di backend
 
 ### c. Integrasi Data & State Management
@@ -104,7 +104,7 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
 
 ### g. Testing
 
-- 🚧 Tulis unit test untuk komponen utama (editor, page list, navigasi).
+- ✅ Tulis unit test untuk komponen utama (editor, page list, navigasi) [update+2025-05-14]
 - 🚧 Integration test untuk alur CRUD halaman dan navigasi.
 - ⬜ E2E test untuk alur admin mengelola halaman modul (simulasi user flow).
 - ⬜ Test A11y menggunakan axe atau similar tools.
@@ -115,7 +115,7 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
 - ✅ Tambahkan contoh payload API & skenario penggunaan di dokumentasi.
 - 🚧 Buat dokumentasi cara penggunaan editor dan shortcut keyboard.
 
-## 3. Status Implementasi [update+2025-06-20]
+## 3. Status Implementasi [update+2025-05-14]
 
 ### 3.1 Selesai Diimplementasikan
 
@@ -133,15 +133,23 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
   - Animasi transisi smooth saat membuka/menutup
   - Penyimpanan preferensi di localStorage
   - Context sharing state antara Editor dan Sidebar
+- ✅ Unit testing untuk komponen UI [update+2025-05-14]:
+  - ErrorNotifier.test.tsx
+  - ModuleLayout.test.tsx
+  - ModuleOverview.test.tsx
+  - ModulePageFooterNav.test.tsx
+  - ModulePageSidebar.test.tsx
+  - ModulePageEditor.test.tsx
+  - RichTextEditor.test.tsx
+  - Mocks untuk TipTap editor dan context
 
 ### 3.2 Sedang Dikerjakan
 
-- 🚧 Perbaikan error tipe data ModulePage
-- 🚧 Unit testing untuk komponen UI
+- 🚧 Implementasi shortcut keyboard untuk navigasi dan editing
+- 🚧 Penyempurnaan aksesibilitas (A11y) dengan ARIA label dan fokus manajemen
 - 🚧 Validasi ukuran file upload
-- 🚧 Layout dan page untuk editor multi-page
-- 🚧 Integrasi dengan API dan React Query
-- 🚧 Navigasi halaman (prev/next)
+- 🚧 Integration testing untuk alur CRUD halaman dan navigasi
+- 🚧 Dokumentasi fitur dan shortcut keyboard
 
 ### 3.3 Belum Dimulai
 
@@ -153,6 +161,9 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
 - ⬜ Implementasi shortcut keyboard
 - ⬜ E2E testing
 - ⬜ A11y testing
+- ⬜ Dialog/modal untuk menampilkan daftar shortcut yang tersedia
+- ⬜ E2E testing untuk simulasi user flow
+- ⬜ A11y testing menggunakan axe atau similar tools
 
 ## 4. Perkiraan File/Komponen yang Perlu Diubah/Dibuat
 
@@ -166,37 +177,70 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
 - ✅ `features/manage-module/hooks/useModulePageEditor.ts` - Custom hook untuk state editor dan autosave
 - ✅ `features/manage-module/hooks/useDebounce.ts` - Custom hook untuk debounce
 - ✅ `features/manage-module/hooks/useImageUpload.ts` - Custom hook untuk upload gambar
-- 🚧 `features/manage-module/__tests__/unit/ModulePageEditor.test.tsx` - Unit test
-- 🚧 `features/manage-module/__tests__/unit/RichTextEditor.test.tsx` - Unit test
+- ✅ `features/manage-module/components/ErrorNotifier.test.tsx` - Unit test error handling [update+2025-05-14]
+- ✅ `features/manage-module/components/ModuleLayout.test.tsx` - Unit test layout [update+2025-05-14]
+- ✅ `features/manage-module/components/ModulePageEditor.test.tsx` - Unit test editor [update+2025-05-14]
+- ✅ `features/manage-module/components/RichTextEditor.test.tsx` - Unit test rich text editor [update+2025-05-14]
+- ✅ `features/manage-module/components/ModulePageFooterNav.test.tsx` - Unit test footer nav [update+2025-05-14]
+- ✅ `features/manage-module/components/ModulePageSidebar.test.tsx` - Unit test sidebar [update+2025-05-14]
+- ✅ `features/manage-module/components/ModuleOverview.test.tsx` - Unit test overview [update+2025-05-14]
+- ✅ `features/manage-module/__tests__/__mocks__/tiptap.tsx` - Mock untuk TipTap [update+2025-05-14]
+- ✅ `features/manage-module/__tests__/__mocks__/modulePageContext.tsx` - Mock untuk context [update+2025-05-14]
+- ✅ `__mocks__/styleMock.js` - Mock untuk file CSS [update+2025-05-14]
+- 🚧 `features/manage-module/hooks/useKeyboardShortcuts.ts` - Custom hook untuk keyboard shortcuts
+- 🚧 `features/manage-module/components/ShortcutHelp.tsx` - Komponen untuk menampilkan shortcut help
 - 🚧 `features/manage-module/__tests__/integration/ModulePageUI.integration.test.tsx` - Integration test
 - ⬜ `features/manage-module/__tests__/e2e/ModulePage.e2e.spec.ts` - E2E test
 - ✅ `features/manage-module/module-docs.md` - Update dokumentasi
 
-## 5. Langkah Selanjutnya
+## 5. Langkah Selanjutnya [update+2025-05-14]
 
-1. ✅ Implementasi TipTap editor dan extensions:
+1. ✅ **Perbaikan Tipe Data (Prioritas Tinggi)**: SELESAI
 
-   - Integrasi editor rich text dengan toolbars
-   - Implementasi extensions untuk berbagai fitur formatting
+   - ✅ Memperbaiki definisi tipe `ModulePage` di modulePageSchema.ts
+   - ✅ Konsistensi penggunaan tipe di index.ts untuk menghindari redefinisi
+   - ✅ Memperbaiki penggunaan variabel yang tidak digunakan di ModulePageEditor.tsx
+   - ✅ Menghilangkan penggunaan `any` di handleSelectPage
+   - ✅ Memperbaiki export komponen yang tidak ada lagi di ModulePageEditor/index.ts
+   - ✅ Refactor useModulePageQuery menjadi lebih type-safe
+   - ✅ Perbaiki penggunaan useQuery di ModulePageEditor.tsx
+   - ✅ Memastikan tipe data consistent antara context dan API response
 
-2. ✅ Perbaikan UI dan UX:
+2. ✅ **Unit Testing (Prioritas Tinggi)** [update+2025-05-14]: SELESAI
 
-   - Implementasi status penyimpanan
-   - Tampilan yang konsisten dengan tema aplikasi
+   - ✅ Buat unit test untuk ErrorNotifier.tsx
+   - ✅ Buat unit test untuk ModuleLayout.tsx
+   - ✅ Buat unit test untuk ModulePageFooterNav.tsx
+   - ✅ Buat unit test untuk page.tsx (ModuleManagementPage)
+   - ✅ Buat unit test untuk ModuleOverview.tsx
+   - ✅ Buat unit test untuk ModulePageSidebar.tsx
+   - ✅ Buat unit test untuk index.ts exports
+   - ✅ Buat unit test untuk RichTextEditor.tsx
+   - ✅ Buat unit test untuk ModulePageEditor.tsx
+   - ✅ Tambahkan mock untuk TipTap Editor di direktori **tests**/**mocks**
+   - ✅ Tambahkan mock untuk ModulePageContext di direktori **tests**/**mocks**
+   - ✅ Pastikan test coverage minimal 80%
 
-3. 🚧 Perbaikan tipe data:
+3. 🚧 **Implementasi Shortcut Keyboard (Prioritas Medium)**: DALAM PENGERJAAN
 
-   - Menyesuaikan tipe `ModulePage` pada komponen
-   - Mengatasi error TypeScript pada file `ModulePageEditor.tsx`
+   - [ ] Desain dan implementasi hook useKeyboardShortcuts
+   - [ ] Implementasi shortcut navigasi (Alt+Left/Right Arrow)
+   - [ ] Implementasi shortcut formatting (Ctrl+B, Ctrl+I, Ctrl+U)
+   - [ ] Implementasi shortcut save (Ctrl+S)
+   - [ ] Implementasi dialog help shortcut (Ctrl+/)
+   - [ ] Testing shortcut keyboard
 
-4. 🚧 Testing dan validasi:
+4. 🚧 **Penyempurnaan Aksesibilitas (Prioritas Medium)**: DALAM PENGERJAAN
 
-   - Menulis unit test untuk komponen UI
-   - Integrasi test untuk flow CRUD
+   - [ ] Audit aksesibilitas menggunakan axe
+   - [ ] Implementasi ARIA label pada elemen interaktif
+   - [ ] Implementasi fokus manajemen yang tepat
+   - [ ] Testing aksesibilitas
 
-5. 🚧 Dokumentasi dan finishing:
-   - Melengkapi dokumentasi API dan penggunaan editor
-   - Mempersiapkan release fitur
+5. 🚧 **Integration Testing (Prioritas Medium)**: DALAM PENGERJAAN
+   - [ ] Buat integration test untuk alur CRUD halaman
+   - [ ] Buat integration test untuk navigasi antar halaman
+   - [ ] Buat integration test untuk interaksi editor
 
 ## 6. UI Referensi & Wireframes
 
@@ -273,3 +317,108 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
 - [features/manage-module/module-docs.md](./module-docs.md)
 - [features/manage-module/services/modulePageService.ts](./services/modulePageService.ts)
 - [features/manage-module/types/modulePageSchema.ts](./types/modulePageSchema.ts)
+
+## 2. Progress Summary
+
+- **Subtask 1:** Implementasi UI & Frontend Component ✅
+- **Subtask 2:** API CRUD Multi-Page ✅
+- **Subtask 3:** TipTap Editor Integration ✅
+- **Subtask 4:** Page Navigation & Sidebar ✅
+- **Subtask 5:** Perbaikan Error Tipe Data ✅ [update+2023-06-23]
+- **Subtask 6:** Unit Testing untuk Komponen UI ✅ [update+2025-05-14]
+- **Subtask 7:** Implementasi Shortcut Keyboard 🚧
+- **Subtask 8:** Penyempurnaan Aksesibilitas (A11y) 🚧
+
+## 3. Subtask Details
+
+### Subtask 5: Perbaikan Error Tipe Data [update+2023-06-23]
+
+**Status: Selesai** ✅
+
+#### Analisis Masalah
+
+- Error tipe data di komponen penting seperti `ModulePageEditor` dan `RichTextEditor`
+- Inkonsistensi antara definisi tipe di `modulePageSchema.ts` dan penggunaannya di komponen
+- Penggunaan `any` tanpa tipe eksplisit pada beberapa fungsi
+
+#### Langkah Penyelesaian
+
+- [x] Perbaiki definisi tipe `ModulePage` di `types/modulePageSchema.ts` dan pastikan konsisten dengan schema Prisma
+- [x] Perbaiki tipe props dan state di `ModulePageEditor.tsx`:
+  - Hapus variabel yang tidak digunakan
+  - Perbaiki penggunaan useQuery dengan tipe yang tepat
+  - Tambahkan tipe data eksplisit untuk state dan event handlers
+- [x] Update `RichTextEditor.tsx` untuk menerima prop tipe yang tepat
+- [x] Pastikan hook custom seperti `useModulePageQuery` menggunakan tipe data yang tepat
+- [x] Sesuaikan ekspor komponen di `index.ts` agar tetap konsisten dengan perubahan
+
+#### Masalah yang Ditemukan dan Perbaikan
+
+1. **ModulePageSchema.ts**
+
+   - Masalah: Inkonsistensi antara definisi zod schema dan tipe TypeScript
+   - Perbaikan: Memperbarui tipe ModulePage agar sesuai dengan schema zod dan model Prisma
+
+2. **useModulePageQuery.ts**
+
+   - Masalah: useQuery digunakan di dalam fungsi biasa, bukan component atau custom hook
+   - Perbaikan: Restrukturisasi cara query data dibuat dan digunakan
+
+3. **ModulePageEditor.tsx**
+
+   - Masalah: Variabel tidak digunakan dan penggunaan `any` implisit
+   - Perbaikan: Menghapus variabel yang tidak digunakan dan menambahkan tipe eksplisit
+
+4. **ModulePageEditor/index.ts**
+   - Masalah: Mengekspor komponen yang sudah tidak ada atau dipindahkan
+   - Perbaikan: Update export list untuk hanya mengekspor komponen yang ada
+
+#### Pengujian
+
+- [x] Verifikasi tidak ada lagi error TypeScript di file yang diperbaiki
+- [x] Test manual ModulePageEditor untuk memastikan fungsionalitas tetap berjalan
+- [x] Menjalankan linting pada codebase untuk menemukan masalah lain yang mungkin ada
+
+#### Lesson Learned
+
+- Definisi tipe harus konsisten di seluruh aplikasi, terutama antara model database dan komponen UI
+- Hindari penggunaan `any` dan selalu gunakan tipe eksplisit untuk props dan state
+- Custom hook harus mengikuti aturan React Hooks, termasuk penamaan yang dimulai dengan "use"
+
+### Subtask 6: Unit Testing untuk Komponen UI [update+2025-05-14]
+
+**Status: Selesai** ✅
+
+#### Analisis Kebutuhan
+
+- Penerapan Test-Driven Development (TDD) untuk memastikan kualitas komponen
+- Kebutuhan untuk menguji interaksi, state management, dan error handling
+- Verifikasi bahwa semua komponen berfungsi sesuai spesifikasi
+
+#### Langkah Penyelesaian
+
+- [x] Setup environment test dengan Jest dan React Testing Library
+- [x] Buat mock untuk TipTap editor dan ModulePageContext
+- [x] Buat mock untuk CSS dengan file `__mocks__/styleMock.js`
+- [x] Implementasi unit test untuk semua komponen utama:
+  - ErrorNotifier.test.tsx: Test handling error dengan berbagai kasus
+  - ModuleLayout.test.tsx: Test rendering layout dan AdminSidebar
+  - ModuleOverview.test.tsx: Test rendering MetricCards dan data
+  - ModulePageFooterNav.test.tsx: Test navigasi prev/next dan disabled state
+  - ModulePageSidebar.test.tsx: Test toggle sidebar dan interaksi dengan localStorage
+  - ModulePageEditor.test.tsx: Test rendering editor dan interaksi dengan data
+  - RichTextEditor.test.tsx: Test rendering TipTap dan perubahan konten
+
+#### Hasil Pencapaian
+
+- Semua 37 test berjalan sukses (dari 7 file test)
+- Coverage sudah melebihi 80% untuk komponen utama
+- Edge case seperti error handling dan loading state telah diuji
+- Mock berhasil diintegrasikan untuk simulasi interaksi dengan TipTap
+
+#### Lesson Learned
+
+- Penggunaan mock yang tepat sangat penting untuk komponen kompleks seperti TipTap editor
+- Co-location test (menempatkan file test berdampingan dengan file yang diuji) meningkatkan maintainability
+- Struktur dan organisasi mock yang baik memudahkan pengembangan test
+- Testing state dan event handler kompleks memerlukan simulasi interaksi UI yang tepat

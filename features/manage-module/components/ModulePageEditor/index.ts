@@ -6,10 +6,11 @@ export { default as DocumentContent } from './document/DocumentContent'
 export { default as FormattingToolbar } from './editor/FormattingToolbar'
 
 // Navigation components
-export { default as TopNavigation } from './navigation/TopNavigation'
+// TopNavigation telah dipindahkan atau dihapus
+// export { default as TopNavigation } from './navigation/TopNavigation'
 
 // Sidebar components
-export { default as Sidebar } from './sidebar/Sidebar'
+// Sidebar telah dipindahkan ke layout level, sehingga tidak lagi diexport dari sini
 export { default as SidebarHeader } from './sidebar/SidebarHeader'
 export { default as SidebarContent } from './sidebar/SidebarContent'
 export { default as SidebarItem } from './sidebar/sidebar-item'

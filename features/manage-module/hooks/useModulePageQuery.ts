@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { modulePageService } from '../services/modulePageService'
-import { ModulePage } from '../types'
+import { ModulePage } from '../types/modulePageSchema'
 
 export function useModulePageQuery(moduleId: string) {
   // Query untuk mendapatkan semua halaman dalam modul
@@ -11,6 +11,7 @@ export function useModulePageQuery(moduleId: string) {
   })
 
   // Function untuk mendapatkan detail halaman berdasarkan ID
+
   const getPageById = (pageId: string) =>
     useQuery({
       queryKey: ['modulePage', moduleId, pageId],

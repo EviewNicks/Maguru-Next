@@ -50,7 +50,7 @@
 - Middleware autentikasi admin
 - Integrasi dengan audit trail (future task, log sederhana dulu)
 
-### C. Frontend UI/UX [update+2025-06-20] 🟡
+### C. Frontend UI/UX [update+2025-05-14] 🟡
 
 - **Halaman Khusus Multi-Page Editor**
   - Route: `/manage-module/pages/[moduleId]` ✅ (Sudah dibuat)
@@ -87,11 +87,19 @@
     - `useDebounce`: Untuk debouncing input dan autosave
     - `useMediaQuery`: Untuk responsive design
     - `useImageUpload`: Untuk upload dan preview gambar
+  - **Unit Testing yang Sudah Diimplementasikan:** ✅ [update+2025-05-14]
+    - ErrorNotifier.test.tsx: Test error handling dengan berbagai kasus
+    - ModuleLayout.test.tsx: Test rendering layout dan AdminSidebar
+    - ModuleOverview.test.tsx: Test rendering MetricCards dan data
+    - ModulePageFooterNav.test.tsx: Test navigasi prev/next dan disabled state
+    - ModulePageSidebar.test.tsx: Test toggle sidebar dan interaksi dengan localStorage
+    - ModulePageEditor.test.tsx: Test rendering editor dan interaksi dengan data
+    - RichTextEditor.test.tsx: Test rendering TipTap dan perubahan konten
+    - Mock untuk TipTap editor dan konteks di direktori `__tests__/__mocks__`
   - **Yang Perlu Diselesaikan:** 🔄
-    - Perbaikan error tipe data pada ModulePageEditor
-    - Implementasi shortcut keyboard
-    - Unit dan integration testing
-    - Penyempurnaan A11y
+    - Implementasi shortcut keyboard untuk navigasi dan editing
+    - Penyempurnaan aksesibilitas (A11y) dengan ARIA label
+    - Integration testing untuk alur CRUD dan navigasi
 
 - **Integrasi**
   - ✅ React Query untuk fetch/mutasi data
@@ -108,8 +116,8 @@
 
 ### E. Testing 🟡
 
-- Unit test untuk fungsi utama (form, editor, API handler) - 90% Selesai
-- Integration test untuk alur CRUD halaman - 80% Selesai
+- Unit test untuk fungsi utama (form, editor, API handler) ✅ [update+2025-05-14]
+- Integration test untuk alur CRUD halaman - 20% Selesai
 - E2E test untuk user flow admin mengelola halaman - Belum dimulai
 - UI Testing untuk komponen-komponen baru - Dalam pengerjaan
 
@@ -156,51 +164,63 @@
   - `features/manage-module/services/modulePageService.ts` ✅
   - `features/manage-module/lib/content.ts` ✅
   - `features/manage-module/lib/TipTapUtils.ts` ✅
+  - `features/manage-module/components/ErrorNotifier.test.tsx` ✅ [update+2025-05-14]
+  - `features/manage-module/components/ModuleLayout.test.tsx` ✅ [update+2025-05-14]
+  - `features/manage-module/components/ModuleOverview.test.tsx` ✅ [update+2025-05-14]
+  - `features/manage-module/components/ModulePageFooterNav.test.tsx` ✅ [update+2025-05-14]
+  - `features/manage-module/components/ModulePageSidebar.test.tsx` ✅ [update+2025-05-14]
+  - `features/manage-module/components/ModulePageEditor.test.tsx` ✅ [update+2025-05-14]
+  - `features/manage-module/components/RichTextEditor.test.tsx` ✅ [update+2025-05-14]
+  - `features/manage-module/__tests__/__mocks__/tiptap.tsx` ✅ [update+2025-05-14]
+  - `features/manage-module/__tests__/__mocks__/modulePageContext.tsx` ✅ [update+2025-05-14]
+  - `__mocks__/styleMock.js` ✅ [update+2025-05-14]
 
 - **Perlu Dikerjakan 🔄**
-  - Perbaikan error tipe data pada ModulePageEditor.tsx dan RichTextEditor.tsx
-  - Unit, integration, dan UI test untuk komponen TipTap editor
-  - Implementasi shortcut keyboard untuk navigasi dan editing
-  - Penyempurnaan A11y untuk editor
+  - `features/manage-module/hooks/useKeyboardShortcuts.ts` - Custom hook untuk keyboard shortcuts
+  - `features/manage-module/components/ShortcutHelp.tsx` - Komponen untuk menampilkan shortcut help
+  - `features/manage-module/__tests__/integration/ModulePageUI.integration.test.tsx` - Integration test
+  - Implementasi aksesibilitas (ARIA label, fokus manajemen)
 
 ### Dokumentasi
 
 - `features/manage-module/module-docs.md` 🟡 (Sebagian selesai)
 - `docs/implementation-plan/sprint-4/story-143/task-ops-140.md` 🟡 (Sebagian selesai)
 
-## 4. Langkah Selanjutnya
+## 4. Langkah Selanjutnya [update+2025-05-14]
 
-1. **Perbaikan Error Tipe Data (Prioritas Tinggi)**
+1. **Perbaikan Error Tipe Data (Prioritas Tinggi)** ✅ SELESAI
 
-   - Selesaikan definisi tipe `ModulePage` dan `UpdateModulePageDto` di `features/manage-module/types/modulePageSchema.ts`
-   - Perbaiki penggunaan tipe data pada custom hook `useModulePageQuery`, `useModulePageEditor`, dan `useModulePageMutation`
-   - Perbaiki import dan penggunaan komponen di `ModulePageEditor.tsx`
-     - Selesaikan penyesuaian tipe `ModulePage` di `ModulePageEditor.tsx`
-   - Perbaiki error TypeScript terkait editor dan hooks
+   - Sudah selesai mengimplementasikan tipe data yang konsisten
+   - Sudah selesai memperbaiki error TypeScript
 
-2. **Penyelesaian Unit Testing (Prioritas Tinggi)**
+2. **Unit Testing untuk Komponen UI (Prioritas Tinggi)** ✅ SELESAI
 
-   - Buat unit test untuk komponen RichTextEditor dan ekstensinya
-   - Buat unit test untuk ModulePageEditor dan komponen-komponennya
+   - Sudah selesai mengimplementasikan unit test untuk semua komponen utama
+   - Coverage sudah mencapai >80% untuk komponen-komponen kritis
+   - Mock untuk TipTap dan context sudah berfungsi dengan baik
 
-3. **Implementasi Shortcut Keyboard (Prioritas Sedang)**
+3. **Implementasi Shortcut Keyboard (Prioritas Sedang)** 🚧 DALAM PENGERJAAN
 
-   - Tambahkan shortcut keyboard untuk navigasi antar halaman
-   - Tambahkan shortcut keyboard untuk editing (bold, italic, dll)
+   - Implementasi hook `useKeyboardShortcuts`
+   - Shortcut navigasi antar halaman (Alt+Left/Right Arrow)
+   - Shortcut formatting (Ctrl+B, Ctrl+I, Ctrl+U)
+   - Shortcut save (Ctrl+S)
+   - Dialog help untuk shortcut
 
-4. **Penyempurnaan A11y (Prioritas Sedang)**
+4. **Penyempurnaan Aksesibilitas (Prioritas Sedang)** 🚧 DALAM PENGERJAAN
 
-   - Tambahkan ARIA label pada komponen editor
-   - Pastikan semua komponen dapat diakses dengan keyboard
+   - Menambahkan ARIA label pada elemen interaktif
+   - Implementasi fokus manajemen yang benar
+   - Testing aksesibilitas dengan axe
 
-5. **Dokumentasi Final (Prioritas Tinggi)**
-   - Lengkapi dokumentasi penggunaan TipTap editor
-   - Dokumentasikan shortcut keyboard yang tersedia
-   - Persiapkan panduan pengguna untuk fitur editor
+5. **Integration Testing (Prioritas Sedang)** 🚧 DALAM PENGERJAAN
+   - Implementasi integration test untuk alur CRUD halaman
+   - Implementasi integration test untuk navigasi antar halaman
+   - Verifikasi interaksi antara komponen
 
 ---
 
 **Catatan:**
 
 - Fitur drag & drop urutan halaman, quiz page, preview, audit trail detail, import/export, duplikasi, dan versioning akan dikerjakan di future task (sudah dicatat di backlog).
-- Prioritaskan penyelesaian tipe data dan unit testing sebagai fokus utama.
+- Setelah menyelesaikan unit testing dengan baik, fokus selanjutnya adalah implementasi shortcut keyboard dan penyempurnaan aksesibilitas, diikuti dengan integration testing.

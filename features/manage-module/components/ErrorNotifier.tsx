@@ -47,7 +47,8 @@ export function handleError(error: unknown): ErrorDetails {
           // Format error umum
           errorDetails = {
             code: `HTTP_${response.status || 500}`,
-            message: response.data.message || 'Terjadi kesalahan pada server',
+            message:
+              response.data.message || getHttpErrorMessage(response.status),
           }
         }
       } else {

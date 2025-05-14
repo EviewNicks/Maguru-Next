@@ -91,7 +91,17 @@ export const ModulePageSchema = z.object({
 /**
  * Type untuk ModulePage
  */
-export type ModulePage = z.infer<typeof ModulePageSchema>
+export type ModulePage = {
+  id: string
+  title: string
+  moduleId: string
+  order: number
+  content?: string
+  blocks?: ContentBlock[]
+  status: 'DRAFT' | 'PUBLISHED'
+  createdAt: Date
+  updatedAt: Date
+}
 
 /**
  * Schema untuk response API list

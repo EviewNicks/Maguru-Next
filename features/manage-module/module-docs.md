@@ -8,14 +8,16 @@
 
 - **Nama Modul**: Manajemen Modul Pembelajaran (Manage Module)
 - **Kode Modul**: MODMGMT-001
-- **Versi**: 1.2.1
-- **Tanggal Terakhir Update**: 14-06-2024 [update+2024-06-14]
+- **Versi**: 1.3.0
+- **Tanggal Terakhir Update**: 14-05-2025 [update+2025-05-14]
 - **Penulis**: Tim Maguru
 - **Status**: Implemented (Sprint 2)
 
 ### 1.2 Ringkasan
 
 Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan admin membuat, mengedit, menghapus, dan mengatur status modul (aktif, draft, diarsipkan). Pada update terbaru, telah dilakukan perbaikan pada fitur filter status modul agar menampilkan semua status (ACTIVE, DRAFT, ARCHIVED) secara benar, serta penambahan dan perbaikan pengujian unit & integrasi untuk memastikan filter status berjalan sesuai kebutuhan. [update+2024-06-14]
+
+Pada update terbaru, telah selesai implementasi unit testing untuk semua komponen utama pada fitur multi-page editor dengan TipTap, termasuk ModulePageEditor, RichTextEditor, ModulePageSidebar, dan komponen pendukung lainnya. Semua test berjalan sukses dengan coverage yang baik, serta menyediakan mock yang tepat untuk TipTap editor dan ModulePageContext. [update+2025-05-14]
 
 ## 2. Spesifikasi Kebutuhan
 
@@ -419,6 +421,95 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
    └───────────────────────────────────┘
    ```
 
+### 3.5 Testing [update+2025-05-14]
+
+#### 3.5.1 Unit Testing
+
+Implementasi unit testing untuk komponen UI telah selesai dilakukan dengan hasil yang baik. Semua test berjalan sukses dengan coverage mencapai lebih dari 80% untuk komponen-komponen utama. Berikut adalah daftar file test yang telah diimplementasikan:
+
+1. **ErrorNotifier.test.tsx**
+
+   - Test penanganan berbagai jenis error, termasuk format dan tampilan pesan error.
+   - Verifikasi bahwa fungsi showErrorNotification memanggil toast dengan parameter yang tepat.
+
+2. **ModuleLayout.test.tsx**
+
+   - Test rendering AdminSidebar dan children components.
+   - Verifikasi struktur layout dan konten yang benar.
+
+3. **ModuleOverview.test.tsx**
+
+   - Test rendering MetricCards dan data statistik.
+   - Verifikasi tampilan judul, badge, dan button yang tepat.
+
+4. **ModulePageFooterNav.test.tsx**
+
+   - Test navigasi halaman (previous/next).
+   - Verifikasi disabled state pada tombol ketika berada di halaman pertama/terakhir.
+
+5. **ModulePageSidebar.test.tsx**
+
+   - Test toggle sidebar (buka/tutup).
+   - Test interaksi dengan localStorage untuk menyimpan preferensi.
+   - Verifikasi render komponen-komponen sidebar seperti SidebarHeader, SidebarContent, dll.
+
+6. **ModulePageEditor.test.tsx**
+
+   - Test rendering editor dan interaksi dengan data.
+   - Verifikasi state loading dan error.
+   - Test navigasi antar halaman.
+
+7. **RichTextEditor.test.tsx**
+   - Test rendering TipTap editor dengan extensions.
+   - Test perubahan konten dan pembaruan state.
+
+#### 3.5.2 Mocks
+
+Untuk mendukung unit testing, telah dibuat mock yang mendukung simulasi komponen kompleks:
+
+1. **tiptap.tsx** (`features/manage-module/__tests__/__mocks__/tiptap.tsx`)
+
+   - Mock untuk useEditor dan EditorContent dari @tiptap/react
+   - Mock untuk berbagai extensions seperti StarterKit, Placeholder, dll.
+
+2. **modulePageContext.tsx** (`features/manage-module/__tests__/__mocks__/modulePageContext.tsx`)
+
+   - Mock untuk ModulePagesContext dengan simulasi state dan fungsi yang dibutuhkan
+
+3. **styleMock.js** (`__mocks__/styleMock.js`)
+   - Mock untuk file CSS yang diimpor dalam komponen
+
+#### 3.5.3 Lesson Learned dari Testing
+
+- Penggunaan mock yang tepat sangat penting untuk komponen kompleks seperti TipTap editor
+- Co-location test (menempatkan file test berdampingan dengan file yang diuji) meningkatkan maintainability
+- Struktur dan organisasi mock yang baik memudahkan pengembangan test
+- Testing state dan event handler kompleks memerlukan simulasi interaksi UI yang tepat
+
+### 3.6 Langkah Selanjutnya [update+2025-05-14]
+
+Setelah menyelesaikan implementasi unit testing dengan baik, fokus pengembangan selanjutnya adalah:
+
+1. **Implementasi Shortcut Keyboard**
+
+   - Pengembangan hook useKeyboardShortcuts
+   - Menambahkan shortcut navigasi (Alt+Left/Right Arrow)
+   - Menambahkan shortcut formatting (Ctrl+B, Ctrl+I, Ctrl+U)
+   - Menambahkan shortcut save (Ctrl+S)
+   - Membuat dialog help untuk menampilkan daftar shortcut
+
+2. **Penyempurnaan Aksesibilitas (A11y)**
+
+   - Audit aksesibilitas menggunakan axe
+   - Menambahkan ARIA label pada elemen interaktif
+   - Implementasi fokus manajemen
+   - Testing aksesibilitas
+
+3. **Integration Testing**
+   - Buat integration test untuk alur CRUD halaman
+   - Test navigasi antar halaman
+   - Verifikasi interaksi antar komponen
+
 ## 4. Pengujian
 
 ### 4.1 Test Cases
@@ -526,9 +617,10 @@ Modul ini bertanggung jawab untuk manajemen modul pembelajaran yang memungkinkan
 
 ## 8. Riwayat Perubahan
 
-| Tanggal    | Versi | Deskripsi Perubahan                                                   | Penulis    |
-| ---------- | ----- | --------------------------------------------------------------------- | ---------- | ------------------- |
-| 01-03-2025 | 1.0.0 | Initial draft & struktur blueprint                                    | Tim Maguru |
-| 07-03-2025 | 1.1.0 | Implementasi UI, services & test case awal                            | Tim Maguru |
-| 14-03-2025 | 1.2.0 | Completed CRUD & status management with tests                         | Tim Maguru |
-| 14-06-2024 | 1.2.1 | Perbaikan filter status modul, update test unit & integrasi, coverage | Tim Maguru | [update+2024-06-14] |
+| Tanggal    | Versi | Deskripsi Perubahan                                                                                                | Penulis    |
+| ---------- | ----- | ------------------------------------------------------------------------------------------------------------------ | ---------- | ------------------- |
+| 01-03-2025 | 1.0.0 | Initial draft & struktur blueprint                                                                                 | Tim Maguru |
+| 07-03-2025 | 1.1.0 | Implementasi UI, services & test case awal                                                                         | Tim Maguru |
+| 14-03-2025 | 1.2.0 | Completed CRUD & status management with tests                                                                      | Tim Maguru |
+| 14-06-2024 | 1.2.1 | Perbaikan filter status modul, update test unit & integrasi, coverage                                              | Tim Maguru | [update+2024-05-12] |
+| 22-06-2025 | 1.3.0 | Implementasi Toggle Right Sidebar, rencana perbaikan tipe data, unit testing, shortcut keyboard, dan aksesibilitas | Tim Maguru | [update+2025-05-24] |

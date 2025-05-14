@@ -9,6 +9,9 @@ import { useModulePageEditor } from '../hooks/useModulePageEditor'
 import { RichTextEditor } from './RichTextEditor'
 import { useDebounce } from '../hooks/useDebounce'
 import { useModulePagesContext } from '../context/ModulePagesContext'
+import { ModulePage } from '../types/modulePageSchema'
+import { useQuery } from '@tanstack/react-query'
+import { modulePageService } from '../services/modulePageService'
 
 interface ModulePageEditorProps {
   moduleId: string
@@ -23,10 +26,11 @@ export default function ModulePageEditor({
   const {
     setPages,
     setActivePage,
-    pages: contextPages,
-    activePage: contextActivePage,
-    expandedItems,
-    toggleExpand,
+    // Variabel yang tidak digunakan
+    // pages: contextPages,
+    // activePage: contextActivePage,
+    // expandedItems,
+    // toggleExpand,
   } = useModulePagesContext()
 
   // State untuk halaman aktif
@@ -35,8 +39,7 @@ export default function ModulePageEditor({
   )
 
   // Fetch data module pages
-  const { getAllPages, getPageById, getAdjacentPages } =
-    useModulePageQuery(moduleId)
+  const { getAllPages, getAdjacentPages } = useModulePageQuery(moduleId)
   const { data: pagesData, isLoading: pagesLoading } = getAllPages
 
   // Ekstrak data halaman dari response API
@@ -46,10 +49,16 @@ export default function ModulePageEditor({
   const firstPage = pages && pages.length > 0 ? pages[0] : null
   const activePageIdToUse = activePageId || firstPage?.id
 
-  // Fetch data halaman aktif
-  const { data: activePageData } = activePageIdToUse
-    ? getPageById(activePageIdToUse)
-    : { data: null }
+  // Fetch data halaman aktif menggunakan useQuery langsung
+  const { data: activePageData } = useQuery({
+    queryKey: ['modulePage', moduleId, activePageIdToUse],
+    queryFn: () =>
+      activePageIdToUse
+        ? modulePageService.getModulePage(activePageIdToUse)
+        : { data: null },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!activePageIdToUse,
+  })
 
   const activePage = activePageData?.data
 
@@ -72,17 +81,19 @@ export default function ModulePageEditor({
   }
 
   // Function untuk memilih halaman dari sidebar
-  const handleSelectPage = (page: any) => {
+  // Fungsi ini tidak digunakan saat ini, tapi dipertahankan untuk penggunaan di masa mendatang
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleSelectPage = (page: ModulePage) => {
     setActivePageId(page.id)
   }
 
   // Update context whenever data changes
   useEffect(() => {
     if (pages.length > 0) {
-      setPages(pages)
+      setPages(pages as ModulePage[])
     }
     if (activePage) {
-      setActivePage(activePage)
+      setActivePage(activePage as ModulePage)
     }
   }, [pages, activePage, setPages, setActivePage])
 

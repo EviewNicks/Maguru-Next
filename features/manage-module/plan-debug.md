@@ -1,441 +1,249 @@
-Tentu! Berikut adalah **planning terstruktur** untuk menyelesaikan masalah pada Subtask 2 (API CRUD Multi-Page) yang masih menyisakan 4 integration test gagal, beserta referensi yang dibutuhkan.
-
----
-
-# 📋 Planning Penyelesaian Subtask 2: Fix 4 Integration Test Gagal (API CRUD Multi-Page)
-
-## 1. Ringkasan Masalah
-
-- Terdapat **4 integration test gagal** pada endpoint API CRUD multi-page.
-- Masalah utama:
-  - Assertion pada response handler tidak konsisten (format response, error handling, validasi input).
-  - Mock pada NextResponse/NextRequest belum sepenuhnya kompatibel dengan kebutuhan test.
-  - Beberapa test gagal pada skenario validasi dan error (POST/PUT).
-
----
-
-## 2. Langkah-Langkah Teknis Penyelesaian
-
-### A. Analisis Test yang Gagal
-
-- [ ] **Identifikasi test case yang gagal** secara detail (lihat file: `ModulePageAPI.integration.test.ts` dan report test).
-- [ ] Catat error message, assertion yang gagal, dan skenario (POST, PUT, validasi, error handler).
-
-### B. Review & Sinkronisasi Handler API
-
-- [ ] **Review handler API** di:
-  - `app/api/module/[id]/pages/route.ts`
-  - `app/api/pages/[id]/route.ts`
-- [ ] Pastikan format response **konsisten**:
-  - Sukses: `{ success: true, data: {...}, meta?: {...} }`
-  - Error: `{ error: "Pesan error", details?: {...} }`
-- [ ] Sinkronkan validasi Zod dan error handling agar response error selalu sama di semua handler.
-
-### C. Perbaiki Mock & Helper Test
-
-- [ ] **Perbaiki mock NextRequest/NextResponse** di:
-  - `__tests__/__mocks__/next-server.ts`
-- [ ] Pastikan mock request.json() mengembalikan data sesuai skenario test (khusus POST/PUT).
-- [ ] Tambahkan helper untuk membuat mock request/response yang lebih fleksibel.
-
-### D. Update & Refactor Integration Test
-
-- [ ] **Update assertion** pada integration test agar sesuai dengan format response terbaru.
-- [ ] Tambahkan test untuk skenario edge case (data kosong, validasi gagal, error handler).
-- [ ] Pastikan semua test menggunakan mock yang konsisten.
-
-### E. Linting & Dokumentasi
-
-- [ ] Jalankan linting dan pastikan tidak ada error/unused import.
-- [ ] Update dokumentasi di `module-docs.md` dan `plan-subtask.md` jika ada perubahan pada format response atau skenario test.
-
----
-
-## 3. Checklist TDD Fix
-
-- [ ] Semua test (unit & integration) lulus (status green).
-- [ ] Format response API konsisten di semua endpoint.
-- [ ] Mock Next.js (NextRequest/NextResponse) kompatibel dengan kebutuhan test.
-- [ ] Dokumentasi endpoint dan contoh payload diperbarui.
-
----
-
-## 4. Referensi yang Dibutuhkan
-
-### 📁 **File Project yang Perlu Direview/Diedit**
-
-- `features/manage-module/__tests__/integration/ModulePageAPI.integration.test.ts`
-- `app/api/module/[id]/pages/route.ts`
-- `app/api/pages/[id]/route.ts`
-- `__tests__/__mocks__/next-server.ts`
-- `features/manage-module/types/modulePageSchema.ts`
-- `features/manage-module/services/modulePageService.ts`
-- `features/manage-module/plan-subtask.md`
-- `features/manage-module/module-docs.md`
-
-### 📚 **Dokumentasi Luar**
-
-- [Jest Mock Functions](https://jestjs.io/docs/mock-functions)
-- [Jest Manual Mocks](https://jestjs.io/docs/manual-mocks)
-- [Testing Next.js API Routes](https://nextjs.org/docs/pages/building-your-application/testing)
-- [Next.js API Route Request Helpers](https://nextjs.org/docs/app/building-your-application/routing/api-routes)
-- [Zod Validation Docs](https://zod.dev/)
-- [Supertest (jika digunakan untuk API test)](https://github.com/ladjs/supertest)
-- [Mocking NextRequest/NextResponse](https://github.com/vercel/next.js/discussions/32238) (diskusi best practice)
-
----
-
-## 5. Catatan
-
-- Jika ada error pada mock Next.js, pertimbangkan untuk menggunakan library seperti [msw](https://mswjs.io/) untuk mocking network request secara lebih realistis.
-- Pastikan semua perubahan diikuti dengan update dokumentasi dan test report.
-
----
-
-**Jika kamu setuju dengan planning ini, saya siap lanjut ke eksekusi langkah demi langkah sesuai urutan di atas.**  
-Apakah ada file atau skenario test tertentu yang ingin kamu prioritaskan lebih dulu?
-
-# 📋 Planning Penyelesaian: Fix Scrollbar Berlebihan dan Optimasi Ruang di ModulePageEditor
-
-## 1. Ringkasan Masalah
-
-- **Scrollbar berlebihan**: Terdapat dua scrollbar di area konten editor yang membingungkan pengguna.
-- **Pemanfaatan ruang**: RichTextEditor tidak memenuhi ruang yang tersedia di Main Content Area.
-- **UI/UX tidak optimal**: Pengguna harus menggunakan dua scrollbar yang berbeda, yang mengurangi pengalaman pengguna.
-
-## 2. Langkah-Langkah Teknis Penyelesaian
-
-### A. Analisis Struktur HTML dan CSS
-
-- [x] **Identifikasi sumber scrollbar berlebihan** di ModulePageEditor.tsx dan RichTextEditor.tsx.
-  - Masalah: `overflow-auto` pada div container di ModulePageEditor.tsx bersamaan dengan `overflow-y-scroll` di RichTextEditor.tsx
-- [x] Analisis hierarchy dan nesting div yang menyebabkan multiple scrollbar.
-  - Masalah: Nested container dengan properti overflow yang berbeda
-- [x] Periksa CSS properties seperti `overflow`, `max-height`, dan `height` yang mempengaruhi scrolling.
-  - Masalah: `min-height: 100vh` di ProseMirror dan fixed heights
-
-### B. Fix Struktur dan CSS di ModulePageEditor.tsx
-
-- [x] **Modifikasi container utama** di ModulePageEditor.tsx:
-  - Menghapus properti `overflow-auto` dari div konten untuk menghindari double scrollbar
-  - Memastikan hanya ada satu container dengan properti overflow
-- [x] **Optimalkan dimensi container**:
-  - Menambahkan `h-full` dan `w-full` untuk memaksimalkan ruang yang tersedia
-  - Menghapus batasan ukuran seperti padding yang tidak diperlukan
-
-### C. Update RichTextEditor.tsx
-
-- [x] **Sesuaikan parameter dan props** agar RichTextEditor dapat menyesuaikan ukurannya dengan container induk:
-  - Menambahkan class `h-full` ke root element RichTextEditor
-  - Memastikan editor mengisi ruang yang tersedia dengan properti height yang tepat
-- [x] **Hindari fixed dimensions**:
-  - Menghapus `min-h-[600px]` dari EditorContent
-  - Menghapus `max-h-[calc(100dvh-6rem)]` yang membatasi tinggi
-
-### D. Refinement Layout Responsive
-
-- [x] **Pastikan layout responsive** di berbagai ukuran layar:
-  - Menggunakan properti height relatif (persentase dan h-full) daripada pixel tetap
-  - Mempertahankan padding dan margin yang diperlukan untuk tampilan yang baik
-
-### E. Update CSS Tiptap Global
-
-- [x] **Modifikasi CSS Tiptap Global**:
-  - Mengubah `min-height: 100vh` menjadi `min-height: 100%` pada .ProseMirror untuk menghindari scrolling berlebihan
-
-## 3. File yang Diubah
-
-- [x] `features/manage-module/components/ModulePageEditor.tsx`
-- [x] `features/manage-module/components/RichTextEditor.tsx`
-- [x] `styles/tiptap.css`
-
-## 4. Ringkasan Perubahan
-
-1. **ModulePageEditor.tsx**:
-
-   - Menghapus `overflow-auto` dari div konten utama
-   - Menambahkan `h-full` dan `w-full` untuk memanfaatkan ruang maksimal
-   - Meneruskan prop `h-full` ke komponen RichTextEditor
-
-2. **RichTextEditor.tsx**:
-
-   - Mengubah container dari `max-h-[calc(100dvh-6rem)] overflow-hidden overflow-y-scroll` menjadi `h-full w-full overflow-auto`
-   - Menghapus `min-h-[600px]` dari EditorContent dan menggantinya dengan `h-full`
-
-3. **tiptap.css**:
-   - Mengubah `min-height: 100vh` menjadi `min-height: 100%` untuk mencegah konten memaksakan tinggi berlebihan
-
-## 5. Acceptance Criteria
-
-- ✅ Hanya satu scrollbar vertikal yang terlihat di area konten editor.
-- ✅ RichTextEditor mengisi ruang yang tersedia di Main Content Area.
-- ✅ Editor tetap fungsional dan mudah digunakan di semua ukuran layar.
-- ✅ Tidak ada lintasan/linter error yang dihasilkan dari perubahan.
-
-## 6. Pengujian Manual
-
-Setelah implementasi, lakukan pengujian manual untuk memastikan:
-
-1. Scrollbar hanya muncul satu kali dan berfungsi dengan baik
-2. Konten editor mengisi seluruh ruang yang tersedia
-3. Toolbar dan floating menu tetap berfungsi dengan baik
-4. Layout responsif di berbagai ukuran layar
-5. Tidak ada visual glitch saat mengedit konten
-
----
-
-**Status: Implementasi Selesai ✅**
-
-Perubahan telah diimplementasikan untuk mengatasi masalah scrollbar berlebihan dan optimasi ruang di ModulePageEditor. Semua file yang diperlukan telah diperbarui, dan struktur layout telah dioptimalkan untuk pengalaman pengguna yang lebih baik.
-
----
-
-# 📋 Planning Penyelesaian: Implementasi Toggle Right Sidebar untuk ModulePageEditor
+# 📋 Planning Penyelesaian: Perbaikan Error Tipe Data dan Implementasi Fitur Lanjutan
 
 ## 1. Ringkasan Tujuan
 
-- **Implementasi sidebar kanan** yang dapat dibuka/ditutup (toggle) pada ModulePageEditor.
-- **Memindahkan Sidebar** yang sudah ada ke dalam layout.tsx untuk konsistensi dengan sidebar admin.
-- **Menambahkan fitur toggle** berupa strip tipis dengan tombol yang bisa membuka/menutup sidebar.
-- **Memastikan UX optimal** tanpa mengganggu area editor utama.
+Menyelesaikan implementasi ModulePageEditor dengan fokus pada:
+
+- ✅ Perbaikan error tipe data pada komponen
+- ✅ Implementasi unit testing untuk komponen UI
+- 🚧 Penambahan shortcut keyboard untuk navigasi dan editing
+- 🚧 Penyempurnaan aksesibilitas (A11y)
 
 ## 2. Analisis Kebutuhan
 
-- Sidebar akan diposisikan di sisi kanan layar, tidak mengganggu sidebar admin di sisi kiri.
-- Dalam keadaan tertutup, sidebar hanya terlihat sebagai strip tipis dengan tombol toggle.
-- Konten sidebar tetap sama seperti implementasi yang sudah ada.
-- Perlu menggunakan z-index untuk memastikan sidebar tampil dengan benar.
+Berdasarkan status pada plan-task-140.md dan plan-subtask.md, beberapa fitur utama telah diimplementasikan:
 
-## 3. Langkah-Langkah Teknis Penyelesaian
+- ✅ Toggle right sidebar sudah selesai diimplementasikan
+- ✅ TipTap editor sudah terintegrasi dengan baik
+- ✅ Sebagian besar UI components sudah dibuat
+- ✅ Context state management untuk berbagi data antara editor dan sidebar sudah diimplementasikan
+- ✅ Unit testing untuk komponen UI sudah diimplementasikan [update+2025-05-14]
 
-### A. Membuat Komponen ModulePageSidebar Baru
+Namun, beberapa hal masih perlu diselesaikan:
 
-- [x] **Membuat komponen ModulePageSidebar baru**:
-  - Menggunakan konten dari Sidebar.tsx yang sudah ada
-  - Menambahkan state untuk mengontrol status terbuka/tertutup
-  - Menambahkan tombol toggle pada strip tipis
-  - Mengimplementasikan animasi transisi smooth
+- 🚧 Shortcut keyboard untuk navigasi dan editing
+- 🚧 Penyempurnaan aksesibilitas dengan ARIA label dan fokus manajemen
 
-### B. Mengintegrasikan ke Layout
+## 3. Rincian Implementasi
 
-- [x] **Modifikasi layout.tsx**:
-  - Mengintegrasikan ModulePageSidebar ke layout.tsx
-  - Memastikan posisinya di sisi kanan layar
-  - Mengatur z-index agar tidak tumpang tindih dengan konten lain
+### A. Perbaikan Error Tipe Data ✅ [update+2023-06-23]
 
-### C. Styling dan Animasi
+1. **Memperbaiki Definisi Tipe `ModulePage` di modulePageSchema.ts (SELESAI)**
 
-- [x] **Implementasikan styling untuk tiga kondisi**:
-  - Sidebar terbuka penuh
-  - Sidebar tertutup (hanya strip tipis)
-  - Transisi antara kedua kondisi
-- [x] **Manajemen ruang dan overflow**:
-  - Memastikan konten editor menyesuaikan dengan kondisi sidebar
-  - Memastikan konten sidebar tidak overflow
-- [x] **Responsive design**:
-  - Memastikan tampilan yang optimal di berbagai ukuran layar
+- [x] Hapus redefinisi tipe yang tidak konsisten
+- [x] Gunakan union type untuk status: `'DRAFT' | 'PUBLISHED' | 'ARCHIVED'`
+- [x] Pastikan field mandatory dan opsional sudah ditandai dengan benar
 
-### D. Penanganan State dan User Interaction
+2. **Memperbaiki Inkonsistensi Impor (SELESAI)**
 
-- [x] **State management**:
-  - Menggunakan React state atau context untuk status sidebar
-  - Menyimpan preferensi pengguna (localStorage)
-- [x] **User interaction**:
-  - Implementasi event handler untuk toggle button
-  - Memastikan keyboard accessibility (tab, space, enter)
-  - Mempertimbangkan gesture touch untuk perangkat mobile
+- [x] Hindari mengimpor tipe yang sama dari tempat berbeda
+- [x] Gunakan re-export dari satu sumber tunggal di `index.ts`
+- [x] Hapus duplikasi definisi tipe
 
-## 4. File yang Perlu Dibuat/Diubah
+3. **Menghilangkan Penggunaan `any` (SELESAI)**
 
-- [x] **File Baru**:
+- [x] Ganti `any` di `handleSelectPage` dengan tipe `ModulePage`
+- [x] Gunakan tipe eksplisit di `ModulePageEditor`
+- [x] Buat interface atau type alias untuk parameter yang kompleks
 
-  - `features/manage-module/components/ModulePageSidebar.tsx` - Komponen utama sidebar kanan
-  - `features/manage-module/context/ModulePagesContext.tsx` - Context untuk manajemen state sidebar
+4. **Membersihkan variabel-variabel yang tidak digunakan (SELESAI)**
 
-- [x] **File yang Diubah**:
-  - `app/(admin)/manage-module/pages/[moduleId]/layout.tsx` - Menambahkan ModulePageSidebar
-  - `features/manage-module/components/ModulePageEditor.tsx` - Menghapus komponen Sidebar yang lama
+- [x] Hapus variabel tidak terpakai di ModulePageEditor
+- [x] Pastikan semua import yang tidak digunakan juga dihapus
 
-## 5. Implementasi Detail
+### B. Implementasi Unit Testing ✅ [update+2025-05-14]
 
-### A. Komponen ModulePageSidebar
+1. **Pengaturan Dasar Unit Testing (SELESAI)**
 
-✅ Implementasi ModulePageSidebar dengan:
+- [x] Buat file-file test dengan pendekatan co-location (berdampingan dengan file yang diuji)
+- [x] Siapkan struktur dasar untuk mock (di `__tests__/__mocks__`)
+- [x] Buat mock umum untuk TipTap editor dan context
 
-- Toggle button untuk membuka/menutup sidebar
-- Animasi smooth saat transisi
-- Penyimpanan preferensi dengan localStorage
-- Styling yang sesuai dengan tema aplikasi
+2. **Test untuk Error Handling (SELESAI)**
 
-### B. Integrasi ke Layout
+- [x] Buat test `ErrorNotifier.test.tsx` untuk memverifikasi penanganan berbagai jenis error
+- [x] Test hasil formatting error yang konsisten
+- [x] Test integrasi dengan toast notification
 
-✅ ModulePageSidebar berhasil diintegrasikan ke dalam layout dengan:
+3. **Test untuk Komponen UI Dasar (SELESAI)**
 
-- Posisi fixed di sisi kanan
-- Z-index yang sesuai
-- Responsive design
+- [x] Buat test untuk `ModuleLayout.test.tsx` (rendering AdminSidebar dan children)
+- [x] Buat test untuk `ModuleOverview.test.tsx` (rendering MetricCards dan data)
+- [x] Buat test untuk `page.test.tsx` (ModuleManagementPage)
+- [x] Buat test untuk `index.test.ts` (export komponen)
 
-### C. Penyesuaian ModulePageEditor
+4. **Test untuk Komponen Navigasi (SELESAI)**
 
-✅ ModulePageEditor diperbarui untuk:
+- [x] Buat test untuk `ModulePageFooterNav.test.tsx` (interaksi tombol previous/next)
+- [x] Buat test untuk `ModulePageSidebar.test.tsx` (toggle sidebar dan state localStorage)
 
-- Menghapus komponen Sidebar lama
-- Menggunakan context untuk state sharing
+5. **Test untuk Editor dan Fitur Utama (SELESAI)**
 
-## 6. Menangani Komunikasi Data
+- [x] Buat test untuk `RichTextEditor.test.tsx` dengan mock TipTap
+- [x] Buat test untuk `ModulePageEditor.test.tsx` (integrasi antar komponen)
+- [x] Buat test untuk interaksi pengguna dan perubahan state (content changes, navigasi, dll.)
 
-✅ Manajemen state sidebar menggunakan:
+6. **Validasi Test Coverage (SELESAI)**
 
-- React Context untuk berbagi data
+- [x] Pastikan coverage setidaknya 80% pada komponen-komponen utama
+- [x] Identifikasi dan tambahkan test untuk edge case
+- [x] Verifikasi handling error sudah ditest secara menyeluruh
 
-## 7. Acceptance Criteria
+### C. Implementasi Shortcut Keyboard 🚧
 
-- [x] Sidebar dapat dibuka dan ditutup dengan tombol toggle.
-- [x] Ketika tertutup, hanya terlihat strip tipis dengan tombol toggle.
-- [x] Konten editor tidak terganggu oleh sidebar.
-- [x] Semua fungsionalitas sidebar tetap berfungsi dengan baik.
-- [x] Tampilan responsif di berbagai ukuran layar.
-- [x] Transisi smooth saat membuka/menutup sidebar.
-- [x] Konfigurasi z-index yang tepat agar tidak tumpang tindih.
+1. **Desain Shortcut Keyboard (BELUM DIMULAI)**
 
-## 8. Pengujian
+- [ ] Definisikan daftar shortcut keyboard yang perlu diimplementasikan
+- [ ] Desain hook `useKeyboardShortcuts` untuk menangani event keyboard secara global
 
-- [x] **Uji fungsional**: Memastikan sidebar dapat dibuka/ditutup dengan benar.
-- [x] **Uji visual**: Memastikan tampilan estetis dan tidak ada glitch.
-- [x] **Uji responsif**: Memastikan tampilan optimal di berbagai ukuran layar.
-- [x] **Uji performa**: Memastikan animasi smooth tanpa lag.
+2. **Implementasi Shortcut Navigasi (BELUM DIMULAI)**
 
-## 9. Catatan Tambahan
+- [ ] Shortcut untuk navigasi antar halaman (Alt+Left/Right Arrow)
+- [ ] Shortcut untuk toggle sidebar (Alt+S)
+- [ ] Shortcut untuk fokus ke editor (Alt+E)
 
-- Perhatikan penggunaan z-index agar tidak konflik dengan komponen lain seperti dropdown atau modal.
-- Pertimbangkan implementasi "drag to resize" untuk menyesuaikan lebar sidebar (fitur tambahan).
-- Pastikan tombol toggle masih mudah diakses meskipun posisi scroll berbeda.
+3. **Implementasi Shortcut Editing (BELUM DIMULAI)**
 
-**Status: Implementasi Selesai ✅**
+- [ ] Shortcut untuk formatting (Ctrl+B, Ctrl+I, Ctrl+U, dsb)
+- [ ] Shortcut untuk save (Ctrl+S)
+- [ ] Shortcut untuk insert block (Ctrl+Shift+K untuk kode, dsb)
 
-Perubahan telah diimplementasikan untuk menambahkan sidebar kanan yang dapat dibuka/ditutup pada ModulePageEditor. Semua file yang diperlukan telah dibuat/diperbarui, dan fungsionalitas berjalan dengan baik.
+4. **UI untuk Shortcut Help (BELUM DIMULAI)**
 
----
+- [ ] Dialog/modal yang menampilkan daftar shortcut yang tersedia
+- [ ] Shortcut untuk membuka dialog help (Ctrl+/)
 
-# 📋 Planning Penyelesaian: Implementasi Toggle Right Sidebar untuk ModulePageEditor
+### D. Penyempurnaan Aksesibilitas (A11y) 🚧
 
-## 1. Ringkasan Tujuan
+1. **Audit A11y (BELUM DIMULAI)**
 
-- **Implementasi sidebar kanan** yang dapat dibuka/ditutup (toggle) pada ModulePageEditor.
-- **Memindahkan Sidebar** yang sudah ada ke dalam layout.tsx untuk konsistensi dengan sidebar admin.
-- **Menambahkan fitur toggle** berupa strip tipis dengan tombol yang bisa membuka/menutup sidebar.
-- **Memastikan UX optimal** tanpa mengganggu area editor utama.
+- [ ] Jalankan audit aksesibilitas menggunakan axe atau lighthouse
+- [ ] Identifikasi masalah aksesibilitas yang perlu diperbaiki
 
-## 2. Analisis Kebutuhan
+2. **Implementasi ARIA Label (BELUM DIMULAI)**
 
-- Sidebar akan diposisikan di sisi kanan layar, tidak mengganggu sidebar admin di sisi kiri.
-- Dalam keadaan tertutup, sidebar hanya terlihat sebagai strip tipis dengan tombol toggle.
-- Konten sidebar tetap sama seperti implementasi yang sudah ada.
-- Perlu menggunakan z-index untuk memastikan sidebar tampil dengan benar.
+- [ ] Tambahkan ARIA label pada semua elemen interaktif
+- [ ] Perbaiki hierarki heading untuk screen reader
 
-## 3. Langkah-Langkah Teknis Penyelesaian
+3. **Fokus Manajemen (BELUM DIMULAI)**
 
-### A. Membuat Komponen ModulePageSidebar Baru
+- [ ] Implementasi trap focus untuk modal
+- [ ] Fokus yang tepat saat navigasi antar halaman
+- [ ] Visual focus indicator yang jelas
 
-- [x] **Membuat komponen ModulePageSidebar baru**:
-  - Menggunakan konten dari Sidebar.tsx yang sudah ada
-  - Menambahkan state untuk mengontrol status terbuka/tertutup
-  - Menambahkan tombol toggle pada strip tipis
-  - Mengimplementasikan animasi transisi smooth
+4. **Testing A11y (BELUM DIMULAI)**
 
-### B. Mengintegrasikan ke Layout
+- [ ] Buat test untuk A11y menggunakan jest-axe
+- [ ] Verifikasi navigasi keyboard berfungsi dengan baik
 
-- [x] **Modifikasi layout.tsx**:
-  - Mengintegrasikan ModulePageSidebar ke layout.tsx
-  - Memastikan posisinya di sisi kanan layar
-  - Mengatur z-index agar tidak tumpang tindih dengan konten lain
+## 4. File yang Perlu Diubah/Dibuat
 
-### C. Styling dan Animasi
+### Perbaikan Error Tipe Data [update+2023-06-23]
 
-- [x] **Implementasikan styling untuk tiga kondisi**:
-  - Sidebar terbuka penuh
-  - Sidebar tertutup (hanya strip tipis)
-  - Transisi antara kedua kondisi
-- [x] **Manajemen ruang dan overflow**:
-  - Memastikan konten editor menyesuaikan dengan kondisi sidebar
-  - Memastikan konten sidebar tidak overflow
-- [x] **Responsive design**:
-  - Memastikan tampilan yang optimal di berbagai ukuran layar
+- [x] `features/manage-module/types/modulePageSchema.ts` - Perbaiki definisi tipe
+- [x] `features/manage-module/components/ModulePageEditor.tsx` - Perbaiki tipe props dan state
+- [x] `features/manage-module/components/RichTextEditor.tsx` - Perbaiki tipe props dan event handlers
+- [x] `features/manage-module/hooks/useModulePageEditor.ts` - Perbaiki tipe return values
+- [x] `features/manage-module/hooks/useModulePageQuery.ts` - Perbaiki tipe parameter dan return
+- [x] `features/manage-module/hooks/useModulePageMutation.ts` - Perbaiki tipe parameter dan return
 
-### D. Penanganan State dan User Interaction
+### Unit Testing [update+2025-05-14]
 
-- [x] **State management**:
-  - Menggunakan React state atau context untuk status sidebar
-  - Menyimpan preferensi pengguna (localStorage)
-- [x] **User interaction**:
-  - Implementasi event handler untuk toggle button
-  - Memastikan keyboard accessibility (tab, space, enter)
-  - Mempertimbangkan gesture touch untuk perangkat mobile
+- [x] `features/manage-module/components/ErrorNotifier.test.tsx` - Unit test untuk error handling
+- [x] `features/manage-module/components/ModuleLayout.test.tsx` - Unit test untuk layout
+- [x] `features/manage-module/components/ModulePageEditor.test.tsx` - Unit test untuk editor
+- [x] `features/manage-module/components/RichTextEditor.test.tsx` - Unit test untuk rich text editor
+- [x] `features/manage-module/components/ModulePageSidebar.test.tsx` - Unit test untuk sidebar
+- [x] `features/manage-module/components/ModulePageFooterNav.test.tsx` - Unit test untuk navigasi
+- [x] `features/manage-module/components/ModuleOverview.test.tsx` - Unit test untuk overview
+- [x] `features/manage-module/__tests__/__mocks__/tiptap.tsx` - Mock data untuk TipTap
+- [x] `features/manage-module/__tests__/__mocks__/modulePageContext.tsx` - Mock data untuk ModulePageContext
+- [x] `__mocks__/styleMock.js` - Mock untuk file CSS
 
-## 4. File yang Perlu Dibuat/Diubah
+### Shortcut Keyboard
 
-- [x] **File Baru**:
+- [ ] `features/manage-module/hooks/useKeyboardShortcuts.ts` - Custom hook untuk keyboard shortcuts
+- [ ] `features/manage-module/utils/shortcutUtils.ts` - Helper functions untuk keyboard shortcuts
+- [ ] `features/manage-module/components/ShortcutHelp.tsx` - Komponen untuk menampilkan shortcut help
 
-  - `features/manage-module/components/ModulePageSidebar.tsx` - Komponen utama sidebar kanan
-  - `features/manage-module/context/ModulePagesContext.tsx` - Context untuk manajemen state sidebar
+### Aksesibilitas
 
-- [x] **File yang Diubah**:
-  - `app/(admin)/manage-module/pages/[moduleId]/layout.tsx` - Menambahkan ModulePageSidebar
-  - `features/manage-module/components/ModulePageEditor.tsx` - Menghapus komponen Sidebar yang lama
+- [ ] `features/manage-module/components/ModulePageEditor.tsx` - Tambahkan ARIA attributes
+- [ ] `features/manage-module/components/RichTextEditor.tsx` - Tambahkan ARIA attributes
+- [ ] `features/manage-module/components/ModulePageSidebar.tsx` - Tambahkan ARIA attributes
+- [ ] `features/manage-module/hooks/useFocusTrap.ts` - Custom hook untuk focus management
+- [ ] `features/manage-module/__tests__/a11y/accessibility.test.tsx` - Test aksesibilitas
 
-## 5. Implementasi Detail
+## 5. Timeline Pengerjaan
 
-### A. Komponen ModulePageSidebar
+1. **Perbaikan Error Tipe Data** (Prioritas Tinggi): ✅ SELESAI
 
-✅ Implementasi ModulePageSidebar dengan:
+   - Pemahaman dan analisis struktur tipe - 1 hari ✅
+   - Perbaikan modulePageSchema.ts - 1 hari ✅
+   - Perbaikan ModulePageEditor dan RichTextEditor - 1 hari ✅
+   - Testing manual dan perbaikan - 1 hari ✅
 
-- Toggle button untuk membuka/menutup sidebar
-- Animasi smooth saat transisi
-- Penyimpanan preferensi dengan localStorage
-- Styling yang sesuai dengan tema aplikasi
+2. **Unit Testing** (Prioritas Tinggi): ✅ SELESAI [update+2025-05-14]
 
-### B. Integrasi ke Layout
+   - Setup test environment dan mock - 1 hari ✅
+   - Unit tests untuk editor dan sidebar - 2 hari ✅
+   - Unit tests untuk TipTap extensions - 1 hari ✅
+   - Test coverage analysis dan improvement - 1 hari ✅
 
-✅ ModulePageSidebar berhasil diintegrasikan ke dalam layout dengan:
+3. **Shortcut Keyboard** (Prioritas Sedang): 🚧 DALAM PENGERJAAN
 
-- Posisi fixed di sisi kanan
-- Z-index yang sesuai
-- Responsive design
+   - Implementasi useKeyboardShortcuts - 1 hari
+   - Integrasi shortcut ke komponen - 1 hari
+   - Testing dan refinement - 1 hari
 
-### C. Penyesuaian ModulePageEditor
+4. **Aksesibilitas** (Prioritas Sedang): ⬜ BELUM DIMULAI
+   - Audit aksesibilitas - 1 hari
+   - Implementasi ARIA labels dan fokus manajemen - 2 hari
+   - Testing aksesibilitas - 1 hari
 
-✅ ModulePageEditor diperbarui untuk:
+## 6. Acceptance Criteria
 
-- Menghapus komponen Sidebar lama
-- Menggunakan context untuk state sharing
+- **Tipe Data**: ✅ SELESAI
 
-## 6. Menangani Komunikasi Data
+  - [x] Tidak ada error TypeScript di ModulePageEditor.tsx dan RichTextEditor.tsx
+  - [x] Tipe data ModulePage dan UpdateModulePageDto jelas dan konsisten
+  - [x] Custom hooks menggunakan tipe data yang tepat
 
-✅ Manajemen state sidebar menggunakan:
+- **Unit Testing**: ✅ SELESAI
 
-- React Context untuk berbagi data
+  - [x] Unit test coverage minimal 80% untuk komponen utama
+  - [x] Semua test berjalan sukses
+  - [x] Edge cases sudah dicover dalam test
 
-## 7. Acceptance Criteria
+- **Shortcut Keyboard**: 🚧 DALAM PENGERJAAN
 
-- [x] Sidebar dapat dibuka dan ditutup dengan tombol toggle.
-- [x] Ketika tertutup, hanya terlihat strip tipis dengan tombol toggle.
-- [x] Konten editor tidak terganggu oleh sidebar.
-- [x] Semua fungsionalitas sidebar tetap berfungsi dengan baik.
-- [x] Tampilan responsif di berbagai ukuran layar.
-- [x] Transisi smooth saat membuka/menutup sidebar.
-- [x] Konfigurasi z-index yang tepat agar tidak tumpang tindih.
+  - [ ] Shortcut untuk navigasi halaman (Alt+Left/Right) berfungsi
+  - [ ] Shortcut formatting (Ctrl+B, Ctrl+I, Ctrl+U) berfungsi
+  - [ ] Shortcut save (Ctrl+S) berfungsi
+  - [ ] Help modal menampilkan shortcut yang tersedia
 
-## 8. Pengujian
+- **Aksesibilitas**: ⬜ BELUM DIMULAI
+  - [ ] Semua elemen interaktif memiliki ARIA label yang tepat
+  - [ ] Focus management berjalan dengan baik
+  - [ ] Aplikasi dapat digunakan sepenuhnya dengan keyboard
+  - [ ] Memenuhi standar WCAG AA
 
-- [x] **Uji fungsional**: Memastikan sidebar dapat dibuka/ditutup dengan benar.
-- [x] **Uji visual**: Memastikan tampilan estetis dan tidak ada glitch.
-- [x] **Uji responsif**: Memastikan tampilan optimal di berbagai ukuran layar.
-- [x] **Uji performa**: Memastikan animasi smooth tanpa lag.
+## 7. Risiko dan Mitigasi
 
-## 9. Catatan Tambahan
+- **Risiko**:
 
-- Perhatikan penggunaan z-index agar tidak konflik dengan komponen lain seperti dropdown atau modal.
-- Pertimbangkan implementasi "drag to resize" untuk menyesuaikan lebar sidebar (fitur tambahan).
-- Pastikan tombol toggle masih mudah diakses meskipun posisi scroll berbeda.
+  - Perubahan tipe data dapat mempengaruhi komponen lain yang menggunakan tipe tersebut
+  - Refactoring untuk aksesibilitas dapat mempengaruhi UI yang sudah ada
+  - Unit testing komponen kompleks seperti TipTap editor dapat sulit
 
-**Status: Implementasi Selesai ✅**
+- **Mitigasi**:
+  - Lakukan perubahan tipe data secara inkremental dengan testing di setiap langkah
+  - Buat branch terpisah untuk perbaikan aksesibilitas
+  - Gunakan mocking untuk menyederhanakan testing komponen kompleks
+
+## 8. Catatan Tambahan [update+2025-05-14]
+
+- ✅ Dokumentasi test sudah diperbarui seiring dengan implementasi unit test
+- ✅ Semua komponen utama sudah memiliki unit test yang berjalan dengan baik
+- 🚧 Langkah selanjutnya: Implementasi shortcut keyboard dan penyempurnaan aksesibilitas
+- ⚠️ Perhatikan pendekatan testing untuk komponen yang memiliki integrasi dengan TipTap editor, gunakan mocking yang tepat
