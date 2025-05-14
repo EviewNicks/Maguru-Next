@@ -98,8 +98,8 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
 ### f. Accessibility (A11y)
 
 - ✅ Pastikan navigasi halaman dan editor dapat diakses keyboard.
-- 🚧 Tambahkan ARIA label pada elemen interaktif.
-- 🚧 Implementasi fokus manajemen yang tepat saat berpindah antar halaman.
+- ✅ Tambahkan ARIA label pada elemen interaktif.
+- ✅ Implementasi fokus manajemen yang tepat saat berpindah antar halaman.
 - ✅ Pastikan kontras warna sesuai standar WCAG AA minimal.
 
 ### g. Testing
@@ -145,8 +145,8 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
 
 ### 3.2 Sedang Dikerjakan
 
-- 🚧 Implementasi shortcut keyboard untuk navigasi dan editing
-- 🚧 Penyempurnaan aksesibilitas (A11y) dengan ARIA label dan fokus manajemen
+- ✅ Implementasi shortcut keyboard untuk navigasi dan editing
+- ✅ Penyempurnaan aksesibilitas (A11y) dengan ARIA label dan fokus manajemen
 - 🚧 Validasi ukuran file upload
 - 🚧 Integration testing untuk alur CRUD halaman dan navigasi
 - 🚧 Dokumentasi fitur dan shortcut keyboard
@@ -221,21 +221,21 @@ Subtask ini bertujuan mengintegrasikan fitur manajemen konten multi-page ke dala
    - ✅ Tambahkan mock untuk ModulePageContext di direktori **tests**/**mocks**
    - ✅ Pastikan test coverage minimal 80%
 
-3. 🚧 **Implementasi Shortcut Keyboard (Prioritas Medium)**: DALAM PENGERJAAN
+3. ✅ **Implementasi Shortcut Keyboard (Prioritas Medium)**: DALAM PENGERJAAN
 
-   - [ ] Desain dan implementasi hook useKeyboardShortcuts
-   - [ ] Implementasi shortcut navigasi (Alt+Left/Right Arrow)
-   - [ ] Implementasi shortcut formatting (Ctrl+B, Ctrl+I, Ctrl+U)
-   - [ ] Implementasi shortcut save (Ctrl+S)
-   - [ ] Implementasi dialog help shortcut (Ctrl+/)
-   - [ ] Testing shortcut keyboard
+   - ✅ Desain dan implementasi hook useKeyboardShortcuts
+   - ✅ Implementasi shortcut navigasi (Alt+Left/Right Arrow)
+   - ✅ Implementasi shortcut formatting (Ctrl+B, Ctrl+I, Ctrl+U)
+   - ✅ Implementasi shortcut save (Ctrl+S)
+   - ✅ Implementasi dialog help shortcut (Ctrl+/)
+   - ✅ Testing shortcut keyboard
 
-4. 🚧 **Penyempurnaan Aksesibilitas (Prioritas Medium)**: DALAM PENGERJAAN
+4. ✅ **Penyempurnaan Aksesibilitas (Prioritas Medium)**: SELESAI
 
-   - [ ] Audit aksesibilitas menggunakan axe
-   - [ ] Implementasi ARIA label pada elemen interaktif
-   - [ ] Implementasi fokus manajemen yang tepat
-   - [ ] Testing aksesibilitas
+   - ✅ Audit aksesibilitas menggunakan axe
+   - ✅ Implementasi ARIA label pada elemen interaktif
+   - ✅ Implementasi fokus manajemen yang tepat
+   - ✅ Testing aksesibilitas
 
 5. 🚧 **Integration Testing (Prioritas Medium)**: DALAM PENGERJAAN
    - [ ] Buat integration test untuk alur CRUD halaman

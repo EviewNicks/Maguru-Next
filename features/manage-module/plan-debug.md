@@ -93,25 +93,25 @@ Namun, beberapa hal masih perlu diselesaikan:
 
 1. **Desain Shortcut Keyboard (BELUM DIMULAI)**
 
-- [ ] Definisikan daftar shortcut keyboard yang perlu diimplementasikan
-- [ ] Desain hook `useKeyboardShortcuts` untuk menangani event keyboard secara global
+- [x] Definisikan daftar shortcut keyboard yang perlu diimplementasikan
+- [x] Desain hook `useKeyboardShortcuts` untuk menangani event keyboard secara global
 
 2. **Implementasi Shortcut Navigasi (BELUM DIMULAI)**
 
-- [ ] Shortcut untuk navigasi antar halaman (Alt+Left/Right Arrow)
-- [ ] Shortcut untuk toggle sidebar (Alt+S)
-- [ ] Shortcut untuk fokus ke editor (Alt+E)
+- [x] Shortcut untuk navigasi antar halaman (Alt+Left/Right Arrow)
+- [x] Shortcut untuk toggle sidebar (Alt+S)
+- [x] Shortcut untuk fokus ke editor (Alt+E)
 
 3. **Implementasi Shortcut Editing (BELUM DIMULAI)**
 
-- [ ] Shortcut untuk formatting (Ctrl+B, Ctrl+I, Ctrl+U, dsb)
-- [ ] Shortcut untuk save (Ctrl+S)
-- [ ] Shortcut untuk insert block (Ctrl+Shift+K untuk kode, dsb)
+- [x] Shortcut untuk formatting (Ctrl+B, Ctrl+I, Ctrl+U, dsb)
+- [x] Shortcut untuk save (Ctrl+S)
+- [x] Shortcut untuk insert block (Ctrl+Shift+K untuk kode, dsb)
 
 4. **UI untuk Shortcut Help (BELUM DIMULAI)**
 
-- [ ] Dialog/modal yang menampilkan daftar shortcut yang tersedia
-- [ ] Shortcut untuk membuka dialog help (Ctrl+/)
+- [x] Dialog/modal yang menampilkan daftar shortcut yang tersedia
+- [x] Shortcut untuk membuka dialog help (Ctrl+/)
 
 ### D. Penyempurnaan Aksesibilitas (A11y) 🚧
 
@@ -162,9 +162,9 @@ Namun, beberapa hal masih perlu diselesaikan:
 
 ### Shortcut Keyboard
 
-- [ ] `features/manage-module/hooks/useKeyboardShortcuts.ts` - Custom hook untuk keyboard shortcuts
-- [ ] `features/manage-module/utils/shortcutUtils.ts` - Helper functions untuk keyboard shortcuts
-- [ ] `features/manage-module/components/ShortcutHelp.tsx` - Komponen untuk menampilkan shortcut help
+- [x] `features/manage-module/hooks/useKeyboardShortcuts.ts` - Custom hook untuk keyboard shortcuts
+- [x] `features/manage-module/utils/shortcutUtils.ts` - Helper functions untuk keyboard shortcuts
+- [x] `features/manage-module/components/ShortcutHelp.tsx` - Komponen untuk menampilkan shortcut help
 
 ### Aksesibilitas
 

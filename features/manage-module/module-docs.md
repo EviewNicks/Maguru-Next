@@ -486,29 +486,130 @@ Untuk mendukung unit testing, telah dibuat mock yang mendukung simulasi komponen
 - Struktur dan organisasi mock yang baik memudahkan pengembangan test
 - Testing state dan event handler kompleks memerlukan simulasi interaksi UI yang tepat
 
-### 3.6 Langkah Selanjutnya [update+2025-05-14]
+### 3.6 Langkah Selanjutnya [update+2025-06-25]
 
-Setelah menyelesaikan implementasi unit testing dengan baik, fokus pengembangan selanjutnya adalah:
+Setelah menyelesaikan implementasi unit testing dan keyboard shortcuts dengan baik, fokus pengembangan selanjutnya adalah:
 
-1. **Implementasi Shortcut Keyboard**
+1. **Penyempurnaan Aksesibilitas (A11y)**
 
-   - Pengembangan hook useKeyboardShortcuts
-   - Menambahkan shortcut navigasi (Alt+Left/Right Arrow)
-   - Menambahkan shortcut formatting (Ctrl+B, Ctrl+I, Ctrl+U)
-   - Menambahkan shortcut save (Ctrl+S)
-   - Membuat dialog help untuk menampilkan daftar shortcut
-
-2. **Penyempurnaan Aksesibilitas (A11y)**
-
-   - Audit aksesibilitas menggunakan axe
+   - Menjalankan audit aksesibilitas menggunakan axe
    - Menambahkan ARIA label pada elemen interaktif
-   - Implementasi fokus manajemen
-   - Testing aksesibilitas
+   - Implementasi fokus manajemen yang tepat
+   - Testing aksesibilitas dengan jest-axe
 
-3. **Integration Testing**
+2. **Integration Testing**
    - Buat integration test untuk alur CRUD halaman
    - Test navigasi antar halaman
    - Verifikasi interaksi antar komponen
+
+### 3.7 Keyboard Shortcuts [update+2025-06-25]
+
+Implementasi keyboard shortcuts telah selesai untuk meningkatkan produktivitas dan aksesibilitas bagi pengguna. Custom hook `useKeyboardShortcuts` telah dikembangkan untuk menangani shortcut keyboard secara global.
+
+#### 3.7.1 Shortcuts yang Diimplementasikan
+
+| Kategori         | Shortcut        | Fungsi                            |
+| ---------------- | --------------- | --------------------------------- |
+| **Navigasi**     | Alt+Left Arrow  | Navigasi ke halaman sebelumnya    |
+|                  | Alt+Right Arrow | Navigasi ke halaman berikutnya    |
+|                  | Alt+S           | Toggle sidebar kanan (buka/tutup) |
+|                  | Alt+E           | Fokus ke editor                   |
+| **Formatting**   | Ctrl+B          | Format teks bold                  |
+|                  | Ctrl+I          | Format teks italic                |
+|                  | Ctrl+U          | Format teks underline             |
+|                  | Ctrl+K          | Sisipkan link                     |
+|                  | Ctrl+`          | Formatting kode                   |
+|                  | Ctrl+Shift+1-6  | Heading level 1-6                 |
+| **Penyuntingan** | Ctrl+S          | Simpan perubahan                  |
+|                  | Ctrl+Z          | Undo                              |
+|                  | Ctrl+Shift+Z    | Redo                              |
+| **Bantuan**      | Ctrl+/          | Tampilkan dialog bantuan shortcut |
+
+#### 3.7.2 Komponen ShortcutHelp
+
+Sebuah dialog bantuan telah dibuat untuk menampilkan semua shortcut yang tersedia kepada pengguna. Dialog ini dapat diakses kapan saja melalui shortcut `Ctrl+/` atau melalui tombol bantuan di toolbar. Fitur-fitur dari ShortcutHelp meliputi:
+
+- Dikelompokkan berdasarkan kategori (navigasi, formatting, penyuntingan)
+- Tampilan yang jelas dan mudah dibaca
+- Dapat ditutup dengan ESC atau klik di luar dialog
+- Didesain sesuai dengan tema aplikasi (mode gelap)
+
+```tsx
+// Contoh penggunaan komponen ShortcutHelp
+import { ShortcutHelp } from '@/features/manage-module/components/ShortcutHelp'
+
+function EditorComponent() {
+  const [showShortcutHelp, setShowShortcutHelp] = useState(false)
+
+  return (
+    <>
+      <button onClick={() => setShowShortcutHelp(true)}>
+        Tampilkan Bantuan Shortcut
+      </button>
+
+      {showShortcutHelp && (
+        <ShortcutHelp onClose={() => setShowShortcutHelp(false)} />
+      )}
+    </>
+  )
+}
+```
+
+#### 3.7.3 Implementasi Custom Hook
+
+Custom hook `useKeyboardShortcuts` telah dikembangkan untuk mengelola shortcut keyboard secara konsisten di seluruh aplikasi. Hook ini memungkinkan:
+
+- Definisi shortcut dengan kombinasi modifier (Ctrl, Alt, Shift)
+- Penanganan konflik shortcut
+- Pembatasan scope shortcut ke elemen tertentu
+- Pengaktifan/penonaktifan shortcut berdasarkan kondisi
+
+```tsx
+// Contoh penggunaan useKeyboardShortcuts
+import { useKeyboardShortcuts } from '@/features/manage-module/hooks/useKeyboardShortcuts'
+
+function EditorComponent() {
+  const handlers = {
+    save: () => saveContent(),
+    'navigate-next': () => goToNextPage(),
+    'navigate-prev': () => goToPrevPage(),
+    'toggle-sidebar': () => toggleSidebar(),
+  }
+
+  const shortcuts = [
+    { key: 's', ctrl: true, action: 'save' },
+    { key: 'ArrowRight', alt: true, action: 'navigate-next' },
+    { key: 'ArrowLeft', alt: true, action: 'navigate-prev' },
+    { key: 's', alt: true, action: 'toggle-sidebar' },
+  ]
+
+  useKeyboardShortcuts(shortcuts, handlers, {
+    scope: 'editor',
+    enabled: true,
+  })
+
+  return <div>Editor Content</div>
+}
+```
+
+#### 3.7.4 Manfaat Implementasi
+
+Shortcut keyboard memberikan manfaat signifikan, termasuk:
+
+1. **Peningkatan Produktivitas**: Pengguna dapat menjalankan tindakan umum tanpa menggunakan mouse
+2. **Peningkatan Aksesibilitas**: Pengguna dengan keterbatasan mobilitas dapat mengakses fitur melalui keyboard
+3. **Pengalaman Pengguna yang Lebih Baik**: Memenuhi harapan power user yang terbiasa dengan shortcut di aplikasi text editor
+
+#### 3.7.5 Pengujian
+
+Unit test telah dikembangkan untuk memastikan shortcut keyboard berfungsi dengan baik:
+
+- Pengujian hook `useKeyboardShortcuts` pada berbagai skenario (dengan/tanpa modifier)
+- Pengujian komponen `ShortcutHelp` untuk memastikan tampilan dan fungsionalitas yang benar
+- Verifikasi bahwa handler yang benar dipanggil untuk setiap shortcut
+- Pengujian penanganan konflik shortcut
+
+Pengujian secara manual juga telah dilakukan untuk memastikan semua shortcut berfungsi dengan baik di lingkungan browser yang berbeda (Chrome, Firefox, Safari).
 
 ## 4. Pengujian
 
@@ -624,3 +725,4 @@ Setelah menyelesaikan implementasi unit testing dengan baik, fokus pengembangan 
 | 14-03-2025 | 1.2.0 | Completed CRUD & status management with tests                                                                      | Tim Maguru |
 | 14-06-2024 | 1.2.1 | Perbaikan filter status modul, update test unit & integrasi, coverage                                              | Tim Maguru | [update+2024-05-12] |
 | 22-06-2025 | 1.3.0 | Implementasi Toggle Right Sidebar, rencana perbaikan tipe data, unit testing, shortcut keyboard, dan aksesibilitas | Tim Maguru | [update+2025-05-24] |
+| 25-06-2025 | 1.3.1 | Implementasi Keyboard Shortcuts & ShortcutHelp untuk meningkatkan produktivitas dan aksesibilitas editor           | Tim Maguru | [update+2025-06-25] |

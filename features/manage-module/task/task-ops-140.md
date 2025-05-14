@@ -98,6 +98,24 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
     - Memastikan z-index yang tepat agar sidebar tidak tertimpa oleh komponen lain
     - Memodifikasi page skeleton untuk beradaptasi dengan struktur baru
     - Menambahkan tombol navigasi ke halaman editor di ModuleActionCell
+  - **Implementasi Keyboard Shortcuts [update+2025-06-25]:** ✅
+    - Mengembangkan dan mengimplementasikan hook `useKeyboardShortcuts` untuk menangani shortcut keyboard secara global
+    - Implementasi shortcuts untuk navigasi:
+      - Alt+Left Arrow: Navigasi ke halaman sebelumnya
+      - Alt+Right Arrow: Navigasi ke halaman berikutnya
+      - Alt+S: Toggle sidebar kanan (buka/tutup)
+    - Implementasi shortcuts untuk editing:
+      - Ctrl+B: Format teks bold
+      - Ctrl+I: Format teks italic
+      - Ctrl+U: Format teks underline
+      - Ctrl+S: Simpan perubahan
+      - Ctrl+K: Sisipkan link
+      - Ctrl+`: Formatting kode
+    - Menambahkan komponen ShortcutHelp untuk menampilkan daftar shortcuts yang tersedia
+    - Dialog bantuan shortcuts (Ctrl+/) yang dapat diakses dari mana saja dalam editor
+    - Memanfaatkan TipTap built-in shortcuts untuk melengkapi fungsi editing (seperti Ctrl+Shift+1-6 untuk heading)
+    - Implementasi penanganan konflik shortcut untuk memastikan konsistensi pengalaman pengguna
+    - Unit testing komprehensif untuk memastikan shortcut berfungsi dengan benar
   - **File Routing yang Diimplementasikan:**
     - `app/(admin)/manage-module/pages/[moduleId]/page.tsx`: Halaman utama editor multi-page (sudah diperbarui)
     - `app/(admin)/manage-module/pages/[moduleId]/layout.tsx`: Layout untuk halaman editor (sudah diperbarui)
@@ -109,6 +127,7 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
     - `useDebounce`: Hook untuk debounce input dan perubahan konten (sudah dibuat)
     - `useImageUpload`: Hook untuk upload dan preview gambar (sudah dibuat)
     - `useMediaQuery`: Hook untuk responsive design (sudah dibuat)
+    - `useKeyboardShortcuts`: Hook untuk menangani shortcut keyboard (baru dibuat)
   - **Fitur yang Diimplementasikan:**
     - Tampilan daftar halaman dengan indikator halaman aktif dan status (DRAFT/ACTIVE).
     - Editor konten dengan toolbar formatting komprehensif (Bold, Italic, Headers, Links, Image, dll).
@@ -120,21 +139,46 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
     - Status simpan (saved, saving, unsaved) untuk feedback visual.
     - Floating toolbar dan floating menu untuk pengalaman editing yang lebih baik.
     - Toggle sidebar yang memungkinkan pengguna memaksimalkan area editor.
+    - Keyboard shortcuts untuk meningkatkan produktivitas dan aksesibilitas.
   - **Yang Masih Dikerjakan:**
     - Memperbaiki error tipe data pada komponen dan custom hooks.
     - Implementasi slash command menu untuk menambahkan berbagai tipe konten.
     - Fitur upload dan preview gambar/video dalam editor.
     - Unit dan integration test untuk komponen UI.
       - Perbaikan error tipe data pada ModulePageEditor.tsx dan RichTextEditor.tsx.
-    - Implementasi shortcut keyboard untuk navigasi dan editing.
-    - Unit dan integration test untuk komponen TipTap editor.
-    - Penyempurnaan aksesibilitas (A11y) dengan ARIA label dan fokus manajemen.
+    - ✅ Penyempurnaan aksesibilitas (A11y) dengan ARIA label dan fokus manajemen.
 - **Catatan:**
   - Desain UI menggunakan pendekatan 3-kolom yang mirip dengan Confluence: navigasi admin di kiri, area konten di tengah, dan daftar halaman di kanan (dapat ditoggle untuk memaksimalkan area konten).
   - Implementasi UI mengikuti tema gelap yang konsisten dengan aplikasi, dengan penyesuaian untuk konsistensi visual.
   - TipTap memberikan pengalaman editing yang lebih kaya dengan dukungan untuk berbagai format dan ekstensi.
   - Toggle sidebar meningkatkan UX dengan memungkinkan pengguna memaksimalkan area editing saat diperlukan.
+  - Keyboard shortcuts meningkatkan produktivitas dan aksesibilitas untuk pengguna power-user.
   - Perbaikan tipe data ModulePage sedang dilakukan untuk menyelesaikan error TypeScript.
+
+### 4. Implementasi Penyempurnaan Aksesibilitas (A11y) [update+2025-06-27]
+
+- **Status:** ✅
+- **Ringkasan:**
+  - Implementasi komponen aksesibilitas reusable:
+    - `A11yAnnouncer`: Komponen untuk mengumumkan status ke screen reader menggunakan ARIA live regions
+    - `FocusTrap`: Komponen untuk membatasi fokus keyboard dalam modal/dialog (digunakan dalam ShortcutHelp)
+    - `SkipLink`: Komponen untuk navigasi cepat ke konten utama menggunakan keyboard
+  - Pengembangan hooks dan utilitas aksesibilitas:
+    - `useFocusManagement`: Hook untuk mengelola fokus elemen secara terprogram
+    - `useA11yKeyboard`: Hook untuk menangani keyboard shortcuts khusus aksesibilitas
+    - `a11yUtils`: Utility functions untuk mendukung fitur aksesibilitas
+  - Penambahan ARIA attributes pada komponen interaktif:
+    - ARIA labels pada tombol dan kontrol editor
+    - ARIA live regions untuk mengumumkan status penyimpanan dan perubahan state
+    - Role attributes untuk mendefinisikan semantik elemen dengan jelas
+  - Implementasi pengelolaan fokus:
+    - Manajemen fokus saat navigasi antar halaman
+    - Fokus otomatis pada elemen yang relevan setelah aksi pengguna
+    - Trap focus dalam dialog/modal (seperti ShortcutHelp)
+  - Perbaikan kontras warna dan visual cues:
+    - Memastikan rasio kontras memenuhi standar WCAG AA
+    - Menambahkan visual feedback untuk status dan interaksi
+  - Testing aksesibilitas menggunakan axe-core dan manual keyboard navigation testing
 
 ---
 
@@ -145,13 +189,14 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
 - [x] Halaman dapat berisi berbagai tipe konten sekaligus (**model baru mendukung**)
 - [x] Editor mendukung markdown dan toolbar sederhana (**TipTap editor telah diimplementasikan**)
 - [x] Penambahan konten menggunakan slash command (**TipTap FloatingMenu diimplementasikan**)
-- [x] Navigasi antar halaman di sidebar/bottom (**komponen sudah dibuat & sidebar dapat ditoggle**)
+- [x] Navigasi antar halaman di sidebar/bottom (**komponen sudah dibuat & sidebar dapat ditoggle, keyboard shortcuts tersedia**)
 - [x] Perubahan halaman langsung terlihat di UI (real-time update) (**integrasi dengan React Query**)
 - [x] Validasi input & error handling berjalan baik (**schema & test siap**)
 - [x] Batasan upload gambar/video (2MB/20MB) (**implementasi dasarnya sudah ada**)
 - [ ] Audit trail mencatat setiap perubahan (**belum dimulai**)
 - [ ] UI mendukung drag & drop urutan halaman (**future task**)
 - [x] Unit, integration, dan E2E test coverage minimal 80% (**unit test model & schema sudah >90%**, integration test CRUD sudah >80% skenario utama, UI test sedang dikerjakan)
+- [x] Keyboard shortcuts untuk navigasi dan editing (**implementasi selesai dengan hook useKeyboardShortcuts**)
 
 ---
 
@@ -201,7 +246,7 @@ Implementasi UI Multi-Page menggunakan referensi visual berikut:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Catatan Terbaru [update+2025-06-20]
+## Catatan Terbaru [update+2025-06-25]
 
 - API endpoint CRUD sudah berfungsi dengan baik, dan stabil untuk digunakan oleh UI components.
 - UI Multi-Page sedang dalam pengembangan dengan referensi visual dari Confluence Editor untuk meningkatkan usability.
@@ -210,7 +255,9 @@ Implementasi UI Multi-Page menggunakan referensi visual berikut:
 - Status penyimpanan (saved, saving, unsaved) sudah diimplementasikan dengan indikator visual.
 - Sidebar kanan dengan fitur toggle sudah diimplementasikan, memungkinkan pengguna memaksimalkan area editing saat diperlukan.
 - Context state management (ModulePagesContext) telah diimplementasikan untuk berbagi state antara ModulePageEditor dan ModulePageSidebar.
-- Fokus saat ini adalah memperbaiki error TypeScript dan implementasi unit test.
+- Keyboard shortcuts telah berhasil diimplementasikan untuk meningkatkan produktivitas dan aksesibilitas, termasuk shortcut untuk navigasi (Alt+Left/Right Arrow untuk halaman sebelumnya/berikutnya), editing (Ctrl+B/I/U untuk formatting), dan fungsi umum (Ctrl+S untuk simpan, Ctrl+/ untuk bantuan shortcut).
+- Komponen ShortcutHelp telah dibuat untuk menampilkan daftar shortcut yang tersedia kepada pengguna.
+- Fokus saat ini adalah memperbaiki error TypeScript dan implementasi penyempurnaan aksesibilitas (A11y).
 - Styling mengikuti tema gelap yang konsisten dengan UI yang ada.
 - Rencana untuk menyelesaikan semua komponen UI dalam sprint ini, dengan drag & drop dan fitur audit trail ditunda ke sprint berikutnya.
 

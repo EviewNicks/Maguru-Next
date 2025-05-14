@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 // import TopNavigation from './ModulePageEditor/navigation/TopNavigation'
 import DocumentHeader from './ModulePageEditor/document/DocumentHeader'
 import ModulePageFooterNav from './ModulePageFooterNav'
@@ -12,6 +12,14 @@ import { useModulePagesContext } from '../context/ModulePagesContext'
 import { ModulePage } from '../types/modulePageSchema'
 import { useQuery } from '@tanstack/react-query'
 import { modulePageService } from '../services/modulePageService'
+import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts'
+import { NAVIGATION_SHORTCUTS, SYSTEM_SHORTCUTS } from '../constants/shortcuts'
+import ShortcutHelp from './ShortcutHelp'
+import { FocusTrap } from './a11y/FocusTrap'
+import { SkipLink } from './a11y/SkipLink'
+import { A11yAnnouncer } from './a11y/A11yAnnouncer'
+import { getStatusAnnouncement } from '../utils/a11yUtils'
+import useFocusManagement from '../hooks/useFocusManagement'
 
 interface ModulePageEditorProps {
   moduleId: string
@@ -22,6 +30,21 @@ export default function ModulePageEditor({
   moduleId,
   initialPageId,
 }: ModulePageEditorProps) {
+  // State for shortcut help dialog
+  const [isShortcutHelpOpen, setIsShortcutHelpOpen] = useState(false)
+
+  // Ref for editor container to manage focus
+  const editorContainerRef = useRef<HTMLDivElement>(null)
+
+  // Focus management hook
+  const editorFocusRef = useFocusManagement({
+    shouldFocus: true,
+    focusDelay: 100,
+  })
+
+  // State untuk status announcement untuk screen readers
+  const [statusAnnouncement, setStatusAnnouncement] = useState('')
+
   // Get context
   const {
     setPages,
@@ -47,45 +70,57 @@ export default function ModulePageEditor({
 
   // Jika initialPageId tidak ditemukan, gunakan halaman pertama sebagai default
   const firstPage = pages && pages.length > 0 ? pages[0] : null
-  const activePageIdToUse = activePageId || firstPage?.id
+  const activePageIdToUse =
+    activePageId || (firstPage?.id as string | undefined)
 
-  // Fetch data halaman aktif menggunakan useQuery langsung
+  // Fetch data halaman aktif
   const { data: activePageData } = useQuery({
     queryKey: ['modulePage', moduleId, activePageIdToUse],
-    queryFn: () =>
-      activePageIdToUse
-        ? modulePageService.getModulePage(activePageIdToUse)
-        : { data: null },
+    queryFn: async () => {
+      if (!activePageIdToUse) return { data: null, success: true }
+      return modulePageService.getModulePage(activePageIdToUse)
+    },
     staleTime: 5 * 60 * 1000,
     enabled: !!activePageIdToUse,
   })
 
-  const activePage = activePageData?.data
+  const activePage = activePageData?.data || null
 
   // Editor state untuk halaman aktif
-  const { title, saveStatus, handleContentChange, handleTitleChange } =
-    useModulePageEditor(moduleId, activePage)
+  const {
+    title,
+    saveStatus,
+    handleContentChange,
+    handleTitleChange,
+    saveChanges, // Manual save function
+  } = useModulePageEditor(moduleId, activePage)
 
   // Handle navigasi ke halaman sebelum/berikutnya
-  const handleNavigation = (direction: 'prev' | 'next') => {
-    if (!pages || !activePageIdToUse) return
+  const handleNavigation = useCallback(
+    (direction: 'prev' | 'next' | 'first' | 'last') => {
+      if (!pages || !activePageIdToUse) return
 
-    // Menggunakan adjacent pages dari query hook
-    const adjacentPages = getAdjacentPages(activePageIdToUse)
+      if (direction === 'first' && pages.length > 0) {
+        setActivePageId(pages[0].id)
+        return
+      }
 
-    if (direction === 'prev' && adjacentPages.previousPage) {
-      setActivePageId(adjacentPages.previousPage.id)
-    } else if (direction === 'next' && adjacentPages.nextPage) {
-      setActivePageId(adjacentPages.nextPage.id)
-    }
-  }
+      if (direction === 'last' && pages.length > 0) {
+        setActivePageId(pages[pages.length - 1].id)
+        return
+      }
 
-  // Function untuk memilih halaman dari sidebar
-  // Fungsi ini tidak digunakan saat ini, tapi dipertahankan untuk penggunaan di masa mendatang
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleSelectPage = (page: ModulePage) => {
-    setActivePageId(page.id)
-  }
+      // Menggunakan adjacent pages dari query hook
+      const adjacentPages = getAdjacentPages(activePageIdToUse)
+
+      if (direction === 'prev' && adjacentPages.previousPage) {
+        setActivePageId(adjacentPages.previousPage.id)
+      } else if (direction === 'next' && adjacentPages.nextPage) {
+        setActivePageId(adjacentPages.nextPage.id)
+      }
+    },
+    [activePageIdToUse, getAdjacentPages, pages]
+  )
 
   // Update context whenever data changes
   useEffect(() => {
@@ -97,8 +132,46 @@ export default function ModulePageEditor({
     }
   }, [pages, activePage, setPages, setActivePage])
 
+  // Update announcement saat saveStatus berubah
+  useEffect(() => {
+    if (saveStatus) {
+      setStatusAnnouncement(getStatusAnnouncement(saveStatus))
+    }
+  }, [saveStatus])
+
   // Debounce title untuk mengurangi request update
   useDebounce(title, 500)
+
+  // Toggle sidebar - We don't actually have this in context, so we'll create a dummy function
+  const toggleSidebar = useCallback(() => {
+    // Get sidebar state from DOM or localStorage
+    const sidebarElement = document.querySelector('[data-sidebar]')
+    if (sidebarElement) {
+      // Trigger a click on the sidebar toggle button
+      const toggleButton = sidebarElement.querySelector('button')
+      if (toggleButton) {
+        toggleButton.click()
+      }
+    }
+  }, [])
+
+  // Setup keyboard shortcuts
+  const shortcutHandlers = {
+    'navigate-prev': () => handleNavigation('prev'),
+    'navigate-next': () => handleNavigation('next'),
+    'navigate-first': () => handleNavigation('first'),
+    'navigate-last': () => handleNavigation('last'),
+    'toggle-sidebar': toggleSidebar,
+    'show-shortcut-help': () => setIsShortcutHelpOpen(true),
+    'save-page': () => saveChanges(),
+  }
+
+  // Register keyboard shortcuts
+  useKeyboardShortcuts(
+    [...NAVIGATION_SHORTCUTS, ...SYSTEM_SHORTCUTS],
+    shortcutHandlers,
+    { scope: 'global' }
+  )
 
   // Status loading
   if (pagesLoading) {
@@ -106,7 +179,17 @@ export default function ModulePageEditor({
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#121212] text-[#e3e4f2]">
+    <div
+      className="flex flex-col h-screen bg-[#121212] text-[#e3e4f2]"
+      role="application"
+      aria-label="Editor halaman modul"
+    >
+      {/* Skip Link - tersembunyi sampai mendapat fokus */}
+      <SkipLink targetId="editor-content" label="Lewati ke editor konten" />
+
+      {/* Status Announcer untuk screen reader */}
+      <A11yAnnouncer message={statusAnnouncement} />
+
       <DocumentHeader
         title={title}
         onTitleChange={handleTitleChange}
@@ -114,10 +197,20 @@ export default function ModulePageEditor({
       />
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div
+        className="flex flex-1 overflow-hidden"
+        ref={editorFocusRef as React.RefObject<HTMLDivElement>}
+        tabIndex={-1}
+      >
         {/* Editor Area */}
-        <div className="flex-1">
-          <div className="h-full w-full">
+        <div
+          className="flex-1"
+          id="editor-content"
+          ref={editorContainerRef}
+          tabIndex={-1}
+          aria-label="Area editor konten"
+        >
+          <div className="h-full w-full" role="region" aria-label="Editor teks">
             <RichTextEditor
               className="bg-[#1e1e1e] border-[#3b3b3b] h-full"
               onChange={handleContentChange}
@@ -140,6 +233,14 @@ export default function ModulePageEditor({
           onNext={() => handleNavigation('next')}
         />
       )}
+
+      {/* Shortcut Help Dialog dengan FocusTrap */}
+      <FocusTrap active={isShortcutHelpOpen}>
+        <ShortcutHelp
+          isOpen={isShortcutHelpOpen}
+          onClose={() => setIsShortcutHelpOpen(false)}
+        />
+      </FocusTrap>
     </div>
   )
 }

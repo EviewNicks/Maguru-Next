@@ -28,22 +28,34 @@ export default function DocumentHeader({
     switch (saveStatus) {
       case 'saved':
         return (
-          <div className="flex items-center text-[#a9abaf] mr-2">
-            <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
+          <div
+            className="flex items-center text-[#a9abaf] mr-2"
+            aria-live="polite"
+          >
+            <CheckCircle
+              className="h-3 w-3 mr-1 text-green-500"
+              aria-hidden="true"
+            />
             <span>Tersimpan</span>
           </div>
         )
       case 'saving':
         return (
-          <div className="flex items-center text-[#a9abaf] mr-2">
-            <Save className="h-3 w-3 mr-1 animate-pulse" />
+          <div
+            className="flex items-center text-[#a9abaf] mr-2"
+            aria-live="polite"
+          >
+            <Save className="h-3 w-3 mr-1 animate-pulse" aria-hidden="true" />
             <span>Menyimpan...</span>
           </div>
         )
       case 'unsaved':
         return (
-          <div className="flex items-center text-[#a9abaf] mr-2">
-            <Clock className="h-3 w-3 mr-1 text-amber-500" />
+          <div
+            className="flex items-center text-[#a9abaf] mr-2"
+            aria-live="polite"
+          >
+            <Clock className="h-3 w-3 mr-1 text-amber-500" aria-hidden="true" />
             <span>Belum tersimpan</span>
           </div>
         )
@@ -53,11 +65,21 @@ export default function DocumentHeader({
   }
 
   return (
-    <div className="flex items-center px-4 h-12 border-b border-[#3b3b3b]">
-      <Button variant="ghost" size="icon" className="mr-1">
-        <ChevronDown className="h-4 w-4" />
+    <div
+      className="flex items-center px-4 h-12 border-b border-[#3b3b3b]"
+      role="region"
+      aria-label="Header dokumen"
+    >
+      {' '}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="mr-1"
+        aria-label="Menu utama"
+      >
+        {' '}
+        <ChevronDown className="h-4 w-4" aria-hidden="true" />{' '}
       </Button>
-
       {/* Title Input */}
       <div className="w-[280px] mr-3">
         <Input
@@ -65,25 +87,39 @@ export default function DocumentHeader({
           onChange={(e) => onTitleChange?.(e.target.value)}
           placeholder="Untitled Page"
           className="border-0 bg-transparent h-8 px-2 focus-visible:ring-0 focus-visible:ring-offset-0 text-[#e3e4f2]"
+          aria-label="Judul halaman"
         />
       </div>
-
       {/* Save Status */}
       {renderSaveStatus()}
-
       <Avatar className="h-6 w-6 bg-[#669df1] mr-2">
         <AvatarFallback className="bg-[#669df1] text-white text-xs">
           EN
         </AvatarFallback>
       </Avatar>
-      <Button variant="ghost" size="icon" className="mr-2">
-        <MessageSquare className="h-4 w-4" />
-      </Button>
-      <Button className="bg-[#669df1] hover:bg-[#669df1]/90 text-white h-8 mr-2">
-        Publish...
-      </Button>
-      <Button variant="ghost" className="text-[#a9abaf] h-8 mr-2">
-        Close draft
+      <Button
+        variant="ghost"
+        size="icon"
+        className="mr-2"
+        aria-label="Komentar"
+      >
+        {' '}
+        <MessageSquare className="h-4 w-4" aria-hidden="true" />{' '}
+      </Button>{' '}
+      <Button
+        className="bg-[#669df1] hover:bg-[#669df1]/90 text-white h-8 mr-2"
+        aria-label="Publikasikan halaman"
+      >
+        {' '}
+        Publish...{' '}
+      </Button>{' '}
+      <Button
+        variant="ghost"
+        className="text-[#a9abaf] h-8 mr-2"
+        aria-label="Tutup draft"
+      >
+        {' '}
+        Close draft{' '}
       </Button>
       <Button
         variant="outline"
@@ -101,7 +137,6 @@ export default function DocumentHeader({
       <Button variant="ghost" size="icon">
         <MoreHorizontal className="h-4 w-4" />
       </Button>
-
       <div className="flex items-center gap-2 mr-auto">
         <Button className="bg-[#1868db] hover:bg-[#1868db]/90 text-white">
           <Plus className="h-4 w-4 mr-1" />

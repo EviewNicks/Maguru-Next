@@ -1,14 +1,22 @@
 'use client'
 
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+} from 'react'
 import { ModulePage } from '../types/modulePageSchema'
 
 interface ModulePagesContextProps {
   pages: ModulePage[]
   activePage: ModulePage | null
   expandedItems: Record<string, boolean>
+  isSidebarOpen: boolean
   handleSelectPage: (page: ModulePage) => void
   toggleExpand: (item: string) => void
+  toggleSidebar: () => void
   setPages: (pages: ModulePage[]) => void
   setActivePage: (page: ModulePage | null) => void
 }
@@ -17,8 +25,10 @@ const defaultContext: ModulePagesContextProps = {
   pages: [],
   activePage: null,
   expandedItems: { SPRINT: true, ModulePages: true },
+  isSidebarOpen: true,
   handleSelectPage: () => {},
   toggleExpand: () => {},
+  toggleSidebar: () => {},
   setPages: () => {},
   setActivePage: () => {},
 }
@@ -41,17 +51,39 @@ export function ModulePagesProvider({ children }: ModulePagesProviderProps) {
     SPRINT: true,
     ModulePages: true,
   })
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true)
 
-  const handleSelectPage = (page: ModulePage) => {
+  // Initialize sidebar state from localStorage on mount
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedState = localStorage.getItem('moduleSidebarOpen')
+      if (savedState) {
+        setIsSidebarOpen(savedState === 'true')
+      }
+    }
+  }, [])
+
+  const handleSelectPage = useCallback((page: ModulePage) => {
     setActivePage(page)
-  }
+  }, [])
 
-  const toggleExpand = (item: string) => {
+  const toggleExpand = useCallback((item: string) => {
     setExpandedItems((prev) => ({
       ...prev,
       [item]: !prev[item],
     }))
-  }
+  }, [])
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => {
+      const newState = !prev
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('moduleSidebarOpen', newState.toString())
+      }
+      return newState
+    })
+  }, [])
 
   return (
     <ModulePagesContext.Provider
@@ -59,8 +91,10 @@ export function ModulePagesProvider({ children }: ModulePagesProviderProps) {
         pages,
         activePage,
         expandedItems,
+        isSidebarOpen,
         handleSelectPage,
         toggleExpand,
+        toggleSidebar,
         setPages,
         setActivePage,
       }}
