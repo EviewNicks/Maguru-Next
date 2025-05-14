@@ -126,6 +126,8 @@ Struktur ini memisahkan komponen, hooks, services, dan types untuk memudahkan pe
 - [x] Datatable dengan Fitur Lengkap
 - [x] Testing Komprehensif (Unit, Integration, E2E)
 - [x] Custom Report untuk E2E Testing
+- [x] Aksesibilitas (A11y) Lengkap [update+2025-06-28]
+- [x] Keyboard Shortcuts untuk Navigasi [update+2025-06-28]
 
 ### 🛠️ Penjelasan Fungsi
 
@@ -141,6 +143,8 @@ Struktur ini memisahkan komponen, hooks, services, dan types untuk memudahkan pe
 - **Datatable dengan Fitur Lengkap**: Implementasi datatable dengan pagination, sorting, filtering, dan searching yang dioptimalkan.
 - **Testing Komprehensif**: Implementasi unit testing, integration testing, dan E2E testing untuk memastikan kualitas kode.
 - **Custom Report**: Implementasi custom reporter untuk E2E testing yang menghasilkan laporan JSON serupa dengan unit dan integration testing.
+- **Aksesibilitas (A11y)**: Implementasi fitur aksesibilitas lengkap termasuk ARIA labels, focus management, dan screen reader announcements untuk memastikan aplikasi dapat digunakan oleh semua pengguna. [update+2025-06-28]
+- **Keyboard Shortcuts**: Implementasi shortcut keyboard untuk navigasi dan editing yang meningkatkan efisiensi dan produktivitas pengguna. [update+2025-06-28]
 
 ---
 
@@ -280,6 +284,8 @@ Halaman Manajemen Modul terdiri dari:
   - Aksi (Edit, Hapus)
 - **Pagination Control** untuk navigasi antar halaman
 - **Modal Form** untuk operasi CRUD
+- **Aksesibilitas** untuk kemudahan navigasi keyboard dan screen reader [update+2025-06-28]
+- **Keyboard Shortcuts** untuk akses cepat ke fitur utama [update+2025-06-28]
 
 ### 🏗️ Komponen Utama
 
@@ -295,6 +301,11 @@ Halaman Manajemen Modul terdiri dari:
    - Sanitasi input untuk mencegah XSS.
 
 3. **ErrorNotifier**: Komponen untuk menampilkan pesan error secara konsisten.
+
+4. **Komponen Aksesibilitas (A11y)**: [update+2025-06-28]
+   - **A11yAnnouncer**: Komponen untuk mengumumkan perubahan status ke screen reader.
+   - **FocusTrap**: Komponen untuk mengelola fokus dalam modal/dialog.
+   - **SkipLink**: Komponen untuk navigasi cepat dengan keyboard.
 
 ---
 
@@ -431,3 +442,5 @@ Halaman Manajemen Modul terdiri dari:
 - **Debounce pada Pencarian**: Mencegah request berlebihan saat user mengetik
 - **Virtual Scrolling**: Optimasi rendering untuk dataset besar
 - **Optimistic Update**: Meningkatkan UX dengan mengupdate UI sebelum request selesai
+- **Keyboard Navigation**: Meningkatkan efisiensi dengan shortcut keyboard [update+2025-06-28]
+- **A11y Optimization**: Meningkatkan aksesibilitas untuk semua pengguna [update+2025-06-28]

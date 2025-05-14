@@ -89,52 +89,52 @@ Namun, beberapa hal masih perlu diselesaikan:
 - [x] Identifikasi dan tambahkan test untuk edge case
 - [x] Verifikasi handling error sudah ditest secara menyeluruh
 
-### C. Implementasi Shortcut Keyboard 🚧
+### C. Implementasi Shortcut Keyboard ✅ [update+2025-06-28]
 
-1. **Desain Shortcut Keyboard (BELUM DIMULAI)**
+1. **Desain Shortcut Keyboard (SELESAI)**
 
 - [x] Definisikan daftar shortcut keyboard yang perlu diimplementasikan
 - [x] Desain hook `useKeyboardShortcuts` untuk menangani event keyboard secara global
 
-2. **Implementasi Shortcut Navigasi (BELUM DIMULAI)**
+2. **Implementasi Shortcut Navigasi (SELESAI)**
 
 - [x] Shortcut untuk navigasi antar halaman (Alt+Left/Right Arrow)
 - [x] Shortcut untuk toggle sidebar (Alt+S)
 - [x] Shortcut untuk fokus ke editor (Alt+E)
 
-3. **Implementasi Shortcut Editing (BELUM DIMULAI)**
+3. **Implementasi Shortcut Editing (SELESAI)**
 
 - [x] Shortcut untuk formatting (Ctrl+B, Ctrl+I, Ctrl+U, dsb)
 - [x] Shortcut untuk save (Ctrl+S)
 - [x] Shortcut untuk insert block (Ctrl+Shift+K untuk kode, dsb)
 
-4. **UI untuk Shortcut Help (BELUM DIMULAI)**
+4. **UI untuk Shortcut Help (SELESAI)**
 
 - [x] Dialog/modal yang menampilkan daftar shortcut yang tersedia
 - [x] Shortcut untuk membuka dialog help (Ctrl+/)
 
-### D. Penyempurnaan Aksesibilitas (A11y) 🚧
+### D. Penyempurnaan Aksesibilitas (A11y) ✅ [update+2025-06-27]
 
-1. **Audit A11y (BELUM DIMULAI)**
+1. **Audit A11y (SELESAI)**
 
-- [ ] Jalankan audit aksesibilitas menggunakan axe atau lighthouse
-- [ ] Identifikasi masalah aksesibilitas yang perlu diperbaiki
+- [x] Jalankan audit aksesibilitas menggunakan axe atau lighthouse
+- [x] Identifikasi masalah aksesibilitas yang perlu diperbaiki
 
-2. **Implementasi ARIA Label (BELUM DIMULAI)**
+2. **Implementasi ARIA Label (SELESAI)**
 
-- [ ] Tambahkan ARIA label pada semua elemen interaktif
-- [ ] Perbaiki hierarki heading untuk screen reader
+- [x] Tambahkan ARIA label pada semua elemen interaktif
+- [x] Perbaiki hierarki heading untuk screen reader
 
-3. **Fokus Manajemen (BELUM DIMULAI)**
+3. **Fokus Manajemen (SELESAI)**
 
-- [ ] Implementasi trap focus untuk modal
-- [ ] Fokus yang tepat saat navigasi antar halaman
-- [ ] Visual focus indicator yang jelas
+- [x] Implementasi trap focus untuk modal
+- [x] Fokus yang tepat saat navigasi antar halaman
+- [x] Visual focus indicator yang jelas
 
-4. **Testing A11y (BELUM DIMULAI)**
+4. **Testing A11y (SELESAI)**
 
-- [ ] Buat test untuk A11y menggunakan jest-axe
-- [ ] Verifikasi navigasi keyboard berfungsi dengan baik
+- [x] Buat test untuk A11y menggunakan jest-axe
+- [x] Verifikasi navigasi keyboard berfungsi dengan baik
 
 ## 4. File yang Perlu Diubah/Dibuat
 
@@ -168,11 +168,16 @@ Namun, beberapa hal masih perlu diselesaikan:
 
 ### Aksesibilitas
 
-- [ ] `features/manage-module/components/ModulePageEditor.tsx` - Tambahkan ARIA attributes
-- [ ] `features/manage-module/components/RichTextEditor.tsx` - Tambahkan ARIA attributes
-- [ ] `features/manage-module/components/ModulePageSidebar.tsx` - Tambahkan ARIA attributes
-- [ ] `features/manage-module/hooks/useFocusTrap.ts` - Custom hook untuk focus management
-- [ ] `features/manage-module/__tests__/a11y/accessibility.test.tsx` - Test aksesibilitas
+- [x] `features/manage-module/components/ModulePageEditor.tsx` - Tambahkan ARIA attributes
+- [x] `features/manage-module/components/RichTextEditor.tsx` - Tambahkan ARIA attributes
+- [x] `features/manage-module/components/ModulePageSidebar.tsx` - Tambahkan ARIA attributes
+- [x] `features/manage-module/components/a11y/A11yAnnouncer.tsx` - Komponen untuk pengumuman ke screen reader
+- [x] `features/manage-module/components/a11y/FocusTrap.tsx` - Komponen untuk focus management di modal
+- [x] `features/manage-module/components/a11y/SkipLink.tsx` - Komponen untuk navigasi cepat dengan keyboard
+- [x] `features/manage-module/hooks/useFocusManagement.ts` - Custom hook untuk focus management
+- [x] `features/manage-module/hooks/useA11yKeyboard.ts` - Custom hook untuk keyboard accessibility
+- [x] `features/manage-module/utils/a11yUtils.ts` - Helper functions untuk aksesibilitas
+- [x] `features/manage-module/__tests__/a11y/accessibility.test.tsx` - Test aksesibilitas
 
 ## 5. Timeline Pengerjaan
 
@@ -190,16 +195,16 @@ Namun, beberapa hal masih perlu diselesaikan:
    - Unit tests untuk TipTap extensions - 1 hari ✅
    - Test coverage analysis dan improvement - 1 hari ✅
 
-3. **Shortcut Keyboard** (Prioritas Sedang): 🚧 DALAM PENGERJAAN
+3. **Shortcut Keyboard** (Prioritas Sedang): ✅ SELESAI [update+2025-06-28]
 
-   - Implementasi useKeyboardShortcuts - 1 hari
-   - Integrasi shortcut ke komponen - 1 hari
-   - Testing dan refinement - 1 hari
+   - Implementasi useKeyboardShortcuts - 1 hari ✅
+   - Integrasi shortcut ke komponen - 1 hari ✅
+   - Testing dan refinement - 1 hari ✅
 
-4. **Aksesibilitas** (Prioritas Sedang): ⬜ BELUM DIMULAI
-   - Audit aksesibilitas - 1 hari
-   - Implementasi ARIA labels dan fokus manajemen - 2 hari
-   - Testing aksesibilitas - 1 hari
+4. **Aksesibilitas** (Prioritas Sedang): ✅ SELESAI [update+2025-06-27]
+   - Audit aksesibilitas - 1 hari ✅
+   - Implementasi ARIA labels dan fokus manajemen - 2 hari ✅
+   - Testing aksesibilitas - 1 hari ✅
 
 ## 6. Acceptance Criteria
 
@@ -215,18 +220,18 @@ Namun, beberapa hal masih perlu diselesaikan:
   - [x] Semua test berjalan sukses
   - [x] Edge cases sudah dicover dalam test
 
-- **Shortcut Keyboard**: 🚧 DALAM PENGERJAAN
+- **Shortcut Keyboard**: ✅ SELESAI [update+2025-06-28]
 
-  - [ ] Shortcut untuk navigasi halaman (Alt+Left/Right) berfungsi
-  - [ ] Shortcut formatting (Ctrl+B, Ctrl+I, Ctrl+U) berfungsi
-  - [ ] Shortcut save (Ctrl+S) berfungsi
-  - [ ] Help modal menampilkan shortcut yang tersedia
+  - [x] Shortcut untuk navigasi halaman (Alt+Left/Right) berfungsi
+  - [x] Shortcut formatting (Ctrl+B, Ctrl+I, Ctrl+U) berfungsi
+  - [x] Shortcut save (Ctrl+S) berfungsi
+  - [x] Help modal menampilkan shortcut yang tersedia
 
-- **Aksesibilitas**: ⬜ BELUM DIMULAI
-  - [ ] Semua elemen interaktif memiliki ARIA label yang tepat
-  - [ ] Focus management berjalan dengan baik
-  - [ ] Aplikasi dapat digunakan sepenuhnya dengan keyboard
-  - [ ] Memenuhi standar WCAG AA
+- **Aksesibilitas**: ✅ SELESAI [update+2025-06-27]
+  - [x] Semua elemen interaktif memiliki ARIA label yang tepat
+  - [x] Focus management berjalan dengan baik
+  - [x] Aplikasi dapat digunakan sepenuhnya dengan keyboard
+  - [x] Memenuhi standar WCAG AA
 
 ## 7. Risiko dan Mitigasi
 
@@ -241,9 +246,15 @@ Namun, beberapa hal masih perlu diselesaikan:
   - Buat branch terpisah untuk perbaikan aksesibilitas
   - Gunakan mocking untuk menyederhanakan testing komponen kompleks
 
-## 8. Catatan Tambahan [update+2025-05-14]
+## 8. Catatan Tambahan [update+2025-06-28]
 
 - ✅ Dokumentasi test sudah diperbarui seiring dengan implementasi unit test
 - ✅ Semua komponen utama sudah memiliki unit test yang berjalan dengan baik
-- 🚧 Langkah selanjutnya: Implementasi shortcut keyboard dan penyempurnaan aksesibilitas
+- ✅ Aksesibilitas sudah diimplementasikan secara menyeluruh dengan komponen khusus a11y:
+  - A11yAnnouncer untuk mengumumkan perubahan status ke screen reader
+  - FocusTrap untuk mengelola fokus dalam modal/dialog
+  - SkipLink untuk navigasi cepat dengan keyboard
+  - ARIA labels dan roles di seluruh komponen interaktif
+- ✅ Implementasi shortcut keyboard sudah selesai dengan integrasi useKeyboardShortcuts ke semua komponen interaktif
+- 🚧 Langkah selanjutnya: Menyelesaikan implementasi integration testing untuk alur CRUD halaman
 - ⚠️ Perhatikan pendekatan testing untuk komponen yang memiliki integrasi dengan TipTap editor, gunakan mocking yang tepat
