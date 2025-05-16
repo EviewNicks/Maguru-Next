@@ -280,11 +280,11 @@
 
 ## 5. Tugas Integrasi UI dan Backend yang Harus Diselesaikan [update+2025-06-29]
 
-### 5.1 Implementasi ModulePageFooterNav di page.tsx 🚧 BELUM SELESAI
+### 5.1 Implementasi ModulePageFooterNav di layout.tsx 🚧 BELUM SELESAI
 
 - **Deskripsi**: ModulePageFooterNav belum diimplementasikan dengan benar pada page.tsx untuk halaman editor
 - **Tugas**:
-  - Menambahkan komponen ModulePageFooterNav ke dalam page.tsx pada rute `/manage-module/pages/[moduleId]`
+  - Menambahkan komponen ModulePageFooterNav ke dalam layout.tsx atau pag pada rute `/manage-module/pages/[moduleId]`
   - Menghubungkan navigasi prev/next dengan API yang ada untuk berpindah antar halaman
   - Memastikan state halaman saat ini (currentPage) dan total halaman (totalPages) diambil dari API
   - Menambahkan state handler untuk fungsi onPrevious dan onNext

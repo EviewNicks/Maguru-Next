@@ -7,7 +7,6 @@ import Navbar from '@/components/layouts/Navbar'
 import GlobalModal from '@/components/layouts/GlobalModal'
 import GlobalToast from '@/components/layouts/GlobalToast'
 import { configureDOMPurify } from '@/features/common/utils/sanitize'
-import Footer from '@/features/common/components/Footer'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const playfair = Playfair_Display({
@@ -45,7 +44,6 @@ export default function RootLayout({
             <GlobalModal />
             <GlobalToast />
           </Container>
-          <Footer />
         </Providers>
       </body>
     </html>

@@ -1,142 +1,180 @@
-# Rencana Implementasi untuk OPS-140: Integrasi ModulePageFooterNav dan Perbaikan Layout Admin
+# Rencana Implementasi: Integrasi Penuh Backend API dengan UI Komponen (OPS-140)
 
 ## 1. Ringkasan Tujuan
 
-Rencana ini akan menyelesaikan dua tugas dari OPS-140 yang belum dikerjakan:
+Mengintegrasikan komponen UI frontend yang telah dibuat dengan API backend untuk operasi CRUD pada modul pembelajaran multi-page. Fokus pada penyelesaian subtask 5.3 dari file `plan-task-140.md`, termasuk:
 
-1. **Implementasi ModulePageFooterNav**: Mengintegrasikan komponen navigasi halaman ke dalam halaman editor modul
-2. **Menghilangkan Footer Global pada Halaman Admin**: Memperbaiki struktur layout agar footer tidak muncul pada halaman admin
+1. Integrasi DocumentHeader dengan API update/save
+2. Implementasi ModulePageSidebar dengan API endpoint
+3. Perbaikan ModulePagesContext untuk state management terpusat
 
-Implementasi ini akan meningkatkan pengalaman pengguna admin saat mengelola halaman modul dengan:
+## 2. Analisis Kondisi Saat Ini
 
-- Navigasi antar halaman yang lancar
-- Layout yang lebih optimal dan bersih
+### Komponen yang Sudah Ada:
 
-## 2. Analisis Masalah
+- `ModulePageEditor` (Editor utama)
+- `ModulePageFooterNav` (Navigasi halaman)
+- `ModulePageSidebar` (Daftar halaman)
+- `DocumentHeader` (Header dokumen)
+- `RichTextEditor` (Editor teks berbasis TipTap)
 
-### 2.1 Masalah ModulePageFooterNav
+### API yang Sudah Dibuat:
 
-- Komponen `ModulePageFooterNav.tsx` sudah ada dan berfungsi, tetapi belum diimplementasikan di `page.tsx`
-- Dari kode yang ada, `page.tsx` hanya merender `ModulePageEditor` tanpa navigasi footer
-- Komponen navigasi membutuhkan data tentang halaman saat ini, total halaman, dan handler navigasi
+- `POST /api/modules/:id/pages` (create page)
+- `GET /api/modules/:id/pages` (list pages)
+- `PUT /api/pages/:id` (update page)
+- `DELETE /api/pages/:id` (delete page)
 
-### 2.2 Masalah Footer Global
+### Masalah yang Perlu Diselesaikan:
 
-- Footer global dirender di `app/layout.tsx` yang mencakup semua halaman, termasuk halaman admin
-- Layout admin (`app/(admin)/layout.tsx`) tidak memiliki logika untuk menghilangkan footer
-- Footer global mengambil ruang yang seharusnya digunakan untuk editing konten
+- DocumentHeader belum terintegrasi dengan API save/update
+- ModulePageSidebar belum menggunakan API untuk manajemen halaman
+- State management masih terpisah-pisah, belum terpusat di ModulePagesContext
 
 ## 3. Langkah-Langkah Teknis
 
-### 3.1 Implementasi ModulePageFooterNav
+### A. Integrasi DocumentHeader dengan API
 
-1. **Modifikasi Komponen ModulePageEditor**
+1. **Perbaiki hook `useModulePageEditor`**
 
-   - Menambahkan state untuk melacak halaman saat ini dan total halaman
-   - Mendefinisikan fungsi navigasi untuk pindah antar halaman
-   - Mengirimkan data dan fungsi tersebut ke ModulePageFooterNav
+   - Tambahkan mutasi untuk update judul halaman
+   - Implementasi debouncing untuk autosave
+   - Tambahkan handling status (saving, saved, error)
 
-2. **Update Halaman Editor**
+2. **Update komponen `DocumentHeader`**
+   - Hubungkan dengan status penyimpanan
+   - Tambahkan indikator visual status (icon/warna)
+   - Implementasi toast notification untuk feedback
 
-   - Mengintegrasikan `ModulePageFooterNav` ke dalam struktur halaman
-   - Memastikan styling konsisten dengan layout yang sudah ada
-   - Menambahkan loading state saat navigasi
+### B. Integrasi ModulePageSidebar dengan API
 
-3. **Menerapkan State Management**
-   - Menggunakan React Query untuk fetch data halaman
-   - Memastikan navigasi mengubah URL dengan parameter pageId
-   - Mengimplementasikan efek samping saat halaman berubah
+1. **Buat/perbaiki hook `useModulePageCRUD`**
 
-### 3.2 Menghilangkan Footer Global di Halaman Admin
+   - Implementasi mutation hooks untuk create, update, delete, reorder halaman
+   - Gunakan TanStack Query untuk cache management
+   - Implementasi optimistic updates untuk UX responsif
 
-1. **Metode 1: Kondisional di Root Layout**
+2. **Update komponen `ModulePageSidebar`**
+   - Tambahkan handler untuk create page
+   - Tambahkan handler untuk delete page dengan konfirmasi
+   - Tambahkan handler untuk rename page
+   - Implementasi indikator status halaman
 
-   - Memodifikasi `app/layout.tsx` untuk memeriksa apakah route saat ini berada di `/admin/`
-   - Menampilkan Footer hanya jika bukan halaman admin
-   - Menambahkan fungsi utilitas untuk memeriksa route
+### C. Perbaikan ModulePagesContext
 
-2. **Metode 2: Layout Nested**
+1. **Refaktor `ModulePagesContext`**
 
-   - Memindahkan Footer dari root layout ke layout khusus non-admin
-   - Membuat struktur layout yang lebih jelas untuk admin vs non-admin
-   - Memastikan komponen shared tetap dirender di semua halaman
+   - Centralisasi state halaman dan operasi CRUD
+   - Tambahkan state untuk tracking loading/error
+   - Implementasi state caching untuk performa
 
-3. **Metode 3: Route Group (Direkomendasikan)**
-   - Membuat route group terpisah untuk halaman publik dengan Footer
-   - Menggunakan `app/(public)/layout.tsx` yang mencakup Footer
-   - Memastikan `app/(admin)/layout.tsx` tidak mewarisi Footer
+2. **Buat provider baru `ModulePageCRUDProvider`**
+   - Enkapsulasi semua operasi CRUD
+   - Buat API wrapper untuk operasi backend
+   - Implementasi error handling terpusat
 
-## 4. File yang Perlu Diubah
+### D. Implementasi Optimistic Updates
 
-### 4.1 ModulePageFooterNav Implementation
+1. **Pattern optimistic updates untuk operasi create/update/delete**
 
-- `app/(admin)/manage-module/pages/[moduleId]/page.tsx` - Menambahkan komponen dan logic untuk navigasi halaman
-- `features/manage-module/components/ModulePageEditor.tsx` - Kemungkinan update untuk memfasilitasi navigasi
+   - Update UI segera sebelum API request selesai
+   - Rollback jika terjadi error dari API
+   - Implementasi retry mechanism
 
-### 4.2 Footer Global Fix
+2. **Handling konkuren editing**
+   - Implementasi locking atau versioning sederhana
+   - Deteksi konflik edit jika diperlukan
 
-- `app/layout.tsx` - Menghapus atau mengondisikan Footer
-- `app/(admin)/layout.tsx` - Memastikan layout admin tidak merender Footer
-- Kemungkinan membuat file baru: `app/(public)/layout.tsx` - Untuk layout khusus halaman non-admin
+## 4. Komponen & File yang Perlu Diubah
+
+### Hooks yang Perlu Diubah/Dibuat:
+
+1. `features/manage-module/hooks/useModulePageEditor.ts` - Perbaiki untuk handling judul & status
+2. `features/manage-module/hooks/useModulePageCRUD.ts` - Buat baru untuk operasi CRUD
+3. `features/manage-module/hooks/useDebounce.ts` - Pastikan berfungsi untuk autosave
+
+### Komponen yang Perlu Diubah:
+
+1. `features/manage-module/components/ModulePageEditor/document/DocumentHeader.tsx`
+2. `features/manage-module/components/ModulePageSidebar.tsx`
+3. `features/manage-module/components/ModulePageFooterNav.tsx`
+
+### Context yang Perlu Diubah/Dibuat:
+
+1. `features/manage-module/context/ModulePagesContext.tsx`
+2. `features/manage-module/context/ModulePageCRUDContext.tsx` (baru)
+
+### Service yang Perlu Diubah/Dibuat:
+
+1. `features/manage-module/services/modulePageService.ts` - Pastikan semua API endpoint terhubung
 
 ## 5. Pendekatan Implementasi
 
-### 5.1 ModulePageFooterNav
+### Strategi Utama:
 
-1. **Fase Persiapan**
+1. **Bottom-up approach**: Mulai dari service layer → hooks → context → komponen UI
+2. **Iterative testing**: Test setiap layer saat diimplementasi
+3. **Progressive enhancement**: Tambahkan fitur satu per satu, verifikasi setelah setiap penambahan
 
-   - Memeriksa bagaimana `ModulePageEditor` mendapatkan data halaman saat ini
-   - Memastikan hooks untuk query halaman sudah berfungsi dengan baik
+### Timeline:
 
-2. **Fase Implementasi**
+1. **Hari 1**: Service layer & hooks dasar
+2. **Hari 2**: Context providers & state management
+3. **Hari 3**: Integrasi komponen UI dengan context & hooks
+4. **Hari 4**: Testing, debugging, optimasi
 
-   - Mengintegrasikan handler navigasi dengan React Query
-   - Menambahkan ModulePageFooterNav ke template
+## 6. Testing & Validasi
 
-3. **Fase Pengujian**
-   - Memastikan navigasi prev/next mengubah halaman dengan benar
-   - Memastikan state UI (disabled, current page) selalu akurat
+1. **Unit testing**:
 
-### 5.2 Footer Global Removal
+   - Test hooks dan utils secara terisolasi
+   - Mock API untuk testing response
 
-1. **Fase Persiapan**
+2. **Integration testing**:
 
-   - Mengidentifikasi opsi terbaik berdasarkan struktur project
-   - Memastikan perubahan tidak akan mempengaruhi halaman non-admin
+   - Test alur edit-save-refresh
+   - Test navigasi antar halaman dengan state preservation
+   - Test error handling & recovery
 
-2. **Fase Implementasi**
+3. **Manual testing checklist**:
+   - Verifikasi autosave berfungsi dengan delay yang sesuai
+   - Verifikasi status penyimpanan ditampilkan dengan benar
+   - Verifikasi optimistic updates bekerja seperti yang diharapkan
+   - Verifikasi error handling & recovery berfungsi dengan benar
 
-   - Mengimplementasikan solusi yang dipilih (konsisten dengan struktur yang ada)
-   - Refaktor struktur layout jika diperlukan
+## 7. Referensi
 
-3. **Fase Pengujian**
-   - Memverifikasi Footer tidak muncul di halaman admin
-   - Memastikan Footer tetap muncul di halaman non-admin
+1. **Dokumentasi Internal**:
 
-## 6. Potensi Risiko dan Mitigasi
+   - `features/manage-module/module-docs.md` - Dokumentasi modul
+   - `plan-task-140.md` - Rencana task OPS-140
 
-- **Risiko**: Perubahan layout global dapat mempengaruhi semua halaman
+2. **Referensi Kode**:
 
-  - **Mitigasi**: Gunakan pendekatan route group untuk isolasi perubahan
+   - `features/manage-module/components/ModulePageEditor.tsx` - Struktur editor utama
+   - `app/(admin)/manage-module/pages/[moduleId]/page.tsx` - Page component
 
-- **Risiko**: Navigasi halaman dengan parameter URL dapat menyebabkan masalah hydration
+3. **Dokumentasi External**:
+   - [TanStack Query Documentation](https://tanstack.com/query/latest/docs/react/overview) - Untuk optimistic updates & mutation
+   - [TipTap Editor Documentation](https://tiptap.dev/docs) - Untuk integrasi editor
+   - [React Hooks API Reference](https://react.dev/reference/react) - Untuk custom hooks
+   - [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction) - Untuk backend APIs
 
-  - **Mitigasi**: Gunakan pendekatan client-side routing yang benar dengan useRouter/useSearchParams
+## 8. Batasan & Pertimbangan
 
-- **Risiko**: State navigasi ModulePageFooterNav mungkin tidak sinkron dengan state editor
-  - **Mitigasi**: Gunakan context atau state yang dikelola dengan baik untuk berbagi data
+1. **Performa**:
 
-## 7. Timeline Perkiraan
+   - Hindari re-render yang tidak perlu dengan memoization
+   - Implementasi debouncing untuk autosave
+   - Gunakan optimistic updates untuk UX responsif
 
-1. **ModulePageFooterNav Integration**: 2-3 jam
+2. **UX**:
 
-   - Investigasi struktur halaman saat ini: 30 menit
-   - Implementasi logic navigasi: 1 jam
-   - Styling dan testing: 1-1,5 jam
+   - Tampilkan loading state/indikator yang jelas
+   - Implementasi feedback visual untuk setiap aksi
+   - Pastikan error handling yang user-friendly
 
-2. **Footer Global Removal**: 1-2 jam
-   - Investigasi struktur layout dan inheritance: 30 menit
-   - Implementasi solusi: 30 menit
-   - Testing di berbagai halaman: 30 menit - 1 jam
-
-Total estimasi waktu: 3-5 jam
+3. **Maintenance**:
+   - Kode harus terdokumentasi dengan baik
+   - Refaktor untuk reusability
+   - Struktur modular untuk memudahkan perubahan di masa depan

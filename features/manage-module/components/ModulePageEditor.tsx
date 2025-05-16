@@ -24,11 +24,13 @@ import useFocusManagement from '../hooks/useFocusManagement'
 interface ModulePageEditorProps {
   moduleId: string
   initialPageId?: string
+  onPageChange?: (pageId: string) => void
 }
 
 export default function ModulePageEditor({
   moduleId,
   initialPageId,
+  onPageChange,
 }: ModulePageEditorProps) {
   // State for shortcut help dialog
   const [isShortcutHelpOpen, setIsShortcutHelpOpen] = useState(false)
@@ -95,31 +97,45 @@ export default function ModulePageEditor({
     saveChanges, // Manual save function
   } = useModulePageEditor(moduleId, activePage)
 
-  // Handle navigasi ke halaman sebelum/berikutnya
+  // Tambahkan state loading
+  const [isNavigating, setIsNavigating] = useState(false)
+
+  // Update handleNavigation untuk menampilkan loading state
   const handleNavigation = useCallback(
     (direction: 'prev' | 'next' | 'first' | 'last') => {
-      if (!pages || !activePageIdToUse) return
+      if (!pages || !activePageIdToUse || isNavigating) return
+
+      setIsNavigating(true)
+
+      let nextPageId: string | undefined
 
       if (direction === 'first' && pages.length > 0) {
-        setActivePageId(pages[0].id)
-        return
+        nextPageId = pages[0].id
+      } else if (direction === 'last' && pages.length > 0) {
+        nextPageId = pages[pages.length - 1].id
+      } else {
+        const adjacentPages = getAdjacentPages(activePageIdToUse)
+
+        if (direction === 'prev' && adjacentPages.previousPage) {
+          nextPageId = adjacentPages.previousPage.id
+        } else if (direction === 'next' && adjacentPages.nextPage) {
+          nextPageId = adjacentPages.nextPage.id
+        }
       }
 
-      if (direction === 'last' && pages.length > 0) {
-        setActivePageId(pages[pages.length - 1].id)
-        return
-      }
+      if (nextPageId) {
+        setActivePageId(nextPageId)
+        if (onPageChange) onPageChange(nextPageId)
 
-      // Menggunakan adjacent pages dari query hook
-      const adjacentPages = getAdjacentPages(activePageIdToUse)
-
-      if (direction === 'prev' && adjacentPages.previousPage) {
-        setActivePageId(adjacentPages.previousPage.id)
-      } else if (direction === 'next' && adjacentPages.nextPage) {
-        setActivePageId(adjacentPages.nextPage.id)
+        // Reset loading state after a short delay
+        setTimeout(() => {
+          setIsNavigating(false)
+        }, 500)
+      } else {
+        setIsNavigating(false)
       }
     },
-    [activePageIdToUse, getAdjacentPages, pages]
+    [activePageIdToUse, getAdjacentPages, onPageChange, pages, isNavigating]
   )
 
   // Update context whenever data changes
@@ -231,6 +247,7 @@ export default function ModulePageEditor({
           totalPages={pages.length}
           onPrevious={() => handleNavigation('prev')}
           onNext={() => handleNavigation('next')}
+          isLoading={isNavigating}
         />
       )}
 
