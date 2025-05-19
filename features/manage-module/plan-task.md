@@ -1,180 +1,328 @@
-# Rencana Implementasi: Integrasi Penuh Backend API dengan UI Komponen (OPS-140)
+# Rencana Implementasi Task 5.4: Perbaikan Error Handling dan Notifikasi
 
-## 1. Ringkasan Tujuan
+## 1. Deskripsi Tugas
 
-Mengintegrasikan komponen UI frontend yang telah dibuat dengan API backend untuk operasi CRUD pada modul pembelajaran multi-page. Fokus pada penyelesaian subtask 5.3 dari file `plan-task-140.md`, termasuk:
+**Tugas**: Meningkatkan sistem error handling dan notifikasi pada aplikasi modul pembelajaran untuk memberikan pengalaman pengguna yang lebih baik dan informatif ketika terjadi error.
 
-1. Integrasi DocumentHeader dengan API update/save
-2. Implementasi ModulePageSidebar dengan API endpoint
-3. Perbaikan ModulePagesContext untuk state management terpusat
+**Masalah saat ini**:
 
-## 2. Analisis Kondisi Saat Ini
+- Error handling masih basic dan tidak memberikan informasi yang cukup kepada pengguna
+- Format error tidak konsisten antar komponen dan fitur
+- Saat terjadi error, tidak ada opsi untuk retry yang jelas
+- Error boundary belum diimplementasikan untuk mencegah crash UI
+- Notifikasi error kurang informatif dan spesifik tentang apa yang terjadi dan bagaimana menyelesaikannya
 
-### Komponen yang Sudah Ada:
+**Solusi yang diusulkan**:
 
-- `ModulePageEditor` (Editor utama)
-- `ModulePageFooterNav` (Navigasi halaman)
-- `ModulePageSidebar` (Daftar halaman)
-- `DocumentHeader` (Header dokumen)
-- `RichTextEditor` (Editor teks berbasis TipTap)
+- Standarisasi format error di seluruh aplikasi
+- Implementasi error boundary untuk mencegah crash UI
+- Perbaikan ErrorNotifier.tsx untuk pesan yang lebih informatif
+- Penambahan mekanisme retry untuk operasi yang gagal
+- Peningkatan UX dengan pesan error yang spesifik dan solusi yang jelas
 
-### API yang Sudah Dibuat:
+## 2. Komponen Utama Error Handling
 
-- `POST /api/modules/:id/pages` (create page)
-- `GET /api/modules/:id/pages` (list pages)
-- `PUT /api/pages/:id` (update page)
-- `DELETE /api/pages/:id` (delete page)
+### 2.1. Perbaikan Format Error Standar
 
-### Masalah yang Perlu Diselesaikan:
+- Membuat struktur error yang konsisten dengan informasi berikut:
+  - Kode error (untuk identifikasi)
+  - Pesan error yang user-friendly
+  - Detail teknis (opsional, hanya untuk development)
+  - Saran tindakan (apa yang harus dilakukan pengguna)
+  - Status dapat diulang (retry) atau tidak
 
-- DocumentHeader belum terintegrasi dengan API save/update
-- ModulePageSidebar belum menggunakan API untuk manajemen halaman
-- State management masih terpisah-pisah, belum terpusat di ModulePagesContext
+### 2.2. Implementasi Error Boundary
 
-## 3. Langkah-Langkah Teknis
+- Membuat komponen error boundary untuk mencegah UI crash saat terjadi error
+- Menampilkan fallback UI yang informatif
+- Memberikan opsi untuk reload atau kembali ke halaman sebelumnya
 
-### A. Integrasi DocumentHeader dengan API
+### 2.3. Peningkatan Sistem Notifikasi
 
-1. **Perbaiki hook `useModulePageEditor`**
+- Menyempurnakan komponen ErrorNotifier.tsx
+- Mengkategorikan error berdasarkan jenisnya (network, validation, server, dll)
+- Menambahkan durasi notifikasi yang tepat berdasarkan jenis error
+- Menambahkan tombol aksi pada notifikasi (retry, dismiss, dll)
 
-   - Tambahkan mutasi untuk update judul halaman
-   - Implementasi debouncing untuk autosave
-   - Tambahkan handling status (saving, saved, error)
+## 3. File yang Perlu Dimodifikasi
 
-2. **Update komponen `DocumentHeader`**
-   - Hubungkan dengan status penyimpanan
-   - Tambahkan indikator visual status (icon/warna)
-   - Implementasi toast notification untuk feedback
+1. **`features/manage-module/components/ErrorNotifier.tsx`**:
 
-### B. Integrasi ModulePageSidebar dengan API
+   - Standarisasi format error dan pesan
+   - Penambahan fungsi parseError untuk menganalisis error dengan lebih baik
+   - Penambahan opsi retry untuk jenis error yang dapat diulang
 
-1. **Buat/perbaiki hook `useModulePageCRUD`**
+2. **`features/manage-module/components/ErrorBoundary.tsx`** (baru):
 
-   - Implementasi mutation hooks untuk create, update, delete, reorder halaman
-   - Gunakan TanStack Query untuk cache management
-   - Implementasi optimistic updates untuk UX responsif
+   - Implementasi error boundary komponen
+   - Pembuatan UI fallback yang informatif
 
-2. **Update komponen `ModulePageSidebar`**
-   - Tambahkan handler untuk create page
-   - Tambahkan handler untuk delete page dengan konfirmasi
-   - Tambahkan handler untuk rename page
-   - Implementasi indikator status halaman
+3. **`features/manage-module/hooks/useModulePageCRUD.ts`**:
 
-### C. Perbaikan ModulePagesContext
+   - Perbaikan error handling untuk operasi CRUD
+   - Integrasi dengan sistem notifikasi yang ditingkatkan
 
-1. **Refaktor `ModulePagesContext`**
+4. **`features/manage-module/hooks/useRichTextAutosave.ts`**:
 
-   - Centralisasi state halaman dan operasi CRUD
-   - Tambahkan state untuk tracking loading/error
-   - Implementasi state caching untuk performa
+   - Perbaikan error handling untuk proses autosave
+   - Penambahan kategorisasi error untuk autosave
 
-2. **Buat provider baru `ModulePageCRUDProvider`**
-   - Enkapsulasi semua operasi CRUD
-   - Buat API wrapper untuk operasi backend
-   - Implementasi error handling terpusat
+5. **`features/manage-module/context/ModulePageCRUDContext.tsx`**:
+   - Peningkatan error handling di tingkat context
+   - Penambahan state untuk tracking status error dan retry attempts
 
-### D. Implementasi Optimistic Updates
+## 4. Rencana Implementasi
 
-1. **Pattern optimistic updates untuk operasi create/update/delete**
+### 4.1. Perubahan pada ErrorNotifier.tsx
 
-   - Update UI segera sebelum API request selesai
-   - Rollback jika terjadi error dari API
-   - Implementasi retry mechanism
+```typescript
+// New error categorization function
+export function categorizeError(error: unknown): ErrorCategory {
+  // Check network errors
+  if (
+    error instanceof Error &&
+    (error.message.includes('network') ||
+      error.message.includes('timeout') ||
+      error.message.includes('connection'))
+  ) {
+    return 'network'
+  }
 
-2. **Handling konkuren editing**
-   - Implementasi locking atau versioning sederhana
-   - Deteksi konflik edit jika diperlukan
+  // Check validation errors
+  if (error instanceof Error && error.message.includes('validation')) {
+    return 'validation'
+  }
 
-## 4. Komponen & File yang Perlu Diubah
+  // Handle API error responses
+  if (typeof error === 'object' && error !== null && 'status' in error) {
+    const status = (error as any).status
+    if (status >= 400 && status < 500) return 'client'
+    if (status >= 500) return 'server'
+  }
 
-### Hooks yang Perlu Diubah/Dibuat:
+  // Default category
+  return 'unknown'
+}
 
-1. `features/manage-module/hooks/useModulePageEditor.ts` - Perbaiki untuk handling judul & status
-2. `features/manage-module/hooks/useModulePageCRUD.ts` - Buat baru untuk operasi CRUD
-3. `features/manage-module/hooks/useDebounce.ts` - Pastikan berfungsi untuk autosave
+// Enhanced error notification
+export function showEnhancedErrorNotification(error: unknown): void {
+  const errorDetails = handleError(error)
+  const category = categorizeError(error)
 
-### Komponen yang Perlu Diubah:
+  // Configure duration based on error type
+  const duration = category === 'network' ? 8000 : 5000
 
-1. `features/manage-module/components/ModulePageEditor/document/DocumentHeader.tsx`
-2. `features/manage-module/components/ModulePageSidebar.tsx`
-3. `features/manage-module/components/ModulePageFooterNav.tsx`
+  // Enhanced toast with appropriate action buttons
+  toast.error(errorDetails.message, {
+    description: errorDetails.details || 'Terjadi kesalahan. Coba lagi nanti.',
+    duration,
+    action: {
+      label: getActionLabelByCategory(category),
+      onClick: () => handleErrorAction(error, category),
+    },
+  })
+}
+```
 
-### Context yang Perlu Diubah/Dibuat:
+### 4.2. Implementasi ErrorBoundary.tsx
 
-1. `features/manage-module/context/ModulePagesContext.tsx`
-2. `features/manage-module/context/ModulePageCRUDContext.tsx` (baru)
+```tsx
+import React, { Component, ErrorInfo, ReactNode } from 'react'
+import { Button } from '@/components/ui/button'
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
-### Service yang Perlu Diubah/Dibuat:
+interface ErrorBoundaryProps {
+  children: ReactNode
+  fallback?: ReactNode
+}
 
-1. `features/manage-module/services/modulePageService.ts` - Pastikan semua API endpoint terhubung
+interface ErrorBoundaryState {
+  hasError: boolean
+  error: Error | null
+}
 
-## 5. Pendekatan Implementasi
+class ErrorBoundaryBase extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
 
-### Strategi Utama:
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error }
+  }
 
-1. **Bottom-up approach**: Mulai dari service layer → hooks → context → komponen UI
-2. **Iterative testing**: Test setiap layer saat diimplementasi
-3. **Progressive enhancement**: Tambahkan fitur satu per satu, verifikasi setelah setiap penambahan
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log error to monitoring service
+    console.error('UI Error:', error, errorInfo)
+  }
 
-### Timeline:
+  render() {
+    if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback
+      }
 
-1. **Hari 1**: Service layer & hooks dasar
-2. **Hari 2**: Context providers & state management
-3. **Hari 3**: Integrasi komponen UI dengan context & hooks
-4. **Hari 4**: Testing, debugging, optimasi
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
+          <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
+          <h2 className="text-xl font-bold mb-2">Terjadi kesalahan!</h2>
+          <p className="text-gray-500 mb-6 max-w-md">
+            Aplikasi mengalami masalah yang tidak terduga. Silakan muat ulang
+            halaman atau kembali ke beranda.
+          </p>
+          <div className="flex space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => window.location.reload()}
+              className="flex items-center"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Muat Ulang
+            </Button>
+            <Button
+              onClick={() => (window.location.href = '/')}
+              className="flex items-center"
+            >
+              <Home className="h-4 w-4 mr-2" />
+              Kembali ke Beranda
+            </Button>
+          </div>
+        </div>
+      )
+    }
 
-## 6. Testing & Validasi
+    return this.props.children
+  }
+}
 
-1. **Unit testing**:
+// Wrapper dengan router
+export function ErrorBoundary({ children, fallback }: ErrorBoundaryProps) {
+  return <ErrorBoundaryBase fallback={fallback}>{children}</ErrorBoundaryBase>
+}
+```
 
-   - Test hooks dan utils secara terisolasi
-   - Mock API untuk testing response
+### 4.3. Perbaikan Error Handling di CRUD Hooks
 
-2. **Integration testing**:
+```typescript
+// Di useModulePageCRUD.ts
+// Improved error handling with retry mechanism
+const updatePage = useMutation({
+  // ...existing code
+  onError: (error, variables, context) => {
+    // Categorize error
+    const errorCategory = categorizeError(error)
 
-   - Test alur edit-save-refresh
-   - Test navigasi antar halaman dengan state preservation
-   - Test error handling & recovery
+    // Determine if operation can be retried
+    const canRetry = errorCategory === 'network' || errorCategory === 'server'
 
-3. **Manual testing checklist**:
-   - Verifikasi autosave berfungsi dengan delay yang sesuai
-   - Verifikasi status penyimpanan ditampilkan dengan benar
-   - Verifikasi optimistic updates bekerja seperti yang diharapkan
-   - Verifikasi error handling & recovery berfungsi dengan benar
+    // Rollback to previous state if mutation fails
+    if (context?.previousState) {
+      queryClient.setQueryData(
+        ['modulePage', moduleId, variables.pageId],
+        context.previousState
+      )
+    }
 
-## 7. Referensi
+    // Show enhanced error notification with retry option if applicable
+    showEnhancedErrorNotification(error, {
+      retryFn: canRetry ? () => updatePage.mutate(variables) : undefined,
+    })
+  },
+})
+```
 
-1. **Dokumentasi Internal**:
+### 4.4. Integrasi Error Boundary dalam Aplikasi
 
-   - `features/manage-module/module-docs.md` - Dokumentasi modul
-   - `plan-task-140.md` - Rencana task OPS-140
+```tsx
+// Di app/(admin)/manage-module/pages/[moduleId]/page.tsx
+import { ErrorBoundary } from '@/features/manage-module/components/ErrorBoundary'
 
-2. **Referensi Kode**:
+export default function ModulePageEditorPage() {
+  // ...existing code
 
-   - `features/manage-module/components/ModulePageEditor.tsx` - Struktur editor utama
-   - `app/(admin)/manage-module/pages/[moduleId]/page.tsx` - Page component
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<ModulePageEditorSkeleton />}>
+        <ModulePageEditor
+          moduleId={moduleId}
+          initialPageId={pageId}
+          onPageChange={handlePageChange}
+        />
+      </Suspense>
+    </ErrorBoundary>
+  )
+}
+```
 
-3. **Dokumentasi External**:
-   - [TanStack Query Documentation](https://tanstack.com/query/latest/docs/react/overview) - Untuk optimistic updates & mutation
-   - [TipTap Editor Documentation](https://tiptap.dev/docs) - Untuk integrasi editor
-   - [React Hooks API Reference](https://react.dev/reference/react) - Untuk custom hooks
-   - [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction) - Untuk backend APIs
+## 5. Testing
 
-## 8. Batasan & Pertimbangan
+### 5.1. Unit Testing
 
-1. **Performa**:
+1. **Test error categorization**:
 
-   - Hindari re-render yang tidak perlu dengan memoization
-   - Implementasi debouncing untuk autosave
-   - Gunakan optimistic updates untuk UX responsif
+   - Verifikasi bahwa error dikategorikan dengan benar berdasarkan jenisnya
+   - Pastikan pesan error yang ditampilkan sesuai dengan kategori
 
-2. **UX**:
+2. **Test ErrorBoundary**:
 
-   - Tampilkan loading state/indikator yang jelas
-   - Implementasi feedback visual untuk setiap aksi
-   - Pastikan error handling yang user-friendly
+   - Simulasikan error dalam komponen child
+   - Verifikasi ErrorBoundary menangkap error dan menampilkan fallback UI
+   - Test fungsionalitas tombol reload dan navigate home
 
-3. **Maintenance**:
-   - Kode harus terdokumentasi dengan baik
-   - Refaktor untuk reusability
-   - Struktur modular untuk memudahkan perubahan di masa depan
+3. **Test retry mechanism**:
+   - Simulasikan network error yang dapat diulang
+   - Verifikasi bahwa tombol retry memanggil fungsi yang benar
+   - Test bahwa state UI kembali normal setelah retry berhasil
+
+### 5.2. File Testing yang Perlu Diupdate
+
+1. **`features/manage-module/components/ErrorNotifier.test.tsx`** (update)
+2. **`features/manage-module/components/ErrorBoundary.test.tsx`** (baru)
+3. **`features/manage-module/hooks/useModulePageCRUD.test.ts`** (update)
+
+## 6. Acceptance Criteria
+
+- [ ] Format error konsisten di seluruh aplikasi
+- [ ] Error dapat dikategorikan berdasarkan jenis (network, validation, server, dll)
+- [ ] Error boundary berhasil mencegah UI crash ketika terjadi error
+- [ ] Notifikasi error menampilkan informasi yang jelas dan spesifik
+- [ ] Terdapat opsi retry untuk error yang dapat diulang
+- [ ] Feedback visual yang jelas saat terjadi error dan saat recovery
+- [ ] Semua unit test berjalan dengan sukses
+
+## 7. Timeline Estimasi
+
+Total estimasi: 1 hari kerja
+
+- Perbaikan ErrorNotifier.tsx (3 jam)
+- Implementasi ErrorBoundary.tsx (2 jam)
+- Integrasi dengan CRUD hooks (2 jam)
+- Testing dan fixing bugs (1 jam)
+
+## 8. Referensi File yang Diperlukan
+
+1. **Error Handling**
+
+   - `features/manage-module/components/ErrorNotifier.tsx`
+   - `features/manage-module/components/ErrorBoundary.tsx` (baru)
+
+2. **Hooks & Context**
+
+   - `features/manage-module/hooks/useModulePageCRUD.ts`
+   - `features/manage-module/hooks/useRichTextAutosave.ts`
+   - `features/manage-module/context/ModulePageCRUDContext.tsx`
+
+3. **Komponen UI**
+
+   - `app/(admin)/manage-module/pages/[moduleId]/page.tsx`
+   - `features/manage-module/components/ModulePageEditor.tsx`
+   - `features/manage-module/components/RichTextEditor.tsx`
+
+4. **Tests**
+   - `features/manage-module/components/ErrorNotifier.test.tsx`
+   - `features/manage-module/components/ErrorBoundary.test.tsx` (baru)
+   - `features/manage-module/hooks/useModulePageCRUD.test.ts`

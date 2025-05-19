@@ -12,11 +12,21 @@ import {
   Plus,
   Search,
   FileEdit,
+  Trash,
+  MoreVertical,
 } from 'lucide-react'
 import SidebarItem from './SidebarItem'
 import SidebarNestedItem from './SIdebarNestedItem'
 import { ModulePage } from '@/features/manage-module/types/modulePageSchema'
 import { useState } from 'react'
+import { CreatePageDialog } from '../dialogs/CreatePageDialog'
+import { DeletePageConfirmation } from '../dialogs/DeletePageConfirmation'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface SidebarContentProps {
   expandedItems: Record<string, boolean>
@@ -34,11 +44,26 @@ export default function SidebarContent({
   onSelectPage,
 }: SidebarContentProps) {
   const [searchTerm, setSearchTerm] = useState('')
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [pageToDelete, setPageToDelete] = useState<{
+    id: string
+    title: string
+  } | null>(null)
 
   // Filter pages based on search term
   const filteredPages = pages.filter((page) =>
     page.title.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Handle opening delete dialog
+  const handleOpenDeleteDialog = (page: ModulePage) => {
+    setPageToDelete({
+      id: page.id,
+      title: page.title || 'Untitled Page',
+    })
+    setDeleteDialogOpen(true)
+  }
 
   return (
     <div className="p-4 border-b border-[#3b3b3b]">
@@ -164,28 +189,58 @@ export default function SidebarContent({
               filteredPages.map((page) => (
                 <div
                   key={page.id}
-                  className={`flex items-center py-1 px-2 rounded cursor-pointer ${
+                  className={`flex items-center justify-between py-1 px-2 rounded cursor-pointer group ${
                     activePage?.id === page.id
                       ? 'bg-[#1c2b42]'
                       : 'hover:bg-[#242528]'
                   }`}
-                  onClick={() => onSelectPage?.(page)}
                 >
-                  {activePage?.id === page.id && (
-                    <div className="w-1 h-4 bg-[#669df1] rounded mr-2"></div>
-                  )}
-                  <FileEdit
-                    className={`h-4 w-4 mr-2 ${
-                      activePage?.id === page.id ? 'text-[#669df1]' : ''
-                    }`}
-                  />
-                  <span
-                    className={`text-sm ${
-                      activePage?.id === page.id ? 'text-[#669df1]' : ''
-                    }`}
+                  <div
+                    className="flex items-center flex-grow"
+                    onClick={() => onSelectPage?.(page)}
                   >
-                    {page.title || 'Untitled Page'}
-                  </span>
+                    {activePage?.id === page.id && (
+                      <div className="w-1 h-4 bg-[#669df1] rounded mr-2"></div>
+                    )}
+                    <FileEdit
+                      className={`h-4 w-4 mr-2 ${
+                        activePage?.id === page.id ? 'text-[#669df1]' : ''
+                      }`}
+                    />
+                    <span
+                      className={`text-sm ${
+                        activePage?.id === page.id ? 'text-[#669df1]' : ''
+                      }`}
+                    >
+                      {page.title || 'Untitled Page'}
+                    </span>
+                  </div>
+
+                  {/* Action Menu - only visible on hover */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Opsi halaman"
+                      >
+                        <MoreVertical className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="bg-[#1f1f21] border-[#3b3b3b] text-[#e3e4f2]"
+                    >
+                      <DropdownMenuItem
+                        className="flex items-center cursor-pointer hover:bg-[#242528]"
+                        onClick={() => handleOpenDeleteDialog(page)}
+                      >
+                        <Trash className="h-4 w-4 mr-2 text-red-400" />
+                        <span>Hapus Halaman</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ))
             ) : (
@@ -197,10 +252,7 @@ export default function SidebarContent({
             <Button
               variant="ghost"
               className="w-full justify-start text-[#a9abaf] mt-2"
-              onClick={() => {
-                // Handle adding new page logic here
-                // Could dispatch an action or call a function from props
-              }}
+              onClick={() => setCreateDialogOpen(true)}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add New Page
@@ -223,6 +275,21 @@ export default function SidebarContent({
           Create
         </Button>
       </div>
+
+      {/* Dialogs */}
+      <CreatePageDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
+
+      {pageToDelete && (
+        <DeletePageConfirmation
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          pageId={pageToDelete.id}
+          pageTitle={pageToDelete.title}
+        />
+      )}
     </div>
   )
 }

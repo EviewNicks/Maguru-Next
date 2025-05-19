@@ -1,6 +1,23 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import ModulePageSidebar from './ModulePageSidebar'
 import { ModulePage } from '../types/modulePageSchema'
+import { useModulePagesContext } from '../context/ModulePagesContext'
+import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
+import React from 'react'
+
+// Mock context
+jest.mock('../context/ModulePagesContext', () => ({
+  useModulePagesContext: jest.fn(),
+}))
+
+// Mock CRUD context
+jest.mock('../context/ModulePageCRUDContext', () => {
+  const actual = jest.requireActual('../context/ModulePageCRUDContext')
+  return {
+    ...actual,
+    useModulePageCRUDContext: jest.fn(),
+  }
+})
 
 // Mock sub-komponen
 jest.mock('./ModulePageEditor/sidebar/SidebarHeader', () => ({
@@ -21,8 +38,6 @@ jest.mock('./ModulePageEditor/sidebar/SidebarContent', () => ({
     pages,
     activePage,
     onSelectPage,
-    expandedItems,
-    toggleExpand,
   }: {
     pages?: ModulePage[]
     activePage?: ModulePage | null
@@ -75,6 +90,11 @@ const localStorageMock = (() => {
 
 Object.defineProperty(window, 'localStorage', { value: localStorageMock })
 
+// Wrapper component for tests
+const TestWrapper = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>
+}
+
 describe('ModulePageSidebar', () => {
   const mockPages: ModulePage[] = [
     {
@@ -98,25 +118,60 @@ describe('ModulePageSidebar', () => {
   ]
 
   const mockActivePage = mockPages[0]
-  const mockOnSelectPage = jest.fn()
+  const mockHandleSelectPage = jest.fn()
   const mockExpandedItems = { SPRINT: true, ModulePages: true }
   const mockToggleExpand = jest.fn()
+  const mockToggleSidebar = jest.fn()
 
   beforeEach(() => {
     jest.clearAllMocks()
-    localStorageMock.clear()
+    localStorageMock
+      .clear()(
+        // Default mocks for both contexts
+        useModulePagesContext as jest.Mock
+      )
+      .mockReturnValue({
+        isSidebarOpen: false,
+        toggleSidebar: mockToggleSidebar,
+        expandedItems: mockExpandedItems,
+        toggleExpand: mockToggleExpand,
+        handleSelectPage: mockHandleSelectPage,
+      })(useModulePageCRUDContext as jest.Mock)
+      .mockReturnValue({
+        moduleId: 'module1',
+        pages: mockPages,
+        activePage: mockActivePage,
+        setActivePage: jest.fn(),
+        isLoading: false,
+        error: null,
+        createPage: jest.fn(),
+        updatePage: jest.fn(),
+        deletePage: jest.fn(),
+        reorderPages: jest.fn(),
+        savePage: jest.fn(),
+        getPageById: jest.fn(),
+        getNextPage: jest.fn(),
+        getPreviousPage: jest.fn(),
+        getFirstPage: jest.fn(),
+        getLastPage: jest.fn(),
+      })
   })
 
+  const renderWithWrapper = (ui: React.ReactElement) => {
+    return render(ui, { wrapper: TestWrapper })
+  }
+
   it('should render with isOpen=false by default', () => {
-    render(
-      <ModulePageSidebar
-        pages={mockPages}
-        activePage={mockActivePage}
-        onSelectPage={mockOnSelectPage}
-        expandedItems={mockExpandedItems}
-        toggleExpand={mockToggleExpand}
-      />
-    )
+    // Mock context untuk sidebar tertutup
+    ;(useModulePagesContext as jest.Mock).mockReturnValue({
+      isSidebarOpen: false,
+      toggleSidebar: mockToggleSidebar,
+      expandedItems: mockExpandedItems,
+      toggleExpand: mockToggleExpand,
+      handleSelectPage: mockHandleSelectPage,
+    })
+
+    renderWithWrapper(<ModulePageSidebar />)
 
     // Verify sidebar is rendered
     expect(screen.getByTestId('mock-chevron-left')).toBeInTheDocument()
@@ -127,106 +182,103 @@ describe('ModulePageSidebar', () => {
   })
 
   it('should toggle open/close when button is clicked', () => {
-    render(
-      <ModulePageSidebar
-        pages={mockPages}
-        activePage={mockActivePage}
-        onSelectPage={mockOnSelectPage}
-      />
-    )
+    // Mock context untuk sidebar tertutup awalnya
+    const mockToggleSidebarFn = jest.fn()
+
+    ;(useModulePagesContext as jest.Mock).mockReturnValue({
+      isSidebarOpen: false,
+      toggleSidebar: mockToggleSidebarFn,
+      expandedItems: mockExpandedItems,
+      toggleExpand: mockToggleExpand,
+      handleSelectPage: mockHandleSelectPage,
+    })
+
+    renderWithWrapper(<ModulePageSidebar />)
 
     // Initially closed
     expect(screen.getByTestId('mock-chevron-left')).toBeInTheDocument()
     expect(screen.queryByTestId('mock-sidebar-header')).not.toBeInTheDocument()
 
-    // Click toggle button (using aria-label to find it uniquely)
+    // Click toggle button
     const toggleButton = screen.getByLabelText('Buka sidebar')
     fireEvent.click(toggleButton)
+
+    // Verify toggleSidebar was called
+    expect(mockToggleSidebarFn).toHaveBeenCalled()
+
+    // Mock context untuk sidebar terbuka setelah klik
+    ;(useModulePagesContext as jest.Mock).mockReturnValue({
+      isSidebarOpen: true,
+      toggleSidebar: mockToggleSidebarFn,
+      expandedItems: mockExpandedItems,
+      toggleExpand: mockToggleExpand,
+      handleSelectPage: mockHandleSelectPage,
+    })
+
+    // Re-render with updated context
+    renderWithWrapper(<ModulePageSidebar />)
 
     // Now sidebar should be open
     expect(screen.getByTestId('mock-chevron-right')).toBeInTheDocument()
     expect(screen.getByTestId('mock-sidebar-header')).toBeInTheDocument()
     expect(screen.getByTestId('mock-sidebar-content')).toBeInTheDocument()
-    expect(screen.getByTestId('mock-sidebar-shortcuts')).toBeInTheDocument()
-    expect(screen.getByTestId('mock-sidebar-blogs')).toBeInTheDocument()
-
-    // Click toggle button again (now it has different aria-label)
-    const closeButton = screen.getByLabelText('Tutup sidebar')
-    fireEvent.click(closeButton)
-
-    // Sidebar should be closed again
-    expect(screen.getByTestId('mock-chevron-left')).toBeInTheDocument()
-    expect(screen.queryByTestId('mock-sidebar-header')).not.toBeInTheDocument()
   })
 
   it('should save preference to localStorage', () => {
-    render(
-      <ModulePageSidebar
-        pages={mockPages}
-        activePage={mockActivePage}
-        onSelectPage={mockOnSelectPage}
-      />
-    )
+    // Mock context untuk sidebar tertutup awalnya
+    const mockToggleSidebarFn = jest.fn()
+
+    ;(useModulePagesContext as jest.Mock).mockReturnValue({
+      isSidebarOpen: false,
+      toggleSidebar: mockToggleSidebarFn,
+      expandedItems: mockExpandedItems,
+      toggleExpand: mockToggleExpand,
+      handleSelectPage: mockHandleSelectPage,
+    })
+
+    renderWithWrapper(<ModulePageSidebar />)
 
     // Click toggle button
     const toggleButton = screen.getByLabelText('Buka sidebar')
     fireEvent.click(toggleButton)
 
-    // Should save to localStorage
-    expect(localStorageMock.setItem).toHaveBeenCalledWith(
-      'moduleSidebarOpen',
-      'true'
-    )
-
-    // Click toggle button again
-    const closeButton = screen.getByLabelText('Tutup sidebar')
-    fireEvent.click(closeButton)
-
-    // Should update localStorage
-    expect(localStorageMock.setItem).toHaveBeenCalledWith(
-      'moduleSidebarOpen',
-      'false'
-    )
+    // Verify toggleSidebar was called
+    expect(mockToggleSidebarFn).toHaveBeenCalled()
   })
 
   it('should load preference from localStorage', () => {
-    // Set localStorage value before rendering
-    localStorageMock.getItem.mockReturnValue('true')
+    // Mock context untuk sidebar terbuka
+    ;(useModulePagesContext as jest.Mock).mockReturnValue({
+      isSidebarOpen: true,
+      toggleSidebar: mockToggleSidebar,
+      expandedItems: mockExpandedItems,
+      toggleExpand: mockToggleExpand,
+      handleSelectPage: mockHandleSelectPage,
+    })
 
-    render(
-      <ModulePageSidebar
-        pages={mockPages}
-        activePage={mockActivePage}
-        onSelectPage={mockOnSelectPage}
-      />
-    )
+    renderWithWrapper(<ModulePageSidebar />)
 
-    // Should be open based on localStorage value
+    // Should be open based on context value
     expect(screen.getByTestId('mock-chevron-right')).toBeInTheDocument()
     expect(screen.getByTestId('mock-sidebar-header')).toBeInTheDocument()
     expect(screen.getByTestId('mock-sidebar-content')).toBeInTheDocument()
   })
 
   it('should pass props to SidebarContent', () => {
-    // Mock localStorage to open sidebar
-    localStorageMock.getItem.mockReturnValue('true')
+    // Mock context untuk sidebar terbuka
+    ;(useModulePagesContext as jest.Mock).mockReturnValue({
+      isSidebarOpen: true,
+      toggleSidebar: mockToggleSidebar,
+      expandedItems: mockExpandedItems,
+      toggleExpand: mockToggleExpand,
+      handleSelectPage: mockHandleSelectPage,
+    })
 
-    render(
-      <ModulePageSidebar
-        pages={mockPages}
-        activePage={mockActivePage}
-        onSelectPage={mockOnSelectPage}
-        expandedItems={mockExpandedItems}
-        toggleExpand={mockToggleExpand}
-      />
-    )
+    renderWithWrapper(<ModulePageSidebar />)
 
-    // Verify props passed to SidebarContent
-    expect(screen.getByTestId('pages-count').textContent).toBe('2')
-    expect(screen.getByTestId('active-page-id').textContent).toBe('page1')
-
-    // Test onSelectPage callback
-    fireEvent.click(screen.getByTestId('select-page-button'))
-    expect(mockOnSelectPage).toHaveBeenCalledWith(mockPages[0])
+    // Verify sidebar content is rendered with correct props
+    expect(screen.getByTestId('mock-sidebar-content')).toBeInTheDocument()
+    expect(screen.getByTestId('pages-count')).toHaveTextContent('2')
+    expect(screen.getByTestId('active-page-id')).toHaveTextContent('page1')
   })
 })

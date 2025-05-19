@@ -1,48 +1,57 @@
 # Laporan Implementasi Task OPS-140: Manajemen Konten Multi-Page
 
-**Status**: 🟡 On Progress (90% Complete) [update+2025-06-28]  
+**Status**: 🟡 On Progress (90% Complete) [update+2025-06-30]  
 **Implementasi Dimulai**: 29 Maret 2025  
 **Developer**: Tim Maguru
 
 ---
 
-## Deskripsi Task
+## 1. Ringkasan Task
+
+### 1.1 Deskripsi
 
 Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. Fitur ini memungkinkan admin untuk membuat, mengedit, menghapus, dan mengelola halaman-halaman konten dalam satu modul secara dinamis dan terstruktur.
 
-## Tujuan
+### 1.2 Tujuan Utama
 
-- Memungkinkan admin mengelola struktur dan isi modul secara fleksibel.
-- Mendukung berbagai tipe konten (teks, kode, gambar, video) dalam satu halaman.
-- Menjamin validasi, audit trail, dan feedback real-time di UI.
+- Memungkinkan admin mengelola struktur dan isi modul secara fleksibel
+- Mendukung berbagai tipe konten (teks, kode, gambar, video) dalam satu halaman
+- Menjamin validasi, audit trail, dan feedback real-time di UI
+
+### 1.3 Batasan Teknis
+
+- Batasan upload gambar maksimal 2MB/file
+- Batasan upload video maksimal 20MB/file
+- Validasi judul halaman minimal 5 karakter
+- Validasi minimal 1 blok konten per halaman
 
 ---
 
-## Status Subtask
+## 2. Status Implementasi
 
-### 1. Desain & Implementasi Model Database [update+2024-06-14]
+### 2.1 Desain & Implementasi Model Database [update+2024-06-14] ✅
 
 - **Status:** ✅ Selesai
 - **Ringkasan:**
-  - Menambahkan field `title` pada model `ModulePage` di Prisma schema.
-  - Mengubah field `content` menjadi tipe `Json` untuk menyimpan array blok konten dengan struktur fleksibel.
-  - Setiap blok konten memiliki properti `type` (text, code, image, video), `content` (isi konten), dan properti opsional seperti `language` untuk kode atau `caption` untuk gambar/video.
-  - Menghapus field `type` dan `language` yang terpisah karena sudah tergabung dalam struktur JSON.
-  - Menambahkan index untuk optimasi query (moduleId, order).
-  - Membuat migrasi database dan sinkronisasi ke database dev.
-  - Membuat dan menguji tipe TypeScript untuk `ModulePage`, `ContentBlock`, dan enum `ContentBlockType`.
-  - Membuat schema validasi Zod untuk create/update module page dan validasi upload file (image/video).
-  - Menulis unit test untuk model dan validasi schema (coverage 100% untuk skenario utama).
+  - Menambahkan field `title` pada model `ModulePage` di Prisma schema
+  - Mengubah field `content` menjadi tipe `Json` untuk menyimpan array blok konten dengan struktur fleksibel
+  - Setiap blok konten memiliki properti `type` (text, code, image, video), `content` (isi konten), dan properti opsional seperti `language` untuk kode atau `caption` untuk gambar/video
+  - Menghapus field `type` dan `language` yang terpisah karena sudah tergabung dalam struktur JSON
+  - Menambahkan index untuk optimasi query (moduleId, order)
+  - Membuat migrasi database dan sinkronisasi ke database dev
+  - Membuat dan menguji tipe TypeScript untuk `ModulePage`, `ContentBlock`, dan enum `ContentBlockType`
+  - Membuat schema validasi Zod untuk create/update module page dan validasi upload file (image/video)
+  - Menulis unit test untuk model dan validasi schema (coverage 100% untuk skenario utama)
 - **Catatan:**
-  - Struktur baru memungkinkan satu halaman berisi campuran berbagai tipe konten.
-  - Sistem blok memungkinkan penyusunan konten lebih fleksibel dan intuitif.
-  - Semua test untuk model dan validasi telah lulus.
-  - Struktur dan validasi sudah siap untuk integrasi API dan UI.
-  - Tidak ada breaking change pada data lama (migrasi aman).
+  - Struktur baru memungkinkan satu halaman berisi campuran berbagai tipe konten
+  - Sistem blok memungkinkan penyusunan konten lebih fleksibel dan intuitif
+  - Semua test untuk model dan validasi telah lulus
+  - Struktur dan validasi sudah siap untuk integrasi API dan UI
+  - Tidak ada breaking change pada data lama (migrasi aman)
 
-### 2. Implementasi API CRUD [update+2025-05-10]
+### 2.2 Implementasi API CRUD [update+2025-05-10] ✅
 
-- **Status:** 🟢 Selesai
+- **Status:** ✅ Selesai
 - **Ringkasan:**
   - API endpoint CRUD untuk halaman multi-page sudah diimplementasikan pada file:
     - `app/api/module/[id]/pages/route.ts` (GET, POST)
@@ -53,40 +62,34 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
     - Sukses dan error pada GET, POST, PUT, DELETE
     - Validasi error, not found, dan error handling
   - **Progres Perbaikan Test [update+2025-05-10]:**
-    - Telah dilakukan perbaikan pada handler API dan mock NextResponse agar menghasilkan response yang konsisten.
-    - Menambahkan validasi manual di handler API untuk memastikan format respons sesuai dengan assertion test.
-    - Memperbaiki test untuk menggunakan pendekatan yang lebih robust dengan mock request.json() yang konsisten.
-    - Masih ada 4 test yang gagal dengan masalah terkait validasi input di handler dan response format.
-    - Test yang berhasil sudah meningkat dari 11/15 ke 11/15 (tidak berubah tetapi error lebih konsisten).
-  - **Langkah Selanjutnya:**
-    - Memperbaiki penanganan data kosong pada method request.json()
-    - Menyelaraskan format validation error response di semua handler API
-    - Memperbaiki assertion test untuk mensimulasikan kondisi validasi, error, dan happy path dengan lebih akurat
-    - Menambahkan test helper untuk membuat request mock yang lebih robust
-    - Dokumentasikan struktur payload API endpoint di module-docs.md setelah test berhasil
+    - Telah dilakukan perbaikan pada handler API dan mock NextResponse agar menghasilkan response yang konsisten
+    - Menambahkan validasi manual di handler API untuk memastikan format respons sesuai dengan assertion test
+    - Memperbaiki test untuk menggunakan pendekatan yang lebih robust dengan mock request.json() yang konsisten
+    - Masih ada 4 test yang gagal dengan masalah terkait validasi input di handler dan response format
+    - Test yang berhasil sudah meningkat dari 11/15 ke 11/15 (tidak berubah tetapi error lebih konsisten)
 
-### 3. Integrasi UI Multi-Page [update+2025-06-28]
+### 2.3 Integrasi UI Multi-Page [update+2025-06-28] ✅
 
 - **Status:** ✅ Selesai
 - **Ringkasan:**
-  - UI untuk manajemen multi-page telah dikembangkan dengan referensi Confluence Editor untuk navigasi dan tata letak.
+  - UI untuk manajemen multi-page telah dikembangkan dengan referensi Confluence Editor untuk navigasi dan tata letak
   - **Komponen yang Diimplementasikan:**
-    - `ModulePageList`: Navigasi sidebar kanan yang menampilkan daftar halaman dalam modul (terinspirasi dari sidebar Confluence).
-    - `ModulePageEditor`: Editor utama yang telah diintegrasikan dengan TipTap untuk mendukung rich text editing.
-    - `ModulePageFooterNav`: Tombol navigasi bawah untuk berpindah antar halaman (prev/next).
-    - `TopNavigation`: Navigasi atas aplikasi.
-    - `DocumentHeader`: Header dokumen dengan status penyimpanan.
-    - `ModulePageSidebar`: Sidebar kanan untuk navigasi halaman dengan fitur toggling.
-    - `ModulePagesContext`: Context untuk sharing state antara ModulePageEditor dan ModulePageSidebar.
-    - `ModulePageLayout`: Layout halaman editor.
+    - `ModulePageList`: Navigasi sidebar kanan yang menampilkan daftar halaman dalam modul
+    - `ModulePageEditor`: Editor utama yang telah diintegrasikan dengan TipTap
+    - `ModulePageFooterNav`: Tombol navigasi bawah untuk berpindah antar halaman (prev/next)
+    - `TopNavigation`: Navigasi atas aplikasi
+    - `DocumentHeader`: Header dokumen dengan status penyimpanan
+    - `ModulePageSidebar`: Sidebar kanan untuk navigasi halaman dengan fitur toggling
+    - `ModulePagesContext`: Context untuk sharing state antara ModulePageEditor dan ModulePageSidebar
+    - `ModulePageLayout`: Layout halaman editor
   - **Implementasi TipTap Editor [update+2025-06-18]:** ✅
-    - Integrasi TipTap sebagai editor rich text yang kuat dan ekstensibel, menggantikan editor sederhana sebelumnya
+    - Integrasi TipTap sebagai editor rich text yang kuat dan ekstensibel
     - Extension yang diimplementasikan: StarterKit, Color, Highlight, Link, TextAlign, Typography, Image, Placeholder, SearchAndReplace
     - 3 jenis toolbar yang dikembangkan:
       - EditorToolbar: Toolbar utama di bagian atas editor
       - FloatingToolbar: Toolbar yang muncul saat memilih teks
       - FloatingMenu: Menu yang muncul saat mengetik '/' (slash command)
-    - Dukungan untuk format teks (bold, italic, underline), heading, list, blockquote, alignment, dll.
+    - Dukungan untuk format teks (bold, italic, underline), heading, list, blockquote, alignment, dll
     - Integrasi penyimpanan otomatis dengan debounce 2000ms
     - Status penyimpanan (saved, saving, unsaved) yang terlihat pada DocumentHeader
   - **Implementasi Toggle Right Sidebar [update+2025-06-20]:** ✅
@@ -162,7 +165,7 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
   - Keyboard shortcuts meningkatkan produktivitas dan aksesibilitas untuk pengguna power-user.
   - Perbaikan tipe data telah diselesaikan untuk mengatasi error TypeScript.
 
-### 4. Implementasi Penyempurnaan Aksesibilitas (A11y) [update+2025-06-28]
+### 2.4 Penyempurnaan Aksesibilitas (A11y) [update+2025-06-28] ✅
 
 - **Status:** ✅ Selesai
 - **Ringkasan:**
@@ -172,51 +175,23 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
     - Analisis flow navigasi keyboard untuk memastikan semua fungsionalitas dapat diakses
   - **Implementasi komponen aksesibilitas reusable:**
     - `A11yAnnouncer`: Komponen untuk mengumumkan status ke screen reader menggunakan ARIA live regions
-      - Digunakan untuk mengumumkan status penyimpanan (saved, saving, error)
-      - Digunakan untuk notifikasi navigasi halaman dan perubahan status
-      - Mendukung level prioritas pengumuman (assertive, polite)
     - `FocusTrap`: Komponen untuk membatasi fokus keyboard dalam modal/dialog
-      - Digunakan dalam ShortcutHelp dialog dan modal konfirmasi
-      - Mencegah fokus keyboard keluar dari modal ketika terbuka
-      - Return fokus ke elemen sebelumnya setelah modal ditutup
     - `SkipLink`: Komponen untuk navigasi cepat ke konten utama
-      - Muncul hanya saat fokus keyboard
-      - Memungkinkan skip ke konten utama, editor, atau navigasi
-      - Meningkatkan efisiensi navigasi keyboard bagi pengguna screen reader
   - **Pengembangan hooks dan utilitas aksesibilitas:**
     - `useFocusManagement`: Hook untuk mengelola fokus elemen
-      - Menyediakan API untuk fokus ke elemen tertentu
-      - Menyimpan dan memulihkan fokus
-      - Memastikan fokus yang tepat setelah navigasi halaman atau aksi
     - `useA11yKeyboard`: Hook untuk keyboard shortcuts khusus aksesibilitas
-      - Shortcuts untuk navigasi cepat (Tab, Shift+Tab, dll)
-      - Shortcuts untuk interaksi dengan elemen (Space, Enter)
-      - Integrasi dengan screen reader commands
     - `a11yUtils`: Utility functions untuk mendukung fitur aksesibilitas
-      - Helper untuk memanipulasi atribut ARIA
-      - Fungsi untuk mendeteksi screen reader
-      - Utility untuk generasi ID aksesibilitas otomatis
   - **Penambahan ARIA attributes pada komponen:**
     - Labels pada semua tombol dan kontrol yang tidak memiliki text konten
     - Descriptions untuk memberikan kontext tambahan pada elemen kompleks
     - Role attributes untuk mendefinisikan semantik elemen dengan jelas
-    - Hidden elements untuk teks tambahan yang hanya terdengar oleh screen reader
   - **Implementasi pengelolaan fokus:**
     - Fokus otomatis pada editor saat halaman dimuat
     - Pemeliharaan fokus setelah navigasi antar halaman
     - Indikator fokus visual yang jelas pada semua elemen interaktif
     - Restorasi fokus saat kembali dari dialog atau menu
-  - **Perbaikan kontras warna dan visual cues:**
-    - Memastikan rasio kontras sesuai WCAG AA (minimal 4.5:1 untuk teks normal)
-    - Menambahkan visual feedback untuk status dan interaksi
-    - Memperbaiki ukuran target klik untuk interaksi touch
-  - **Testing aksesibilitas:**
-    - Pengujian dengan axe-core terintegrasi dalam unit testing
-    - Manual keyboard testing untuk memastikan semua fitur dapat diakses
-    - Simulasi screen reader untuk memastikan konten diumumkan dengan benar
-    - Checking against WCAG 2.1 AA checklist
 
-### 5. Testing dan Kualitas Kode [update+2025-06-28]
+### 2.5 Testing dan Kualitas Kode [update+2025-06-28] 🟡
 
 - **Status:** 🟡 On Progress (80% Selesai)
 - **Ringkasan:**
@@ -243,7 +218,6 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
     - `RichTextEditor.test.tsx`: Test TipTap editor dengan mock
     - `ShortcutHelp.test.tsx`: Test rendering shortcut help dialog
     - `useKeyboardShortcuts.test.tsx`: Test keyboard shortcut hook functionality
-    - Mock files di `__tests__/__mocks__/` untuk TipTap dan context
   - **Coverage Report:**
     - Components: 85% coverage (line coverage)
     - Hooks: 90% coverage
@@ -258,7 +232,7 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
 
 ---
 
-## Status Acceptance Criteria
+## 3. Status Acceptance Criteria
 
 - [x] Admin dapat membuat, mengedit, menghapus halaman konten pada modul (**implementasi selesai**)
 - [x] Setiap halaman memiliki metadata (judul, urutan, dsb) (**model dan UI selesai**)
@@ -275,9 +249,160 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
 - [x] Keyboard shortcuts untuk navigasi dan editing (**implementasi selesai, 100%**)
 - [x] Aksesibilitas memenuhi standar WCAG AA (**implementasi selesai, 100%**)
 
-## UI Preview [update+2025-06-28]
+---
 
-### ModulePageLayout (3-kolom)
+## 4. Issue dan Tugas yang Perlu Diselesaikan [update+2025-06-30]
+
+### 4.1 Tugas Integrasi UI dan Backend
+
+#### 4.1.1 Implementasi ModulePageFooterNav di page.tsx 🚧
+
+- **Deskripsi**: ModulePageFooterNav belum diimplementasikan dengan benar pada page.tsx untuk halaman editor
+- **Tugas**:
+  - Menambahkan komponen ModulePageFooterNav ke dalam layout.tsx atau page pada rute `/manage-module/pages/[moduleId]`
+  - Menghubungkan navigasi prev/next dengan API yang ada
+  - Memastikan state halaman saat ini (currentPage) dan total halaman (totalPages) diambil dari API
+  - Menambahkan state handler untuk fungsi onPrevious dan onNext
+  - Implementasi loading state saat navigasi antar halaman
+
+#### 4.1.2 Menghilangkan Footer Global pada Halaman Admin 🚧
+
+- **Deskripsi**: Footer dari Footer.tsx muncul di halaman admin, padahal seharusnya tidak ada
+- **Tugas**:
+  - Memodifikasi layout.tsx pada app/(admin) untuk menghilangkan footer global
+  - Membuat conditional rendering pada app/layout.tsx
+  - Menambahkan pengecekan route path untuk mengidentifikasi halaman admin
+  - Alternatif: Membuat layout yang benar-benar terpisah untuk admin dan non-admin
+  - Pastikan pengecekan client-side dan server-side berjalan dengan konsisten
+
+#### 4.1.3 Integrasi Penuh Backend API dengan UI 🚧
+
+- **Deskripsi**: Beberapa komponen frontend belum terintegrasi penuh dengan API backend
+- **Tugas**:
+  - **ModulePageEditor dan DocumentHeader**
+    - Menghubungkan DocumentHeader dengan API update/save untuk menyimpan judul
+    - Mengimplementasikan indikator status penyimpanan dengan API calls
+    - Menambahkan Toast notification untuk status operasi API
+    - Menambahkan debounce untuk autosave konten dan judul
+  - **ModulePageSidebar**
+    - Mengimplementasikan fetch daftar halaman dari API pada ModulePageSidebar
+    - Menambahkan fitur tambah halaman baru via API
+    - Menambahkan fitur delete halaman via API dengan konfirmasi
+    - Membuat fitur reorder halaman dengan drag and drop (jika waktu mencukupi)
+    - Menampilkan status halaman (draft/published) dengan indikator visual
+  - **ModulePageContext**
+    - Memperbaiki ModulePagesContext agar menyediakan state terpusat untuk operasi CRUD
+    - Menambahkan mutation hooks untuk operasi create, update, delete, reorder
+    - Memastikan optimistic updates untuk UI responsif
+    - Menambahkan error handling untuk kegagalan operasi API
+
+### 4.2 Tugas Lanjutan
+
+#### 4.2.1 Refactoring File Structure 🚧
+
+- **Deskripsi**: Struktur file saat ini perlu dioptimalkan untuk maintainability jangka panjang
+- **Tugas**:
+  - Reorganisasi komponen-komponen terkait module page ke dalam folder terstruktur
+  - Membuat index exports file untuk semua komponen
+  - Memperbaiki path imports yang terlalu panjang dengan alias path
+  - Menerapkan pattern co-location untuk menempatkan komponen, hooks, dan tests berdekatan
+
+#### 4.2.2 Edge Cases dan Error Handling 🚧
+
+- **Deskripsi**: Penanganan edge cases dan error perlu ditingkatkan
+- **Tugas**:
+  - Menambahkan handling untuk kasus tidak ada halaman pada modul
+  - Menangani kasus error saat fetch/mutate data
+  - Menambahkan skeleton loaders untuk state loading
+  - Implementasi fallback UI saat data tidak tersedia
+  - Penanganan khusus untuk offline mode atau koneksi buruk
+
+---
+
+## 5. Tugas Baru: Integrasi Backend API dengan UI [update+2025-06-30]
+
+Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan untuk mengintegrasikan Backend API dengan UI komponen secara penuh:
+
+### 5.1 Perbaikan Integrasi ModulePageEditor dengan API [PRIORITAS TINGGI]
+
+- **Masalah**: Saat ini implementasi `useRichTextAutosave` mencoba mem-parse konten sebagai JSON, yang dapat menyebabkan error karena format konten dari TipTap adalah HTML.
+- **Solusi**:
+  - Modifikasi `useRichTextAutosave.ts` untuk menangani konten HTML dari TipTap dengan benar
+  - Pastikan format data yang dikirim ke backend sesuai dengan yang diharapkan oleh API
+  - Implementasi error handling yang lebih baik dengan pesan yang informatif
+- **Estimasi**: 1 hari
+
+### 5.2 Optimalisasi State Management ModulePageCRUD [PRIORITAS TINGGI]
+
+- **Masalah**: Terdapat duplikasi state antara `ModulePagesContext` dan `ModulePageCRUDContext` yang dapat menyebabkan inkonsistensi data.
+- **Solusi**:
+  - Refaktor kedua context untuk memiliki tanggung jawab yang jelas dan terpisah
+  - `ModulePagesContext` fokus pada UI state (sidebar, expanded items)
+  - `ModulePageCRUDContext` fokus pada data state dan operasi CRUD
+  - Implementasi sinkronisasi state yang lebih baik antara kedua context
+- **Estimasi**: 2 hari
+
+### 5.3 Implementasi Optimistic Updates untuk Editing [PRIORITAS MENENGAH]
+
+- **Masalah**: Saat ini tidak ada optimistic updates untuk editing konten, yang dapat membuat UX terasa lambat.
+- **Solusi**:
+  - Implementasi optimistic updates di `useModulePageCRUD.ts` untuk operasi update
+  - Tambahkan rollback mechanism jika update gagal
+  - Tingkatkan feedback visual saat proses update berjalan
+- **Estimasi**: 1 hari
+
+### 5.4 Perbaikan Error Handling dan Notifikasi [PRIORITAS MENENGAH]
+
+- **Masalah**: Error handling saat ini masih basic dan tidak memberikan informasi yang cukup kepada pengguna.
+- **Solusi**:
+  - Standarisasi format error di seluruh aplikasi
+  - Implementasi error boundary untuk mencegah crash UI
+  - Perbaiki `ErrorNotifier.tsx` untuk menampilkan pesan yang lebih informatif dan user-friendly
+  - Tambahkan retry mechanism untuk operasi yang gagal
+- **Estimasi**: 1 hari
+
+### 5.5 Integrasi Penuh DocumentHeader dengan API [PRIORITAS RENDAH]
+
+- **Masalah**: DocumentHeader belum sepenuhnya terintegrasi dengan API untuk autosave judul.
+- **Solusi**:
+  - Perbaiki integrasi antara DocumentHeader dan ModulePageCRUDContext
+  - Implementasi debounce yang lebih baik untuk autosave judul
+  - Tambahkan indikator status save yang lebih jelas
+- **Estimasi**: 0.5 hari
+
+### 5.6 Validasi Data dan Type Safety [PRIORITAS RENDAH]
+
+- **Masalah**: Beberapa bagian kode masih menggunakan `any` type dan validasi data tidak konsisten.
+- **Solusi**:
+  - Perbaiki type definitions untuk menghindari penggunaan `any`
+  - Implementasi validasi data yang konsisten di semua layer (client dan server)
+  - Gunakan zod schemas untuk validasi runtime
+- **Estimasi**: 1 hari
+
+---
+
+## 6. Timeline & Prioritas Implementasi
+
+### 6.1 Timeline Implementasi Tugas Baru
+
+1. **Hari 1-2**: Perbaikan Integrasi ModulePageEditor dengan API dan Optimalisasi State Management
+2. **Hari 3-4**: Implementasi Optimistic Updates dan Perbaikan Error Handling
+3. **Hari 5**: Integrasi DocumentHeader dan Validasi Data
+
+### 6.2 Prioritas Implementasi
+
+1. **Perbaikan Integrasi ModulePageEditor dengan API** - Prioritas tertinggi karena memengaruhi fungsi utama aplikasi
+2. **Optimalisasi State Management ModulePageCRUD** - Penting untuk konsistensi data dan mencegah bug
+3. **Implementasi Optimistic Updates** - Meningkatkan UX secara signifikan
+4. **Perbaikan Error Handling** - Meningkatkan robustness aplikasi
+5. **Integrasi DocumentHeader dengan API** - Meningkatkan UX untuk editing judul
+6. **Validasi Data dan Type Safety** - Meningkatkan maintainability kode jangka panjang
+
+---
+
+## 7. UI Preview [update+2025-06-28]
+
+### 7.1 ModulePageLayout (3-kolom)
 
 ```
 ┌─────────────────┬───────────────────────────────┬──┐
@@ -297,28 +422,7 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. F
 └─────────────────┴───────────────────────────────┴─┘
 ```
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ [B] [I] [U] [Code] [Link] [Image] [H1] [H2] [▣ Align] [...] │
-├─────────────────────────────────────────────────────────────┤
-│ # Judul Halaman                                             │
-│                                                             │
-│ Ini adalah paragraf teks yang menjelaskan tentang...        │
-│                                                             │
-│ /                                                           │
-│ ┌─────────────────────┐                                     │
-│ │ /text               │                                     │
-│ │ /heading            │                                     │
-│ │ /code               │                                     │
-│ │ /image              │                                     │
-│ │ /video              │                                     │
-│ └─────────────────────┘                                     │
-│                                                             │
-└─────────────────────────────────────────────────────────────|
-
-```
-
-### Keyboard Shortcuts Panel
+### 7.2 Keyboard Shortcuts Panel
 
 Semua shortcuts tersedia melalui dialog help (Ctrl+/):
 
@@ -343,64 +447,26 @@ Semua shortcuts tersedia melalui dialog help (Ctrl+/):
 |                   | Enter/Space     | Aktifkan tombol/link yang fokus   |
 |                   | Esc             | Tutup dialog/menu yang terbuka    |
 
-## Issue dan Tugas yang Perlu Diselesaikan [update+2025-05-15]
+---
 
-Selama evaluasi implementasi, telah teridentifikasi beberapa tugas penting yang masih perlu diselesaikan untuk memastikan fungsionalitas penuh dari fitur manajemen konten multi-page:
+## 8. Subtask Progress [update+2025-06-30]
 
-### 1. Implementasi ModulePageFooterNav di page.tsx 🚧
+- **Subtask 1:** Implementasi UI & Frontend Component ✅
+- **Subtask 2:** API CRUD Multi-Page ✅
+- **Subtask 3:** TipTap Editor Integration ✅
+- **Subtask 4:** Page Navigation & Sidebar ✅
+- **Subtask 5:** Perbaikan Error Tipe Data ✅
+- **Subtask 6:** Unit Testing untuk Komponen UI ✅
+- **Subtask 7:** Implementasi Shortcut Keyboard ✅
+- **Subtask 8:** Penyempurnaan Aksesibilitas (A11y) ✅
+- **Subtask 9:** Integration Testing 🚧 (40% selesai)
+- **Subtask 10:** Integrasi Penuh Backend API dengan UI 🚧 (0% selesai)
+- **Subtask 11:** Implementasi ModulePageFooterNav di page.tsx 🚧 (0% selesai)
+- **Subtask 12:** Menghilangkan Footer Global pada Halaman Admin 🚧 (0% selesai)
 
-Saat ini, navigasi footer (prev/next) belum diimplementasikan dengan benar pada halaman editor:
+---
 
-- **Issue**: Komponen `ModulePageFooterNav` sudah dibuat tetapi belum diintegrasikan pada file `pages/[moduleId]/page.tsx`.
-- **Dampak**: Pengguna tidak dapat melakukan navigasi antar halaman melalui tombol next/prev di bagian bawah.
-- **Solusi**: Mengintegrasikan komponen ModulePageFooterNav ke dalam page.tsx dengan handler navigasi yang terhubung ke API.
-
-### 2. Footer Global pada Halaman Admin 🚧
-
-Footer global (`Footer.tsx`) muncul di halaman admin, yang mengurangi ruang editor dan tidak sesuai dengan desain UI admin:
-
-- **Issue**: Footer dari `Footer.tsx` masih muncul di halaman admin editor.
-- **Dampak**: Ruang vertikal untuk editor berkurang, inconsistent UI dengan desain asli.
-- **Solusi**: Modifikasi layout admin untuk menghilangkan footer global khusus untuk halaman admin.
-
-### 3. Integrasi Penuh Backend API dengan UI 🚧
-
-Meskipun komponen UI dan API backend sudah dibuat, integrasi keduanya belum sepenuhnya diimplementasikan:
-
-- **Issue**: ModulePageEditor, DocumentHeader, dan ModulePageSidebar belum terintegrasi penuh dengan API endpoint.
-- **Dampak**: Fitur-fitur CRUD halaman belum berfungsi sepenuhnya, operasi seperti tambah/hapus halaman dan simpan konten belum langsung tersimpan ke database.
-- **Solusi**:
-  - Menghubungkan DocumentHeader dengan API update untuk menyimpan judul
-  - Mengimplementasikan fetch daftar halaman dari API pada ModulePageSidebar
-  - Menambahkan fitur tambah/hapus halaman melalui API
-  - Memperbaiki ModulePageContext untuk menyediakan state terpusat untuk operasi CRUD
-
-### 4. Edge Cases dan Error Handling 🚧
-
-Penanganan kasus khusus dan error masih perlu ditingkatkan:
-
-- **Issue**: Beberapa skenario error dan edge cases belum ditangani dengan baik.
-- **Dampak**: Pengalaman pengguna bisa terganggu saat terjadi error.
-- **Solusi**: Menambahkan handling untuk kasus tidak ada halaman, error saat fetch/mutate, dan skeleton loaders.
-
-## Next Steps [update+2025-06-29]
-
-1. **Prioritas Tinggi** - Implementasi ModulePageFooterNav dan menghilangkan footer global (1-2 hari)
-2. **Prioritas Tinggi** - Integrasi penuh Backend API dengan UI komponen, terutama ModulePageSidebar dan DocumentHeader (3-5 hari)
-3. **Prioritas Sedang** - Menyelesaikan integration testing untuk alur CRUD dan navigasi (40% selesai)
-4. **Prioritas Sedang** - Melengkapi penanganan edge cases dan error handling (2-3 hari)
-5. **Prioritas Rendah** - Melengkapi audit trail untuk perubahan halaman (70% selesai)
-6. **Prioritas Rendah** - Menulis E2E testing untuk user flow admin mengelola halaman
-7. **Prioritas Rendah** - Mempersiapkan dokumentasi final dan demo
-
-**Catatan:**
-
-- Fitur drag & drop urutan halaman, quiz integration, import/export, duplikasi, dan versioning akan dikerjakan di future task (sudah dicatat di backlog).
-- Semua fitur utama sekarang sudah selesai diimplementasikan (TipTap Editor, Sidebar, Navigation, Keyboard Shortcuts, Aksesibilitas).
-- Integration testing sedang dalam pengerjaan dan akan menjadi fokus utama berikutnya.
-- Tugas integrasi backend API menjadi prioritas tinggi untuk mencapai versi yang fully functional.
-
-## Referensi
+## 9. Referensi
 
 - [OPS-140 (Jira)](https://eviewnicks-1738239611759.atlassian.net/browse/OPS-140)
 - [TipTap Editor](https://tiptap.dev/) - Untuk implementasi editor blok konten
@@ -414,3 +480,10 @@ Penanganan kasus khusus dan error masih perlu ditingkatkan:
 - [Prisma Relations](https://www.prisma.io/docs/concepts/components/prisma-relations)
 - [Dokumentasi Task Detail](../../docs/implementation-plan/sprint-4/story-143/task-ops-140.md)
 - [Integration Test Report](../../../services/reports/test-report-2025-05-10T01-41-07.526Z.json) [update+2025-05-10]
+
+## 10. Catatan Tambahan
+
+- Fitur drag & drop urutan halaman, quiz integration, import/export, duplikasi, dan versioning akan dikerjakan di future task (sudah dicatat di backlog).
+- Semua fitur utama sekarang sudah selesai diimplementasikan (TipTap Editor, Sidebar, Navigation, Keyboard Shortcuts, Aksesibilitas).
+- Integration testing sedang dalam pengerjaan dan akan menjadi fokus utama berikutnya.
+- Tugas integrasi backend API menjadi prioritas tinggi untuk mencapai versi yang fully functional.

@@ -6,31 +6,27 @@ import React, {
   useState,
   useCallback,
   ReactNode,
+  useEffect,
 } from 'react'
+import { useModulePageCRUDContext } from './ModulePageCRUDContext'
 import { ModulePage } from '../types/modulePageSchema'
 
 interface ModulePagesContextProps {
-  pages: ModulePage[]
-  activePage: ModulePage | null
+  // UI state only
   expandedItems: Record<string, boolean>
   isSidebarOpen: boolean
+  // UI actions
   handleSelectPage: (page: ModulePage) => void
   toggleExpand: (item: string) => void
   toggleSidebar: () => void
-  setPages: (pages: ModulePage[]) => void
-  setActivePage: (page: ModulePage | null) => void
 }
 
 const defaultContext: ModulePagesContextProps = {
-  pages: [],
-  activePage: null,
   expandedItems: { SPRINT: true, ModulePages: true },
   isSidebarOpen: true,
   handleSelectPage: () => {},
   toggleExpand: () => {},
   toggleSidebar: () => {},
-  setPages: () => {},
-  setActivePage: () => {},
 }
 
 const ModulePagesContext =
@@ -45,16 +41,20 @@ interface ModulePagesProviderProps {
 }
 
 export function ModulePagesProvider({ children }: ModulePagesProviderProps) {
-  const [pages, setPages] = useState<ModulePage[]>([])
-  const [activePage, setActivePage] = useState<ModulePage | null>(null)
+  // Remove page state, will be accessed from ModulePageCRUDContext
+  // UI state only
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
     SPRINT: true,
     ModulePages: true,
   })
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true)
 
+  // Safe access to the CRUD context
+  // We need a consistent reference to this context
+  const crudContext = useModulePagesContextSafely()
+
   // Initialize sidebar state from localStorage on mount
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedState = localStorage.getItem('moduleSidebarOpen')
       if (savedState) {
@@ -63,9 +63,17 @@ export function ModulePagesProvider({ children }: ModulePagesProviderProps) {
     }
   }, [])
 
-  const handleSelectPage = useCallback((page: ModulePage) => {
-    setActivePage(page)
-  }, [])
+  // This now safely accesses the CRUD context reference
+  const handleSelectPage = useCallback(
+    (page: ModulePage) => {
+      if (crudContext?.setActivePage) {
+        crudContext.setActivePage(page)
+      } else {
+        console.warn('ModulePageCRUDContext.setActivePage not available')
+      }
+    },
+    [crudContext]
+  )
 
   const toggleExpand = useCallback((item: string) => {
     setExpandedItems((prev) => ({
@@ -88,18 +96,25 @@ export function ModulePagesProvider({ children }: ModulePagesProviderProps) {
   return (
     <ModulePagesContext.Provider
       value={{
-        pages,
-        activePage,
         expandedItems,
         isSidebarOpen,
         handleSelectPage,
         toggleExpand,
         toggleSidebar,
-        setPages,
-        setActivePage,
       }}
     >
       {children}
     </ModulePagesContext.Provider>
   )
+}
+
+// Helper hook to safely access ModulePageCRUDContext
+function useModulePagesContextSafely() {
+  // Use this pattern to avoid conditional hook calls
+  try {
+    return useModulePageCRUDContext()
+  } catch {
+    // Silently return null if context is not available
+    return null
+  }
 }

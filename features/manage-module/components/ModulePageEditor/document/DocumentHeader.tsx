@@ -12,18 +12,81 @@ import {
   Plus,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { useState, useEffect, useCallback } from 'react'
+import { useDebounce } from '../../../hooks/useDebounce'
+import { useModulePageCRUDContext } from '../../../context/ModulePageCRUDContext'
 
 interface DocumentHeaderProps {
   title?: string
   onTitleChange?: (title: string) => void
   saveStatus?: 'saved' | 'saving' | 'unsaved'
+  pageId?: string
 }
 
 export default function DocumentHeader({
   title = '',
   onTitleChange,
-  saveStatus = 'saved',
+  saveStatus: propsSaveStatus = 'saved',
+  pageId,
 }: DocumentHeaderProps) {
+  const [localTitle, setLocalTitle] = useState<string>(title)
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>(
+    propsSaveStatus
+  )
+  const debouncedTitle = useDebounce<string>(localTitle, 1000)
+
+  // Connect to module page CRUD context
+  const { savePage } = useModulePageCRUDContext()
+
+  // Handle title input change
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newTitle = e.target.value
+      setLocalTitle(newTitle)
+      setSaveStatus('unsaved')
+
+      if (onTitleChange) {
+        onTitleChange(newTitle)
+      }
+    },
+    [onTitleChange]
+  )
+
+  // Auto-save title when it changes (debounced)
+  useEffect(() => {
+    if (
+      debouncedTitle !== title &&
+      pageId &&
+      debouncedTitle.trim().length >= 5
+    ) {
+      const saveTitle = async () => {
+        try {
+          setSaveStatus('saving')
+          await savePage({
+            pageId,
+            title: debouncedTitle,
+          })
+          setSaveStatus('saved')
+        } catch (error) {
+          console.error('Error saving title:', error)
+          setSaveStatus('unsaved')
+        }
+      }
+
+      saveTitle()
+    }
+  }, [debouncedTitle, title, pageId, savePage])
+
+  // Sync with props
+  useEffect(() => {
+    setLocalTitle(title)
+  }, [title])
+
+  // Sync save status from props
+  useEffect(() => {
+    setSaveStatus(propsSaveStatus)
+  }, [propsSaveStatus])
+
   const renderSaveStatus = () => {
     switch (saveStatus) {
       case 'saved':
@@ -83,8 +146,8 @@ export default function DocumentHeader({
       {/* Title Input */}
       <div className="w-[280px] mr-3">
         <Input
-          value={title}
-          onChange={(e) => onTitleChange?.(e.target.value)}
+          value={localTitle}
+          onChange={handleTitleChange}
           placeholder="Untitled Page"
           className="border-0 bg-transparent h-8 px-2 focus-visible:ring-0 focus-visible:ring-offset-0 text-[#e3e4f2]"
           aria-label="Judul halaman"

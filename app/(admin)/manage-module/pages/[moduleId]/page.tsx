@@ -5,6 +5,9 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import ModulePageEditor from '@/features/manage-module/components/ModulePageEditor'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useModulePageQuery } from '@/features/manage-module/hooks/useModulePageQuery'
+import { ErrorBoundary } from '@/features/manage-module/components/ErrorBoundary'
+import { AlertTriangle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export default function ModulePageEditorPage() {
   const params = useParams()
@@ -34,14 +37,45 @@ export default function ModulePageEditorPage() {
     router.push(`/manage-module/pages/${moduleId}?pageId=${newPageId}`)
   }
 
+  // Custom fallback untuk error boundary dalam konteks editor
+  const editorErrorFallback = (
+    <div className="flex flex-col items-center justify-center h-screen bg-[#121212] text-white p-6">
+      <AlertTriangle className="h-16 w-16 text-amber-500 mb-6" />
+      <h2 className="text-2xl font-bold mb-3">
+        Terjadi kesalahan saat memuat editor
+      </h2>
+      <p className="text-gray-400 mb-8 max-w-md text-center">
+        Sistem tidak dapat memuat editor halaman modul. Ini mungkin disebabkan
+        oleh masalah jaringan atau data yang rusak.
+      </p>
+      <div className="flex gap-4">
+        <Button
+          variant="outline"
+          onClick={() => window.location.reload()}
+          data-testid="reload-editor-btn"
+        >
+          Muat Ulang Editor
+        </Button>
+        <Button
+          onClick={() => router.push('/manage-module')}
+          data-testid="back-modules-btn"
+        >
+          Kembali ke Daftar Modul
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
-    <Suspense fallback={<ModulePageEditorSkeleton />}>
-      <ModulePageEditor
-        moduleId={moduleId}
-        initialPageId={pageId}
-        onPageChange={handlePageChange}
-      />
-    </Suspense>
+    <ErrorBoundary fallback={editorErrorFallback}>
+      <Suspense fallback={<ModulePageEditorSkeleton />}>
+        <ModulePageEditor
+          moduleId={moduleId}
+          initialPageId={pageId}
+          onPageChange={handlePageChange}
+        />
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 

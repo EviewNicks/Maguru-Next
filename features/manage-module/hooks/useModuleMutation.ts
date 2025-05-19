@@ -8,7 +8,7 @@ import {
   deleteModule,
 } from '../services/moduleClientService'
 import { Module, ModuleStatus } from '../types'
-import { handleError } from '../components/ErrorNotifier/ErrorNotifier'
+import { handleError } from '../components/ErrorNotifier'
 
 // Tipe data untuk input pembuatan modul
 export interface CreateModuleInput {

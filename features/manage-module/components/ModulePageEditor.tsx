@@ -8,14 +8,14 @@ import { useModulePageQuery } from '../hooks/useModulePageQuery'
 import { useModulePageEditor } from '../hooks/useModulePageEditor'
 import { RichTextEditor } from './RichTextEditor'
 import { useDebounce } from '../hooks/useDebounce'
-import { useModulePagesContext } from '../context/ModulePagesContext'
-import { ModulePage } from '../types/modulePageSchema'
+import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
+import { ModulePage } from '../types'
 import { useQuery } from '@tanstack/react-query'
 import { modulePageService } from '../services/modulePageService'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts'
 import { NAVIGATION_SHORTCUTS, SYSTEM_SHORTCUTS } from '../constants/shortcuts'
 import ShortcutHelp from './ShortcutHelp'
-import { FocusTrap } from './a11y/FocusTrap'
+// import { FocusTrap } from './a11y/FocusTrap' - Tidak digunakan
 import { SkipLink } from './a11y/SkipLink'
 import { A11yAnnouncer } from './a11y/A11yAnnouncer'
 import { getStatusAnnouncement } from '../utils/a11yUtils'
@@ -47,16 +47,18 @@ export default function ModulePageEditor({
   // State untuk status announcement untuk screen readers
   const [statusAnnouncement, setStatusAnnouncement] = useState('')
 
-  // Get context
+  // Get CRUD context
   const {
-    setPages,
-    setActivePage,
-    // Variabel yang tidak digunakan
-    // pages: contextPages,
-    // activePage: contextActivePage,
-    // expandedItems,
-    // toggleExpand,
-  } = useModulePagesContext()
+    pages,
+    activePage: crudActivePage,
+    setActivePage: setCrudActivePage,
+    savePage,
+    isLoading: crudLoading,
+    getNextPage,
+    getPreviousPage,
+    getFirstPage,
+    getLastPage,
+  } = useModulePageCRUDContext()
 
   // State untuk halaman aktif
   const [activePageId, setActivePageId] = useState<string | undefined>(
@@ -64,11 +66,8 @@ export default function ModulePageEditor({
   )
 
   // Fetch data module pages
-  const { getAllPages, getAdjacentPages } = useModulePageQuery(moduleId)
-  const { data: pagesData, isLoading: pagesLoading } = getAllPages
-
-  // Ekstrak data halaman dari response API
-  const pages = pagesData?.data || []
+  const { getAllPages } = useModulePageQuery(moduleId)
+  const { isLoading: pagesLoading } = getAllPages
 
   // Jika initialPageId tidak ditemukan, gunakan halaman pertama sebagai default
   const firstPage = pages && pages.length > 0 ? pages[0] : null
@@ -86,46 +85,61 @@ export default function ModulePageEditor({
     enabled: !!activePageIdToUse,
   })
 
-  const activePage = activePageData?.data || null
+  // Gunakan activePage dari CRUD context jika tersedia
+  const activePage = crudActivePage || activePageData?.data || null
 
   // Editor state untuk halaman aktif
-  const {
-    title,
-    saveStatus,
-    handleContentChange,
-    handleTitleChange,
-    saveChanges, // Manual save function
-  } = useModulePageEditor(moduleId, activePage)
+  const { title, saveStatus, handleTitleChange } = useModulePageEditor(
+    moduleId,
+    activePage
+  )
+
+  // Use savePage from CRUD context for enhanced saving with optimistic updates
+  const handleSave = useCallback(async () => {
+    if (!activePage?.id) return
+
+    try {
+      setStatusAnnouncement('Menyimpan halaman...')
+      await savePage({
+        pageId: activePage.id,
+        title: title,
+        blocks: activePage.blocks,
+      })
+      setStatusAnnouncement('Halaman berhasil disimpan')
+    } catch (error) {
+      console.error('Error saving page:', error)
+      setStatusAnnouncement('Gagal menyimpan halaman. Silakan coba lagi.')
+    }
+  }, [activePage, title, savePage])
 
   // Tambahkan state loading
   const [isNavigating, setIsNavigating] = useState(false)
 
-  // Update handleNavigation untuk menampilkan loading state
+  // Update handleNavigation untuk menggunakan helper functions dari context
   const handleNavigation = useCallback(
     (direction: 'prev' | 'next' | 'first' | 'last') => {
       if (!pages || !activePageIdToUse || isNavigating) return
 
       setIsNavigating(true)
 
-      let nextPageId: string | undefined
+      let nextPage: ModulePage | null = null
 
-      if (direction === 'first' && pages.length > 0) {
-        nextPageId = pages[0].id
-      } else if (direction === 'last' && pages.length > 0) {
-        nextPageId = pages[pages.length - 1].id
-      } else {
-        const adjacentPages = getAdjacentPages(activePageIdToUse)
-
-        if (direction === 'prev' && adjacentPages.previousPage) {
-          nextPageId = adjacentPages.previousPage.id
-        } else if (direction === 'next' && adjacentPages.nextPage) {
-          nextPageId = adjacentPages.nextPage.id
-        }
+      if (direction === 'first') {
+        nextPage = getFirstPage()
+      } else if (direction === 'last') {
+        nextPage = getLastPage()
+      } else if (direction === 'prev') {
+        nextPage = getPreviousPage(activePageIdToUse)
+      } else if (direction === 'next') {
+        nextPage = getNextPage(activePageIdToUse)
       }
 
-      if (nextPageId) {
-        setActivePageId(nextPageId)
-        if (onPageChange) onPageChange(nextPageId)
+      if (nextPage?.id) {
+        setActivePageId(nextPage.id)
+        if (onPageChange) onPageChange(nextPage.id)
+
+        // Update activePage in CRUD context
+        setCrudActivePage(nextPage)
 
         // Reset loading state after a short delay
         setTimeout(() => {
@@ -135,18 +149,25 @@ export default function ModulePageEditor({
         setIsNavigating(false)
       }
     },
-    [activePageIdToUse, getAdjacentPages, onPageChange, pages, isNavigating]
+    [
+      activePageIdToUse,
+      onPageChange,
+      pages,
+      isNavigating,
+      getFirstPage,
+      getLastPage,
+      getPreviousPage,
+      getNextPage,
+      setCrudActivePage,
+    ]
   )
 
-  // Update context whenever data changes
+  // Update context whenever activePage changes
   useEffect(() => {
-    if (pages.length > 0) {
-      setPages(pages as ModulePage[])
-    }
     if (activePage) {
-      setActivePage(activePage as ModulePage)
+      setCrudActivePage(activePage as ModulePage)
     }
-  }, [pages, activePage, setPages, setActivePage])
+  }, [activePage, setCrudActivePage])
 
   // Update announcement saat saveStatus berubah
   useEffect(() => {
@@ -179,7 +200,7 @@ export default function ModulePageEditor({
     'navigate-last': () => handleNavigation('last'),
     'toggle-sidebar': toggleSidebar,
     'show-shortcut-help': () => setIsShortcutHelpOpen(true),
-    'save-page': () => saveChanges(),
+    'save-page': () => handleSave(),
   }
 
   // Register keyboard shortcuts
@@ -190,9 +211,19 @@ export default function ModulePageEditor({
   )
 
   // Status loading
-  if (pagesLoading) {
+  if (pagesLoading || crudLoading) {
     return <div className="p-4">Memuat halaman...</div>
   }
+
+  // Get initial content from active page
+  const initialContent = activePage?.blocks
+    ? JSON.stringify(activePage.blocks)
+    : ''
+
+  // Calculate currentPage and totalPages for navigation
+  const currentPage =
+    pages.findIndex((page) => page.id === activePageIdToUse) + 1
+  const totalPages = pages.length
 
   return (
     <div
@@ -210,6 +241,7 @@ export default function ModulePageEditor({
         title={title}
         onTitleChange={handleTitleChange}
         saveStatus={saveStatus}
+        pageId={activePageIdToUse}
       />
 
       {/* Main Content Area */}
@@ -229,10 +261,9 @@ export default function ModulePageEditor({
           <div className="h-full w-full" role="region" aria-label="Editor teks">
             <RichTextEditor
               className="bg-[#1e1e1e] border-[#3b3b3b] h-full"
-              onChange={handleContentChange}
-              initialContent={
-                activePage?.blocks ? JSON.stringify(activePage.blocks) : ''
-              }
+              initialContent={initialContent}
+              pageId={activePageIdToUse}
+              autosave={true}
             />
           </div>
         </div>
@@ -241,23 +272,19 @@ export default function ModulePageEditor({
       {/* Footer Navigation */}
       {pages && activePageIdToUse && (
         <ModulePageFooterNav
-          currentPage={
-            pages.findIndex((page) => page.id === activePageIdToUse) + 1
-          }
-          totalPages={pages.length}
+          currentPage={currentPage}
+          totalPages={totalPages}
           onPrevious={() => handleNavigation('prev')}
           onNext={() => handleNavigation('next')}
           isLoading={isNavigating}
         />
       )}
 
-      {/* Shortcut Help Dialog dengan FocusTrap */}
-      <FocusTrap active={isShortcutHelpOpen}>
-        <ShortcutHelp
-          isOpen={isShortcutHelpOpen}
-          onClose={() => setIsShortcutHelpOpen(false)}
-        />
-      </FocusTrap>
+      {/* Shortcut Help Modal */}
+      <ShortcutHelp
+        isOpen={isShortcutHelpOpen}
+        onClose={() => setIsShortcutHelpOpen(false)}
+      />
     </div>
   )
 }
