@@ -50,24 +50,24 @@ model ModulePage {
 
 #### 2.1.2 Struktur Konten (JSON)
 
-```json
-[
-  {
-    "type": "text",
-    "content": "<p>Konten HTML/markdown</p>"
-  },
-  {
-    "type": "code",
-    "content": "function example() { return 'hello'; }",
-    "language": "javascript"
-  },
-  {
-    "type": "image",
-    "content": "https://url-to-image.jpg",
-    "caption": "Deskripsi gambar"
-  }
-]
-```
+    ```json
+    [
+      {
+        "type": "text",
+        "content": "<p>Konten HTML/markdown</p>"
+      },
+      {
+        "type": "code",
+        "content": "function example() { return 'hello'; }",
+        "language": "javascript"
+      },
+      {
+        "type": "image",
+        "content": "https://url-to-image.jpg",
+        "caption": "Deskripsi gambar"
+      }
+    ]
+    ```
 
 ### 2.2 API Backend ✅
 
@@ -99,31 +99,32 @@ model ModulePage {
   - `ModulePageFooterNav`: Navigasi bawah untuk prev/next
   - `TopNavigation`: Navigasi atas aplikasi
   - `DocumentHeader`: Header dokumen dengan judul & status penyimpanan
-  - `RichTextEditor`: Editor rich text berbasis TipTap
-  - `EditorToolbar`: Toolbar format teks berbasis TipTap
-  - `ModulePageSidebar`: Sidebar kanan dengan fitur toggle
-  - `ModulePagesContext`: Context provider untuk berbagi state
+- `RichTextEditor`: Editor rich text berbasis TipTap
+- `EditorToolbar`: Toolbar format teks berbasis TipTap
+- `ModulePageSidebar`: Sidebar kanan dengan fitur toggle
+- `ModulePagesContext`: Context provider untuk berbagi state
 
 #### 2.3.3 Editor TipTap
 
 - **Extensions:** Color, Highlight, Link, Subscript, Superscript, TextAlign, TextStyle, Typography, Underline, Image, Placeholder
 - **Toolbars:**
   - `EditorToolbar`: Toolbar utama di bagian atas
-  - `FloatingToolbar`: Toolbar yang muncul saat memilih teks
-  - `TipTapFloatingMenu`: Menu slash command yang muncul saat mengetik '/'
+    - `FloatingToolbar`: Toolbar yang muncul saat memilih teks
+    - `TipTapFloatingMenu`: Menu slash command yang muncul saat mengetik '/'
 
 #### 2.3.4 Aksesibilitas (A11y) [update+2025-06-27]
 
-- `A11yAnnouncer.tsx`: Komponen untuk mengumumkan perubahan status ke screen reader
-- `FocusTrap.tsx`: Komponen untuk manajemen fokus dalam modal/dialog
-- `SkipLink.tsx`: Komponen untuk navigasi cepat dengan keyboard
-- ARIA labels dan roles di semua komponen interaktif
+    - `A11yAnnouncer.tsx`: Komponen untuk mengumumkan perubahan status ke screen reader
+    - `FocusTrap.tsx`: Komponen untuk manajemen fokus dalam modal/dialog
+    - `SkipLink.tsx`: Komponen untuk navigasi cepat dengan keyboard
+    - ARIA labels dan roles di semua komponen interaktif
 
 #### 2.3.5 Keyboard Shortcuts [update+2025-06-28]
 
-- `useKeyboardShortcuts.ts`: Custom hook untuk mengelola shortcut keyboard
-- `shortcutUtils.ts`: Helper functions untuk keyboard shortcuts
-- `ShortcutHelp.tsx`: Komponen dialog untuk menampilkan daftar shortcut
+    - `useKeyboardShortcuts.ts`: Custom hook untuk mengelola shortcut keyboard
+    - `shortcutUtils.ts`: Helper functions untuk keyboard shortcuts
+    - `ShortcutHelp.tsx`: Komponen dialog untuk menampilkan daftar shortcut
+
 - **Implementasi Shortcuts:**
   - Navigasi: Alt+Left/Right Arrow untuk halaman prev/next
   - Editor: Ctrl+B, Ctrl+I, Ctrl+U untuk formatting
@@ -131,12 +132,13 @@ model ModulePage {
 
 #### 2.3.6 Custom Hooks
 
-- `useModulePageQuery`: Query data halaman
-- `useModulePageMutation`: Mutasi data halaman
-- `useModulePageEditor`: State editor dan autosave
-- `useDebounce`: Untuk debouncing input dan autosave
-- `useMediaQuery`: Untuk responsive design
-- `useImageUpload`: Untuk upload dan preview gambar
+    - `useModulePageQuery`: Query data halaman
+    - `useModulePageMutation`: Mutasi data halaman
+    - `useModulePageEditor`: State editor dan autosave
+    - `useDebounce`: Untuk debouncing input dan autosave
+    - `useMediaQuery`: Untuk responsive design
+    - `useImageUpload`: Untuk upload dan preview gambar
+
 - `useKeyboardShortcuts`: Untuk manajemen keyboard shortcuts
 - `useFocusManagement`: Untuk manajemen fokus
 - `useA11yKeyboard`: Untuk a11y keyboard handling
@@ -277,19 +279,19 @@ model ModulePage {
   - **ModulePageEditor dan DocumentHeader**
     - Menghubungkan DocumentHeader dengan API update/save untuk menyimpan judul
     - Mengimplementasikan indikator status penyimpanan dengan API calls
-    - Menambahkan Toast notification untuk status operasi API
-    - Menambahkan debounce untuk autosave konten dan judul
+  - Menambahkan Toast notification untuk status operasi API
+  - Menambahkan debounce untuk autosave konten dan judul
   - **ModulePageSidebar**
-    - Mengimplementasikan fetch daftar halaman dari API pada ModulePageSidebar
-    - Menambahkan fitur tambah halaman baru via API
-    - Menambahkan fitur delete halaman via API dengan konfirmasi
-    - Membuat fitur reorder halaman dengan drag and drop (jika waktu mencukupi)
-    - Menampilkan status halaman (draft/published) dengan indikator visual
+  - Mengimplementasikan fetch daftar halaman dari API pada ModulePageSidebar
+  - Menambahkan fitur tambah halaman baru via API
+  - Menambahkan fitur delete halaman via API dengan konfirmasi
+  - Membuat fitur reorder halaman dengan drag and drop (jika waktu mencukupi)
+  - Menampilkan status halaman (draft/published) dengan indikator visual
   - **ModulePageContext**
     - Memperbaiki ModulePagesContext agar menyediakan state terpusat untuk operasi CRUD
-    - Menambahkan mutation hooks untuk operasi create, update, delete, reorder
-    - Memastikan optimistic updates untuk UI responsif
-    - Menambahkan error handling untuk kegagalan operasi API
+  - Menambahkan mutation hooks untuk operasi create, update, delete, reorder
+  - Memastikan optimistic updates untuk UI responsif
+  - Menambahkan error handling untuk kegagalan operasi API
 
 ### 4.2 Tugas Lanjutan
 
@@ -366,14 +368,34 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
   - Tambahkan retry mechanism untuk operasi yang gagal
 - **Estimasi**: 1 hari
 
-### 5.5 Integrasi Penuh DocumentHeader dengan API [PRIORITAS RENDAH]
+### 5.5 Integrasi Penuh DocumentHeader dengan API [PRIORITAS TINGGI] [update+2025-07-07]
 
-- **Masalah**: DocumentHeader belum sepenuhnya terintegrasi dengan API untuk autosave judul.
+- **Masalah**:
+
+  - DocumentHeader belum sepenuhnya terintegrasi dengan API untuk autosave judul
+  - Tombol-tombol utama di DocumentHeader belum berfungsi, termasuk Create dan Close draft
+  - Tidak ada konfirmasi visual saat menyimpan perubahan judul
+  - Antarmuka pengguna belum konsisten dengan fungsionalitas yang tersedia
+
 - **Solusi**:
+
   - Perbaiki integrasi antara DocumentHeader dan ModulePageCRUDContext
+  - Implementasi fungsionalitas tombol Create untuk membuat halaman baru
+  - Implementasi tombol Close draft untuk menghapus halaman saat ini
+  - Tingkatkan indikator status save dengan animation dan pesan yang lebih jelas
   - Implementasi debounce yang lebih baik untuk autosave judul
-  - Tambahkan indikator status save yang lebih jelas
-- **Estimasi**: 0.5 hari
+  - Tambahkan dialog konfirmasi saat mengakses fitur yang berdampak tinggi (seperti menghapus halaman)
+  - Tambahkan feedback visual yang jelas dan notifikasi toast untuk setiap aksi
+
+- **Implementasi**:
+
+  - Menghubungkan tombol Create dengan fungsi createPage dari ModulePageCRUDContext
+  - Integrasi tombol Close draft dengan fungsi deletePage
+  - Perbaikan indikator status save dengan animasi loading dan success
+  - Implementasi dialog konfirmasi untuk aksi berbahaya
+  - Refaktor DocumentHeader untuk lebih modular dan testable
+
+- **Estimasi**: 1 hari
 
 ### 5.6 Validasi Data dan Type Safety [PRIORITAS RENDAH]
 
@@ -401,7 +423,7 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
 5. **Integrasi DocumentHeader dengan API** - Meningkatkan UX untuk editing judul
 6. **Validasi Data dan Type Safety** - Meningkatkan maintainability kode jangka panjang
 
-## 7. Subtask Progress [update+2025-05-20]
+## 7. Subtask Progress [update+2025-07-07]
 
 - **Subtask 1:** Implementasi UI & Frontend Component ✅
 - **Subtask 2:** API CRUD Multi-Page ✅
@@ -412,12 +434,12 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
 - **Subtask 7:** Implementasi Shortcut Keyboard ✅
 - **Subtask 8:** Penyempurnaan Aksesibilitas (A11y) ✅
 - **Subtask 9:** Integration Testing 🚧 (40% selesai)
-- **Subtask 10:** Integrasi Penuh Backend API dengan UI 🚧 (85% selesai)
+- **Subtask 10:** Integrasi Penuh Backend API dengan UI 🚧 (93% selesai)
   - ✅ Task 5.1: Perbaikan Integrasi ModulePageEditor dengan API
   - ✅ Task 5.2: Optimalisasi State Management ModulePageCRUD
   - ✅ Task 5.3: Implementasi Optimistic Updates untuk Editing [update+2025-07-05]
   - ✅ Task 5.4: Perbaikan Error Handling dan Notifikasi [update+2025-07-06]
-  - 🚧 Task 5.5: Integrasi Penuh DocumentHeader dengan API
+  - ✅ Task 5.5: Integrasi Penuh DocumentHeader dengan API [update+2025-07-07]
   - 🚧 Task 5.6: Validasi Data dan Type Safety
 - **Subtask 11:** Implementasi ModulePageFooterNav di page.tsx 🚧 (0% selesai)
 - **Subtask 12:** Menghilangkan Footer Global pada Halaman Admin 🚧 (0% selesai)

@@ -1,328 +1,432 @@
-# Rencana Implementasi Task 5.4: Perbaikan Error Handling dan Notifikasi
-
-## 1. Deskripsi Tugas
-
-**Tugas**: Meningkatkan sistem error handling dan notifikasi pada aplikasi modul pembelajaran untuk memberikan pengalaman pengguna yang lebih baik dan informatif ketika terjadi error.
-
-**Masalah saat ini**:
-
-- Error handling masih basic dan tidak memberikan informasi yang cukup kepada pengguna
-- Format error tidak konsisten antar komponen dan fitur
-- Saat terjadi error, tidak ada opsi untuk retry yang jelas
-- Error boundary belum diimplementasikan untuk mencegah crash UI
-- Notifikasi error kurang informatif dan spesifik tentang apa yang terjadi dan bagaimana menyelesaikannya
-
-**Solusi yang diusulkan**:
-
-- Standarisasi format error di seluruh aplikasi
-- Implementasi error boundary untuk mencegah crash UI
-- Perbaikan ErrorNotifier.tsx untuk pesan yang lebih informatif
-- Penambahan mekanisme retry untuk operasi yang gagal
-- Peningkatan UX dengan pesan error yang spesifik dan solusi yang jelas
-
-## 2. Komponen Utama Error Handling
-
-### 2.1. Perbaikan Format Error Standar
-
-- Membuat struktur error yang konsisten dengan informasi berikut:
-  - Kode error (untuk identifikasi)
-  - Pesan error yang user-friendly
-  - Detail teknis (opsional, hanya untuk development)
-  - Saran tindakan (apa yang harus dilakukan pengguna)
-  - Status dapat diulang (retry) atau tidak
-
-### 2.2. Implementasi Error Boundary
-
-- Membuat komponen error boundary untuk mencegah UI crash saat terjadi error
-- Menampilkan fallback UI yang informatif
-- Memberikan opsi untuk reload atau kembali ke halaman sebelumnya
-
-### 2.3. Peningkatan Sistem Notifikasi
-
-- Menyempurnakan komponen ErrorNotifier.tsx
-- Mengkategorikan error berdasarkan jenisnya (network, validation, server, dll)
-- Menambahkan durasi notifikasi yang tepat berdasarkan jenis error
-- Menambahkan tombol aksi pada notifikasi (retry, dismiss, dll)
-
-## 3. File yang Perlu Dimodifikasi
-
-1. **`features/manage-module/components/ErrorNotifier.tsx`**:
-
-   - Standarisasi format error dan pesan
-   - Penambahan fungsi parseError untuk menganalisis error dengan lebih baik
-   - Penambahan opsi retry untuk jenis error yang dapat diulang
-
-2. **`features/manage-module/components/ErrorBoundary.tsx`** (baru):
-
-   - Implementasi error boundary komponen
-   - Pembuatan UI fallback yang informatif
-
-3. **`features/manage-module/hooks/useModulePageCRUD.ts`**:
-
-   - Perbaikan error handling untuk operasi CRUD
-   - Integrasi dengan sistem notifikasi yang ditingkatkan
-
-4. **`features/manage-module/hooks/useRichTextAutosave.ts`**:
-
-   - Perbaikan error handling untuk proses autosave
-   - Penambahan kategorisasi error untuk autosave
-
-5. **`features/manage-module/context/ModulePageCRUDContext.tsx`**:
-   - Peningkatan error handling di tingkat context
-   - Penambahan state untuk tracking status error dan retry attempts
-
-## 4. Rencana Implementasi
-
-### 4.1. Perubahan pada ErrorNotifier.tsx
-
-```typescript
-// New error categorization function
-export function categorizeError(error: unknown): ErrorCategory {
-  // Check network errors
-  if (
-    error instanceof Error &&
-    (error.message.includes('network') ||
-      error.message.includes('timeout') ||
-      error.message.includes('connection'))
-  ) {
-    return 'network'
-  }
-
-  // Check validation errors
-  if (error instanceof Error && error.message.includes('validation')) {
-    return 'validation'
-  }
-
-  // Handle API error responses
-  if (typeof error === 'object' && error !== null && 'status' in error) {
-    const status = (error as any).status
-    if (status >= 400 && status < 500) return 'client'
-    if (status >= 500) return 'server'
-  }
-
-  // Default category
-  return 'unknown'
-}
-
-// Enhanced error notification
-export function showEnhancedErrorNotification(error: unknown): void {
-  const errorDetails = handleError(error)
-  const category = categorizeError(error)
-
-  // Configure duration based on error type
-  const duration = category === 'network' ? 8000 : 5000
-
-  // Enhanced toast with appropriate action buttons
-  toast.error(errorDetails.message, {
-    description: errorDetails.details || 'Terjadi kesalahan. Coba lagi nanti.',
-    duration,
-    action: {
-      label: getActionLabelByCategory(category),
-      onClick: () => handleErrorAction(error, category),
-    },
-  })
-}
-```
-
-### 4.2. Implementasi ErrorBoundary.tsx
-
-```tsx
-import React, { Component, ErrorInfo, ReactNode } from 'react'
-import { Button } from '@/components/ui/button'
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-
-interface ErrorBoundaryProps {
-  children: ReactNode
-  fallback?: ReactNode
-}
-
-interface ErrorBoundaryState {
-  hasError: boolean
-  error: Error | null
-}
-
-class ErrorBoundaryBase extends Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props)
-    this.state = { hasError: false, error: null }
-  }
-
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error }
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to monitoring service
-    console.error('UI Error:', error, errorInfo)
-  }
-
-  render() {
-    if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback
-      }
-
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
-          <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
-          <h2 className="text-xl font-bold mb-2">Terjadi kesalahan!</h2>
-          <p className="text-gray-500 mb-6 max-w-md">
-            Aplikasi mengalami masalah yang tidak terduga. Silakan muat ulang
-            halaman atau kembali ke beranda.
-          </p>
-          <div className="flex space-x-4">
-            <Button
-              variant="outline"
-              onClick={() => window.location.reload()}
-              className="flex items-center"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Muat Ulang
-            </Button>
-            <Button
-              onClick={() => (window.location.href = '/')}
-              className="flex items-center"
-            >
-              <Home className="h-4 w-4 mr-2" />
-              Kembali ke Beranda
-            </Button>
-          </div>
-        </div>
-      )
-    }
-
-    return this.props.children
-  }
-}
-
-// Wrapper dengan router
-export function ErrorBoundary({ children, fallback }: ErrorBoundaryProps) {
-  return <ErrorBoundaryBase fallback={fallback}>{children}</ErrorBoundaryBase>
-}
-```
-
-### 4.3. Perbaikan Error Handling di CRUD Hooks
-
-```typescript
-// Di useModulePageCRUD.ts
-// Improved error handling with retry mechanism
-const updatePage = useMutation({
-  // ...existing code
-  onError: (error, variables, context) => {
-    // Categorize error
-    const errorCategory = categorizeError(error)
-
-    // Determine if operation can be retried
-    const canRetry = errorCategory === 'network' || errorCategory === 'server'
-
-    // Rollback to previous state if mutation fails
-    if (context?.previousState) {
-      queryClient.setQueryData(
-        ['modulePage', moduleId, variables.pageId],
-        context.previousState
-      )
-    }
-
-    // Show enhanced error notification with retry option if applicable
-    showEnhancedErrorNotification(error, {
-      retryFn: canRetry ? () => updatePage.mutate(variables) : undefined,
-    })
-  },
-})
-```
-
-### 4.4. Integrasi Error Boundary dalam Aplikasi
-
-```tsx
-// Di app/(admin)/manage-module/pages/[moduleId]/page.tsx
-import { ErrorBoundary } from '@/features/manage-module/components/ErrorBoundary'
-
-export default function ModulePageEditorPage() {
-  // ...existing code
-
-  return (
-    <ErrorBoundary>
-      <Suspense fallback={<ModulePageEditorSkeleton />}>
-        <ModulePageEditor
-          moduleId={moduleId}
-          initialPageId={pageId}
-          onPageChange={handlePageChange}
-        />
-      </Suspense>
-    </ErrorBoundary>
-  )
-}
-```
-
-## 5. Testing
-
-### 5.1. Unit Testing
-
-1. **Test error categorization**:
-
-   - Verifikasi bahwa error dikategorikan dengan benar berdasarkan jenisnya
-   - Pastikan pesan error yang ditampilkan sesuai dengan kategori
-
-2. **Test ErrorBoundary**:
-
-   - Simulasikan error dalam komponen child
-   - Verifikasi ErrorBoundary menangkap error dan menampilkan fallback UI
-   - Test fungsionalitas tombol reload dan navigate home
-
-3. **Test retry mechanism**:
-   - Simulasikan network error yang dapat diulang
-   - Verifikasi bahwa tombol retry memanggil fungsi yang benar
-   - Test bahwa state UI kembali normal setelah retry berhasil
-
-### 5.2. File Testing yang Perlu Diupdate
-
-1. **`features/manage-module/components/ErrorNotifier.test.tsx`** (update)
-2. **`features/manage-module/components/ErrorBoundary.test.tsx`** (baru)
-3. **`features/manage-module/hooks/useModulePageCRUD.test.ts`** (update)
-
-## 6. Acceptance Criteria
-
-- [ ] Format error konsisten di seluruh aplikasi
-- [ ] Error dapat dikategorikan berdasarkan jenis (network, validation, server, dll)
-- [ ] Error boundary berhasil mencegah UI crash ketika terjadi error
-- [ ] Notifikasi error menampilkan informasi yang jelas dan spesifik
-- [ ] Terdapat opsi retry untuk error yang dapat diulang
-- [ ] Feedback visual yang jelas saat terjadi error dan saat recovery
-- [ ] Semua unit test berjalan dengan sukses
-
-## 7. Timeline Estimasi
-
-Total estimasi: 1 hari kerja
-
-- Perbaikan ErrorNotifier.tsx (3 jam)
-- Implementasi ErrorBoundary.tsx (2 jam)
-- Integrasi dengan CRUD hooks (2 jam)
-- Testing dan fixing bugs (1 jam)
-
-## 8. Referensi File yang Diperlukan
-
-1. **Error Handling**
-
-   - `features/manage-module/components/ErrorNotifier.tsx`
-   - `features/manage-module/components/ErrorBoundary.tsx` (baru)
-
-2. **Hooks & Context**
-
-   - `features/manage-module/hooks/useModulePageCRUD.ts`
-   - `features/manage-module/hooks/useRichTextAutosave.ts`
-   - `features/manage-module/context/ModulePageCRUDContext.tsx`
-
-3. **Komponen UI**
-
-   - `app/(admin)/manage-module/pages/[moduleId]/page.tsx`
-   - `features/manage-module/components/ModulePageEditor.tsx`
-   - `features/manage-module/components/RichTextEditor.tsx`
-
-4. **Tests**
-   - `features/manage-module/components/ErrorNotifier.test.tsx`
-   - `features/manage-module/components/ErrorBoundary.test.tsx` (baru)
-   - `features/manage-module/hooks/useModulePageCRUD.test.ts`
+# Task 5.5: Integrasi Penuh DocumentHeader dengan API
+
+## Status Task
+
+**Prioritas:** Tinggi  
+**Estimasi Waktu:** 1 hari  
+**Bagian Dari:** OPS-140 (Manajemen Konten Multi-Page)  
+**Status:** ✅ SELESAI [update+2025-07-07]
+
+## Deskripsi Masalah
+
+Saat ini, DocumentHeader pada ModulePageEditor belum terintegrasi sepenuhnya dengan API backend. Beberapa masalah yang ditemui:
+
+1. Tombol-tombol utama belum berfungsi:
+   - Tombol "Create" belum memicu pembuatan halaman baru
+   - Tombol "Close draft" belum melakukan penghapusan halaman
+2. Autosave judul masih bermasalah:
+
+   - Tidak ada konfirmasi visual yang jelas saat judul disimpan
+   - Terdapat inconsistensi antara state UI dan data backend
+
+3. User experience kurang optimal:
+   - Tidak ada dialog konfirmasi untuk aksi berisiko tinggi (menghapus halaman)
+   - Antarmuka tidak responsif terhadap status operasi
+4. fungsionalitas yang belum di kerjakan sekarang:
+   - memberikan notifikasi errorNotifier terkait fungsionalitas belum di kerjakan.
+
+## Tujuan Implementasi
+
+Mengintegrasikan komponen DocumentHeader.tsx sepenuhnya dengan ModulePageCRUDContext untuk:
+
+1. Mengimplementasikan fungsi tombol "Create" untuk membuat halaman baru
+2. Mengimplementasikan fungsi tombol "Close draft" untuk menghapus halaman saat ini
+3. Memperbaiki autosave judul dengan indikator status yang jelas
+4. Menambahkan dialog konfirmasi untuk aksi berbahaya seperti menghapus halaman
+5. Meningkatkan UX dengan feedback visual yang konsisten
+
+## Langkah-langkah Implementasi
+
+### 1. Analisis Komponen dan Context yang Ada
+
+- [x] Analisis `DocumentHeader.tsx`
+- [x] Analisis `ModulePageCRUDContext.tsx`
+- [x] Analisis `useModulePageCRUD.ts`
+
+### 2. Implementasi Tombol "Create"
+
+1. [x] Modifikasi fungsi handler pada tombol "Create":
+
+   ```tsx
+   const handleCreate = async () => {
+     try {
+       // Set status ke loading
+       setIsCreating(true)
+
+       // Membuat halaman baru dengan createPage dari context
+       const newPage = await createPage({
+         moduleId,
+         title: 'Halaman Baru',
+         order: pages.length,
+         blocks: [],
+       })
+
+       // Setelah berhasil, set halaman baru sebagai halaman aktif
+       if (newPage && newPage.data) {
+         setActivePage(newPage.data)
+       }
+
+       // Tampilkan toast sukses
+       toast.success('Halaman baru berhasil dibuat')
+     } catch (error) {
+       console.error('Error creating new page:', error)
+     } finally {
+       setIsCreating(false)
+     }
+   }
+   ```
+
+2. [x] Tambahkan state loading untuk tombol Create:
+
+   ```tsx
+   const [isCreating, setIsCreating] = useState(false)
+   ```
+
+3. [x] Update UI tombol Create untuk menampilkan loading state:
+   ```tsx
+   <Button
+     className="bg-[#1868db] hover:bg-[#1868db]/90 text-white"
+     onClick={handleCreate}
+     disabled={isCreating}
+   >
+     {isCreating ? (
+       <>
+         <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+         Creating...
+       </>
+     ) : (
+       <>
+         <Plus className="h-4 w-4 mr-1" />
+         Create
+       </>
+     )}
+   </Button>
+   ```
+
+### 3. Implementasi Tombol "Close draft"
+
+1. [x] Buat state untuk dialog konfirmasi:
+
+   ```tsx
+   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+   ```
+
+2. [x] Implementasi dialog konfirmasi menggunakan AlertDialog:
+
+   ```tsx
+   <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+     <AlertDialogContent>
+       <AlertDialogHeader>
+         <AlertDialogTitle>Hapus halaman?</AlertDialogTitle>
+         <AlertDialogDescription>
+           Tindakan ini tidak dapat dibatalkan. Halaman ini akan dihapus secara
+           permanen.
+         </AlertDialogDescription>
+       </AlertDialogHeader>
+       <AlertDialogFooter>
+         <AlertDialogCancel>Batal</AlertDialogCancel>
+         <AlertDialogAction
+           onClick={handleDeleteConfirm}
+           className="bg-red-500 hover:bg-red-600"
+         >
+           Hapus
+         </AlertDialogAction>
+       </AlertDialogFooter>
+     </AlertDialogContent>
+   </AlertDialog>
+   ```
+
+3. [x] Tambahkan handler untuk membuka dialog:
+
+   ```tsx
+   const handleCloseDraft = () => {
+     if (pageId) {
+       setShowDeleteDialog(true)
+     }
+   }
+   ```
+
+4. [x] Tambahkan handler untuk konfirmasi hapus:
+
+   ```tsx
+   const [isDeleting, setIsDeleting] = useState(false)
+
+   const handleDeleteConfirm = async () => {
+     if (!pageId) return
+
+     try {
+       setIsDeleting(true)
+       await deletePage(pageId)
+       setShowDeleteDialog(false)
+       // Navigasi ke halaman lain akan ditangani oleh context
+       // karena kita sudah mengimplementasikan logika di deletePage
+     } catch (error) {
+       console.error('Error deleting page:', error)
+     } finally {
+       setIsDeleting(false)
+     }
+   }
+   ```
+
+5. [x] Update tombol Close draft:
+   ```tsx
+   <Button
+     variant="ghost"
+     className="text-[#a9abaf] h-8 mr-2"
+     aria-label="Tutup draft"
+     onClick={handleCloseDraft}
+     disabled={!pageId || isDeleting}
+   >
+     {isDeleting ? (
+       <>
+         <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+         Deleting...
+       </>
+     ) : (
+       'Close draft'
+     )}
+   </Button>
+   ```
+
+### 4. Perbaikan Autosave Judul
+
+1. [x] Tambahkan state untuk tracking status save judul:
+
+   ```tsx
+   const [titleSaveStatus, setTitleSaveStatus] = useState<
+     'saved' | 'saving' | 'unsaved' | 'error'
+   >('saved')
+   ```
+
+2. [x] Perbaiki implementasi autosave pada useEffect:
+
+   ```tsx
+   useEffect(() => {
+     if (
+       debouncedTitle !== title &&
+       pageId &&
+       debouncedTitle.trim().length >= 5
+     ) {
+       const saveTitle = async () => {
+         try {
+           setTitleSaveStatus('saving')
+           await savePage({
+             pageId,
+             title: debouncedTitle,
+           })
+           setTitleSaveStatus('saved')
+         } catch (error) {
+           console.error('Error saving title:', error)
+           setTitleSaveStatus('error')
+
+           // Show error notification
+           showErrorNotification(error, {
+             retryFn: () => saveTitle(),
+           })
+         }
+       }
+
+       saveTitle()
+     } else if (
+       debouncedTitle.trim().length > 0 &&
+       debouncedTitle.trim().length < 5
+     ) {
+       // Jika judul terlalu pendek, tampilkan error
+       setTitleSaveStatus('error')
+       toast.error('Judul harus terdiri dari minimal 5 karakter')
+     }
+   }, [debouncedTitle, title, pageId, savePage])
+   ```
+
+3. [x] Perbaiki tampilan status save:
+
+   ```tsx
+   const renderSaveStatus = () => {
+     switch (titleSaveStatus) {
+       case 'saved':
+         return (
+           <div
+             className="flex items-center text-[#a9abaf] mr-2"
+             aria-live="polite"
+           >
+             <CheckCircle
+               className="h-3 w-3 mr-1 text-green-500"
+               aria-hidden="true"
+             />
+             <span>Tersimpan</span>
+           </div>
+         )
+       case 'saving':
+         return (
+           <div
+             className="flex items-center text-[#a9abaf] mr-2"
+             aria-live="polite"
+           >
+             <Loader2
+               className="h-3 w-3 mr-1 animate-spin"
+               aria-hidden="true"
+             />
+             <span>Menyimpan...</span>
+           </div>
+         )
+       case 'unsaved':
+         return (
+           <div
+             className="flex items-center text-[#a9abaf] mr-2"
+             aria-live="polite"
+           >
+             <Clock
+               className="h-3 w-3 mr-1 text-amber-500"
+               aria-hidden="true"
+             />
+             <span>Belum tersimpan</span>
+           </div>
+         )
+       case 'error':
+         return (
+           <div
+             className="flex items-center text-red-400 mr-2"
+             aria-live="assertive"
+           >
+             <AlertCircle className="h-3 w-3 mr-1" aria-hidden="true" />
+             <span>Gagal menyimpan</span>
+           </div>
+         )
+       default:
+         return null
+     }
+   }
+   ```
+
+4. [x] Tambahkan validasi langsung pada input judul:
+
+   ```tsx
+   const handleTitleChange = useCallback(
+     (e: React.ChangeEvent<HTMLInputElement>) => {
+       const newTitle = e.target.value
+       setLocalTitle(newTitle)
+
+       // Set status langsung ke unsaved untuk feedback instan
+       setTitleSaveStatus('unsaved')
+
+       if (onTitleChange) {
+         onTitleChange(newTitle)
+       }
+     },
+     [onTitleChange]
+   )
+   ```
+
+### 5. Integrasi dengan ModulePageCRUDContext
+
+1. [x] Tambahkan lebih banyak prop yang diambil dari context:
+
+   ```tsx
+   const {
+     moduleId,
+     pages,
+     activePage,
+     isLoading,
+     setActivePage,
+     createPage,
+     deletePage,
+     savePage,
+   } = useModulePageCRUDContext()
+   ```
+
+2. [x] Update props pada DocumentHeader untuk menerima nilai dari context:
+
+   ```tsx
+   interface DocumentHeaderProps {
+     title?: string
+     onTitleChange?: (title: string) => void
+     saveStatus?: 'saved' | 'saving' | 'unsaved' | 'error'
+     pageId?: string
+   }
+   ```
+
+3. [x] Pastikan pageId digunakan dari props atau dari activePage:
+   ```tsx
+   const effectivePageId = pageId || (activePage ? activePage.id : undefined)
+   ```
+
+### 6. Testing & Refinement
+
+1. [x] Buat unit test untuk DocumentHeader dengan integrasi API baru:
+
+   ```tsx
+   // DocumentHeader.test.tsx
+   // - Test tombol Create
+   // - Test tombol Close draft
+   // - Test autosave judul
+   // - Test dialog konfirmasi
+   ```
+
+2. [x] Tambahkan a11y improvements:
+
+   ```tsx
+   // Pastikan semua elemen UI memiliki aria-label yang sesuai
+   // Pastikan dialog menggunakan role yang benar
+   // Tambahkan keyboard shortcuts untuk aksi umum
+   ```
+
+3. [x] Fix style issues:
+   ```tsx
+   // Pastikan UI konsisten untuk semua state (idle, loading, error)
+   // Buat transisi animasi yang halus
+   ```
+
+## Subtask Checklist
+
+- [x] **1. Analisis komponen yang ada**
+
+  - [x] 1.1 Review struktur DocumentHeader.tsx
+  - [x] 1.2 Review ModulePageCRUDContext.tsx dan useModulePageCRUD.ts
+  - [x] 1.3 Identifikasi fungsi yang diperlukan untuk implementasi
+
+- [x] **2. Implementasi tombol "Create"**
+
+  - [x] 2.1 Tambahkan handler untuk membuat halaman baru
+  - [x] 2.2 Tambahkan loading state
+  - [x] 2.3 Tambahkan feedback visual
+  - [x] 2.4 Implementasi navigasi ke halaman baru setelah dibuat
+
+- [x] **3. Implementasi tombol "Close draft"**
+
+  - [x] 3.1 Buat dialog konfirmasi AlertDialog
+  - [x] 3.2 Tambahkan handler untuk membuka dialog
+  - [x] 3.3 Tambahkan handler untuk konfirmasi hapus
+  - [x] 3.4 Tambahkan loading state
+  - [x] 3.5 Implementasi navigasi setelah halaman dihapus
+
+- [x] **4. Perbaikan autosave judul**
+
+  - [x] 4.1 Perbaiki state tracking untuk status save
+  - [x] 4.2 Implementasi indikator status yang lebih informatif
+  - [x] 4.3 Tambahkan validasi input
+  - [x] 4.4 Perbaiki error handling
+
+- [x] **5. Integrasi dengan ModulePageCRUDContext**
+
+  - [x] 5.1 Update interface props
+  - [x] 5.2 Tambahkan props dari context
+  - [x] 5.3 Pastikan semua fungsi menggunakan context
+
+- [x] **6. Testing dan refinement**
+  - [x] 6.1 Buat unit test untuk DocumentHeader
+  - [x] 6.2 Tambahkan aksesibilitas (a11y)
+  - [x] 6.3 Perbaiki style dan UI
+  - [x] 6.4 Verifikasi semua flow berhasil
+
+## Expected Outcome
+
+Setelah implementasi selesai, DocumentHeader akan memiliki fitur sebagai berikut:
+
+1. Tombol "Create" yang berfungsi penuh untuk membuat halaman baru
+2. Tombol "Close draft" dengan dialog konfirmasi untuk menghapus halaman
+3. Autosave judul dengan indikator status yang jelas dan informatif
+4. Feedback visual yang responsif untuk semua operasi API
+5. Dialog konfirmasi untuk operasi berbahaya
+6. Error handling yang baik untuk semua kemungkinan kesalahan
+
+Semua perubahan harus diimplementasikan dengan mempertahankan aksesibilitas dan konsistensi UI.

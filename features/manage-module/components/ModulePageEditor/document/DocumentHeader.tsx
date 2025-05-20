@@ -7,19 +7,32 @@ import {
   MoreHorizontal,
   Share2,
   CheckCircle,
-  Save,
   Clock,
   Plus,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState, useEffect, useCallback } from 'react'
 import { useDebounce } from '../../../hooks/useDebounce'
 import { useModulePageCRUDContext } from '../../../context/ModulePageCRUDContext'
+import { toast } from 'sonner'
+import { showErrorNotification } from '../../../components/ErrorNotifier'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface DocumentHeaderProps {
   title?: string
   onTitleChange?: (title: string) => void
-  saveStatus?: 'saved' | 'saving' | 'unsaved'
+  saveStatus?: 'saved' | 'saving' | 'unsaved' | 'error'
   pageId?: string
 }
 
@@ -29,21 +42,96 @@ export default function DocumentHeader({
   saveStatus: propsSaveStatus = 'saved',
   pageId,
 }: DocumentHeaderProps) {
+  // State local
   const [localTitle, setLocalTitle] = useState<string>(title)
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>(
-    propsSaveStatus
-  )
+  const [titleSaveStatus, setTitleSaveStatus] = useState<
+    'saved' | 'saving' | 'unsaved' | 'error'
+  >(propsSaveStatus)
+  const [isCreating, setIsCreating] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  // Hook debounce untuk judul
   const debouncedTitle = useDebounce<string>(localTitle, 1000)
 
-  // Connect to module page CRUD context
-  const { savePage } = useModulePageCRUDContext()
+  // Mengambil fungsi dan data dari context
+  const {
+    moduleId,
+    pages,
+    activePage,
+    setActivePage,
+    createPage,
+    deletePage,
+    savePage,
+  } = useModulePageCRUDContext()
 
-  // Handle title input change
+  // Gunakan pageId dari props atau dari activePage
+  const effectivePageId = pageId || (activePage ? activePage.id : undefined)
+
+  // Handler untuk pembuatan halaman baru
+  const handleCreate = async () => {
+    try {
+      // Set status ke loading
+      setIsCreating(true)
+
+      // Membuat halaman baru dengan createPage dari context
+      const newPage = await createPage({
+        moduleId,
+        title: 'Halaman Baru',
+        order: pages.length,
+        blocks: [],
+      })
+
+      // Setelah berhasil, set halaman baru sebagai halaman aktif
+      if (newPage && newPage.data) {
+        setActivePage(newPage.data)
+      }
+
+      // Tampilkan toast sukses
+      toast.success('Halaman baru berhasil dibuat')
+    } catch (error) {
+      console.error('Error creating new page:', error)
+      showErrorNotification(error)
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  // Handler untuk membuka dialog konfirmasi hapus
+  const handleCloseDraft = () => {
+    if (effectivePageId) {
+      setShowDeleteDialog(true)
+    }
+  }
+
+  // Handler untuk konfirmasi hapus halaman
+  const handleDeleteConfirm = async () => {
+    if (!effectivePageId) return
+
+    try {
+      setIsDeleting(true)
+      await deletePage(effectivePageId)
+      setShowDeleteDialog(false)
+      // Navigasi ke halaman lain akan ditangani oleh context
+      // karena kita sudah mengimplementasikan logika di deletePage
+      toast.success('Halaman berhasil dihapus')
+    } catch (error) {
+      console.error('Error deleting page:', error)
+      showErrorNotification(error)
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteDialog(false)
+    }
+  }
+
+  // Handle title input change dengan validasi
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newTitle = e.target.value
       setLocalTitle(newTitle)
-      setSaveStatus('unsaved')
+
+      // Set status langsung ke unsaved untuk feedback instan
+      setTitleSaveStatus('unsaved')
 
       if (onTitleChange) {
         onTitleChange(newTitle)
@@ -52,43 +140,58 @@ export default function DocumentHeader({
     [onTitleChange]
   )
 
-  // Auto-save title when it changes (debounced)
+  // Auto-save title when it changes (debounced) dengan validasi dan error handling yang lebih baik
   useEffect(() => {
     if (
       debouncedTitle !== title &&
-      pageId &&
+      effectivePageId &&
       debouncedTitle.trim().length >= 5
     ) {
       const saveTitle = async () => {
         try {
-          setSaveStatus('saving')
+          setTitleSaveStatus('saving')
           await savePage({
-            pageId,
+            pageId: effectivePageId,
             title: debouncedTitle,
           })
-          setSaveStatus('saved')
+          setTitleSaveStatus('saved')
         } catch (error) {
           console.error('Error saving title:', error)
-          setSaveStatus('unsaved')
+          setTitleSaveStatus('error')
+
+          // Show error notification dengan opsi retry
+          showErrorNotification(error, {
+            retryFn: () => saveTitle(),
+          })
         }
       }
 
       saveTitle()
+    } else if (
+      debouncedTitle.trim().length > 0 &&
+      debouncedTitle.trim().length < 5
+    ) {
+      // Jika judul terlalu pendek, tampilkan error
+      setTitleSaveStatus('error')
+      toast.error('Judul harus terdiri dari minimal 5 karakter')
     }
-  }, [debouncedTitle, title, pageId, savePage])
+  }, [debouncedTitle, title, effectivePageId, savePage])
 
   // Sync with props
   useEffect(() => {
     setLocalTitle(title)
   }, [title])
 
-  // Sync save status from props
+  // Pindahkan setSaveStatus ke dalam setTitleSaveStatus
   useEffect(() => {
-    setSaveStatus(propsSaveStatus)
+    setTitleSaveStatus(
+      propsSaveStatus as 'saved' | 'saving' | 'unsaved' | 'error'
+    )
   }, [propsSaveStatus])
 
+  // Render status save yang lebih informatif
   const renderSaveStatus = () => {
-    switch (saveStatus) {
+    switch (titleSaveStatus) {
       case 'saved':
         return (
           <div
@@ -108,7 +211,7 @@ export default function DocumentHeader({
             className="flex items-center text-[#a9abaf] mr-2"
             aria-live="polite"
           >
-            <Save className="h-3 w-3 mr-1 animate-pulse" aria-hidden="true" />
+            <Loader2 className="h-3 w-3 mr-1 animate-spin" aria-hidden="true" />
             <span>Menyimpan...</span>
           </div>
         )
@@ -122,6 +225,16 @@ export default function DocumentHeader({
             <span>Belum tersimpan</span>
           </div>
         )
+      case 'error':
+        return (
+          <div
+            className="flex items-center text-red-400 mr-2"
+            aria-live="assertive"
+          >
+            <AlertCircle className="h-3 w-3 mr-1" aria-hidden="true" />
+            <span>Gagal menyimpan</span>
+          </div>
+        )
       default:
         return null
     }
@@ -133,16 +246,15 @@ export default function DocumentHeader({
       role="region"
       aria-label="Header dokumen"
     >
-      {' '}
       <Button
         variant="ghost"
         size="icon"
         className="mr-1"
         aria-label="Menu utama"
       >
-        {' '}
-        <ChevronDown className="h-4 w-4" aria-hidden="true" />{' '}
+        <ChevronDown className="h-4 w-4" aria-hidden="true" />
       </Button>
+
       {/* Title Input */}
       <div className="w-[280px] mr-3">
         <Input
@@ -153,37 +265,50 @@ export default function DocumentHeader({
           aria-label="Judul halaman"
         />
       </div>
+
       {/* Save Status */}
       {renderSaveStatus()}
+
       <Avatar className="h-6 w-6 bg-[#669df1] mr-2">
         <AvatarFallback className="bg-[#669df1] text-white text-xs">
           EN
         </AvatarFallback>
       </Avatar>
+
       <Button
         variant="ghost"
         size="icon"
         className="mr-2"
         aria-label="Komentar"
       >
-        {' '}
-        <MessageSquare className="h-4 w-4" aria-hidden="true" />{' '}
-      </Button>{' '}
+        <MessageSquare className="h-4 w-4" aria-hidden="true" />
+      </Button>
+
       <Button
         className="bg-[#669df1] hover:bg-[#669df1]/90 text-white h-8 mr-2"
         aria-label="Publikasikan halaman"
       >
-        {' '}
-        Publish...{' '}
-      </Button>{' '}
+        Publish...
+      </Button>
+
+      {/* Close draft button dengan konfirmasi dialog */}
       <Button
         variant="ghost"
         className="text-[#a9abaf] h-8 mr-2"
         aria-label="Tutup draft"
+        onClick={handleCloseDraft}
+        disabled={!effectivePageId || isDeleting}
       >
-        {' '}
-        Close draft{' '}
+        {isDeleting ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+            Deleting...
+          </>
+        ) : (
+          'Close draft'
+        )}
       </Button>
+
       <Button
         variant="outline"
         className="border-[#3b3b3b] bg-transparent h-8 mr-2"
@@ -191,20 +316,38 @@ export default function DocumentHeader({
         <Share2 className="h-4 w-4 mr-1" />
         Share
       </Button>
+
       <Button
         variant="outline"
         className="border-[#3b3b3b] bg-transparent h-8 mr-2"
       >
         <Link className="h-4 w-4" />
       </Button>
+
       <Button variant="ghost" size="icon">
         <MoreHorizontal className="h-4 w-4" />
       </Button>
+
       <div className="flex items-center gap-2 mr-auto">
-        <Button className="bg-[#1868db] hover:bg-[#1868db]/90 text-white">
-          <Plus className="h-4 w-4 mr-1" />
-          Create
+        {/* Create button dengan loading state */}
+        <Button
+          className="bg-[#1868db] hover:bg-[#1868db]/90 text-white"
+          onClick={handleCreate}
+          disabled={isCreating}
+        >
+          {isCreating ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4 mr-1" />
+              Create
+            </>
+          )}
         </Button>
+
         <Button
           variant="outline"
           className="border-[#669df1] text-[#669df1] bg-transparent hover:bg-[#1c2b42]"
@@ -213,6 +356,36 @@ export default function DocumentHeader({
           Upgrade
         </Button>
       </div>
+
+      {/* Alert Dialog untuk konfirmasi penghapusan halaman */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus halaman?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tindakan ini tidak dapat dibatalkan. Halaman ini akan dihapus
+              secara permanen.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-500 hover:bg-red-600"
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Menghapus...
+                </>
+              ) : (
+                'Hapus'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
