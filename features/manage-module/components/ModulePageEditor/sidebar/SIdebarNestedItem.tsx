@@ -1,19 +1,25 @@
 'use client'
 
 import { FileText } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface SidebarNestedItemProps {
   label: string
   onClick?: () => void
+  className?: string
 }
 
 export default function SidebarNestedItem({
   label,
   onClick,
+  className,
 }: SidebarNestedItemProps) {
   return (
     <div
-      className="flex items-center py-1 px-2 hover:bg-[#242528] rounded cursor-pointer"
+      className={cn(
+        'flex items-center py-1 px-2 hover:bg-[#242528] rounded cursor-pointer',
+        className
+      )}
       onClick={onClick}
     >
       <div className="w-4 mr-2"></div>

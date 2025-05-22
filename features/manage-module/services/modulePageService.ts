@@ -6,6 +6,9 @@ import {
 import { ModulePage, ApiListResponse, ApiEntityResponse } from '../types'
 import prisma from '@/lib/prisma'
 
+// Fix type untuk status agar sesuai dengan enum ModulePage
+type ModulePageStatus = 'DRAFT' | 'PUBLISHED'
+
 /**
  * Service untuk operasi CRUD halaman modul
  */
@@ -16,49 +19,139 @@ export const modulePageService = {
    * @returns Halaman yang telah dibuat
    */
   async createModulePage(
-    data: CreateModulePageInput
+    data: CreateModulePageInput & { language?: string }
   ): Promise<ApiEntityResponse<ModulePage>> {
-    // Validasi keberadaan modul
-    const moduleData = await prisma.module.findUnique({
-      where: { id: data.moduleId },
-    })
+    try {
+      console.log(
+        '[Service] Creating module page with data:',
+        JSON.stringify({
+          moduleId: data.moduleId,
+          title: data.title,
+          type: data.type,
+          order: data.order,
+          hasBlocks: !!data.blocks && Array.isArray(data.blocks),
+        })
+      )
 
-    if (!moduleData) {
-      throw new Error('Modul tidak ditemukan')
-    }
+      // Validasi keberadaan modul
+      const moduleData = await prisma.module.findUnique({
+        where: { id: data.moduleId },
+      })
 
-    // Jika order tidak disediakan, tandai sebagai halaman terakhir
-    if (!data.order) {
+      if (!moduleData) {
+        console.error('[Service] Module not found:', data.moduleId)
+        throw new Error('Modul tidak ditemukan')
+      }
+
+      // Dapatkan halaman terakhir untuk menentukan order
       const lastPage = await prisma.modulePage.findFirst({
         where: { moduleId: data.moduleId },
         orderBy: { order: 'desc' },
         select: { order: true },
       })
-      data.order = lastPage ? lastPage.order + 1 : 1
-    }
 
-    // Simpan blocks sebagai JSON di kolom content
-    const createdPage = await prisma.modulePage.create({
-      data: {
-        moduleId: data.moduleId,
-        title: data.title,
-        order: data.order,
-        content: JSON.stringify(data.blocks),
-      },
-    })
+      // Jika order tidak disediakan atau untuk menghindari konflik, gunakan order terakhir + 1
+      let orderToUse = data.order
+      if (!orderToUse) {
+        orderToUse = lastPage ? lastPage.order + 1 : 1
+        console.log('[Service] Using calculated order:', orderToUse)
+      }
 
-    // Transform hasil untuk response API
-    return {
-      success: true,
-      data: {
-        id: createdPage.id,
-        moduleId: createdPage.moduleId,
-        title: createdPage.title,
-        order: createdPage.order,
-        blocks: data.blocks, // Gunakan data asli blocks, bukan string JSON
-        createdAt: createdPage.createdAt,
-        updatedAt: createdPage.updatedAt,
-      },
+      // Pastikan blocks valid dan dapat dikonversi ke JSON
+      let contentJson
+      try {
+        contentJson = JSON.stringify(data.blocks || [])
+        console.log('[Service] Content JSON successfully created')
+      } catch (jsonError) {
+        console.error('[Service] Error stringifying blocks:', jsonError)
+        throw new Error('Format blok konten tidak valid')
+      }
+
+      let createdPage
+      let retryCount = 0
+      const maxRetries = 3
+
+      while (retryCount < maxRetries) {
+        try {
+          // Simpan blocks sebagai JSON di kolom content
+          createdPage = await prisma.modulePage.create({
+            data: {
+              moduleId: data.moduleId,
+              title: data.title || 'Halaman Baru',
+              order: orderToUse,
+              content: contentJson,
+              type: data.type || 'content',
+              // Tambahkan default language untuk memenuhi schema
+              language: data.language || 'id',
+            },
+          })
+
+          // Berhasil dibuat, keluar dari loop
+          break
+        } catch (error: unknown) {
+          // Jika error adalah constraint unik, coba dengan order yang lebih besar
+          const prismaError = error as {
+            code?: string
+            meta?: { target?: string[] }
+          }
+          if (
+            prismaError.code === 'P2002' &&
+            prismaError.meta?.target?.includes('order')
+          ) {
+            retryCount++
+            console.log(
+              `[Service] Order conflict detected, retrying with new order (attempt ${retryCount})`
+            )
+
+            // Ambil order terbesar saat ini dan tambahkan 1
+            const currentMax = await prisma.modulePage.findFirst({
+              where: { moduleId: data.moduleId },
+              orderBy: { order: 'desc' },
+              select: { order: true },
+            })
+
+            orderToUse = (currentMax?.order || 0) + 1
+            console.log(`[Service] New order to try: ${orderToUse}`)
+
+            // Jika sudah mencapai batas retry, lempar error
+            if (retryCount >= maxRetries) {
+              throw new Error(
+                'Gagal membuat halaman setelah beberapa percobaan. Silakan coba lagi nanti.'
+              )
+            }
+          } else {
+            // Jika bukan error constraint, lempar error asli
+            throw error
+          }
+        }
+      }
+
+      if (!createdPage) {
+        throw new Error('Gagal membuat halaman setelah beberapa percobaan')
+      }
+
+      console.log(
+        '[Service] Page created successfully with ID:',
+        createdPage.id
+      )
+
+      // Transform hasil untuk response API
+      return {
+        success: true,
+        data: {
+          id: createdPage.id,
+          moduleId: createdPage.moduleId,
+          title: createdPage.title,
+          order: createdPage.order,
+          blocks: data.blocks || [], // Gunakan data asli blocks, bukan string JSON
+          status: 'DRAFT' as ModulePageStatus, // Gunakan status yang valid sesuai enum
+          createdAt: createdPage.createdAt,
+          updatedAt: createdPage.updatedAt,
+        },
+      }
+    } catch (error) {
+      console.error('[Service] Error in createModulePage:', error)
+      throw error
     }
   },
 
@@ -75,6 +168,7 @@ export const modulePageService = {
     const page = options.page || 1
     const limit = options.limit || 10
     const skip = (page - 1) * limit
+    const includeContent = options.includeContent ?? false
 
     // Ambil daftar halaman
     const pages = await prisma.modulePage.findMany({
@@ -90,16 +184,28 @@ export const modulePageService = {
     })
 
     // Transform hasil untuk response API
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const transformedPages = pages.map((page: any) => ({
-      id: page.id,
-      moduleId: page.moduleId,
-      title: page.title,
-      order: page.order,
-      blocks: JSON.parse(page.content as string) as ContentBlock[],
-      createdAt: page.createdAt,
-      updatedAt: page.updatedAt,
-    }))
+    const transformedPages = pages.map((page) => {
+      // Base page data tanpa blocks
+      const pageData: Partial<ModulePage> = {
+        id: page.id,
+        moduleId: page.moduleId,
+        title: page.title,
+        order: page.order,
+        status: 'DRAFT' as ModulePageStatus,
+        createdAt: page.createdAt,
+        updatedAt: page.updatedAt,
+      }
+
+      // Hanya tambahkan blocks jika includeContent=true
+      if (includeContent) {
+        pageData.blocks = JSON.parse(page.content as string) as ContentBlock[]
+      } else {
+        // Tambahkan blocks kosong jika client mengharapkan property ini
+        pageData.blocks = []
+      }
+
+      return pageData as ModulePage
+    })
 
     return {
       success: true,
@@ -138,6 +244,7 @@ export const modulePageService = {
         title: page.title,
         order: page.order,
         blocks: JSON.parse(page.content as string) as ContentBlock[],
+        status: 'DRAFT' as ModulePageStatus,
         createdAt: page.createdAt,
         updatedAt: page.updatedAt,
       },
@@ -205,6 +312,7 @@ export const modulePageService = {
         title: updatedPage.title,
         order: updatedPage.order,
         blocks,
+        status: 'DRAFT' as ModulePageStatus,
         createdAt: updatedPage.createdAt,
         updatedAt: updatedPage.updatedAt,
       },

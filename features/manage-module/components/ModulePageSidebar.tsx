@@ -7,20 +7,24 @@ import SidebarShortcuts from './ModulePageEditor/sidebar/SidebarShortcuts'
 import SidebarBlogs from './ModulePageEditor/sidebar/SidebarBlogs'
 import { ModulePage } from '../types/modulePageSchema'
 import { useModulePagesContext } from '../context/ModulePagesContext'
-import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 
-export default function ModulePageSidebar() {
+interface ModulePageSidebarProps {
+  pages: ModulePage[]
+  activePage: ModulePage | null
+  onSelectPage: (page: ModulePage) => void
+  expandedItems: Record<string, boolean>
+  toggleExpand: (item: string) => void
+}
+
+export default function ModulePageSidebar({
+  pages,
+  activePage,
+  onSelectPage,
+  expandedItems,
+  toggleExpand,
+}: ModulePageSidebarProps) {
   // UI state dari ModulePagesContext
-  const { expandedItems, toggleExpand, isSidebarOpen, toggleSidebar } =
-    useModulePagesContext()
-
-  // Data dari ModulePageCRUDContext
-  const { pages, activePage, setActivePage } = useModulePageCRUDContext()
-
-  // Handler untuk select page
-  const handleSelectPage = (page: ModulePage) => {
-    setActivePage(page)
-  }
+  const { isSidebarOpen, toggleSidebar } = useModulePagesContext()
 
   return (
     <div
@@ -58,7 +62,7 @@ export default function ModulePageSidebar() {
               toggleExpand={toggleExpand}
               pages={pages}
               activePage={activePage}
-              onSelectPage={handleSelectPage}
+              onSelectPage={onSelectPage}
             />
             <SidebarBlogs />
 

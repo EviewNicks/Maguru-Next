@@ -1,0 +1,329 @@
+{
+  "info": {
+    "_postman_id": "e6c5e810-5d94-4b28-a9a1-053a71bfdc43",
+    "name": "Maguru Module Management API",
+    "description": "API Collection untuk Module Management di Maguru. Collection ini berisi semua endpoint yang terkait dengan pengelolaan modul dan halaman modul.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Module",
+      "description": "Endpoint untuk pengelolaan modul",
+      "item": [
+        {
+          "name": "Get All Modules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/module?page=1&limit=10&status=ACTIVE&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "module"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Mendapatkan daftar modul dengan paginasi, filter status, dan pencarian."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Module",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Modul Testing API\",\n  \"description\": \"Ini adalah modul untuk testing API menggunakan Postman\",\n  \"status\": \"DRAFT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/module",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "module"]
+            },
+            "description": "Membuat modul baru dalam sistem."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Module by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "module", "{{moduleId}}"]
+            },
+            "description": "Mendapatkan detail modul berdasarkan ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Module",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Modul Testing API Updated\",\n  \"description\": \"Ini adalah modul untuk testing API menggunakan Postman (Updated)\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "module", "{{moduleId}}"]
+            },
+            "description": "Memperbarui modul berdasarkan ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Module Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "module", "{{moduleId}}", "status"]
+            },
+            "description": "Memperbarui status modul (DRAFT, ACTIVE, ARCHIVED)."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Module",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "module", "{{moduleId}}"]
+            },
+            "description": "Menghapus modul berdasarkan ID."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Module Pages",
+      "description": "Endpoint untuk pengelolaan halaman modul",
+      "item": [
+        {
+          "name": "Get Module Pages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages?page=1&limit=10&includeContent=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "module", "{{moduleId}}", "pages"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "includeContent",
+                  "value": "false"
+                }
+              ]
+            },
+            "description": "Mendapatkan daftar halaman untuk modul tertentu."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Module Page",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Halaman Test 1\",\n  \"type\": \"content\",\n  \"order\": 1,\n  \"blocks\": [\n    {\n      \"type\": \"text\",\n      \"content\": \"Ini adalah konten halaman test pertama.\"\n    },\n    {\n      \"type\": \"heading\",\n      \"content\": \"Sub Judul\"\n    },\n    {\n      \"type\": \"code\",\n      \"content\": \"console.log('Hello World');\",\n      \"language\": \"javascript\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "module", "{{moduleId}}", "pages"]
+            },
+            "description": "Membuat halaman baru dalam modul tertentu."
+          },
+          "response": []
+        },
+        {
+          "name": "Reorder Module Pages",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pageIds\": [\"{{pageId1}}\", \"{{pageId2}}\", \"{{pageId3}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages/reorder",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "module", "{{moduleId}}", "pages", "reorder"]
+            },
+            "description": "Mengubah urutan halaman dalam modul berdasarkan array ID halaman."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Module Page by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pages/{{pageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pages", "{{pageId}}"]
+            },
+            "description": "Mendapatkan detail halaman modul berdasarkan ID halaman."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Module Page",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Halaman Test 1 (Updated)\",\n  \"blocks\": [\n    {\n      \"type\": \"paragraph\",\n      \"content\": \"Ini adalah konten halaman test pertama yang telah diperbarui.\"\n    },\n    {\n      \"type\": \"heading\",\n      \"content\": \"Sub Judul Baru\"\n    },\n    {\n      \"type\": \"code\",\n      \"content\": \"console.log('Hello Updated World');\",\n      \"language\": \"javascript\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pages/{{pageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pages", "{{pageId}}"]
+            },
+            "description": "Memperbarui halaman modul berdasarkan ID halaman."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Module Page",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pages/{{pageId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pages", "{{pageId}}"]
+            },
+            "description": "Menghapus halaman modul berdasarkan ID halaman."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "moduleId",
+      "value": "",
+      "type": "string",
+      "description": "ID modul yang akan diuji"
+    },
+    {
+      "key": "pageId",
+      "value": "",
+      "type": "string",
+      "description": "ID halaman modul yang akan diuji"
+    },
+    {
+      "key": "pageId1",
+      "value": "",
+      "type": "string",
+      "description": "ID halaman modul pertama untuk testing reorder"
+    },
+    {
+      "key": "pageId2",
+      "value": "",
+      "type": "string",
+      "description": "ID halaman modul kedua untuk testing reorder"
+    },
+    {
+      "key": "pageId3",
+      "value": "",
+      "type": "string",
+      "description": "ID halaman modul ketiga untuk testing reorder"
+    }
+  ]
+}

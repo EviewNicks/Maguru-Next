@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { modulePageService } from '../services/modulePageService'
+import { modulePageClientService } from '../services/modulePageClientService'
 import {
   CreateModulePageInput,
   UpdateModulePageInput,
   ModulePage,
+  ContentBlock,
 } from '../types/modulePageSchema'
 import { useCallback } from 'react'
 import {
@@ -12,6 +13,7 @@ import {
   categorizeError,
   isErrorRetryable,
 } from '../components/ErrorNotifier'
+import React from 'react'
 
 // Mendefinisikan tipe untuk respons API
 interface ApiResponse<T> {
@@ -32,21 +34,38 @@ interface ApiResponse<T> {
 export function useModulePageCRUD(moduleId: string) {
   const queryClient = useQueryClient()
 
+  // Set moduleId aktif agar dapat digunakan di service
+  React.useEffect(() => {
+    if (moduleId) {
+      modulePageClientService.setActiveModuleId(moduleId)
+    }
+  }, [moduleId])
+
   // Fetch pages untuk modul dengan query
   const {
     data: pagesData,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ['modulePages', moduleId],
-    queryFn: async () => modulePageService.getModulePages(moduleId),
-    staleTime: 5 * 60 * 1000, // 5 menit
+    queryFn: async () => {
+      console.log(
+        `[useModulePageCRUD] Fetching pages for moduleId: ${moduleId}`
+      )
+      const result = await modulePageClientService.getModulePages(moduleId)
+      console.log(`[useModulePageCRUD] Fetched ${result.data.length} pages`)
+      return result
+    },
+    staleTime: 1 * 60 * 1000, // 1 menit (lebih pendek untuk memastikan data tetap segar)
+    refetchOnMount: true, // Refetch saat komponen dimount
+    refetchOnWindowFocus: true, // Refetch saat window mendapat fokus kembali
   })
 
   // Mutation untuk create halaman
   const createPage = useMutation({
     mutationFn: (newPage: CreateModulePageInput) =>
-      modulePageService.createModulePage(newPage),
+      modulePageClientService.createModulePage(newPage),
     onSuccess: () => {
       // Invalidate cache untuk memastikan data terbaru
       queryClient.invalidateQueries({
@@ -75,7 +94,7 @@ export function useModulePageCRUD(moduleId: string) {
     }: {
       pageId: string
       updateData: UpdateModulePageInput
-    }) => modulePageService.updateModulePage(pageId, updateData),
+    }) => modulePageClientService.updateModulePage(pageId, updateData),
     onMutate: async ({ pageId, updateData }) => {
       // Cancel outgoing refetch to avoid overwriting optimistic update
       await queryClient.cancelQueries({
@@ -171,7 +190,8 @@ export function useModulePageCRUD(moduleId: string) {
 
   // Mutation untuk delete halaman
   const deletePage = useMutation({
-    mutationFn: (pageId: string) => modulePageService.deleteModulePage(pageId),
+    mutationFn: (pageId: string) =>
+      modulePageClientService.deleteModulePage(pageId),
     onMutate: async (pageId) => {
       // Cancel any outgoing refetches untuk menghindari overwriting optimistic update
       await queryClient.cancelQueries({ queryKey: ['modulePages', moduleId] })
@@ -225,7 +245,7 @@ export function useModulePageCRUD(moduleId: string) {
   // Mutation untuk reorder halaman
   const reorderPages = useMutation({
     mutationFn: (pageIds: string[]) =>
-      modulePageService.reorderModulePages(moduleId, pageIds),
+      modulePageClientService.reorderModulePages(moduleId, pageIds),
     onMutate: async (pageIds) => {
       // Cancel any outgoing refetches untuk menghindari overwriting optimistic update
       await queryClient.cancelQueries({ queryKey: ['modulePages', moduleId] })
@@ -297,7 +317,7 @@ export function useModulePageCRUD(moduleId: string) {
   const getPageById = useCallback(
     async (pageId: string): Promise<ModulePage | null> => {
       try {
-        const response = await modulePageService.getModulePage(pageId)
+        const response = await modulePageClientService.getModulePage(pageId)
         return response?.data || null
       } catch (error) {
         console.error('Error fetching page:', error)
@@ -329,7 +349,7 @@ export function useModulePageCRUD(moduleId: string) {
     }: {
       pageId: string
       title?: string
-      blocks?: Array<{ type: string; content: string; [key: string]: any }>
+      blocks?: ContentBlock[]
     }) => {
       const updateData: UpdateModulePageInput = {}
       if (title) updateData.title = title
@@ -354,6 +374,7 @@ export function useModulePageCRUD(moduleId: string) {
     pages: pagesData?.data || [],
     isLoading,
     error,
+    refetch,
 
     // Mutations
     createPage,

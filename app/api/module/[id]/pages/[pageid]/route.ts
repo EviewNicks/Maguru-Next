@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { updateModulePageSchema } from '@/features/manage-module/types/modulePageSchema'
+import { UpdateModulePageSchema } from '@/features/manage-module/types/modulePageSchema'
 import { modulePageService } from '@/features/manage-module/services/modulePageService'
 import {
   withAdminAuth,
   withAuditTrail,
   composeMiddlewares,
-} from '../../module/middleware'
+} from '../../../middleware'
 
 // Tipe untuk params dari route dynamic
 type RouteParams = { params: { id: string } }
@@ -69,7 +69,7 @@ async function updateModulePageHandler(
     // Validasi menggunakan schema Zod - skip jika dalam mode test
     const isTest = process.env.NODE_ENV === 'test'
     if (!isTest) {
-      const validationResult = updateModulePageSchema.safeParse(body)
+      const validationResult = UpdateModulePageSchema.safeParse(body)
       if (!validationResult.success) {
         return NextResponse.json(
           {

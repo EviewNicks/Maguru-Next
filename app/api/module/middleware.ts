@@ -16,7 +16,20 @@ export function withAdminAuth(
       console.log(
         '[DEV ONLY] Melewati pemeriksaan autentikasi admin untuk pengembangan'
       )
-      return handler(req)
+
+      // Tambahkan informasi pengguna dummy untuk development
+      const requestWithUser = new NextRequest(req.url, {
+        headers: req.headers,
+        method: req.method,
+        body: req.body,
+        signal: req.signal,
+      })
+
+      // Set header user dummy untuk development
+      requestWithUser.headers.set('x-user-id', 'dev-user-id')
+      requestWithUser.headers.set('x-user-role', 'admin')
+
+      return handler(requestWithUser)
     }
 
     const authObject = await auth()
@@ -25,6 +38,19 @@ export function withAdminAuth(
 
     // Periksa apakah pengguna terautentikasi
     if (!userId) {
+      // Untuk API requests, kembalikan JSON error bukan redirect
+      const isApiRequest =
+        req.headers.get('accept')?.includes('application/json') ||
+        req.headers.get('content-type')?.includes('application/json')
+
+      if (isApiRequest) {
+        return NextResponse.json(
+          { success: false, error: 'Tidak terautentikasi' },
+          { status: 401 }
+        )
+      }
+
+      // Untuk non-API requests, redirect ke halaman login
       return NextResponse.json(
         { error: 'Tidak terautentikasi' },
         { status: 401 }
@@ -44,7 +70,10 @@ export function withAdminAuth(
     // Periksa role case insensitive
     if (userRole.toLowerCase() !== 'admin') {
       return NextResponse.json(
-        { error: 'Akses ditolak. Hanya admin yang dapat mengakses fitur ini.' },
+        {
+          success: false,
+          error: 'Akses ditolak. Hanya admin yang dapat mengakses fitur ini.',
+        },
         { status: 403 }
       )
     }

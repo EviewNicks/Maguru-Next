@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 import {
   Form,
   FormControl,
@@ -24,6 +25,11 @@ import {
 } from '@/components/ui/form'
 import { useModulePageCRUDContext } from '../../../context/ModulePageCRUDContext'
 import { toast } from 'sonner'
+import {
+  ContentBlockType,
+  CreateModulePageInput,
+} from '@/features/manage-module/types/modulePageSchema'
+import { useRouter } from 'next/navigation'
 
 // Schema for create page form validation
 const createPageSchema = z.object({
@@ -42,7 +48,9 @@ export function CreatePageDialog({
   onOpenChange,
 }: CreatePageDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { moduleId, createPage } = useModulePageCRUDContext()
+  const { moduleId, createPage, setActivePage, pages } =
+    useModulePageCRUDContext()
+  const router = useRouter()
 
   // Initialize the form
   const form = useForm<CreatePageFormValues>({
@@ -54,27 +62,48 @@ export function CreatePageDialog({
 
   // Handle form submission
   const onSubmit = async (values: CreatePageFormValues) => {
-    if (!moduleId) return
+    if (!moduleId) {
+      toast.error('ID Modul tidak ditemukan')
+      return
+    }
 
     try {
       setIsSubmitting(true)
 
-      // Create new page with title and default content
-      await createPage({
+      // Tentukan order untuk halaman baru (defaultnya di akhir)
+      const newOrder =
+        pages.length > 0 ? Math.max(...pages.map((page) => page.order)) + 1 : 1
+
+      // Buat objek dengan tipe yang benar
+      const newPageData: CreateModulePageInput = {
         title: values.title,
         moduleId,
-        order: 1000, // Will be auto-sorted on backend
+        type: 'content',
+        order: newOrder,
         blocks: [
           {
-            type: 'text',
-            content: '<p>Halaman baru Anda</p>',
+            type: ContentBlockType.TEXT,
+            content:
+              '<p>Halaman baru Anda telah dibuat. Mulai edit konten disini.</p>',
           },
         ],
-      })
+      }
+
+      // Create new page with title and default content
+      const result = await createPage(newPageData)
 
       // Close dialog and reset form
       onOpenChange(false)
       form.reset()
+
+      // Jika berhasil, navigasikan ke halaman baru
+      if (result?.data) {
+        // Set halaman baru sebagai active page
+        setActivePage(result.data)
+
+        // Navigasi ke halaman dengan query parameter pageId
+        router.push(`/manage-module/pages/${moduleId}?pageId=${result.data.id}`)
+      }
 
       // Show success message
       toast.success('Halaman berhasil dibuat')
@@ -108,6 +137,7 @@ export function CreatePageDialog({
                     <Input
                       placeholder="Masukkan judul halaman"
                       className="bg-[#1a1a1c] border-[#3b3b3b] focus:border-[#669df1]"
+                      disabled={isSubmitting}
                       {...field}
                     />
                   </FormControl>
@@ -122,6 +152,7 @@ export function CreatePageDialog({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
                 className="border-[#3b3b3b]"
+                disabled={isSubmitting}
               >
                 Batal
               </Button>
@@ -130,7 +161,14 @@ export function CreatePageDialog({
                 disabled={isSubmitting}
                 className="bg-[#669df1] hover:bg-[#669df1]/90"
               >
-                {isSubmitting ? 'Membuat...' : 'Tambah Halaman'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Membuat...
+                  </>
+                ) : (
+                  'Tambah Halaman'
+                )}
               </Button>
             </DialogFooter>
           </form>

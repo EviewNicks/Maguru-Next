@@ -39,6 +39,8 @@ export const CreateModulePageSchema = z.object({
   title: z.string().min(5, 'Judul harus minimal 5 karakter'),
   moduleId: z.string().uuid(),
   order: z.number().int().min(0),
+  type: z.string().default('content'),
+  language: z.string().optional(),
   blocks: z
     .array(ContentBlockSchema)
     .min(1, 'Halaman harus memiliki minimal 1 blok konten'),

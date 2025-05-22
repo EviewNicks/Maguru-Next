@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Toaster } from 'sonner'
 import ModulePageSidebar from '@/features/manage-module/components/ModulePageSidebar'
 import {
@@ -9,6 +9,9 @@ import {
 } from '@/features/manage-module/context/ModulePagesContext'
 import { ModulePageCRUDProvider } from '@/features/manage-module/context/ModulePageCRUDContext'
 import { useParams } from 'next/navigation'
+import { useModulePageQuery } from '@/features/manage-module/hooks/useModulePageQuery'
+import { useModulePageCRUDContext } from '@/features/manage-module/context/ModulePageCRUDContext'
+import { ModulePage } from '@/features/manage-module/types/modulePageSchema'
 
 interface ModulePageLayoutProps {
   children: React.ReactNode
@@ -18,37 +21,57 @@ function ModulePageLayoutContent({ children }: ModulePageLayoutProps) {
   const params = useParams()
   const moduleId = params.moduleId as string
 
-  const { pages, activePage, handleSelectPage, expandedItems, toggleExpand } =
-    useModulePagesContext()
+  // Gunakan context untuk state UI
+  const { expandedItems, toggleExpand } = useModulePagesContext()
+
+  // Gunakan CRUD context untuk data dan operasi CRUD
+  const { pages, activePage, setActivePage } = useModulePageCRUDContext()
+
+  // Gunakan query hook untuk memastikan data diambil saat komponen dimuat
+  const { getAllPages } = useModulePageQuery(moduleId)
+
+  // Efek untuk memuat data halaman saat komponen dimuat atau moduleId berubah
+  useEffect(() => {
+    // Refresh data halaman saat komponen dimuat atau moduleId berubah
+    getAllPages.refetch()
+  }, [moduleId, getAllPages])
+
+  // Handler untuk navigasi halaman
+  const handleSelectPage = (page: ModulePage) => {
+    setActivePage(page)
+  }
 
   return (
-    <ModulePageCRUDProvider moduleId={moduleId}>
-      <div className="min-h-screen bg-black text-white overflow-hidden">
-        {/* Toaster untuk notifikasi */}
-        <Toaster position="top-right" />
+    <div className="min-h-screen bg-black text-white overflow-hidden">
+      {/* Toaster untuk notifikasi */}
+      <Toaster position="top-right" />
 
-        {/* Content */}
-        <div className="h-screen overflow-hidden">
-          {children}
+      {/* Content */}
+      <div className="h-screen overflow-hidden">
+        {children}
 
-          {/* Right Sidebar */}
-          <ModulePageSidebar
-            pages={pages}
-            activePage={activePage}
-            onSelectPage={handleSelectPage}
-            expandedItems={expandedItems}
-            toggleExpand={toggleExpand}
-          />
-        </div>
+        {/* Right Sidebar */}
+        <ModulePageSidebar
+          pages={pages}
+          activePage={activePage}
+          onSelectPage={handleSelectPage}
+          expandedItems={expandedItems}
+          toggleExpand={toggleExpand}
+        />
       </div>
-    </ModulePageCRUDProvider>
+    </div>
   )
 }
 
 export default function ModulePageLayout({ children }: ModulePageLayoutProps) {
+  const params = useParams()
+  const moduleId = params.moduleId as string
+
   return (
     <ModulePagesProvider>
-      <ModulePageLayoutContent>{children}</ModulePageLayoutContent>
+      <ModulePageCRUDProvider moduleId={moduleId}>
+        <ModulePageLayoutContent>{children}</ModulePageLayoutContent>
+      </ModulePageCRUDProvider>
     </ModulePagesProvider>
   )
 }

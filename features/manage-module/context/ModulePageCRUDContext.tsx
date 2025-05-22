@@ -24,6 +24,7 @@ interface ModulePageCRUDContextProps {
   activePage: ModulePage | null
   isLoading: boolean
   error: Error | null
+  refetch: () => Promise<unknown>
 
   // Mutation functions dengan tipe yang lebih fleksibel untuk menghindari type conflicts
 
@@ -86,6 +87,7 @@ export function ModulePageCRUDProvider({
     pages,
     isLoading,
     error,
+    refetch,
     createPage: createPageMutation,
     updatePage: updatePageMutation,
     deletePage: deletePageMutation,
@@ -214,6 +216,7 @@ export function ModulePageCRUDProvider({
       activePage,
       isLoading,
       error,
+      refetch,
       createPage,
       updatePage,
       deletePage,
@@ -233,6 +236,7 @@ export function ModulePageCRUDProvider({
       activePage,
       isLoading,
       error,
+      refetch,
       createPage,
       updatePage,
       deletePage,
