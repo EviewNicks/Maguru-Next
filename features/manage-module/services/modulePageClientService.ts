@@ -271,16 +271,57 @@ export const modulePageClientService = {
         throw new Error('ModuleId tidak ditemukan untuk memperbarui halaman')
       }
 
+      console.log(
+        `[Client] Updating page ${pageId} with data:`,
+        JSON.stringify({
+          title: data.title,
+          hasBlocks: !!data.blocks && Array.isArray(data.blocks),
+        })
+      )
+
       const baseUrl = getBaseUrl()
       const response = await axios.put(
         `${baseUrl}/api/module/${activeModuleId}/pages/${pageId}`,
-        data
+        data,
+        {
+          // Tingkatkan timeout untuk menghindari error pada jaringan lambat
+          timeout: 30000,
+          // Tambahkan header untuk menandai request dari client
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Client-Source': 'modulePageClientService',
+          },
+        }
       )
       return response.data
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 404) {
-        return null
+      console.error('[Client] Error updating page:', error)
+
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED') {
+          console.error(
+            '[Client] Network error or timeout. Server mungkin tidak tersedia.'
+          )
+          throw new Error('Koneksi ke server gagal. Silakan coba lagi nanti.')
+        }
+
+        if (error.response) {
+          console.error('[Client] Error response data:', error.response.data)
+          console.error(
+            '[Client] Error response status:',
+            error.response.status
+          )
+
+          if (error.response.status === 404) {
+            return null
+          }
+
+          throw new Error(
+            `Server error: ${error.response.data?.error || error.message}`
+          )
+        }
       }
+
       throw error
     }
   },

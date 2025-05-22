@@ -14,6 +14,7 @@ import {
   isErrorRetryable,
 } from '../components/ErrorNotifier'
 import React from 'react'
+import axios from 'axios'
 
 // Mendefinisikan tipe untuk respons API
 interface ApiResponse<T> {
@@ -54,12 +55,27 @@ export function useModulePageCRUD(moduleId: string) {
         `[useModulePageCRUD] Fetching pages for moduleId: ${moduleId}`
       )
       const result = await modulePageClientService.getModulePages(moduleId)
-      console.log(`[useModulePageCRUD] Fetched ${result.data.length} pages`)
+      console.log(
+        `[useModulePageCRUD] Fetched ${result.data?.length || 0} pages`
+      )
       return result
     },
-    staleTime: 1 * 60 * 1000, // 1 menit (lebih pendek untuk memastikan data tetap segar)
-    refetchOnMount: true, // Refetch saat komponen dimount
-    refetchOnWindowFocus: true, // Refetch saat window mendapat fokus kembali
+    staleTime: 1 * 60 * 1000, // 1 menit
+    gcTime: 5 * 60 * 1000, // 5 menit (sebelumnya cacheTime)
+    refetchOnMount: 'always', // Refetch hanya sekali saat komponen dimount
+    refetchOnWindowFocus: false, // Nonaktifkan refetch saat window mendapat fokus
+    retry: (failureCount, error) => {
+      // Hanya retry maksimal 2 kali dan hanya untuk error tertentu
+      if (failureCount > 2) return false
+
+      // Jangan retry untuk error koneksi ditolak
+      if (axios.isAxiosError(error) && error.code === 'ERR_NETWORK') {
+        return false
+      }
+
+      return true
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   })
 
   // Mutation untuk create halaman

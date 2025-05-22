@@ -142,40 +142,66 @@ export default function DocumentHeader({
 
   // Auto-save title when it changes (debounced) dengan validasi dan error handling yang lebih baik
   useEffect(() => {
-    if (
-      debouncedTitle !== title &&
-      effectivePageId &&
-      debouncedTitle.trim().length >= 5
-    ) {
-      const saveTitle = async () => {
-        try {
-          setTitleSaveStatus('saving')
-          await savePage({
-            pageId: effectivePageId,
-            title: debouncedTitle,
-          })
-          setTitleSaveStatus('saved')
-        } catch (error) {
-          console.error('Error saving title:', error)
-          setTitleSaveStatus('error')
+    // Jika tidak ada pageId atau title sama dengan yang sebelumnya, skip
+    if (!effectivePageId || debouncedTitle === title) {
+      return
+    }
 
-          // Show error notification dengan opsi retry
+    // Jika judul terlalu pendek, tampilkan error tapi jangan simpan
+    if (debouncedTitle.trim().length < 5) {
+      setTitleSaveStatus('error')
+      toast.error('Judul harus terdiri dari minimal 5 karakter')
+      return
+    }
+
+    // Fungsi untuk menyimpan judul
+    const saveTitle = async () => {
+      // Jika sedang dalam proses saving, jangan kirim request baru
+      if (titleSaveStatus === 'saving') return
+
+      try {
+        setTitleSaveStatus('saving')
+
+        // Tambahkan delay kecil untuk menghindari terlalu banyak request
+        await new Promise((resolve) => setTimeout(resolve, 300))
+
+        await savePage({
+          pageId: effectivePageId,
+          title: debouncedTitle,
+        })
+
+        setTitleSaveStatus('saved')
+      } catch (error) {
+        console.error('Error saving title:', error)
+        setTitleSaveStatus('error')
+
+        // Cek apakah error adalah network error
+        if (error instanceof Error && error.message.includes('Network')) {
+          toast.error(
+            'Koneksi ke server gagal. Perubahan akan disimpan saat koneksi pulih.',
+            {
+              duration: 5000,
+            }
+          )
+
+          // Coba lagi dalam 10 detik jika network error
+          setTimeout(() => {
+            if (titleSaveStatus === 'error') {
+              saveTitle()
+            }
+          }, 10000)
+        } else {
+          // Show error notification dengan opsi retry untuk error lainnya
           showErrorNotification(error, {
             retryFn: () => saveTitle(),
           })
         }
       }
-
-      saveTitle()
-    } else if (
-      debouncedTitle.trim().length > 0 &&
-      debouncedTitle.trim().length < 5
-    ) {
-      // Jika judul terlalu pendek, tampilkan error
-      setTitleSaveStatus('error')
-      toast.error('Judul harus terdiri dari minimal 5 karakter')
     }
-  }, [debouncedTitle, title, effectivePageId, savePage])
+
+    // Jalankan fungsi save
+    saveTitle()
+  }, [debouncedTitle, title, effectivePageId, savePage, titleSaveStatus])
 
   // Sync with props
   useEffect(() => {

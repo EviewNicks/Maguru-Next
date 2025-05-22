@@ -32,9 +32,12 @@ function ModulePageLayoutContent({ children }: ModulePageLayoutProps) {
 
   // Efek untuk memuat data halaman saat komponen dimuat atau moduleId berubah
   useEffect(() => {
-    // Refresh data halaman saat komponen dimuat atau moduleId berubah
-    getAllPages.refetch()
-  }, [moduleId, getAllPages])
+    // Hanya refetch jika moduleId valid dan belum ada data atau data kosong
+    if (moduleId && (!pages || pages.length === 0)) {
+      console.log(`[Layout] Initial data fetch for moduleId: ${moduleId}`)
+      getAllPages.refetch()
+    }
+  }, [moduleId, getAllPages, pages])
 
   // Handler untuk navigasi halaman
   const handleSelectPage = (page: ModulePage) => {
