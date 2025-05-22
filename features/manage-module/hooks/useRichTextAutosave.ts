@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 import { useDebounce } from './useDebounce'
 import {
   showErrorNotification,
@@ -9,7 +8,7 @@ import {
   isErrorRetryable,
 } from '../components/ErrorNotifier'
 import { ContentBlock, ContentBlockType } from '../types/modulePageSchema'
-import { toast } from 'sonner'
+import axios from 'axios'
 
 export type SaveStatus = 'saved' | 'saving' | 'unsaved' | 'error'
 
@@ -22,156 +21,179 @@ export type SaveStatus = 'saved' | 'saving' | 'unsaved' | 'error'
  * @returns Object berisi state dan fungsi untuk mengelola konten dan status save
  */
 export function useRichTextAutosave(pageId?: string, initialContent = '') {
-  // State untuk editor
-  const [content, setContent] = useState<string>(initialContent)
+  // Flag untuk menonaktifkan autosave sementara
+  const isDisabled = true // SEMENTARA DINONAKTIFKAN - Akan diaktifkan kembali nanti
+
+  // State untuk status penyimpanan
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved')
-  const [isContentDirty, setIsContentDirty] = useState(false)
+  // State untuk konten editor
+  const [content, setContent] = useState(initialContent || '')
+  // Ref untuk menandai jika ada penyimpanan yang sedang berlangsung
+  const pendingSaveRef = useRef(false)
+  // Ref untuk menandai jika konten sudah berubah sejak penyimpanan terakhir
+  const contentChangedRef = useRef(false)
 
-  // Simpan konten sebelum perubahan untuk rollback jika diperlukan
-  const previousContentRef = useRef<string>(initialContent)
+  // Log initial content untuk debugging
+  useEffect(() => {
+    console.log(
+      '[useRichTextAutosave] Initial content:',
+      initialContent ? 'provided' : 'empty'
+    )
+  }, [initialContent])
 
-  // Track save operations yang sedang berjalan
-  const pendingSaveRef = useRef<boolean>(false)
-
-  // Debounce content changes untuk mengurangi jumlah save
-  const debouncedContent = useDebounce<string>(content, 2000)
-
-  // Get savePage function dari context
-  const { savePage } = useModulePageCRUDContext()
-
-  // Handler untuk perubahan konten dengan optimistic update
-  const handleContentChange = useCallback(
-    (newContent: string) => {
-      // Simpan konten sebelumnya jika belum ada operasi save yang berjalan
-      if (!pendingSaveRef.current) {
-        previousContentRef.current = content
-      }
-
-      // Update state lokal segera (optimistic update)
-      setContent(newContent)
-      setIsContentDirty(true)
-      setSaveStatus('unsaved')
-    },
-    [content]
-  )
-
-  // Fungsi untuk mengkonversi konten HTML dari TipTap ke format ContentBlock
+  // Konversi HTML ke format blocks
   const convertHtmlToContentBlock = useCallback(
     (htmlContent: string): ContentBlock[] => {
-      // Buat blok konten text sederhana dengan konten HTML
-      return [
+      // Jika konten kosong, kembalikan array kosong
+      if (!htmlContent || htmlContent === '<p></p>') {
+        return []
+      }
+
+      try {
+        // Cek apakah konten sudah dalam format JSON blocks
+        if (htmlContent.startsWith('[') && htmlContent.includes('"type"')) {
+          const parsedBlocks = JSON.parse(htmlContent)
+          if (Array.isArray(parsedBlocks)) {
+            console.log('[useRichTextAutosave] Using existing blocks format')
+            return parsedBlocks
+          }
+        }
+      } catch (_error) {
+        // Bukan JSON valid, lanjutkan dengan konversi HTML
+        console.log(
+          '[useRichTextAutosave] Not valid JSON blocks, treating as HTML',
+          _error instanceof Error ? _error.message : 'Unknown error'
+        )
+      }
+
+      // Jika bukan JSON valid, anggap sebagai HTML dan konversi ke blocks
+      // Ini adalah implementasi sederhana, bisa dikembangkan lebih lanjut
+      const blocks: ContentBlock[] = [
         {
           type: ContentBlockType.TEXT,
           content: htmlContent,
         },
       ]
+
+      console.log(
+        '[useRichTextAutosave] Converted HTML to blocks:',
+        blocks.length
+      )
+      return blocks
     },
     []
   )
 
-  // Effect untuk autosave saat debouncedContent berubah
+  // Debounce untuk mengurangi frekuensi penyimpanan
+  const debouncedContent = useDebounce(content, 2000)
+
+  // Efek untuk menyimpan konten saat berubah (setelah debounce)
   useEffect(() => {
-    if (!isContentDirty || !pageId) return
+    // Skip jika tidak ada pageId atau konten belum berubah
+    if (!pageId || !contentChangedRef.current || !debouncedContent) return
 
-    const saveContent = async () => {
-      try {
-        // Tandai bahwa operasi save sedang berjalan
-        pendingSaveRef.current = true
-        setSaveStatus('saving')
+    // Reset flag karena akan melakukan penyimpanan
+    contentChangedRef.current = false
 
-        // Konversi konten HTML ke format ContentBlock
-        const blocks = convertHtmlToContentBlock(content)
+    // Simpan konten
+    saveContent()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedContent, pageId])
 
-        // Optimistic update sudah dilakukan di handleContentChange
-        // Sekarang kita melakukan save ke server
-        await savePage({
-          pageId,
-          blocks,
-        })
+  // Handler untuk perubahan konten
+  const handleContentChange = useCallback((newContent: string) => {
+    setContent(newContent)
+    contentChangedRef.current = true
 
-        // Update state setelah save berhasil
-        setIsContentDirty(false)
-        setSaveStatus('saved')
-      } catch (error) {
-        console.error('Error saving content:', error)
+    // Ubah status jika belum 'unsaved'
+    setSaveStatus((current) => (current === 'saved' ? 'unsaved' : current))
+  }, [])
 
-        // Handle error dengan rollback UI state jika diperlukan
-        setSaveStatus('error')
-
-        // Kategorisasi error dan tambahkan opsi retry
-        const category = categorizeError(error)
-        showErrorNotification(error, {
-          retryFn: isErrorRetryable(category) ? saveContent : undefined,
-        })
-      } finally {
-        // Reset flag operasi save
-        pendingSaveRef.current = false
-      }
+  // Fungsi untuk menyimpan konten
+  const saveContent = useCallback(async () => {
+    // NONAKTIFKAN AUTOSAVE SEMENTARA
+    if (isDisabled) {
+      console.log('[useRichTextAutosave] Autosave is temporarily disabled')
+      return
     }
 
-    saveContent()
-  }, [
-    debouncedContent,
-    pageId,
-    content,
-    isContentDirty,
-    savePage,
-    convertHtmlToContentBlock,
-  ])
-
-  // Manual save function with better error handling and retry support
-  const saveContent = useCallback(async () => {
-    if (!pageId || !isContentDirty) return
+    if (!pageId) {
+      console.warn('[useRichTextAutosave] No pageId provided, skipping save')
+      return
+    }
 
     try {
       pendingSaveRef.current = true
       setSaveStatus('saving')
+      console.log(`[useRichTextAutosave] Saving content for pageId: ${pageId}`)
 
-      // Konversi konten HTML ke format ContentBlock
+      // Konversi konten HTML ke format blocks
       const blocks = convertHtmlToContentBlock(content)
 
-      await savePage({
-        pageId,
+      // Siapkan data untuk update
+      const updateData = {
         blocks,
-      })
+      }
 
-      setIsContentDirty(false)
-      setSaveStatus('saved')
+      console.log('[useRichTextAutosave] Saving blocks:', blocks.length)
 
-      // Notifikasi sukses
-      toast.success('Konten berhasil disimpan', {
-        duration: 2000,
-      })
-    } catch (error) {
-      console.error('Error manually saving content:', error)
-      setSaveStatus('error')
+      // Lakukan request update dengan penanganan error yang lebih baik
+      try {
+        const moduleId = pageId.split('-')[0]
+        const response = await axios.put(
+          `/api/module/${moduleId}/pages/${pageId}`,
+          updateData,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          }
+        )
 
-      // Kategorisasi error dan tambahkan opsi retry
-      const category = categorizeError(error)
-      showErrorNotification(error, {
-        retryFn: isErrorRetryable(category) ? saveContent : undefined,
-      })
+        if (response.data && response.data.success) {
+          setSaveStatus('saved')
+          console.log('[useRichTextAutosave] Content saved successfully')
+        } else {
+          throw new Error(response.data?.error || 'Unknown error')
+        }
+      } catch (error) {
+        console.error('[useRichTextAutosave] Error saving content:', error)
+        setSaveStatus('error')
+
+        // Kategorisasi error untuk penanganan yang lebih baik
+        const category = categorizeError(error)
+
+        // Tampilkan notifikasi error
+        showErrorNotification(error, {
+          retryFn: isErrorRetryable(category) ? saveContent : undefined,
+        })
+      }
     } finally {
       pendingSaveRef.current = false
     }
-  }, [pageId, content, isContentDirty, savePage, convertHtmlToContentBlock])
+  }, [pageId, content, convertHtmlToContentBlock])
 
-  // Fungsi untuk rollback ke konten sebelumnya jika diperlukan
-  const rollbackContent = useCallback(() => {
-    // Kembali ke konten sebelumnya jika ada error
-    if (saveStatus === 'error' && previousContentRef.current) {
-      setContent(previousContentRef.current)
-      setIsContentDirty(false)
-      setSaveStatus('saved')
+  // Fungsi untuk memaksa penyimpanan (untuk digunakan dari luar hook)
+  const forceSave = useCallback(() => {
+    if (contentChangedRef.current) {
+      saveContent()
     }
-  }, [saveStatus])
+  }, [saveContent])
+
+  // Efek untuk menyimpan konten saat komponen unmount
+  useEffect(() => {
+    return () => {
+      // Jika ada perubahan yang belum disimpan saat komponen unmount
+      if (contentChangedRef.current && !pendingSaveRef.current) {
+        saveContent()
+      }
+    }
+  }, [saveContent])
 
   return {
     content,
     saveStatus,
-    isContentDirty,
     handleContentChange,
-    saveContent,
-    rollbackContent,
+    forceSave,
   }
 }

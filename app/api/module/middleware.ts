@@ -45,16 +45,24 @@ export function withAdminAuth(
 
       if (isApiRequest) {
         return NextResponse.json(
-          { success: false, error: 'Tidak terautentikasi' },
-          { status: 401 }
+          {
+            success: false,
+            error: 'Tidak terautentikasi',
+            message: 'Silakan login terlebih dahulu untuk mengakses API ini',
+          },
+          {
+            status: 401,
+            headers: {
+              'WWW-Authenticate': 'Bearer realm="Maguru API"',
+            },
+          }
         )
       }
 
-      // Untuk non-API requests, redirect ke halaman login
-      return NextResponse.json(
-        { error: 'Tidak terautentikasi' },
-        { status: 401 }
-      )
+      // Untuk non-API requests, redirect ke halaman login dengan URL redirect
+      const redirectUrl = new URL('/sign-in', req.url)
+      redirectUrl.searchParams.set('redirect_url', req.url)
+      return NextResponse.redirect(redirectUrl)
     }
 
     // Periksa apakah pengguna memiliki role admin
@@ -73,6 +81,7 @@ export function withAdminAuth(
         {
           success: false,
           error: 'Akses ditolak. Hanya admin yang dapat mengakses fitur ini.',
+          message: 'Anda tidak memiliki hak akses untuk mengakses API ini',
         },
         { status: 403 }
       )

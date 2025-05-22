@@ -2,6 +2,7 @@ import axios from 'axios'
 import {
   CreateModulePageInput,
   UpdateModulePageInput,
+  ContentBlockType,
 } from '../types/modulePageSchema'
 import { ModulePage, ApiListResponse, ApiEntityResponse } from '../types'
 
@@ -158,6 +159,30 @@ export const modulePageClientService = {
   },
 
   /**
+   * Tambahkan fungsi untuk menangani error autentikasi
+   */
+  handleAuthError(error: unknown) {
+    if (
+      axios.isAxiosError(error) &&
+      (error.response?.status === 401 || error.response?.status === 403)
+    ) {
+      console.error(
+        '[Client] Autentikasi dibutuhkan, mengarahkan ke halaman login...'
+      )
+
+      // Jika dalam lingkungan browser, arahkan ke halaman login
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname
+        window.location.href = `/sign-in?redirect_url=${encodeURIComponent(currentPath)}`
+      }
+
+      throw new Error('Sesi autentikasi kedaluwarsa. Silakan login kembali.')
+    }
+
+    throw error
+  },
+
+  /**
    * Mendapatkan daftar halaman dalam modul
    * @param moduleId - ID modul
    * @param options - Opsi query (pagination, includeContent)
@@ -167,19 +192,20 @@ export const modulePageClientService = {
     moduleId: string,
     options: { page?: number; limit?: number; includeContent?: boolean } = {}
   ): Promise<ApiListResponse<ModulePage>> {
-    // Set sebagai modul aktif
-    this.setActiveModuleId(moduleId)
-
-    const queryParams = new URLSearchParams()
-    if (options.page) queryParams.append('page', options.page.toString())
-    if (options.limit) queryParams.append('limit', options.limit.toString())
-    if (options.includeContent) queryParams.append('includeContent', 'true')
-
     try {
-      console.log(`[Client] Fetching pages for moduleId: ${moduleId}`)
+      // Set sebagai modul aktif
+      this.setActiveModuleId(moduleId)
+
+      // Buat query string dari parameter
+      const queryParams = new URLSearchParams()
+      if (options.page) queryParams.append('page', options.page.toString())
+      if (options.limit) queryParams.append('limit', options.limit.toString())
+      if (options.includeContent !== undefined)
+        queryParams.append('includeContent', options.includeContent.toString())
 
       const baseUrl = getBaseUrl()
       const url = `${baseUrl}/api/module/${moduleId}/pages?${queryParams.toString()}`
+      console.log(`[Client] Fetching pages for moduleId: ${moduleId}`)
       console.log(`[Client] Request URL: ${url}`)
 
       const response = await axios.get(url)
@@ -200,25 +226,31 @@ export const modulePageClientService = {
     } catch (error) {
       console.error('[Client] Error fetching module pages:', error)
 
+      // Tampilkan informasi error untuk debugging
       if (axios.isAxiosError(error)) {
-        console.error('[Client] Status:', error.response?.status)
-        console.error('[Client] Response data:', error.response?.data)
-
-        if (error.response?.status === 404) {
-          return {
-            success: true,
-            data: [],
-            meta: {
-              totalItems: 0,
-              currentPage: 1,
-              totalPages: 0,
-              pageSize: 10,
-            },
+        if (error.response) {
+          console.error('[Client] Status:', error.response.status)
+          if (error.response.status === 401 || error.response.status === 403) {
+            return this.handleAuthError(error)
           }
+          console.error('[Client] Response data:', error.response.data)
+        } else if (error.request) {
+          console.error('[Client] No response received:', error.request)
         }
       }
 
-      throw new Error('Gagal mengambil daftar halaman modul')
+      // Return data kosong sebagai fallback untuk mencegah crash UI
+      return {
+        success: false,
+        data: [],
+        meta: {
+          totalItems: 0,
+          currentPage: 1,
+          totalPages: 1,
+          pageSize: 10,
+        },
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
     }
   },
 
@@ -253,10 +285,10 @@ export const modulePageClientService = {
   },
 
   /**
-   * Memperbarui halaman berdasarkan ID
-   * @param pageId - ID halaman
-   * @param data - Data yang akan diperbarui
-   * @param moduleId - Opsional moduleId, jika tidak disediakan akan menggunakan yang aktif
+   * Memperbarui halaman modul
+   * @param pageId - ID halaman yang akan diperbarui
+   * @param data - Data baru untuk halaman
+   * @param moduleId - ID modul (opsional, akan menggunakan active moduleId jika tidak disediakan)
    * @returns Halaman yang telah diperbarui
    */
   async updateModulePage(
@@ -264,28 +296,43 @@ export const modulePageClientService = {
     data: UpdateModulePageInput,
     moduleId?: string
   ): Promise<ApiEntityResponse<ModulePage> | null> {
-    try {
-      // Gunakan moduleId yang diberikan atau yang aktif
-      const activeModuleId = moduleId || this.getActiveModuleId()
-      if (!activeModuleId) {
-        throw new Error('ModuleId tidak ditemukan untuk memperbarui halaman')
-      }
+    // Pastikan kita memiliki moduleId
+    const effectiveModuleId = moduleId || this.getActiveModuleId()
+    if (!effectiveModuleId) {
+      throw new Error('ModuleId tidak ditemukan untuk memperbarui halaman')
+    }
 
+    try {
       console.log(
-        `[Client] Updating page ${pageId} with data:`,
-        JSON.stringify({
-          title: data.title,
-          hasBlocks: !!data.blocks && Array.isArray(data.blocks),
-        })
+        `[Client] Updating module page ${pageId} in module ${effectiveModuleId}`
       )
+
+      // Validasi data sebelum dikirim untuk menghindari error JSON
+      const validatedData = { ...data }
+
+      // Jika ada blocks, pastikan itu array dan dapat di-stringify
+      if (validatedData.blocks) {
+        if (!Array.isArray(validatedData.blocks)) {
+          console.warn('[Client] Blocks bukan array, mengkonversi ke array')
+          validatedData.blocks = [validatedData.blocks]
+        }
+
+        // Pastikan blocks dapat di-stringify
+        try {
+          JSON.stringify(validatedData.blocks)
+        } catch (error) {
+          console.error('[Client] Error stringifying blocks:', error)
+          throw new Error('Format blocks tidak valid')
+        }
+      }
 
       const baseUrl = getBaseUrl()
       const response = await axios.put(
-        `${baseUrl}/api/module/${activeModuleId}/pages/${pageId}`,
-        data,
+        `${baseUrl}/api/module/${effectiveModuleId}/pages/${pageId}`,
+        validatedData,
         {
-          // Tingkatkan timeout untuk menghindari error pada jaringan lambat
-          timeout: 30000,
+          // Tambahkan timeout untuk menghindari request tergantung terlalu lama
+          timeout: 15000,
           // Tambahkan header untuk menandai request dari client
           headers: {
             'Content-Type': 'application/json',
@@ -293,18 +340,68 @@ export const modulePageClientService = {
           },
         }
       )
+
       return response.data
     } catch (error) {
-      console.error('[Client] Error updating page:', error)
+      console.error('[Client] Error updating module page:', error)
 
-      if (axios.isAxiosError(error)) {
-        if (error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED') {
-          console.error(
-            '[Client] Network error or timeout. Server mungkin tidak tersedia.'
+      // Tangani error autentikasi
+      if (
+        axios.isAxiosError(error) &&
+        (error.response?.status === 401 || error.response?.status === 403)
+      ) {
+        return this.handleAuthError(error)
+      }
+
+      // Tangani error format JSON
+      if (
+        axios.isAxiosError(error) &&
+        error.response?.status === 400 &&
+        error.response?.data?.error?.includes('JSON')
+      ) {
+        console.error('[Client] JSON format error:', error.response.data)
+
+        // Coba lagi dengan format yang lebih sederhana
+        try {
+          console.log('[Client] Retrying with simplified format')
+
+          // Buat versi sederhana dari data
+          const simplifiedData = { ...data }
+
+          // Jika ada blocks, sederhanakan
+          if (simplifiedData.blocks) {
+            simplifiedData.blocks = [
+              {
+                type: ContentBlockType.TEXT,
+                content: Array.isArray(simplifiedData.blocks)
+                  ? JSON.stringify(simplifiedData.blocks)
+                  : 'Konten tidak dapat diformat dengan benar',
+              },
+            ]
+          }
+
+          const baseUrl = getBaseUrl()
+          const response = await axios.put(
+            `${baseUrl}/api/module/${effectiveModuleId}/pages/${pageId}`,
+            simplifiedData,
+            {
+              timeout: 15000,
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Client-Source': 'modulePageClientService-retry',
+              },
+            }
           )
-          throw new Error('Koneksi ke server gagal. Silakan coba lagi nanti.')
-        }
 
+          return response.data
+        } catch (retryError) {
+          console.error('[Client] Retry failed:', retryError)
+          throw new Error('Format data tidak valid dan upaya perbaikan gagal')
+        }
+      }
+
+      // Log detail error
+      if (axios.isAxiosError(error)) {
         if (error.response) {
           console.error('[Client] Error response data:', error.response.data)
           console.error(
@@ -312,17 +409,23 @@ export const modulePageClientService = {
             error.response.status
           )
 
-          if (error.response.status === 404) {
-            return null
+          // Jika ada pesan error dari server, gunakan itu
+          if (error.response.data?.error) {
+            throw new Error(`Server error: ${error.response.data.error}`)
           }
-
-          throw new Error(
-            `Server error: ${error.response.data?.error || error.message}`
+        } else if (error.request) {
+          console.error(
+            '[Client] No response received, request:',
+            error.request
           )
+          throw new Error('Tidak ada respons dari server. Silakan coba lagi.')
         }
       }
 
-      throw error
+      // Jika tidak ada error spesifik, lempar error generik
+      throw error instanceof Error
+        ? error
+        : new Error('Terjadi kesalahan saat memperbarui halaman')
     }
   },
 

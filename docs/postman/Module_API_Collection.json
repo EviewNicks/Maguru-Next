@@ -225,9 +225,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pages/{{pageId}}",
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages/{{pageId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "pages", "{{pageId}}"]
+              "path": ["api", "module", "{{moduleId}}", "pages", "{{pageId}}"]
             },
             "description": "Mendapatkan detail halaman modul berdasarkan ID halaman."
           },
@@ -248,9 +248,9 @@
               "raw": "{\n  \"title\": \"Halaman Test 1 (Updated)\",\n  \"blocks\": [\n    {\n      \"type\": \"paragraph\",\n      \"content\": \"Ini adalah konten halaman test pertama yang telah diperbarui.\"\n    },\n    {\n      \"type\": \"heading\",\n      \"content\": \"Sub Judul Baru\"\n    },\n    {\n      \"type\": \"code\",\n      \"content\": \"console.log('Hello Updated World');\",\n      \"language\": \"javascript\"\n    }\n  ]\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/pages/{{pageId}}",
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages/{{pageId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "pages", "{{pageId}}"]
+              "path": ["api", "module", "{{moduleId}}", "pages", "{{pageId}}"]
             },
             "description": "Memperbarui halaman modul berdasarkan ID halaman."
           },
@@ -262,9 +262,9 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/pages/{{pageId}}",
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages/{{pageId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "pages", "{{pageId}}"]
+              "path": ["api", "module", "{{moduleId}}", "pages", "{{pageId}}"]
             },
             "description": "Menghapus halaman modul berdasarkan ID halaman."
           },

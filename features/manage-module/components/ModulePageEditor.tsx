@@ -9,7 +9,7 @@ import { useModulePageEditor } from '../hooks/useModulePageEditor'
 import { RichTextEditor } from './RichTextEditor'
 import { useDebounce } from '../hooks/useDebounce'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
-import { ModulePage } from '../types'
+import { ModulePage, ContentBlock } from '../types'
 import { useQuery } from '@tanstack/react-query'
 import { modulePageService } from '../services/modulePageService'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts'
@@ -215,10 +215,34 @@ export default function ModulePageEditor({
     return <div className="p-4">Memuat halaman...</div>
   }
 
+  // Tambahkan fungsi untuk memformat blocks menjadi string JSON
+  const formatBlocksForEditor = (
+    blocks: ContentBlock[] | undefined
+  ): string => {
+    if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
+      return ''
+    }
+
+    try {
+      return JSON.stringify(blocks)
+    } catch (error) {
+      console.error('Error formatting blocks for editor:', error)
+      return ''
+    }
+  }
+
   // Get initial content from active page
   const initialContent = activePage?.blocks
-    ? JSON.stringify(activePage.blocks)
+    ? formatBlocksForEditor(activePage.blocks)
     : ''
+
+  // Tambahkan juga logging untuk debugging
+  console.log('Active page:', activePage?.id, activePage?.title)
+  console.log(
+    'Blocks available:',
+    !!activePage?.blocks,
+    Array.isArray(activePage?.blocks) ? activePage.blocks.length : 0
+  )
 
   // Calculate currentPage and totalPages for navigation
   const currentPage =

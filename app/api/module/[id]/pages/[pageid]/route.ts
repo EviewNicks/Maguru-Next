@@ -64,7 +64,22 @@ async function updateModulePageHandler(
 ) {
   try {
     const pageId = context.params.id
-    const body = await request.json()
+
+    // Tangani JSON parsing dengan lebih baik
+    let body
+    try {
+      body = await request.json()
+    } catch (jsonError) {
+      console.error('Error parsing JSON in updateModulePageHandler:', jsonError)
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Format JSON tidak valid. Pastikan request body berformat JSON yang benar.',
+        },
+        { status: 400 }
+      )
+    }
 
     // Validasi menggunakan schema Zod - skip jika dalam mode test
     const isTest = process.env.NODE_ENV === 'test'
@@ -105,6 +120,18 @@ async function updateModulePageHandler(
     )
   } catch (error) {
     console.error('Error updating module page:', error)
+
+    // Berikan respons yang lebih spesifik berdasarkan jenis error
+    if (error instanceof Error) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Terjadi kesalahan saat memperbarui halaman modul: ${error.message}`,
+        },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json(
       {
         success: false,
