@@ -2,6 +2,7 @@ import {
   ContentBlock,
   CreateModulePageInput,
   UpdateModulePageInput,
+  ContentBlockType,
 } from '../types/modulePageSchema'
 import { ModulePage, ApiListResponse, ApiEntityResponse } from '../types'
 import prisma from '@/lib/prisma'
@@ -198,7 +199,7 @@ export const modulePageService = {
 
       // Hanya tambahkan blocks jika includeContent=true
       if (includeContent) {
-        pageData.blocks = JSON.parse(page.content as string) as ContentBlock[]
+        pageData.blocks = this.parseContent(page.content as string)
       } else {
         // Tambahkan blocks kosong jika client mengharapkan property ini
         pageData.blocks = []
@@ -243,7 +244,7 @@ export const modulePageService = {
         moduleId: page.moduleId,
         title: page.title,
         order: page.order,
-        blocks: JSON.parse(page.content as string) as ContentBlock[],
+        blocks: this.parseContent(page.content as string),
         status: 'DRAFT' as ModulePageStatus,
         createdAt: page.createdAt,
         updatedAt: page.updatedAt,
@@ -289,7 +290,26 @@ export const modulePageService = {
     }
 
     if (data.blocks) {
-      updateData.content = JSON.stringify(data.blocks)
+      // Periksa jika blocks sudah dalam format JSON Tiptap
+      if (
+        data.blocks.length === 1 &&
+        data.blocks[0].type === 'text' &&
+        typeof data.blocks[0].content === 'string' &&
+        data.blocks[0].content.startsWith('{') &&
+        data.blocks[0].content.includes('"type":"doc"')
+      ) {
+        // Simpan content dari block tersebut langsung sebagai content halaman
+        // karena ini adalah format JSON Tiptap
+        updateData.content = data.blocks[0].content
+        console.log(
+          'Saving Tiptap JSON format directly:',
+          updateData.content.substring(0, 50) + '...'
+        )
+      } else {
+        // Format lama - simpan sebagai array blocks
+        updateData.content = JSON.stringify(data.blocks)
+        console.log('Saving in legacy blocks format')
+      }
     }
 
     // Update halaman
@@ -391,6 +411,33 @@ export const modulePageService = {
     } catch (error) {
       console.error('Error reordering pages:', error)
       throw error
+    }
+  },
+
+  /**
+   * Parse content string dari database menjadi ContentBlock[]
+   * Mendukung format lama (array blocks) dan baru (JSON Tiptap)
+   */
+  parseContent(content: string): ContentBlock[] {
+    if (!content) return []
+
+    try {
+      // Cek jika content adalah format JSON Tiptap (dimulai dengan { dan memiliki type:'doc')
+      if (content.startsWith('{') && content.includes('"type":"doc"')) {
+        // Ini adalah format JSON Tiptap - buat satu block yang berisi konten tersebut
+        return [
+          {
+            type: ContentBlockType.TEXT,
+            content: content,
+          },
+        ]
+      }
+
+      // Format lama (array blocks) - parsing sebagai array
+      return JSON.parse(content) as ContentBlock[]
+    } catch (error) {
+      console.error('Error parsing content:', error)
+      return [] // Fallback jika parsing gagal
     }
   },
 }

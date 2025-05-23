@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 // import TopNavigation from './ModulePageEditor/navigation/TopNavigation'
 import DocumentHeader from './ModulePageEditor/document/DocumentHeader'
 import ModulePageFooterNav from './ModulePageFooterNav'
@@ -9,17 +9,20 @@ import { useModulePageEditor } from '../hooks/useModulePageEditor'
 import { RichTextEditor } from './RichTextEditor'
 import { useDebounce } from '../hooks/useDebounce'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
-import { ModulePage, ContentBlock } from '../types'
+import { ModulePage, ContentBlock, ContentBlockType } from '../types'
 import { useQuery } from '@tanstack/react-query'
 import { modulePageService } from '../services/modulePageService'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts'
 import { NAVIGATION_SHORTCUTS, SYSTEM_SHORTCUTS } from '../constants/shortcuts'
 import ShortcutHelp from './ShortcutHelp'
 // import { FocusTrap } from './a11y/FocusTrap' - Tidak digunakan
-import { SkipLink } from './a11y/SkipLink'
-import { A11yAnnouncer } from './a11y/A11yAnnouncer'
+import SkipLink from './a11y/SkipLink'
+import A11yAnnouncer from './a11y/A11yAnnouncer'
 import { getStatusAnnouncement } from '../utils/a11yUtils'
 import useFocusManagement from '../hooks/useFocusManagement'
+import { ErrorBoundary } from './ErrorBoundary'
+import { AlertTriangle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface ModulePageEditorProps {
   moduleId: string
@@ -210,91 +213,125 @@ export default function ModulePageEditor({
     { scope: 'global' }
   )
 
+  // Get initial content - tidak perlu memformat karena RichTextEditor sudah dapat menangani langsung dari API
+  const initialContent = activePage?.blocks
+    ? JSON.stringify(activePage.blocks)
+    : ''
+
+  // Log untuk debugging nilai initialContent
+  console.log(
+    '[ModulePageEditor] Sending initialContent to RichTextEditor:',
+    initialContent
+      ? initialContent.length > 100
+        ? initialContent.substring(0, 100) + '...'
+        : initialContent
+      : 'empty'
+  )
+  console.log('[ModulePageEditor] activePage blocks:', activePage?.blocks)
+
+  // Callback untuk penanganan perubahan konten dari RichTextEditor
+  const handleEditorChange = useCallback(
+    (content: object) => {
+      // Log untuk debugging
+      console.log('[ModulePageEditor] Editor content changed')
+
+      // Konversi JSON ke string
+      const contentString = JSON.stringify(content)
+
+      // Simpan perubahan hanya jika ada activePage dan konten berubah
+      if (activePage?.id && contentString !== initialContent) {
+        // Jika hanya mengisi satu block type TEXT
+        const updatedBlocks: ContentBlock[] = [
+          {
+            type: ContentBlockType.TEXT,
+            content: contentString,
+          },
+        ]
+
+        // Simpan perubahan melalui context
+        savePage({
+          pageId: activePage.id,
+          title: title,
+          blocks: updatedBlocks,
+        }).catch((error) => {
+          console.error('[ModulePageEditor] Error saving page:', error)
+        })
+      }
+    },
+    [activePage, initialContent, savePage, title]
+  )
+
   // Status loading
   if (pagesLoading || crudLoading) {
     return <div className="p-4">Memuat halaman...</div>
   }
 
-  // Tambahkan fungsi untuk memformat blocks menjadi string JSON
-  const formatBlocksForEditor = (
-    blocks: ContentBlock[] | undefined
-  ): string => {
-    if (!blocks || !Array.isArray(blocks) || blocks.length === 0) {
-      return ''
-    }
-
-    try {
-      return JSON.stringify(blocks)
-    } catch (error) {
-      console.error('Error formatting blocks for editor:', error)
-      return ''
-    }
-  }
-
-  // Get initial content from active page
-  const initialContent = activePage?.blocks
-    ? formatBlocksForEditor(activePage.blocks)
-    : ''
-
-  // Tambahkan juga logging untuk debugging
-  console.log('Active page:', activePage?.id, activePage?.title)
-  console.log(
-    'Blocks available:',
-    !!activePage?.blocks,
-    Array.isArray(activePage?.blocks) ? activePage.blocks.length : 0
-  )
-
-  // Calculate currentPage and totalPages for navigation
+  // Hitung currentPage dan totalPages untuk navigasi
   const currentPage =
-    pages.findIndex((page) => page.id === activePageIdToUse) + 1
-  const totalPages = pages.length
+    (pages?.findIndex((page) => page.id === activePageIdToUse) || 0) + 1
+  const totalPages = pages?.length || 0
 
   return (
-    <div
-      className="flex flex-col h-screen bg-[#121212] text-[#e3e4f2]"
-      role="application"
-      aria-label="Editor halaman modul"
-    >
-      {/* Skip Link - tersembunyi sampai mendapat fokus */}
-      <SkipLink targetId="editor-content" label="Lewati ke editor konten" />
+    <>
+      {/* Skip Link untuk aksesibilitas keyboard */}
+      <SkipLink targetId="editor-content" label="Lewati ke konten editor" />
 
-      {/* Status Announcer untuk screen reader */}
-      <A11yAnnouncer message={statusAnnouncement} />
-
-      <DocumentHeader
-        title={title}
-        onTitleChange={handleTitleChange}
-        saveStatus={saveStatus}
-        pageId={activePageIdToUse}
-      />
-
-      {/* Main Content Area */}
+      {/* Main container */}
       <div
-        className="flex flex-1 overflow-hidden"
-        ref={editorFocusRef as React.RefObject<HTMLDivElement>}
-        tabIndex={-1}
+        ref={editorContainerRef}
+        className="h-full flex flex-col bg-[#121212] text-white"
       >
+        {/* Header */}
+        <DocumentHeader
+          title={title}
+          onTitleChange={handleTitleChange}
+          saveStatus={saveStatus}
+          pageId={activePageIdToUse}
+        />
+
         {/* Editor Area */}
         <div
-          className="flex-1"
           id="editor-content"
-          ref={editorContainerRef}
+          className="flex flex-1 overflow-hidden"
+          ref={editorFocusRef as React.RefObject<HTMLDivElement>}
           tabIndex={-1}
-          aria-label="Area editor konten"
         >
-          <div className="h-full w-full" role="region" aria-label="Editor teks">
-            <RichTextEditor
-              className="bg-[#1e1e1e] border-[#3b3b3b] h-full"
-              initialContent={initialContent}
-              pageId={activePageIdToUse}
-              autosave={true}
-            />
+          {/* Main editor */}
+          <div className="flex-1 h-full">
+            <ErrorBoundary
+              fallback={
+                <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                  <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
+                  <h3 className="text-lg font-medium mb-2">
+                    Terjadi kesalahan saat memuat editor
+                  </h3>
+                  <p className="text-sm text-gray-400 mb-4">
+                    Editor tidak dapat dimuat dengan benar. Ini mungkin
+                    disebabkan karena masalah koneksi atau format data yang
+                    tidak valid.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.reload()}
+                    size="sm"
+                  >
+                    Muat Ulang Editor
+                  </Button>
+                </div>
+              }
+            >
+              <RichTextEditor
+                className="h-full"
+                onChange={handleEditorChange}
+                initialContent={initialContent}
+                pageId={activePageIdToUse} // Tambahkan pageId untuk pengambilan data dari API
+                autosave={true}
+              />
+            </ErrorBoundary>
           </div>
         </div>
-      </div>
 
-      {/* Footer Navigation */}
-      {pages && activePageIdToUse && (
+        {/* Footer Navigation */}
         <ModulePageFooterNav
           currentPage={currentPage}
           totalPages={totalPages}
@@ -302,13 +339,16 @@ export default function ModulePageEditor({
           onNext={() => handleNavigation('next')}
           isLoading={isNavigating}
         />
-      )}
 
-      {/* Shortcut Help Modal */}
-      <ShortcutHelp
-        isOpen={isShortcutHelpOpen}
-        onClose={() => setIsShortcutHelpOpen(false)}
-      />
-    </div>
+        {/* Shortcut Help */}
+        <ShortcutHelp
+          isOpen={isShortcutHelpOpen}
+          onClose={() => setIsShortcutHelpOpen(false)}
+        />
+
+        {/* A11y Live Region Announcer */}
+        <A11yAnnouncer message={statusAnnouncement} />
+      </div>
+    </>
   )
 }

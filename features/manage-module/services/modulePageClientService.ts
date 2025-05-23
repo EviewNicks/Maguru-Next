@@ -268,13 +268,36 @@ export const modulePageClientService = {
       // Gunakan moduleId yang diberikan atau yang aktif
       const activeModuleId = moduleId || this.getActiveModuleId()
       if (!activeModuleId) {
-        throw new Error('ModuleId tidak ditemukan untuk mendapatkan halaman')
+        throw new Error(
+          'ModuleId tidak ditemukan untuk mengambil detail halaman'
+        )
       }
 
       const baseUrl = getBaseUrl()
       const response = await axios.get(
         `${baseUrl}/api/module/${activeModuleId}/pages/${pageId}`
       )
+
+      // Periksa apakah response data valid
+      if (response.data && response.data.data) {
+        // Cek apakah blocks ada dan perlu diproses
+        const pageData = response.data.data
+
+        if (pageData.blocks && Array.isArray(pageData.blocks)) {
+          // Cek apakah ini mungkin format JSON Tiptap
+          if (
+            pageData.blocks.length === 1 &&
+            pageData.blocks[0].type === 'text' &&
+            typeof pageData.blocks[0].content === 'string' &&
+            pageData.blocks[0].content.startsWith('{') &&
+            pageData.blocks[0].content.includes('"type":"doc"')
+          ) {
+            console.log('[Client] Detected Tiptap JSON format in response')
+            // Format sudah benar, tidak perlu dikonversi
+          }
+        }
+      }
+
       return response.data
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -312,7 +335,19 @@ export const modulePageClientService = {
 
       // Jika ada blocks, pastikan itu array dan dapat di-stringify
       if (validatedData.blocks) {
-        if (!Array.isArray(validatedData.blocks)) {
+        // Periksa apakah ini adalah format JSON Tiptap
+        if (
+          validatedData.blocks.length === 1 &&
+          validatedData.blocks[0].type === 'text' &&
+          typeof validatedData.blocks[0].content === 'string' &&
+          validatedData.blocks[0].content.startsWith('{') &&
+          validatedData.blocks[0].content.includes('"type":"doc"')
+        ) {
+          // Ini adalah format JSON Tiptap, format sudah benar
+          console.log('[Client] Detected Tiptap JSON format, sending as is')
+        }
+        // Jika bukan array, konversi ke array
+        else if (!Array.isArray(validatedData.blocks)) {
           console.warn('[Client] Blocks bukan array, mengkonversi ke array')
           validatedData.blocks = [validatedData.blocks]
         }

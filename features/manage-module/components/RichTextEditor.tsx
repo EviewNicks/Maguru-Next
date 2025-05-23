@@ -14,7 +14,7 @@ import TextAlign from '@tiptap/extension-text-align'
 import TextStyle from '@tiptap/extension-text-style'
 import Typography from '@tiptap/extension-typography'
 import Underline from '@tiptap/extension-underline'
-import { EditorContent, type Extension, useEditor, Editor } from '@tiptap/react'
+import { EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 
 import { TipTapFloatingMenu } from '@/features/manage-module/components/ModulePageEditor/extension/FloatingMenu'
@@ -22,10 +22,10 @@ import { FloatingToolbar } from '@/features/manage-module/components/ModulePageE
 import { EditorToolbar } from '@/features/manage-module/components/ModulePageEditor/toolbars/EditorToolbar'
 import Placeholder from '@tiptap/extension-placeholder'
 
-import { content as defaultContent } from '@/features/manage-module/lib/content'
+import { defaultContentJSON } from '@/features/manage-module/lib/content'
 import { useRichTextAutosave } from '@/features/manage-module/hooks/useRichTextAutosave'
 import { useCallback, useEffect, useState } from 'react'
-import { SaveIcon, AlertTriangle, RefreshCw } from 'lucide-react'
+import { SaveIcon, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
 import {
   Tooltip,
   TooltipContent,
@@ -34,6 +34,9 @@ import {
 } from '@/components/ui/tooltip'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Button } from '@/components/ui/button'
+
+// Import RichTextEditorWithAutosave dari file terpisah
+import { RichTextEditorWithAutosave } from './RichTextEditorWithAutosave'
 
 const extensions = [
   StarterKit.configure({
@@ -86,295 +89,235 @@ const extensions = [
   Typography,
 ]
 
-interface RichTextEditorProps {
+export interface RichTextEditorProps {
   className?: string
-  onChange?: (content: string) => void
+  onChange?: (content: object) => void
   initialContent?: string
   pageId?: string
   autosave?: boolean
+  onEditorReady?: (editor: Editor | null) => void
 }
 
-// Perbaiki fungsi parseContent untuk menangani blocks dengan lebih baik
-function parseContent(content: string | undefined): string {
-  if (!content) return defaultContent
-
-  try {
-    // Cek apakah content adalah JSON string (dari blocks)
-    if (content.startsWith('[') && content.includes('"type"')) {
-      console.log('Parsing JSON content:', content.substring(0, 100))
-      const blocks = JSON.parse(content)
-
-      // Jika blocks valid, gabungkan content dari setiap block
-      if (Array.isArray(blocks)) {
-        console.log('Valid blocks array with', blocks.length, 'blocks')
-
-        // Konversi blocks menjadi HTML sederhana
-        const htmlContent = blocks
-          .map((block) => {
-            if (!block || !block.content) return ''
-
-            if (block.type === 'text' || block.type === 'paragraph') {
-              return block.content // Sudah dalam format HTML
-            } else if (block.type === 'heading') {
-              return `<h2>${block.content}</h2>`
-            } else if (block.type === 'code') {
-              return `<pre><code>${block.content}</code></pre>`
-            }
-            return block.content || ''
-          })
-          .join('')
-
-        console.log('Converted to HTML:', htmlContent.substring(0, 100))
-        return htmlContent || defaultContent
-      }
-    }
-
-    // Jika bukan JSON atau parsing gagal, gunakan content sebagai HTML
-    return content
-  } catch (error) {
-    console.error('Error parsing content:', error)
-    return content || defaultContent
-  }
-}
-
-// Komponen khusus untuk autosave
-function RichTextEditorWithAutosave({
-  pageId,
+// Komponen utama RichTextEditor
+export function RichTextEditor({
   className,
-  initialContent,
   onChange,
-}: Omit<RichTextEditorProps, 'autosave'> & { pageId: string }) {
-  // State untuk menyimpan content yang sudah di-parse
-  const [parsedContent, setParsedContent] = useState<string>(defaultContent)
+  initialContent,
+  autosave = false,
+  pageId,
+  onEditorReady,
+}: RichTextEditorProps) {
+  // State untuk menyimpan instance editor
+  const [editor, setEditor] = useState<Editor | null>(null)
 
-  // Parse initialContent saat komponen dimount
-  useEffect(() => {
+  // Parse content dengan JSON.parse jika string, gunakan langsung jika object
+  // Tidak menggunakan parseContent di sini karena itu akan dilakukan di RichTextEditorWithAutosave
+  const getParsedContent = useCallback(() => {
     try {
-      console.log(
-        'Initial content received:',
-        initialContent?.substring(0, 100)
-      )
+      if (typeof initialContent === 'string') {
+        if (initialContent.trim() === '') {
+          console.log(
+            'RichTextEditor: initialContent kosong, menggunakan defaultContentJSON'
+          )
+          return defaultContentJSON
+        }
 
-      // Cek apakah initialContent adalah string JSON
-      if (initialContent && initialContent.startsWith('[')) {
-        const parsedBlocks = JSON.parse(initialContent)
-        console.log('Parsed blocks:', parsedBlocks)
-
-        // Jika blocks valid, set parsed content
-        if (Array.isArray(parsedBlocks)) {
-          setParsedContent(parseContent(initialContent))
+        // Coba parse initialContent
+        try {
+          console.log('RichTextEditor: mencoba parse initialContent')
+          return JSON.parse(initialContent)
+        } catch (error) {
+          console.error('RichTextEditor: error parsing initialContent:', error)
+          return defaultContentJSON
         }
       } else {
-        // Jika bukan JSON, gunakan sebagai HTML
-        setParsedContent(initialContent || defaultContent)
+        console.log('RichTextEditor: initialContent sudah berupa object')
+        return initialContent || defaultContentJSON
       }
     } catch (error) {
-      console.error('Error processing initial content:', error)
-      setParsedContent(defaultContent)
+      console.error('RichTextEditor: error di getParsedContent:', error)
+      return defaultContentJSON
     }
   }, [initialContent])
 
-  // Gunakan hook autosave secara langsung di komponen
-  const {
-    content: autoSavedContent,
-    saveStatus,
-    handleContentChange,
-    forceSave,
-  } = useRichTextAutosave(pageId, parsedContent)
+  // Initialize editor when component mounts
+  useEffect(() => {
+    // Cleanup untuk mencegah memory leak
+    return () => {
+      if (editor) {
+        console.log('RichTextEditor: destroying editor')
+        editor.destroy()
+      }
+    }
+  }, [editor])
 
-  const handleUpdate = useCallback(
-    ({ editor }: { editor: Editor }) => {
-      const html = editor.getHTML()
-      handleContentChange(html)
-      if (onChange) onChange(html)
-    },
-    [onChange, handleContentChange]
-  )
+  // Perbarui editor content saat initialContent berubah
+  useEffect(() => {
+    console.log('RichTextEditor: initialContent berubah')
+    if (editor && initialContent) {
+      try {
+        const parsedContent = getParsedContent()
+        if (parsedContent) {
+          console.log('RichTextEditor: memperbaharui content editor')
+          editor.commands.setContent(parsedContent)
+        }
+      } catch (error) {
+        console.error(
+          'RichTextEditor: error memperbarui content editor:',
+          error
+        )
+      }
+    }
+  }, [editor, initialContent, getParsedContent])
 
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: extensions as Extension[],
-    content: autoSavedContent || parsedContent,
-    editorProps: {
-      attributes: {
-        class: 'max-w-full focus:outline-none',
-      },
-    },
-    onUpdate: handleUpdate,
+  // Callback untuk change events
+  const handleUpdate = useCallback(() => {
+    if (editor && onChange) {
+      try {
+        const json = editor.getJSON()
+        onChange(json)
+      } catch (error) {
+        console.error('RichTextEditor: error di handleUpdate:', error)
+      }
+    }
+  }, [editor, onChange])
+
+  // Buat editor instance
+  const createEditor = useCallback(() => {
+    if (editor) return
+    console.log('RichTextEditor: creating editor instance')
+
+    try {
+      const parsedContent = getParsedContent()
+      console.log('RichTextEditor: parsedContent for editor:', parsedContent)
+
+      const newEditor = new Editor({
+        extensions,
+        content: parsedContent,
+        autofocus: false,
+        editable: true,
+        onUpdate: handleUpdate,
+      })
+
+      // Set editor instance ke state
+      setEditor(newEditor)
+
+      // Panggil callback onEditorReady jika disediakan
+      if (onEditorReady) {
+        onEditorReady(newEditor)
+      }
+    } catch (error) {
+      console.error('RichTextEditor: error creating editor:', error)
+    }
+  }, [editor, getParsedContent, handleUpdate, onEditorReady])
+
+  // Create editor on mount
+  useEffect(() => {
+    createEditor()
+  }, [createEditor])
+
+  // Integrasi dengan autosave hook
+  const { isSaving, lastSaved, triggerSave } = useRichTextAutosave({
+    editor,
+    enabled: autosave && !!pageId,
+    pageId: pageId || '',
   })
 
-  // Jika editor tidak berhasil dimuat, tampilkan pesan error
-  if (!editor) {
+  // Jika pageId disediakan dan autosave diaktifkan, gunakan RichTextEditorWithAutosave sebagai pengganti
+  if (pageId && autosave) {
     return (
-      <div className="flex items-center justify-center h-full p-4 text-red-400">
-        <AlertTriangle className="w-5 h-5 mr-2" />
-        <span>Gagal memuat editor. Silakan muat ulang halaman.</span>
-      </div>
+      <RichTextEditorWithAutosave
+        pageId={pageId}
+        className={className}
+        initialContent={initialContent}
+        onChange={onChange}
+      />
     )
   }
 
+  // Render editor normal jika tidak menggunakan autosave + pageId
   return (
-    <div
-      className={cn(
-        'relative h-full w-full overflow-auto border bg-card pb-[60px] sm:pb-0',
-        className
-      )}
-    >
-      <EditorToolbar editor={editor} />
-      <FloatingToolbar editor={editor} />
-      <TipTapFloatingMenu editor={editor} />
-      <EditorContent
-        editor={editor}
-        className="h-full w-full min-w-full cursor-text sm:p-6"
-      />
-
-      {/* Save Status Indicator (Enhanced) */}
-      <div className="absolute bottom-4 right-4 flex items-center gap-2 p-2 rounded-md bg-[#242528] text-xs">
-        <TooltipProvider>
-          {saveStatus === 'saved' && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-1 text-green-400 transition-opacity">
-                  <SaveIcon className="w-3 h-3" />
-                  <span>Tersimpan</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>Perubahan tersimpan otomatis</TooltipContent>
-            </Tooltip>
-          )}
-
-          {saveStatus === 'saving' && (
-            <div className="flex items-center gap-1 text-yellow-400 animate-pulse transition-all">
-              <RefreshCw className="w-3 h-3 animate-spin" />
-              <span>Menyimpan...</span>
-            </div>
-          )}
-
-          {saveStatus === 'unsaved' && (
-            <div className="flex items-center gap-1 text-yellow-400 transition-all">
-              <RefreshCw className="w-3 h-3" />
-              <span>Menunggu menyimpan...</span>
-            </div>
-          )}
-
-          {saveStatus === 'error' && (
-            <div className="flex items-center gap-2 text-red-400 transition-all">
-              <div className="flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                <span>Gagal menyimpan</span>
-              </div>
-
-              <div className="flex gap-2 ml-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      className="p-1 rounded hover:bg-zinc-700 transition-colors"
-                      onClick={forceSave}
-                      aria-label="Coba lagi"
-                    >
-                      <RefreshCw className="w-3 h-3" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Coba menyimpan lagi</TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          )}
-        </TooltipProvider>
-      </div>
-    </div>
-  )
-}
-
-// Komponen standar tanpa autosave
-function RichTextEditorStandard({
-  className,
-  onChange,
-  initialContent,
-}: Omit<RichTextEditorProps, 'autosave' | 'pageId'>) {
-  // Parse initialContent
-  const [parsedContent, setParsedContent] = useState<string>(defaultContent)
-
-  useEffect(() => {
-    setParsedContent(parseContent(initialContent))
-  }, [initialContent])
-
-  const handleUpdate = useCallback(
-    ({ editor }: { editor: Editor }) => {
-      if (onChange) {
-        const html = editor.getHTML()
-        onChange(html)
+    <ErrorBoundary
+      fallback={
+        <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+          <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
+          <h3 className="text-lg font-medium mb-2">
+            Terjadi kesalahan pada editor
+          </h3>
+          <p className="text-sm text-gray-400 mb-4">
+            Editor tidak dapat dimuat dengan benar.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => window.location.reload()}
+            size="sm"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Muat Ulang
+          </Button>
+        </div>
       }
-    },
-    [onChange]
-  )
-
-  const editor = useEditor({
-    immediatelyRender: false,
-    extensions: extensions as Extension[],
-    content: parsedContent,
-    editorProps: {
-      attributes: {
-        class: 'max-w-full focus:outline-none',
-      },
-    },
-    onUpdate: handleUpdate,
-  })
-
-  if (!editor) return null
-
-  return (
-    <div
-      className={cn(
-        'relative h-full w-full overflow-auto border bg-card pb-[60px] sm:pb-0',
-        className
-      )}
     >
-      <EditorToolbar editor={editor} />
-      <FloatingToolbar editor={editor} />
-      <TipTapFloatingMenu editor={editor} />
-      <EditorContent
-        editor={editor}
-        className="h-full w-full min-w-full cursor-text sm:p-6"
-      />
-    </div>
-  )
-}
+      <div className={cn('flex flex-col h-full', className)}>
+        {editor && <EditorToolbar editor={editor} />}
 
-// Tambahkan editor error fallback di bagian atas file, sebelum extensions
-const EditorErrorFallback = () => (
-  <div className="flex flex-col items-center justify-center h-full w-full p-6 bg-[#171717] text-gray-300">
-    <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
-    <h3 className="text-lg font-medium mb-2">Terjadi kesalahan pada editor</h3>
-    <p className="text-sm text-gray-400 text-center mb-4 max-w-md">
-      Editor tidak dapat dimuat dengan benar. Ini mungkin disebabkan karena
-      masalah koneksi atau error internal.
-    </p>
-    <Button
-      variant="outline"
-      onClick={() => window.location.reload()}
-      size="sm"
-    >
-      Muat Ulang Editor
-    </Button>
-  </div>
-)
+        <div className="flex-1 overflow-auto prose prose-slate max-w-full">
+          {editor ? (
+            <EditorContent
+              editor={editor}
+              className="min-h-[50vh] p-4 focus:outline-none"
+            />
+          ) : (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-300" />
+            </div>
+          )}
+        </div>
 
-// Perbarui komponennya dengan ErrorBoundary dan TooltipProvider
-export function RichTextEditor(props: RichTextEditorProps) {
-  // Ubah default autosave menjadi false untuk menonaktifkan sementara
-  const { autosave = false, pageId } = props
+        {/* Toolbar bawah dengan status autosave */}
+        {autosave && (
+          <div className="border-t border-gray-200 bg-gray-50 px-4 py-2 flex justify-between items-center text-sm">
+            <div className="flex items-center">
+              {isSaving ? (
+                <span className="flex items-center text-gray-500">
+                  <Loader2 className="h-3 w-3 animate-spin mr-2" />
+                  Menyimpan...
+                </span>
+              ) : lastSaved ? (
+                <span className="flex items-center text-green-600">
+                  <SaveIcon className="h-3 w-3 mr-2" />
+                  Disimpan {lastSaved}
+                </span>
+              ) : null}
+            </div>
 
-  // Render komponen dengan autosave jika syarat terpenuhi
-  return (
-    <ErrorBoundary fallback={<EditorErrorFallback />}>
-      <TooltipProvider>
-        {autosave && pageId ? (
-          <RichTextEditorWithAutosave {...props} pageId={pageId} />
-        ) : (
-          <RichTextEditorStandard {...props} />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={triggerSave}
+                    disabled={isSaving}
+                  >
+                    <SaveIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Simpan konten</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         )}
-      </TooltipProvider>
+
+        {editor && (
+          <>
+            <TipTapFloatingMenu editor={editor} />
+            <FloatingToolbar editor={editor} />
+          </>
+        )}
+      </div>
     </ErrorBoundary>
   )
 }

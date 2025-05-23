@@ -1,192 +1,116 @@
-# Task 5.6: Integrasi Editor dan Sidebar dengan API
+# Rencana Implementasi Integrasi API GET Module Page dengan RichTextEditor
 
-## Status Task
+## Latar Belakang
 
-**Prioritas:** Tinggi  
-**Estimasi Waktu:** 1 hari  
-**Bagian Dari:** OPS-140 (Manajemen Konten Multi-Page)  
-**Status:** ✅ SELESAI [update+2025-05-21]
+Saat ini, RichTextEditor menggunakan `defaultContentJSON` sebagai konten default ketika tidak ada konten yang diberikan. Kita perlu mengubahnya agar mengambil konten langsung dari API database menggunakan endpoint `GET /api/module/{moduleId}/pages/{pageId}`.
 
-## Deskripsi Masalah
+## Alur Kerja
 
-Setelah berhasil mengimplementasikan API untuk modul dan halaman modul, sekarang perlu mengintegrasikan komponen frontend dengan API tersebut. Beberapa masalah yang perlu diselesaikan:
-
-1. Editor konten saat ini masih menggunakan kode dari node_modules dan perlu dibersihkan/diadaptasi.
-2. Tombol "Tambah Halaman" pada sidebar belum terintegrasi dengan API.
-3. Dialog pembuatan halaman (`CreatePageDialog.tsx`) perlu diperbarui untuk menggunakan API baru.
-4. Integrasi antara sidebar dan editor perlu disempurnakan agar perubahan status halaman tercermin di kedua komponen.
-
-## Tujuan Implementasi
-
-1. Membersihkan dan menyesuaikan `EditorContent.tsx` agar sesuai dengan kebutuhan proyek.
-2. Mengintegrasikan tombol "Tambah Halaman" pada sidebar dengan API.
-3. Memperbaiki `CreatePageDialog.tsx` untuk menggunakan API baru.
-4. Memastikan status halaman tercermin di editor dan sidebar.
+1. Pengguna mengklik item halaman di `SidebarContent.tsx`
+2. Sistem memanggil API untuk mendapatkan detail halaman
+3. Data dari API digunakan sebagai konten editor, bukan lagi menggunakan konten default
 
 ## Langkah-langkah Implementasi
 
-### 1. Perbaikan EditorContent.tsx
+### 1. Memahami Format Data API
 
-- [x] Menghapus kode yang tidak perlu dari `EditorContent.tsx`.
-- [x] Menyesuaikan komponen untuk menggunakan TipTap editor dengan benar.
-- [x] Mengintegrasikan dengan konteks aplikasi.
+- Response API berisi `blocks` yang perlu dikonversi ke format JSON Tiptap
+- Format data dari API:
 
-### 2. Integrasi Tombol "Tambah Halaman" pada Sidebar
+```json
+{
+  "success": true,
+  "data": {
+    "id": "6373eabd-fe25-4537-a040-42830f99fa5b",
+    "moduleId": "e82e800c-93f5-48ef-b17b-2dfe5624f4fb",
+    "title": "Halaman Baru 6",
+    "order": 6,
+    "blocks": [
+      {
+        "type": "text",
+        "content": "<p>Halaman baru Anda telah dibuat. Mulai edit konten disini.</p>"
+      }
+    ],
+    "status": "DRAFT",
+    "createdAt": "2025-05-22T07:14:17.588Z",
+    "updatedAt": "2025-05-22T07:14:17.588Z"
+  }
+}
+```
 
-- [x] Memastikan kedua tombol "Tambah Halaman" di `SidebarContent.tsx` (baris 68-76 dan 157-167) berfungsi dengan benar.
-- [x] Menghubungkan tombol dengan dialog pembuatan halaman.
-- [x] Memastikan feedback visual saat tombol ditekan.
+### 2. Modifikasi RichTextEditor.tsx
 
-### 3. Perbaikan CreatePageDialog.tsx
+- Perbaiki fungsi `parseContent()` untuk menangani format data dari API dengan lebih baik
+- Pastikan fungsi tersebut dapat mengekstrak konten dari `blocks[0].content` jika formatnya adalah text
+- Tambahkan penanganan error yang lebih baik
 
-- [x] Memperbarui `CreatePageDialog.tsx` untuk menggunakan API yang telah dibuat.
-- [x] Memastikan validasi input berfungsi dengan benar.
-- [x] Menambahkan feedback visual saat operasi sedang berlangsung.
-- [x] Memperbaiki alur setelah halaman dibuat (redirect ke halaman baru).
+### 3. Integrasi dengan SidebarContent.tsx
 
-### 4. Integrasi Sidebar dan Editor
+- Pastikan ketika item halaman diklik, ID halaman diteruskan dengan benar
+- Pastikan API dipanggil dengan parameter yang benar
 
-- [x] Memastikan perubahan status halaman tercermin di editor dan sidebar.
-- [x] Mengimplementasikan navigasi antar halaman melalui sidebar.
-- [x] Memastikan halaman aktif terlihat jelas di sidebar.
+### 4. Penanganan Loading State
 
-## Subtask Checklist
+- Tambahkan state loading saat mengambil konten dari API
+- Tampilkan skeleton atau spinner saat loading
 
-- [x] **1. Perbaikan EditorContent.tsx**
+### 5. Penanganan Error
 
-  - [x] 1.1 Menghapus kode yang tidak perlu
-  - [x] 1.2 Menyesuaikan komponen dengan TipTap
-  - [x] 1.3 Mengintegrasikan dengan konteks aplikasi
+- Gunakan `ErrorBoundary` untuk menangani error saat memuat konten
+- Tambahkan pesan error yang informatif
 
-- [x] **2. Integrasi Tombol "Tambah Halaman"**
+### 6. Testing
 
-  - [x] 2.1 Memperbaiki tombol di header sidebar
-  - [x] 2.2 Memperbaiki tombol di dalam folder
-  - [x] 2.3 Menambahkan loading state
+- Uji dengan berbagai format konten dari API
+- Pastikan konversi dari format blocks ke JSON Tiptap berjalan dengan benar
+- Uji penanganan error dan loading state
 
-- [x] **3. Perbaikan CreatePageDialog.tsx**
+## Timeline
 
-  - [x] 3.1 Memperbarui dialog untuk menggunakan API baru
-  - [x] 3.2 Memperbaiki validasi input
-  - [x] 3.3 Menambahkan feedback visual
-  - [x] 3.4 Memperbaiki alur setelah halaman dibuat
+- Analisis dan pemahaman kode: 1 jam
+- Implementasi perubahan pada RichTextEditor.tsx: 2 jam
+- Integrasi dengan SidebarContent.tsx: 1 jam
+- Testing dan debugging: 2 jam
+- Total: 6 jam
 
-- [x] **4. Integrasi Sidebar dan Editor**
-  - [x] 4.1 Mengimplementasikan navigasi antar halaman
-  - [x] 4.2 Memperbarui tampilan halaman aktif
-  - [x] 4.3 Menambahkan error handling
+## Catatan Tambahan
 
-## Expected Outcome
+- Pastikan untuk mempertahankan fungsionalitas autosave yang sudah ada
+- Perhatikan backward compatibility untuk format data lama
+- Gunakan ErrorBoundary untuk menangani error dengan baik
 
-Setelah implementasi selesai, pengguna akan dapat:
+## Ringkasan Implementasi
 
-1. Membuat halaman baru melalui tombol di sidebar.
-2. Melihat daftar halaman yang telah dibuat di sidebar.
-3. Berpindah antar halaman dengan mengklik halaman di sidebar.
-4. Melihat status halaman saat ini dengan jelas.
-5. Mendapatkan feedback visual yang jelas saat operasi sedang berlangsung.
+### Perubahan yang Dilakukan:
 
-Semua perubahan telah diimplementasikan dengan mempertahankan aksesibilitas dan konsistensi UI.
+1. **Perbaikan Fungsi `parseContent()`**
 
-## Catatan Implementasi
+   - Menggunakan enum `ContentBlockType` untuk tipe blok konten
+   - Menambahkan penanganan error yang lebih baik untuk parsing JSON
+   - Memastikan kompatibilitas dengan berbagai format data API
 
-Beberapa perbaikan yang telah dilakukan:
+2. **Peningkatan Komponen `RichTextEditorWithAutosave`**
 
-1. **Custom EditorContent**: Implementasi `CustomEditorContent.tsx` yang lebih mudah dikontrol dan diintegrasikan dengan aplikasi.
-2. **Perbaikan Dialog**: Dialog pembuatan halaman dengan validasi yang lebih baik dan navigasi otomatis.
-3. **Feedback Visual**: Tombol dengan state loading untuk memberikan feedback yang jelas kepada pengguna.
-4. **State Handling**: Penanganan state yang lebih baik untuk operasi CRUD halaman.
+   - Menambahkan ekstraksi moduleId yang lebih fleksibel dari pageId
+   - Menambahkan header untuk cache control dan identifikasi client
+   - Memperbaiki penanganan error dengan pesan yang lebih informatif
+   - Meningkatkan loading state dengan indikator visual
 
-## Pengujian
+3. **Perbaikan Komponen `SidebarContent`**
 
-Semua fitur sudah diuji dan berfungsi dengan baik:
+   - Memperbaiki fungsi `handleSelectPage` untuk sinkronisasi yang lebih baik
+   - Menambahkan delay untuk pengalaman pengguna yang lebih baik
+   - Memperbaiki notifikasi toast
 
-- Pembuatan halaman baru
-- Navigasi antar halaman
-- Tampilan halaman aktif di sidebar
-- Autosave konten editor
+4. **Perbaikan Komponen `ModulePageEditor`**
+   - Memperbaiki error dengan `editorFocusRef` menggunakan cast tipe yang benar
+   - Menambahkan `ErrorBoundary` untuk menangani kegagalan loading editor
+   - Memperbaiki impor dan path yang salah
 
-# Task 5.7: Penyederhanaan Proses Pembuatan Halaman
+### Hasil Akhir:
 
-## Status Task
-
-**Prioritas:** Tinggi  
-**Estimasi Waktu:** 4 jam  
-**Bagian Dari:** OPS-140 (Manajemen Konten Multi-Page)  
-**Status:** ✅ SELESAI [update+2025-05-21]
-
-## Deskripsi Masalah
-
-Saat ini, proses pembuatan halaman modul mengharuskan pengguna mengisi form dialog untuk memasukkan judul halaman. Hal ini menambah langkah yang tidak diperlukan dan menimbulkan beberapa error pada proses pembuatan halaman. Dibutuhkan pendekatan yang lebih sederhana yang langsung membuat halaman saat pengguna mengklik tombol "Tambah Halaman".
-
-## Tujuan Implementasi
-
-1. Menyederhanakan proses pembuatan halaman menjadi one-click creation
-2. Mengatasi error yang terjadi saat pembuatan halaman
-3. Menambahkan feedback visual dan animasi yang lebih baik
-4. Memperbaiki validasi dan penanganan error
-
-## Langkah-langkah Implementasi
-
-### 1. Simplifikasi Proses Pembuatan Halaman
-
-- [x] Ubah handler untuk tombol "Tambah Halaman" di `SidebarContent.tsx` agar langsung membuat halaman tanpa dialog
-- [x] Buat fungsi untuk menghasilkan judul default (misalnya: "Halaman Baru [nomor]")
-- [x] Pastikan halaman baru langsung ditambahkan ke sidebar dengan animasi
-
-### 2. Perbaikan Feedback Visual dan Animasi
-
-- [x] Tambahkan animasi loading pada tombol saat pembuatan halaman berlangsung
-- [x] Implementasikan transisi halus saat halaman baru muncul di sidebar
-- [x] Tambahkan delay visual yang sesuai untuk memberikan feedback yang jelas
-
-### 3. Perbaikan Penanganan Error
-
-- [x] Tambahkan mekanisme retry otomatis jika pembuatan halaman gagal
-- [x] Implementasikan error boundary khusus untuk komponen sidebar
-- [x] Tambahkan toast notification yang informatif untuk berbagai jenis error
-
-## Subtask Checklist
-
-- [x] **1. Modifikasi SidebarContent.tsx**
-
-  - [x] 1.1 Ubah handler tombol "Tambah Halaman"
-  - [x] 1.2 Implementasikan fungsi createNewPage yang langsung memanggil API
-  - [x] 1.3 Tambahkan feedback visual saat proses berlangsung
-
-- [x] **2. Perbaikan Animasi dan Transisi**
-
-  - [x] 2.1 Tambahkan transisi CSS untuk item baru di sidebar
-  - [x] 2.2 Implementasikan delay yang sesuai untuk navigasi
-  - [x] 2.3 Tambahkan highlight animasi untuk halaman yang baru dibuat
-
-- [x] **3. Perbaikan Error Handling**
-  - [x] 3.1 Tambahkan sistem retry otomatis
-  - [x] 3.2 Perbaiki validasi input
-  - [x] 3.3 Tambahkan notifikasi error yang lebih informatif
-
-## Expected Outcome
-
-Setelah implementasi selesai:
-
-1. Pengguna dapat membuat halaman baru dengan satu klik
-2. Halaman baru langsung muncul di sidebar dengan animasi smooth
-3. Error ditangani dengan baik dan pengguna mendapat feedback yang jelas
-4. Proses pembuatan halaman menjadi lebih cepat dan intuitif
-
-## Hasil Implementasi
-
-Proses pembuatan halaman telah berhasil disederhanakan dengan perubahan berikut:
-
-1. **One-Click Creation**: Pengguna sekarang dapat membuat halaman baru langsung dengan satu klik tanpa perlu mengisi form dialog.
-2. **Judul Otomatis**: Judul halaman dibuat secara otomatis dengan format "Halaman Baru [nomor]".
-3. **Feedback Visual**:
-   - Animasi loading pada tombol saat proses pembuatan berlangsung
-   - Highlight animasi pada halaman baru yang dibuat
-   - Delay transisi yang lebih baik untuk user experience
-4. **Penanganan Error**:
-   - Tombol "Coba Lagi" otomatis pada notifikasi error
-   - Notifikasi toast yang lebih informatif
-   - Transisi visual yang smooth saat halaman dibuat atau gagal dibuat
-
-Implementasi ini membuat flow pembuatan halaman lebih cepat, langsung, dan memberikan feedback yang jelas kepada pengguna.
+- RichTextEditor sekarang dapat mengambil konten langsung dari API
+- Penanganan error yang lebih baik untuk kasus seperti timeout, 404, dan masalah format
+- Loading state yang memberikan feedback lebih baik kepada pengguna
+- Performa yang lebih baik dengan penggunaan cache control dan timeout
+- Pengalaman pengguna yang lebih mulus saat navigasi antar halaman

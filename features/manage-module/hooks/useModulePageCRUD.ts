@@ -6,6 +6,7 @@ import {
   UpdateModulePageInput,
   ModulePage,
   ContentBlock,
+  ContentBlockType,
 } from '../types/modulePageSchema'
 import { useCallback } from 'react'
 import {
@@ -356,6 +357,7 @@ export function useModulePageCRUD(moduleId: string) {
    * Helper function untuk menyimpan perubahan pada halaman
    * Digunakan oleh DocumentHeader dan ModulePageEditor
    * Mendukung optimistic updates untuk pengalaman pengguna yang lebih baik
+   * Sekarang mendukung format JSON Tiptap
    */
   const savePage = useCallback(
     async ({
@@ -365,11 +367,30 @@ export function useModulePageCRUD(moduleId: string) {
     }: {
       pageId: string
       title?: string
-      blocks?: ContentBlock[]
+      blocks?: ContentBlock[] | Record<string, unknown>
     }) => {
       const updateData: UpdateModulePageInput = {}
       if (title) updateData.title = title
-      if (blocks) updateData.blocks = blocks
+
+      if (blocks) {
+        // Periksa apakah blocks dalam format JSON Tiptap
+        if (
+          typeof blocks === 'object' &&
+          'type' in blocks &&
+          blocks.type === 'doc'
+        ) {
+          // Ini JSON Tiptap langsung, konversi ke format yang kompatibel dengan API
+          updateData.blocks = [
+            {
+              type: ContentBlockType.TEXT,
+              content: JSON.stringify(blocks),
+            },
+          ]
+        } else {
+          // Format blocks tradisional atau sudah dalam format yang benar
+          updateData.blocks = blocks as ContentBlock[]
+        }
+      }
 
       try {
         // Gunakan mutation yang sudah mendukung optimistic updates

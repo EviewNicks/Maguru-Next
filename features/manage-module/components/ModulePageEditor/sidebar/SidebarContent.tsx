@@ -92,6 +92,32 @@ export default function SidebarContent({
     setDeleteDialogOpen(true)
   }
 
+  // Handle selecting a page
+  const handleSelectPage = (page: ModulePage) => {
+    // Log page selection for debugging
+    console.log(`[SidebarContent] Selected page: ${page.id} - ${page.title}`)
+
+    // Call the provided onSelectPage callback
+    if (onSelectPage) {
+      onSelectPage(page)
+    }
+
+    // Set active page in context - pastikan context diperbarui sebelum navigasi
+    setActivePage(page)
+
+    // Bersihkan spasi editor untuk siap menerima konten baru
+    setTimeout(() => {
+      // Navigate to the selected page
+      router.push(`/manage-module/pages/${moduleId}?pageId=${page.id}`)
+
+      // Tambahkan feedback sukses
+      toast.success(`Membuka halaman "${page.title}"`, {
+        duration: 2000,
+        position: 'bottom-right',
+      })
+    }, 100) // Sedikit delay untuk animasi yang lebih baik
+  }
+
   // Create new page directly without dialog
   const handleCreatePage = async () => {
     if (!moduleId) {
@@ -257,7 +283,7 @@ export default function SidebarContent({
                     <div className="flex-grow">
                       <SidebarNestedItem
                         label={page.title || 'Untitled Page'}
-                        onClick={() => onSelectPage?.(page)}
+                        onClick={() => handleSelectPage(page)}
                         className={
                           activePage?.id === page.id
                             ? 'text-[#669df1] bg-[#1c2b42]'
