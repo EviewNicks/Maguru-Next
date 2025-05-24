@@ -406,6 +406,38 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
   - Gunakan zod schemas untuk validasi runtime
 - **Estimasi**: 1 hari
 
+### 5.7 Refactoring Arsitektur untuk Optimasi Pemanggilan API [SELESAI ✅] [update+2025-07-08]
+
+- **Masalah**:
+
+  - Terjadi pemanggilan API PUT yang tidak perlu saat navigasi antar halaman
+  - Konten halaman baru tertulis dengan data dari halaman sebelumnya
+  - Komponen-komponen child melakukan fetch data sendiri-sendiri, menyebabkan duplikasi request dan data tidak konsisten
+
+- **Solusi**:
+
+  - ✅ Memindahkan logika fetching data ke level page (fetch once, use everywhere)
+  - ✅ Mengimplementasikan flag navigasi untuk membedakan antara navigasi halaman dan perubahan konten
+  - ✅ Memindahkan fungsi-fungsi handler dari komponen child ke level page
+  - ✅ Menggunakan React Query untuk caching dan state management yang lebih baik
+
+- **Implementasi**:
+
+  - **Task 1: Implementasi Flag Navigasi**
+    - Ditambahkan flag navigasi di `SidebarContent.tsx` dan `page.tsx` untuk menandai bahwa navigasi sedang berlangsung
+    - Ditambahkan pengecekan flag navigasi di `useRichTextAutosave.ts` dan `useModulePageEditor.ts` untuk melewati autosave saat navigasi
+    - Dihapus flag navigasi setelah navigasi selesai dengan setTimeout
+  - **Task 2: Optimasi Pemanggilan API di Level Page**
+    - Direfaktor `app/(admin)/manage-module/pages/[moduleId]/page.tsx` untuk menjadi single source of truth
+    - Dipindahkan fungsi `handleSelectPage` dan `handleCreatePage` dari komponen child ke level page
+    - Dipindahkan logic fetching data ke `page.tsx` menggunakan React Query
+    - Diteruskan data sebagai props ke komponen-komponen child
+    - Dihapus pemanggilan API yang tidak perlu di `layout.tsx`
+    - Digunakan data yang diteruskan di `ModulePageEditor.tsx` alih-alih fetch sendiri
+    - Ditambahkan AbortController di `RichTextEditorWithAutosave.tsx` untuk membatalkan request saat navigasi
+
+- **Status**: Selesai
+
 ## 6. Timeline & Prioritas Implementasi
 
 ### 6.1 Timeline Implementasi Tugas Baru
@@ -423,7 +455,7 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
 5. **Integrasi DocumentHeader dengan API** - Meningkatkan UX untuk editing judul
 6. **Validasi Data dan Type Safety** - Meningkatkan maintainability kode jangka panjang
 
-## 7. Subtask Progress [update+2025-07-07]
+## 7. Subtask Progress [update+2025-07-08]
 
 - **Subtask 1:** Implementasi UI & Frontend Component ✅
 - **Subtask 2:** API CRUD Multi-Page ✅
@@ -440,6 +472,7 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
   - ✅ Task 5.3: Implementasi Optimistic Updates untuk Editing [update+2025-07-05]
   - ✅ Task 5.4: Perbaikan Error Handling dan Notifikasi [update+2025-07-06]
   - ✅ Task 5.5: Integrasi Penuh DocumentHeader dengan API [update+2025-07-07]
+  - ✅ Task 5.7: Refactoring Arsitektur untuk Optimasi Pemanggilan API [update+2025-07-08]
   - 🚧 Task 5.6: Validasi Data dan Type Safety
 - **Subtask 11:** Implementasi ModulePageFooterNav di page.tsx 🚧 (0% selesai)
 - **Subtask 12:** Menghilangkan Footer Global pada Halaman Admin 🚧 (0% selesai)

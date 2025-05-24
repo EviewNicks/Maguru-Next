@@ -78,6 +78,7 @@ export default function DocumentHeader({
       const newPage = await createPage({
         moduleId,
         title: 'Halaman Baru',
+        type: 'content',
         order: pages.length,
         blocks: [],
       })
@@ -203,17 +204,12 @@ export default function DocumentHeader({
     saveTitle()
   }, [debouncedTitle, title, effectivePageId, savePage, titleSaveStatus])
 
-  // Sync with props
+  // Sync with props - tambahkan pengecekan untuk menghindari loop
   useEffect(() => {
-    setLocalTitle(title)
+    if (title !== localTitle) {
+      setLocalTitle(title)
+    }
   }, [title])
-
-  // Pindahkan setSaveStatus ke dalam setTitleSaveStatus
-  useEffect(() => {
-    setTitleSaveStatus(
-      propsSaveStatus as 'saved' | 'saving' | 'unsaved' | 'error'
-    )
-  }, [propsSaveStatus])
 
   // Render status save yang lebih informatif
   const renderSaveStatus = () => {

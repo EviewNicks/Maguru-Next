@@ -94,6 +94,7 @@ export interface RichTextEditorProps {
   onChange?: (content: object) => void
   initialContent?: string
   pageId?: string
+  moduleId?: string
   autosave?: boolean
   onEditorReady?: (editor: Editor | null) => void
 }
@@ -105,6 +106,7 @@ export function RichTextEditor({
   initialContent,
   autosave = false,
   pageId,
+  moduleId,
   onEditorReady,
 }: RichTextEditorProps) {
   // State untuk menyimpan instance editor
@@ -231,6 +233,7 @@ export function RichTextEditor({
         className={className}
         initialContent={initialContent}
         onChange={onChange}
+        moduleId={moduleId}
       />
     )
   }

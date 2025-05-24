@@ -8,8 +8,7 @@ import {
   useModulePagesContext,
 } from '@/features/manage-module/context/ModulePagesContext'
 import { ModulePageCRUDProvider } from '@/features/manage-module/context/ModulePageCRUDContext'
-import { useParams } from 'next/navigation'
-import { useModulePageQuery } from '@/features/manage-module/hooks/useModulePageQuery'
+import { useParams, useSearchParams } from 'next/navigation'
 import { useModulePageCRUDContext } from '@/features/manage-module/context/ModulePageCRUDContext'
 import { ModulePage } from '@/features/manage-module/types/modulePageSchema'
 
@@ -18,8 +17,8 @@ interface ModulePageLayoutProps {
 }
 
 function ModulePageLayoutContent({ children }: ModulePageLayoutProps) {
-  const params = useParams()
-  const moduleId = params.moduleId as string
+  const searchParams = useSearchParams()
+  const pageId = searchParams.get('pageId') || undefined
 
   // Gunakan context untuk state UI
   const { expandedItems, toggleExpand } = useModulePagesContext()
@@ -27,17 +26,18 @@ function ModulePageLayoutContent({ children }: ModulePageLayoutProps) {
   // Gunakan CRUD context untuk data dan operasi CRUD
   const { pages, activePage, setActivePage } = useModulePageCRUDContext()
 
-  // Gunakan query hook untuk memastikan data diambil saat komponen dimuat
-  const { getAllPages } = useModulePageQuery(moduleId)
-
-  // Efek untuk memuat data halaman saat komponen dimuat atau moduleId berubah
+  // Efek untuk mengatur activePage berdasarkan pageId dari URL
   useEffect(() => {
-    // Hanya refetch jika moduleId valid dan belum ada data atau data kosong
-    if (moduleId && (!pages || pages.length === 0)) {
-      console.log(`[Layout] Initial data fetch for moduleId: ${moduleId}`)
-      getAllPages.refetch()
+    if (pageId && pages.length > 0) {
+      const currentPage = pages.find((page) => page.id === pageId)
+      if (currentPage && (!activePage || activePage.id !== pageId)) {
+        console.log(
+          `[Layout] Setting active page to: ${currentPage.title} (${pageId})`
+        )
+        setActivePage(currentPage)
+      }
     }
-  }, [moduleId, getAllPages, pages])
+  }, [pageId, pages, activePage, setActivePage])
 
   // Handler untuk navigasi halaman
   const handleSelectPage = (page: ModulePage) => {

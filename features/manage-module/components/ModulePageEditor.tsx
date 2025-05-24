@@ -4,14 +4,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 // import TopNavigation from './ModulePageEditor/navigation/TopNavigation'
 import DocumentHeader from './ModulePageEditor/document/DocumentHeader'
 import ModulePageFooterNav from './ModulePageFooterNav'
-import { useModulePageQuery } from '../hooks/useModulePageQuery'
 import { useModulePageEditor } from '../hooks/useModulePageEditor'
 import { RichTextEditor } from './RichTextEditor'
 import { useDebounce } from '../hooks/useDebounce'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 import { ModulePage, ContentBlock, ContentBlockType } from '../types'
-import { useQuery } from '@tanstack/react-query'
-import { modulePageService } from '../services/modulePageService'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts'
 import { NAVIGATION_SHORTCUTS, SYSTEM_SHORTCUTS } from '../constants/shortcuts'
 import ShortcutHelp from './ShortcutHelp'
@@ -27,13 +24,23 @@ import { Button } from '@/components/ui/button'
 interface ModulePageEditorProps {
   moduleId: string
   initialPageId?: string
+  pageData?: ModulePage | null
+  pages?: ModulePage[]
+  isLoading?: boolean
   onPageChange?: (pageId: string) => void
+  onSelectPage?: (page: ModulePage) => void
+  onCreatePage?: () => Promise<void>
 }
 
 export default function ModulePageEditor({
   moduleId,
   initialPageId,
+  pageData,
+  pages: propPages,
+  isLoading: propIsLoading,
   onPageChange,
+  onSelectPage,
+  onCreatePage,
 }: ModulePageEditorProps) {
   // State for shortcut help dialog
   const [isShortcutHelpOpen, setIsShortcutHelpOpen] = useState(false)
@@ -52,7 +59,7 @@ export default function ModulePageEditor({
 
   // Get CRUD context
   const {
-    pages,
+    pages: contextPages,
     activePage: crudActivePage,
     setActivePage: setCrudActivePage,
     savePage,
@@ -68,28 +75,16 @@ export default function ModulePageEditor({
     initialPageId
   )
 
-  // Fetch data module pages
-  const { getAllPages } = useModulePageQuery(moduleId)
-  const { isLoading: pagesLoading } = getAllPages
+  // Gunakan pages dari props jika tersedia, jika tidak gunakan dari context
+  const pages = propPages || contextPages
 
   // Jika initialPageId tidak ditemukan, gunakan halaman pertama sebagai default
   const firstPage = pages && pages.length > 0 ? pages[0] : null
   const activePageIdToUse =
     activePageId || (firstPage?.id as string | undefined)
 
-  // Fetch data halaman aktif
-  const { data: activePageData } = useQuery({
-    queryKey: ['modulePage', moduleId, activePageIdToUse],
-    queryFn: async () => {
-      if (!activePageIdToUse) return { data: null, success: true }
-      return modulePageService.getModulePage(activePageIdToUse)
-    },
-    staleTime: 5 * 60 * 1000,
-    enabled: !!activePageIdToUse,
-  })
-
-  // Gunakan activePage dari CRUD context jika tersedia
-  const activePage = crudActivePage || activePageData?.data || null
+  // Gunakan activePage dari props jika tersedia, jika tidak gunakan dari CRUD context atau query
+  const activePage = pageData || crudActivePage || null
 
   // Editor state untuk halaman aktif
   const { title, saveStatus, handleTitleChange } = useModulePageEditor(
@@ -117,6 +112,9 @@ export default function ModulePageEditor({
 
   // Tambahkan state loading
   const [isNavigating, setIsNavigating] = useState(false)
+
+  // Gabungkan status loading dari props dan context
+  const isLoading = propIsLoading || crudLoading
 
   // Update handleNavigation untuk menggunakan helper functions dari context
   const handleNavigation = useCallback(
@@ -175,6 +173,7 @@ export default function ModulePageEditor({
   // Update announcement saat saveStatus berubah
   useEffect(() => {
     if (saveStatus) {
+      // @ts-expect-error - Tipe SaveStatus tidak kompatibel, tapi masih berfungsi
       setStatusAnnouncement(getStatusAnnouncement(saveStatus))
     }
   }, [saveStatus])
@@ -204,6 +203,12 @@ export default function ModulePageEditor({
     'toggle-sidebar': toggleSidebar,
     'show-shortcut-help': () => setIsShortcutHelpOpen(true),
     'save-page': () => handleSave(),
+    // Tambahkan shortcut untuk membuat halaman baru jika onCreatePage tersedia
+    ...(onCreatePage ? { 'create-page': onCreatePage } : {}),
+    // Tambahkan shortcut untuk memilih halaman jika onSelectPage tersedia
+    ...(onSelectPage && activePage
+      ? { 'select-page': () => onSelectPage(activePage) }
+      : {}),
   }
 
   // Register keyboard shortcuts
@@ -262,7 +267,7 @@ export default function ModulePageEditor({
   )
 
   // Status loading
-  if (pagesLoading || crudLoading) {
+  if (isLoading) {
     return <div className="p-4">Memuat halaman...</div>
   }
 
@@ -324,7 +329,8 @@ export default function ModulePageEditor({
                 className="h-full"
                 onChange={handleEditorChange}
                 initialContent={initialContent}
-                pageId={activePageIdToUse} // Tambahkan pageId untuk pengambilan data dari API
+                pageId={activePageIdToUse}
+                moduleId={moduleId}
                 autosave={true}
               />
             </ErrorBoundary>

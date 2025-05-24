@@ -1,14 +1,9 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
-import {
-  showErrorNotification,
-  categorizeError,
-  isErrorRetryable,
-} from '../components/ErrorNotifier'
-import { ContentBlock, ContentBlockType } from '../types/modulePageSchema'
-import axios from 'axios'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Editor } from '@tiptap/react'
+import axios from 'axios'
+import { ContentBlockType } from '../types'
 import { formatDistanceToNow } from 'date-fns'
 import { id } from 'date-fns/locale'
 
@@ -41,97 +36,78 @@ export function useRichTextAutosave({
   const contentChangedRef = useRef(false)
   // Ref untuk menyimpan timeout ID untuk debounce
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  // Ref untuk menandai jika proses menyimpan sedang berlangsung
+  const isSavingRef = useRef(false)
 
   // Mendapatkan string lastSaved yang diformat
   const lastSaved = lastSavedAt
     ? formatDistanceToNow(lastSavedAt, { addSuffix: true, locale: id })
     : null
 
-  // Konversi JSON string ke format blocks
-  const convertJsonToContentBlocks = useCallback(
-    (jsonContent: object): ContentBlock[] => {
-      try {
-        // Buat satu block dengan type text dan konten dari JSON
-        const block: ContentBlock = {
-          type: ContentBlockType.TEXT,
-          content: JSON.stringify(jsonContent),
-        }
-
-        return [block]
-      } catch (error) {
-        console.error('[useRichTextAutosave] JSON conversion error:', error)
-        return []
-      }
-    },
-    []
-  )
-
   // Fungsi untuk menyimpan konten
   const saveContent = useCallback(async () => {
-    if (!enabled || !pageId || !editor) {
-      console.warn('[useRichTextAutosave] Autosave disabled or missing data')
+    // Jika editor tidak ada atau autosave tidak diaktifkan, jangan lakukan apa-apa
+    if (!editor || !enabled || !pageId) {
+      return
+    }
+
+    // Periksa flag navigasi - jangan autosave jika sedang navigasi halaman
+    const isNavigating =
+      window.sessionStorage.getItem('isNavigating') === 'true'
+    if (isNavigating) {
+      console.log(
+        '[useRichTextAutosave] Navigation in progress, skipping autosave'
+      )
+      return
+    }
+
+    // Jika sudah dalam proses menyimpan, jangan mulai proses baru
+    if (isSavingRef.current) {
+      console.log('[useRichTextAutosave] Already saving, skipping')
       return
     }
 
     try {
+      // Set status saving
       setIsSaving(true)
-      setSaveStatus('saving')
-      console.log(`[useRichTextAutosave] Saving content for pageId: ${pageId}`)
+      isSavingRef.current = true
 
-      // Dapatkan konten editor dalam format JSON
-      const editorContent = editor.getJSON()
+      // Dapatkan konten dari editor
+      const content = editor.getJSON()
 
-      // Konversi konten JSON ke format blocks
-      const blocks = convertJsonToContentBlocks(editorContent)
-
-      // Siapkan data untuk update
-      const updateData = {
-        blocks,
-      }
-
-      console.log('[useRichTextAutosave] Saving blocks:', blocks.length)
-
-      // Ekstrak moduleId dari pageId jika menggunakan format dengan separator
-      let moduleId = pageId
-      if (pageId.includes('-')) {
-        moduleId = pageId.split('-')[0]
-      }
-
-      // Lakukan request update
-      const response = await axios.put(
-        `/api/module/${moduleId}/pages/${pageId}`,
-        updateData,
+      // Siapkan data untuk API
+      const blocks = [
         {
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Client-Source': 'RichTextAutosave',
-          },
-        }
-      )
+          type: ContentBlockType.TEXT,
+          content: JSON.stringify(content),
+        },
+      ]
 
+      // Panggil API untuk menyimpan
+      console.log(`[useRichTextAutosave] Saving content for pageId: ${pageId}`)
+      const response = await axios.put(`/api/module/pages/${pageId}`, {
+        blocks,
+      })
+
+      // Update status setelah berhasil
       if (response.data && response.data.success) {
-        setSaveStatus('saved')
         setLastSavedAt(new Date())
         console.log('[useRichTextAutosave] Content saved successfully')
       } else {
-        throw new Error(response.data?.error || 'Unknown error')
+        console.error(
+          '[useRichTextAutosave] API returned error:',
+          response.data
+        )
+        throw new Error(response.data?.error || 'Failed to save content')
       }
     } catch (error) {
       console.error('[useRichTextAutosave] Error saving content:', error)
-      setSaveStatus('error')
-
-      // Kategorisasi error untuk penanganan yang lebih baik
-      const category = categorizeError(error)
-
-      // Tampilkan notifikasi error
-      showErrorNotification(error, {
-        retryFn: isErrorRetryable(category) ? saveContent : undefined,
-      })
+      throw error
     } finally {
       setIsSaving(false)
-      contentChangedRef.current = false
+      isSavingRef.current = false
     }
-  }, [pageId, editor, enabled, convertJsonToContentBlocks])
+  }, [editor, enabled, pageId])
 
   // Inisialisasi event listener untuk perubahan editor
   useEffect(() => {

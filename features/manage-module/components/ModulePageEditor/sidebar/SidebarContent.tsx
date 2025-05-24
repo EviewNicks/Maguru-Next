@@ -37,6 +37,7 @@ interface SidebarContentProps {
   pages?: ModulePage[]
   activePage?: ModulePage | null
   onSelectPage?: (page: ModulePage) => void
+  onCreatePage?: () => Promise<void>
 }
 
 export default function SidebarContent({
@@ -45,6 +46,7 @@ export default function SidebarContent({
   pages = [],
   activePage,
   onSelectPage,
+  onCreatePage,
 }: SidebarContentProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -94,32 +96,58 @@ export default function SidebarContent({
 
   // Handle selecting a page
   const handleSelectPage = (page: ModulePage) => {
-    // Log page selection for debugging
+    // Log page selection untuk debugging
     console.log(`[SidebarContent] Selected page: ${page.id} - ${page.title}`)
 
-    // Call the provided onSelectPage callback
-    if (onSelectPage) {
-      onSelectPage(page)
-    }
+    // Buat deep clone page object untuk mencegah referensi yang tidak diinginkan
+    // Ini penting untuk memastikan tidak ada perubahan yang tidak disengaja pada objek asli
+    const pageClone = JSON.parse(JSON.stringify(page)) as ModulePage
 
-    // Set active page in context - pastikan context diperbarui sebelum navigasi
-    setActivePage(page)
+    console.log(`[SidebarContent] Created clone with title: ${pageClone.title}`)
 
-    // Bersihkan spasi editor untuk siap menerima konten baru
+    // Tandai bahwa ini adalah navigasi halaman, bukan perubahan konten
+    // Ini akan mencegah autosave yang tidak perlu
+    window.sessionStorage.setItem('isNavigating', 'true')
+
+    // Tambahkan delay kecil untuk memastikan state diperbarui sebelum navigasi
     setTimeout(() => {
-      // Navigate to the selected page
-      router.push(`/manage-module/pages/${moduleId}?pageId=${page.id}`)
+      // Update activePage di context
+      setActivePage(pageClone)
 
-      // Tambahkan feedback sukses
-      toast.success(`Membuka halaman "${page.title}"`, {
-        duration: 2000,
-        position: 'bottom-right',
-      })
-    }, 100) // Sedikit delay untuk animasi yang lebih baik
+      // Jika prop onSelectPage tersedia, gunakan itu
+      if (onSelectPage) {
+        onSelectPage(pageClone)
+      } else {
+        // Jika tidak, gunakan router untuk navigasi langsung
+        router.push(`/manage-module/pages/${moduleId}?pageId=${page.id}`)
+      }
+
+      // Hapus flag navigasi setelah navigasi selesai
+      setTimeout(() => {
+        window.sessionStorage.removeItem('isNavigating')
+      }, 500)
+    }, 0)
   }
 
-  // Create new page directly without dialog
+  // Handle creating a new page
   const handleCreatePage = async () => {
+    if (onCreatePage) {
+      // Jika prop onCreatePage tersedia, gunakan itu
+      setIsCreating(true)
+      try {
+        await onCreatePage()
+      } catch (error) {
+        console.error('Error creating page:', error)
+        toast.error('Gagal membuat halaman. Silakan coba lagi.')
+      } finally {
+        setTimeout(() => {
+          setIsCreating(false)
+        }, 300)
+      }
+      return
+    }
+
+    // Fallback ke implementasi lama jika onCreatePage tidak tersedia
     if (!moduleId) {
       toast.error('ID Modul tidak ditemukan')
       return

@@ -12,6 +12,7 @@ interface ModulePageSidebarProps {
   pages: ModulePage[]
   activePage: ModulePage | null
   onSelectPage: (page: ModulePage) => void
+  onCreatePage?: () => Promise<void>
   expandedItems: Record<string, boolean>
   toggleExpand: (item: string) => void
 }
@@ -20,6 +21,7 @@ export default function ModulePageSidebar({
   pages,
   activePage,
   onSelectPage,
+  onCreatePage,
   expandedItems,
   toggleExpand,
 }: ModulePageSidebarProps) {
@@ -63,6 +65,7 @@ export default function ModulePageSidebar({
               pages={pages}
               activePage={activePage}
               onSelectPage={onSelectPage}
+              onCreatePage={onCreatePage}
             />
             <SidebarBlogs />
 

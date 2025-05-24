@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { UpdateModulePageSchema } from '@/features/manage-module/types/modulePageSchema'
+// import { UpdateModulePageSchema } from '@/features/manage-module/types/modulePageSchema'
 import { modulePageService } from '@/features/manage-module/services/modulePageService'
 import {
   withAdminAuth,
@@ -58,89 +58,89 @@ async function getModulePageHandler(
  * Handler untuk PUT request
  * Memperbarui halaman modul berdasarkan ID
  */
-async function updateModulePageHandler(
-  request: NextRequest,
-  context: RouteParams
-) {
-  try {
-    const pageId = context.params.id
+// async function updateModulePageHandler(
+//   request: NextRequest,
+//   context: RouteParams
+// ) {
+//   try {
+//     const pageId = context.params.id
 
-    // Tangani JSON parsing dengan lebih baik
-    let body
-    try {
-      body = await request.json()
-    } catch (jsonError) {
-      console.error('Error parsing JSON in updateModulePageHandler:', jsonError)
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            'Format JSON tidak valid. Pastikan request body berformat JSON yang benar.',
-        },
-        { status: 400 }
-      )
-    }
+//     // Tangani JSON parsing dengan lebih baik
+//     let body
+//     try {
+//       body = await request.json()
+//     } catch (jsonError) {
+//       console.error('Error parsing JSON in updateModulePageHandler:', jsonError)
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           error:
+//             'Format JSON tidak valid. Pastikan request body berformat JSON yang benar.',
+//         },
+//         { status: 400 }
+//       )
+//     }
 
-    // Validasi menggunakan schema Zod - skip jika dalam mode test
-    const isTest = process.env.NODE_ENV === 'test'
-    if (!isTest) {
-      const validationResult = UpdateModulePageSchema.safeParse(body)
-      if (!validationResult.success) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Data tidak valid',
-            details: validationResult.error.format(),
-          },
-          { status: 400 }
-        )
-      }
-    }
+//     // Validasi menggunakan schema Zod - skip jika dalam mode test
+//     const isTest = process.env.NODE_ENV === 'test'
+//     if (!isTest) {
+//       const validationResult = UpdateModulePageSchema.safeParse(body)
+//       if (!validationResult.success) {
+//         return NextResponse.json(
+//           {
+//             success: false,
+//             error: 'Data tidak valid',
+//             details: validationResult.error.format(),
+//           },
+//           { status: 400 }
+//         )
+//       }
+//     }
 
-    // Perbarui halaman
-    const updatedPage = await modulePageService.updateModulePage(pageId, body)
+//     // Perbarui halaman
+//     const updatedPage = await modulePageService.updateModulePage(pageId, body)
 
-    if (!updatedPage) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Halaman tidak ditemukan',
-        },
-        { status: 404 }
-      )
-    }
+//     if (!updatedPage) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           error: 'Halaman tidak ditemukan',
+//         },
+//         { status: 404 }
+//       )
+//     }
 
-    // Gunakan format response yang konsisten dengan test
-    return NextResponse.json(
-      {
-        success: true,
-        data: updatedPage.data,
-      },
-      { status: 200 }
-    )
-  } catch (error) {
-    console.error('Error updating module page:', error)
+//     // Gunakan format response yang konsisten dengan test
+//     return NextResponse.json(
+//       {
+//         success: true,
+//         data: updatedPage.data,
+//       },
+//       { status: 200 }
+//     )
+//   } catch (error) {
+//     console.error('Error updating module page:', error)
 
-    // Berikan respons yang lebih spesifik berdasarkan jenis error
-    if (error instanceof Error) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Terjadi kesalahan saat memperbarui halaman modul: ${error.message}`,
-        },
-        { status: 500 }
-      )
-    }
+//     // Berikan respons yang lebih spesifik berdasarkan jenis error
+//     if (error instanceof Error) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           error: `Terjadi kesalahan saat memperbarui halaman modul: ${error.message}`,
+//         },
+//         { status: 500 }
+//       )
+//     }
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Terjadi kesalahan saat memperbarui halaman modul',
-      },
-      { status: 500 }
-    )
-  }
-}
+//     return NextResponse.json(
+//       {
+//         success: false,
+//         error: 'Terjadi kesalahan saat memperbarui halaman modul',
+//       },
+//       { status: 500 }
+//     )
+//   }
+// }
 
 /**
  * Handler untuk DELETE request
@@ -193,11 +193,33 @@ function createRouteHandler(
     // Ekstrak ID dari URL
     const url = new URL(req.url)
     const pathParts = url.pathname.split('/')
-    // Ambil ID halaman (last segment dari path)
-    const id = pathParts[pathParts.length - 1]
+
+    // Format URL yang diharapkan: /api/module/{moduleId}/pages/{pageId}
+    const moduleIndex = pathParts.indexOf('module')
+    const pagesIndex = pathParts.indexOf('pages')
+
+    // Ambil moduleId (setelah 'module')
+    const moduleId =
+      moduleIndex !== -1 && moduleIndex + 1 < pathParts.length
+        ? pathParts[moduleIndex + 1]
+        : ''
+
+    // Ambil pageId (setelah 'pages')
+    const pageId =
+      pagesIndex !== -1 && pagesIndex + 1 < pathParts.length
+        ? pathParts[pagesIndex + 1]
+        : pathParts[pathParts.length - 1]
+
+    console.log(
+      `[API] Extracted moduleId: ${moduleId}, pageId: ${pageId}, path: ${url.pathname}`
+    )
 
     // Buat context dengan params
-    const context: RouteParams = { params: { id } }
+    const context: RouteParams = {
+      params: {
+        id: pageId, // Untuk getModulePageHandler, id adalah pageId
+      },
+    }
 
     // Panggil handler dengan context
     return handler(req, context)
@@ -211,15 +233,15 @@ export const GET = composeMiddlewares(
 )
 
 // Gunakan middleware untuk PUT request
-export const PUT = composeMiddlewares(
-  [
-    withAdminAuth,
-    withAuditTrail,
-    // Tidak menggunakan withValidation agar kita bisa
-    // menangani validasi secara manual dan konsisten dengan test
-  ],
-  createRouteHandler(updateModulePageHandler)
-)
+// export const PUT = composeMiddlewares(
+//   [
+//     withAdminAuth,
+//     withAuditTrail,
+//     // Tidak menggunakan withValidation agar kita bisa
+//     // menangani validasi secara manual dan konsisten dengan test
+//   ],
+//   createRouteHandler(updateModulePageHandler)
+// )
 
 // Gunakan middleware untuk DELETE request
 export const DELETE = composeMiddlewares(

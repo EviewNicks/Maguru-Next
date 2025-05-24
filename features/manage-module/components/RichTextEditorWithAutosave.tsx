@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Editor } from '@tiptap/react'
 import axios from 'axios'
 import { Loader2 } from 'lucide-react'
 import { defaultContentJSON } from '@/features/manage-module/lib/content'
@@ -28,12 +27,19 @@ function parseContent(
   // Debug logs untuk melihat nilai input
   console.log(
     '[parseContent] Input content:',
-    content ? 'Provided' : 'Not provided'
+    content ? `String length: ${content.length}` : 'Not provided'
   )
   console.log(
     '[parseContent] Input pageData:',
-    pageData ? 'Provided' : 'Not provided'
+    pageData ? `ID: ${pageData.id}, Title: ${pageData.title}` : 'Not provided'
   )
+
+  if (pageData) {
+    console.log(
+      '[parseContent] Page blocks:',
+      pageData.blocks ? `Count: ${pageData.blocks.length}` : 'No blocks'
+    )
+  }
 
   // Jika tidak ada konten dan tidak ada pageData, gunakan defaultContentJSON
   if (!content && !pageData) {
@@ -47,29 +53,74 @@ function parseContent(
     // PRIORITAS 1: Jika pageData tersedia, gunakan data dari API
     if (pageData && pageData.blocks) {
       console.log(
-        '[parseContent] Menggunakan data dari API:',
-        pageData.blocks.length,
-        'blocks,',
-        'tipe:',
+        '[parseContent] Processing API data:',
+        `${pageData.blocks.length} blocks,`,
+        'types:',
         pageData.blocks.map((b) => b.type).join(', ')
       )
 
       // Jika blocks adalah array dan memiliki konten
       if (Array.isArray(pageData.blocks) && pageData.blocks.length > 0) {
+        const firstBlock = pageData.blocks[0]
+
+        // Jika blok pertama adalah TEXT dan mungkin berisi JSON Tiptap
+        if (
+          firstBlock.type === ContentBlockType.TEXT &&
+          typeof firstBlock.content === 'string' &&
+          firstBlock.content.startsWith('{') &&
+          firstBlock.content.includes('"type":"doc"')
+        ) {
+          try {
+            console.log('[parseContent] Detected Tiptap JSON in block content')
+            const parsedTiptapJson = JSON.parse(firstBlock.content)
+            if (parsedTiptapJson.type === 'doc') {
+              console.log(
+                '[parseContent] Successfully parsed Tiptap JSON from block'
+              )
+              return parsedTiptapJson
+            }
+          } catch (jsonError) {
+            console.error(
+              '[parseContent] Failed to parse Tiptap JSON from block:',
+              jsonError
+            )
+          }
+        }
+
         // Format 1: Jika ada multiple blocks, konversi masing-masing ke format Tiptap
         console.log(
-          '[parseContent] Format 1: Multiple blocks, converting each to Tiptap format'
+          '[parseContent] Converting multiple blocks to Tiptap format'
         )
         return {
           type: 'doc',
           content: pageData.blocks.map((block: ContentBlock) => {
             if (block.type === ContentBlockType.TEXT) {
+              // Coba parse content sebagai HTML jika mengandung tag HTML
+              if (
+                typeof block.content === 'string' &&
+                (block.content.includes('<p>') || block.content.includes('<h'))
+              ) {
+                console.log(
+                  '[parseContent] Processing HTML content in TEXT block'
+                )
+                return {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: block.content.replace(/<\/?[^>]+(>|$)/g, ''),
+                    },
+                  ],
+                }
+              }
+
+              // Plain text content
               return {
                 type: 'paragraph',
                 content: [
                   {
                     type: 'text',
-                    text: block.content.replace(/<\/?[^>]+(>|$)/g, ''),
+                    text: block.content || '',
                   },
                 ],
               }
@@ -81,7 +132,7 @@ function parseContent(
                 content: [
                   {
                     type: 'text',
-                    text: block.content,
+                    text: block.content || '',
                   },
                 ],
               }
@@ -93,7 +144,7 @@ function parseContent(
                 content: [
                   {
                     type: 'text',
-                    text: block.content,
+                    text: block.content || '',
                   },
                 ],
               }
@@ -115,12 +166,13 @@ function parseContent(
 
     // PRIORITAS 2: Jika tidak ada pageData, gunakan content string jika tersedia
     if (content) {
-      console.log('[parseContent] No pageData, trying to parse content string')
+      console.log('[parseContent] Trying to parse content string')
 
       // Cek apakah content adalah JSON string yang valid
       try {
         // Coba parse sebagai JSON
         const parsedContent = JSON.parse(content)
+        console.log('[parseContent] Successfully parsed content as JSON')
 
         // Format 1: Jika content adalah format JSON Tiptap
         if (parsedContent.type === 'doc') {
@@ -161,9 +213,7 @@ function parseContent(
       }
 
       // Format 3: Jika content adalah plain text
-      console.log(
-        '[parseContent] Content is plain text, creating simple paragraph'
-      )
+      console.log('[parseContent] Treating content as plain text')
       return {
         type: 'doc',
         content: [
@@ -197,111 +247,106 @@ export function RichTextEditorWithAutosave({
   className,
   initialContent,
   onChange,
+  moduleId,
 }: Omit<RichTextEditorProps, 'autosave'> & { pageId: string }) {
-  // State untuk menyimpan content yang sudah di-parse
   const [parsedContent, setParsedContent] = useState<object>(defaultContentJSON)
+  const [pageData, setPageData] = useState<PageData | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const [editorInstance, setEditorInstance] = useState<Editor | null>(null)
+
+  // Ekstrak moduleId dari URL path hanya jika tidak diberikan sebagai prop
+  useEffect(() => {
+    if (!moduleId) {
+      // Format: /manage-module/pages/{moduleId}
+      const pathParts = window.location.pathname.split('/')
+      const pagesIndex = pathParts.indexOf('pages')
+
+      if (pagesIndex !== -1 && pagesIndex + 1 < pathParts.length) {
+        const extractedModuleId = pathParts[pagesIndex + 1]
+        console.log(
+          `[RichTextEditorWithAutosave] Extracted moduleId from URL: ${extractedModuleId}`
+        )
+      }
+    } else {
+      console.log(
+        `[RichTextEditorWithAutosave] Using moduleId from props: ${moduleId}`
+      )
+    }
+  }, [moduleId])
 
   // Fetch page data from API
   useEffect(() => {
+    const controller = new AbortController()
+
     const fetchPageData = async () => {
       if (!pageId) return
+
+      // Periksa flag navigasi - jangan fetch jika sedang navigasi halaman
+      const isNavigating =
+        window.sessionStorage.getItem('isNavigating') === 'true'
+      if (isNavigating) {
+        console.log(
+          '[RichTextEditorWithAutosave] Navigation in progress, skipping fetch'
+        )
+        return
+      }
 
       setIsLoading(true)
       setError(null)
 
       try {
-        // Extract moduleId from pageId
-        let moduleId
-        // Jika pageId berformat dengan separator "-", ambil bagian pertama
-        if (pageId.includes('-')) {
-          moduleId = pageId.split('-')[0]
-        } else {
-          // Jika tidak, coba dapatkan moduleId langsung dari URL
-          const pathParts = window.location.pathname.split('/')
-          const moduleIdIndex = pathParts.indexOf('pages')
-
-          if (moduleIdIndex !== -1 && moduleIdIndex + 1 < pathParts.length) {
-            moduleId = pathParts[moduleIdIndex + 1]
-          } else {
-            // Jika tidak ditemukan, gunakan pageId sebagai moduleId
-            moduleId = pageId
-          }
+        // Pastikan moduleId tersedia sebelum melakukan fetch
+        if (!moduleId) {
+          console.error('[RichTextEditorWithAutosave] moduleId tidak tersedia')
+          setError('Module ID tidak tersedia')
+          setIsLoading(false)
+          return
         }
 
         console.log(
-          `[RichTextEditor] Fetching data for module: ${moduleId}, page: ${pageId}`
+          `[RichTextEditorWithAutosave] Fetching data for pageId: ${pageId}, moduleId: ${moduleId}`
         )
 
+        // Gunakan URL API yang benar dengan moduleId
         const response = await axios.get(
-          `/api/module/${moduleId}/pages/${pageId}`,
-          {
-            headers: {
-              'Cache-Control': 'no-cache',
-              'X-Client-Source': 'RichTextEditor',
-            },
-            timeout: 10000, // 10 seconds timeout
-          }
+          `/api/module/${moduleId}/pages/${pageId}`
         )
-
-        console.log('[RichTextEditor] API response:', response.data)
 
         if (response.data && response.data.success) {
-          const fetchedPageData = response.data.data
           console.log(
-            '[RichTextEditor] Page data fetched successfully:',
-            fetchedPageData.id,
-            fetchedPageData.title,
-            'blocks:',
-            fetchedPageData.blocks
+            '[RichTextEditorWithAutosave] Data fetched successfully:',
+            response.data
           )
+          const fetchedPageData = response.data.data
+          setPageData(fetchedPageData)
 
-          // Parse content from API data
-          const parsed = parseContent(initialContent, fetchedPageData)
-          console.log('[RichTextEditor] Parsed content for editor:', parsed)
-          setParsedContent(parsed)
+          // Parse content untuk editor
+          const parsedContent = parseContent(initialContent, fetchedPageData)
+          setParsedContent(parsedContent)
         } else {
-          throw new Error(response.data?.error || 'Failed to fetch page data')
+          console.error(
+            '[RichTextEditorWithAutosave] API error:',
+            response.data
+          )
+          setError('Failed to load page data')
         }
       } catch (err) {
-        console.error('[RichTextEditor] Error fetching page data:', err)
-
-        // Tampilkan pesan error yang lebih spesifik untuk pengguna
-        if (axios.isAxiosError(err)) {
-          if (err.code === 'ECONNABORTED') {
-            setError('Waktu permintaan habis. Silakan coba lagi.')
-          } else if (err.response?.status === 404) {
-            setError('Halaman tidak ditemukan. Silakan periksa ID halaman.')
-          } else if (
-            err.response?.status === 401 ||
-            err.response?.status === 403
-          ) {
-            setError('Anda tidak memiliki izin untuk mengakses halaman ini.')
-          } else {
-            setError(
-              `Gagal mengambil data halaman: ${
-                err.response?.data?.error || err.message || 'Terjadi kesalahan'
-              }`
-            )
-          }
-        } else {
-          setError('Gagal mengambil data halaman. Silakan coba lagi.')
-        }
-
-        // Fallback to initialContent if available
-        if (initialContent) {
-          console.log('[RichTextEditor] Using initialContent as fallback')
-          setParsedContent(parseContent(initialContent))
-        }
+        console.error('[RichTextEditorWithAutosave] Fetch error:', err)
+        setError('Error loading page data')
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchPageData()
-  }, [pageId, initialContent])
+    // Hanya jalankan fetchPageData jika moduleId sudah tersedia
+    if (moduleId) {
+      fetchPageData()
+    }
+
+    return () => {
+      controller.abort()
+    }
+  }, [pageId, initialContent, moduleId])
 
   // Tampilkan loader selama data diambil
   if (isLoading) {
@@ -343,8 +388,8 @@ export function RichTextEditorWithAutosave({
           onChange(content)
         }
       }}
-      onEditorReady={setEditorInstance}
       autosave={true}
+      moduleId={moduleId}
     />
   )
 }
