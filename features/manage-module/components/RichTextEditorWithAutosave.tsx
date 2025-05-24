@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import { Loader2 } from 'lucide-react'
 import { defaultContentJSON } from '@/features/manage-module/lib/content'
 import { RichTextEditor, RichTextEditorProps } from './RichTextEditor'
 import { ContentBlock, ContentBlockType } from '../types/modulePageSchema'
+import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 
 // Definisikan interface untuk data halaman dari API
 interface PageData {
@@ -247,43 +247,60 @@ export function RichTextEditorWithAutosave({
   className,
   initialContent,
   onChange,
-  moduleId,
 }: Omit<RichTextEditorProps, 'autosave'> & { pageId: string }) {
+  // Gunakan context untuk mengakses moduleId, isNavigating, dan getPageById
+  const { moduleId, isNavigating, getPageById, activePage, pages } =
+    useModulePageCRUDContext()
+
   const [parsedContent, setParsedContent] = useState<object>(defaultContentJSON)
   const [pageData, setPageData] = useState<PageData | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0)
 
-  // Ekstrak moduleId dari URL path hanya jika tidak diberikan sebagai prop
+  // Penggunaan data dari context jika tersedia
   useEffect(() => {
-    if (!moduleId) {
-      // Format: /manage-module/pages/{moduleId}
-      const pathParts = window.location.pathname.split('/')
-      const pagesIndex = pathParts.indexOf('pages')
-
-      if (pagesIndex !== -1 && pagesIndex + 1 < pathParts.length) {
-        const extractedModuleId = pathParts[pagesIndex + 1]
-        console.log(
-          `[RichTextEditorWithAutosave] Extracted moduleId from URL: ${extractedModuleId}`
-        )
-      }
-    } else {
-      console.log(
-        `[RichTextEditorWithAutosave] Using moduleId from props: ${moduleId}`
+    if (activePage && activePage.id === pageId) {
+      // Gunakan data dari context jika pageId sama dengan activePage
+      console.log('[RichTextEditorWithAutosave] Using active page from context')
+      setPageData(activePage as unknown as PageData)
+      const parsedContent = parseContent(
+        initialContent,
+        activePage as unknown as PageData
       )
+      setParsedContent(parsedContent)
+      setIsLoading(false)
+      return
     }
-  }, [moduleId])
 
-  // Fetch page data from API
-  useEffect(() => {
-    const controller = new AbortController()
+    // Cari dalam pages dari context
+    const pageFromContext = pages.find((p) => p.id === pageId)
+    if (pageFromContext && pageFromContext.blocks) {
+      console.log('[RichTextEditorWithAutosave] Using page from context pages')
+      setPageData(pageFromContext as unknown as PageData)
+      const parsedContent = parseContent(
+        initialContent,
+        pageFromContext as unknown as PageData
+      )
+      setParsedContent(parsedContent)
+      setIsLoading(false)
+      return
+    }
 
+    // Fetch page data dari API hanya jika tidak ada di context
     const fetchPageData = async () => {
       if (!pageId) return
 
+      // Throttle: Jangan fetch jika baru saja fetch (dalam 30 detik terakhir)
+      const now = Date.now()
+      if (now - lastFetchTime < 30000) {
+        console.log(
+          '[RichTextEditorWithAutosave] Throttling API call, last fetch was too recent'
+        )
+        return
+      }
+
       // Periksa flag navigasi - jangan fetch jika sedang navigasi halaman
-      const isNavigating =
-        window.sessionStorage.getItem('isNavigating') === 'true'
       if (isNavigating) {
         console.log(
           '[RichTextEditorWithAutosave] Navigation in progress, skipping fetch'
@@ -293,6 +310,7 @@ export function RichTextEditorWithAutosave({
 
       setIsLoading(true)
       setError(null)
+      setLastFetchTime(now)
 
       try {
         // Pastikan moduleId tersedia sebelum melakukan fetch
@@ -304,31 +322,28 @@ export function RichTextEditorWithAutosave({
         }
 
         console.log(
-          `[RichTextEditorWithAutosave] Fetching data for pageId: ${pageId}, moduleId: ${moduleId}`
+          `[RichTextEditorWithAutosave] Fetching data for pageId: ${pageId} using getPageById`
         )
 
-        // Gunakan URL API yang benar dengan moduleId
-        const response = await axios.get(
-          `/api/module/${moduleId}/pages/${pageId}`
-        )
+        // Gunakan getPageById dari context alih-alih axios langsung
+        const fetchedPage = await getPageById(pageId)
 
-        if (response.data && response.data.success) {
+        if (fetchedPage) {
           console.log(
-            '[RichTextEditorWithAutosave] Data fetched successfully:',
-            response.data
+            '[RichTextEditorWithAutosave] Data fetched successfully',
+            fetchedPage
           )
-          const fetchedPageData = response.data.data
-          setPageData(fetchedPageData)
+          setPageData(fetchedPage as unknown as PageData)
 
           // Parse content untuk editor
-          const parsedContent = parseContent(initialContent, fetchedPageData)
+          const parsedContent = parseContent(
+            initialContent,
+            fetchedPage as unknown as PageData
+          )
           setParsedContent(parsedContent)
         } else {
-          console.error(
-            '[RichTextEditorWithAutosave] API error:',
-            response.data
-          )
-          setError('Failed to load page data')
+          console.error('[RichTextEditorWithAutosave] Page not found')
+          setError('Halaman tidak ditemukan')
         }
       } catch (err) {
         console.error('[RichTextEditorWithAutosave] Fetch error:', err)
@@ -339,14 +354,19 @@ export function RichTextEditorWithAutosave({
     }
 
     // Hanya jalankan fetchPageData jika moduleId sudah tersedia
-    if (moduleId) {
+    if (moduleId && pageId) {
       fetchPageData()
     }
-
-    return () => {
-      controller.abort()
-    }
-  }, [pageId, initialContent, moduleId])
+  }, [
+    pageId,
+    initialContent,
+    moduleId,
+    isNavigating,
+    getPageById,
+    activePage,
+    pages,
+    lastFetchTime,
+  ])
 
   // Tampilkan loader selama data diambil
   if (isLoading) {
@@ -383,13 +403,9 @@ export function RichTextEditorWithAutosave({
     <RichTextEditor
       className={className}
       initialContent={JSON.stringify(parsedContent)}
-      onChange={(content) => {
-        if (onChange) {
-          onChange(content)
-        }
-      }}
+      onChange={onChange}
       autosave={true}
-      moduleId={moduleId}
+      pageId={pageId}
     />
   )
 }

@@ -15,7 +15,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { useState, useEffect, useCallback } from 'react'
 import { useDebounce } from '../../../hooks/useDebounce'
-import { useModulePageCRUDContext } from '../../../context/ModulePageCRUDContext'
+import {
+  useModulePageCRUDContext,
+  SaveStatus,
+} from '../../../context/ModulePageCRUDContext'
 import { toast } from 'sonner'
 import { showErrorNotification } from '../../../components/ErrorNotifier'
 import {
@@ -32,8 +35,9 @@ import {
 interface DocumentHeaderProps {
   title?: string
   onTitleChange?: (title: string) => void
-  saveStatus?: 'saved' | 'saving' | 'unsaved' | 'error'
+  saveStatus?: SaveStatus
   pageId?: string
+  isLoading?: boolean
 }
 
 export default function DocumentHeader({
@@ -41,12 +45,12 @@ export default function DocumentHeader({
   onTitleChange,
   saveStatus: propsSaveStatus = 'saved',
   pageId,
+  isLoading = false,
 }: DocumentHeaderProps) {
   // State local
   const [localTitle, setLocalTitle] = useState<string>(title)
-  const [titleSaveStatus, setTitleSaveStatus] = useState<
-    'saved' | 'saving' | 'unsaved' | 'error'
-  >(propsSaveStatus)
+  const [titleSaveStatus, setTitleSaveStatus] =
+    useState<SaveStatus>(propsSaveStatus)
   const [isCreating, setIsCreating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -285,6 +289,7 @@ export default function DocumentHeader({
           placeholder="Untitled Page"
           className="border-0 bg-transparent h-8 px-2 focus-visible:ring-0 focus-visible:ring-offset-0 text-[#e3e4f2]"
           aria-label="Judul halaman"
+          disabled={isLoading}
         />
       </div>
 
@@ -319,7 +324,7 @@ export default function DocumentHeader({
         className="text-[#a9abaf] h-8 mr-2"
         aria-label="Tutup draft"
         onClick={handleCloseDraft}
-        disabled={!effectivePageId || isDeleting}
+        disabled={!effectivePageId || isDeleting || isLoading}
       >
         {isDeleting ? (
           <>
@@ -355,7 +360,7 @@ export default function DocumentHeader({
         <Button
           className="bg-[#1868db] hover:bg-[#1868db]/90 text-white"
           onClick={handleCreate}
-          disabled={isCreating}
+          disabled={isCreating || isLoading}
         >
           {isCreating ? (
             <>

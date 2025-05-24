@@ -10,12 +10,19 @@ import {
   ModulePage,
   CreateModulePageInput,
   UpdateModulePageInput,
+  ContentBlockType,
+  ContentBlock,
 } from '../types'
 import { useModulePageCRUD } from '../hooks/useModulePageCRUD'
 import { showErrorNotification } from '../components/ErrorNotifier'
+import { useRouter } from 'next/navigation'
+import debounce from 'lodash/debounce'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPromise = Promise<any>
+
+// Tipe untuk status penyimpanan
+export type SaveStatus = 'saved' | 'saving' | 'unsaved' | 'error'
 
 interface ModulePageCRUDContextProps {
   // Data
@@ -39,6 +46,12 @@ interface ModulePageCRUDContextProps {
   // State management
   setActivePage: (page: ModulePage | null) => void
 
+  // Editor state
+  saveStatus: SaveStatus
+  setSaveStatus: (status: SaveStatus) => void
+  isNavigating: boolean
+  setIsNavigating: (isNavigating: boolean) => void
+
   // Navigation helpers
   getNextPage: (currentPageId?: string) => ModulePage | null
   getPreviousPage: (currentPageId?: string) => ModulePage | null
@@ -52,8 +65,21 @@ interface ModulePageCRUDContextProps {
     pageId: string
     title?: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    blocks?: any[] // Perlu menggunakan any karena tipe yang kompleks
+    blocks?: any[]
   }) => AnyPromise
+
+  // Tambahkan savePageWrapper ke interface
+  savePageWrapper: (
+    pageId: string,
+    data: { title?: string; blocks?: ContentBlock[] }
+  ) => Promise<ModulePage | null>
+
+  // Handler functions
+  handlePageChange: (newPageId: string) => void
+  handleSelectPage: (page: ModulePage) => void
+  handleEditorChange: (content: object, pageId: string) => void
+  handleNavigateToPrevPage: () => void
+  handleNavigateToNextPage: () => void
 }
 
 const ModulePageCRUDContext = createContext<ModulePageCRUDContextProps | null>(
@@ -79,8 +105,19 @@ export function ModulePageCRUDProvider({
   children,
   moduleId,
 }: ModulePageCRUDProviderProps) {
+  const router = useRouter()
+
   // State untuk halaman aktif
   const [activePage, setActivePage] = useState<ModulePage | null>(null)
+
+  // State untuk editor
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved')
+  const [isNavigating, setIsNavigating] = useState<boolean>(false)
+
+  // State untuk menyimpan konten terakhir yang dikirim
+  const [lastSavedContent, setLastSavedContent] = useState<
+    Record<string, string>
+  >({})
 
   // Gunakan hook untuk operasi CRUD
   const {
@@ -93,7 +130,8 @@ export function ModulePageCRUDProvider({
     deletePage: deletePageMutation,
     reorderPages: reorderPagesMutation,
     getPageById,
-    savePage,
+    savePage: savePageMutation,
+    savePageWrapper,
   } = useModulePageCRUD(moduleId)
 
   // Set active page otomatis ke halaman pertama jika belum diset
@@ -208,6 +246,139 @@ export function ModulePageCRUDProvider({
     return pages.length > 0 ? pages[pages.length - 1] : null
   }, [pages])
 
+  // Handler untuk navigasi halaman
+  const handlePageChange = useCallback(
+    (newPageId: string) => {
+      if (!newPageId) return
+
+      // Tandai bahwa ini adalah navigasi halaman
+      setIsNavigating(true)
+      window.sessionStorage.setItem('isNavigating', 'true')
+
+      // Navigasi ke halaman baru
+      router.push(`/manage-module/pages/${moduleId}?pageId=${newPageId}`)
+
+      // Hapus flag navigasi setelah navigasi selesai
+      setTimeout(() => {
+        setIsNavigating(false)
+        window.sessionStorage.removeItem('isNavigating')
+      }, 500)
+    },
+    [moduleId, router]
+  )
+
+  // Handler untuk memilih halaman dari sidebar
+  const handleSelectPage = useCallback(
+    (page: ModulePage) => {
+      if (!page) return
+
+      // Log page selection untuk debugging
+      console.log(`[Context] Selected page: ${page.id} - ${page.title}`)
+
+      // Buat deep clone page object untuk mencegah referensi yang tidak diinginkan
+      const pageClone = JSON.parse(JSON.stringify(page)) as ModulePage
+
+      // Set halaman aktif
+      setActivePage(pageClone)
+
+      // Navigasi ke halaman yang dipilih
+      handlePageChange(page.id)
+    },
+    [handlePageChange]
+  )
+
+  // Handler untuk perubahan konten editor dengan debounce dan optimasi
+  const saveEditorContent = useCallback(
+    (content: object, pageId: string) => {
+      if (!pageId) return
+
+      // Jika sedang navigasi, jangan update konten
+      if (isNavigating) {
+        console.log('[Context] Navigation in progress, skipping content update')
+        return
+      }
+
+      // Konversi konten ke string untuk perbandingan
+      const contentString = JSON.stringify(content)
+
+      // Periksa apakah konten benar-benar berubah dengan membandingkan dengan yang terakhir disimpan
+      if (lastSavedContent[pageId] === contentString) {
+        console.log('[Context] Content unchanged, skipping save')
+        return
+      }
+
+      // Update status UI
+      setSaveStatus('saving')
+      console.log('[Context] Saving page content...')
+
+      // Konversi konten ke format yang diharapkan API
+      const updatedBlocks: ContentBlock[] = [
+        {
+          type: ContentBlockType.TEXT,
+          content: contentString,
+        },
+      ]
+
+      // Simpan perubahan menggunakan savePageWrapper
+      savePageWrapper(pageId, { blocks: updatedBlocks })
+        .then(() => {
+          setSaveStatus('saved')
+          // Simpan referensi ke konten yang baru disimpan
+          setLastSavedContent((prev) => ({ ...prev, [pageId]: contentString }))
+          console.log('[Context] Content saved successfully')
+        })
+        .catch((error: Error) => {
+          console.error('[Context] Error saving content:', error)
+          setSaveStatus('error')
+        })
+    },
+    [isNavigating, savePageWrapper, lastSavedContent]
+  )
+
+  // Debounce saveEditorContent untuk mengurangi jumlah API calls
+  const handleEditorChange = useMemo(
+    () =>
+      debounce((content: object, pageId: string) => {
+        saveEditorContent(content, pageId)
+      }, 2000), // 2 detik debounce, meningkat dari 500ms
+    [saveEditorContent]
+  )
+
+  // Handler untuk navigasi ke halaman sebelumnya
+  const handleNavigateToPrevPage = useCallback(() => {
+    if (!activePage || isNavigating) return
+
+    const currentIndex = pages.findIndex((p) => p.id === activePage.id)
+    if (currentIndex > 0) {
+      const prevPage = pages[currentIndex - 1]
+      handleSelectPage(prevPage)
+    }
+  }, [activePage, pages, handleSelectPage, isNavigating])
+
+  // Handler untuk navigasi ke halaman berikutnya
+  const handleNavigateToNextPage = useCallback(() => {
+    if (!activePage || isNavigating) return
+
+    const currentIndex = pages.findIndex((p) => p.id === activePage.id)
+    if (currentIndex < pages.length - 1) {
+      const nextPage = pages[currentIndex + 1]
+      handleSelectPage(nextPage)
+    }
+  }, [activePage, pages, handleSelectPage, isNavigating])
+
+  // Wrapper untuk savePage agar sesuai dengan tipe yang diharapkan di interface
+  const savePage = useCallback(
+    (params: {
+      pageId: string
+      title?: string
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      blocks?: any[]
+    }): AnyPromise => {
+      return savePageMutation.mutateAsync(params)
+    },
+    [savePageMutation]
+  )
+
   // Memoize context value untuk mencegah re-render yang tidak perlu
   const contextValue = useMemo(
     () => ({
@@ -224,11 +395,23 @@ export function ModulePageCRUDProvider({
       setActivePage,
       getPageById,
       savePage,
+      savePageWrapper,
       // Navigation helpers
       getNextPage,
       getPreviousPage,
       getFirstPage,
       getLastPage,
+      // Editor state
+      saveStatus,
+      setSaveStatus,
+      isNavigating,
+      setIsNavigating,
+      // Handler functions
+      handlePageChange,
+      handleSelectPage,
+      handleEditorChange,
+      handleNavigateToPrevPage,
+      handleNavigateToNextPage,
     }),
     [
       moduleId,
@@ -243,10 +426,20 @@ export function ModulePageCRUDProvider({
       reorderPages,
       getPageById,
       savePage,
+      savePageWrapper,
       getNextPage,
       getPreviousPage,
       getFirstPage,
       getLastPage,
+      saveStatus,
+      setSaveStatus,
+      isNavigating,
+      setIsNavigating,
+      handlePageChange,
+      handleSelectPage,
+      handleEditorChange,
+      handleNavigateToPrevPage,
+      handleNavigateToNextPage,
     ]
   )
 

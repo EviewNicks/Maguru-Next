@@ -47,19 +47,23 @@ export function isEditableElement(
 
 /**
  * Mendapatkan pesan pengumuman berdasarkan status penyimpanan
- * @param status Status penyimpanan ('saved', 'saving', 'unsaved')
+ * @param status Status penyimpanan ('saved', 'saving', 'unsaved', 'error')
  * @returns Pesan pengumuman yang sesuai
  */
-export function getStatusAnnouncement(status: 'saved' | 'saving' | 'unsaved'): string {
+export function getStatusAnnouncement(
+  status: 'saved' | 'saving' | 'unsaved' | 'error'
+): string {
   switch (status) {
     case 'saved':
-      return 'Perubahan telah tersimpan';
+      return 'Perubahan telah tersimpan'
     case 'saving':
-      return 'Menyimpan perubahan';
+      return 'Menyimpan perubahan'
     case 'unsaved':
-      return 'Perubahan belum tersimpan';
+      return 'Perubahan belum tersimpan'
+    case 'error':
+      return 'Gagal menyimpan perubahan'
     default:
-      return '';
+      return ''
   }
 }
 

@@ -2,22 +2,24 @@
 
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 
-interface ModulePageFooterNavProps {
-  currentPage: number
-  totalPages: number
-  onPrevious: () => void
-  onNext: () => void
-  isLoading?: boolean
-}
+export default function ModulePageFooterNav() {
+  // Gunakan context untuk mengakses state dan handlers
+  const {
+    pages,
+    activePage,
+    handleNavigateToPrevPage,
+    handleNavigateToNextPage,
+    isNavigating,
+  } = useModulePageCRUDContext()
 
-export default function ModulePageFooterNav({
-  currentPage,
-  totalPages,
-  onPrevious,
-  onNext,
-  isLoading = false,
-}: ModulePageFooterNavProps) {
+  // Hitung currentPage dan totalPages
+  const currentPage = activePage
+    ? pages.findIndex((p) => p.id === activePage.id) + 1
+    : 0
+  const totalPages = pages.length
+
   return (
     <div
       className="flex items-center justify-between py-4 px-6 border-t border-[#3b3b3b]"
@@ -27,11 +29,11 @@ export default function ModulePageFooterNav({
       <Button
         variant="outline"
         className="border-[#3b3b3b] bg-transparent hover:bg-[#242528]"
-        onClick={onPrevious}
-        disabled={currentPage <= 1 || isLoading}
+        onClick={handleNavigateToPrevPage}
+        disabled={currentPage <= 1 || isNavigating}
         aria-label="Halaman sebelumnya"
       >
-        {isLoading ? (
+        {isNavigating ? (
           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
         ) : (
           <ChevronLeft className="h-4 w-4 mr-2" />
@@ -46,12 +48,12 @@ export default function ModulePageFooterNav({
       <Button
         variant="outline"
         className="border-[#3b3b3b] bg-transparent hover:bg-[#242528]"
-        onClick={onNext}
-        disabled={currentPage >= totalPages || isLoading}
+        onClick={handleNavigateToNextPage}
+        disabled={currentPage >= totalPages || isNavigating}
         aria-label="Halaman berikutnya"
       >
         Halaman Berikutnya
-        {isLoading ? (
+        {isNavigating ? (
           <Loader2 className="h-4 w-4 ml-2 animate-spin" />
         ) : (
           <ChevronRight className="h-4 w-4 ml-2" />

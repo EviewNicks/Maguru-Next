@@ -5,28 +5,16 @@ import SidebarContent from './ModulePageEditor/sidebar/SidebarContent'
 import SidebarHeader from './ModulePageEditor/sidebar/SidebarHeader'
 import SidebarShortcuts from './ModulePageEditor/sidebar/SidebarShortcuts'
 import SidebarBlogs from './ModulePageEditor/sidebar/SidebarBlogs'
-import { ModulePage } from '../types/modulePageSchema'
 import { useModulePagesContext } from '../context/ModulePagesContext'
+import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 
-interface ModulePageSidebarProps {
-  pages: ModulePage[]
-  activePage: ModulePage | null
-  onSelectPage: (page: ModulePage) => void
-  onCreatePage?: () => Promise<void>
-  expandedItems: Record<string, boolean>
-  toggleExpand: (item: string) => void
-}
-
-export default function ModulePageSidebar({
-  pages,
-  activePage,
-  onSelectPage,
-  onCreatePage,
-  expandedItems,
-  toggleExpand,
-}: ModulePageSidebarProps) {
+export default function ModulePageSidebar() {
   // UI state dari ModulePagesContext
-  const { isSidebarOpen, toggleSidebar } = useModulePagesContext()
+  const { isSidebarOpen, toggleSidebar, expandedItems, toggleExpand } =
+    useModulePagesContext()
+
+  // Data dari ModulePageCRUDContext
+  const { pages, activePage } = useModulePageCRUDContext()
 
   return (
     <div
@@ -64,8 +52,6 @@ export default function ModulePageSidebar({
               toggleExpand={toggleExpand}
               pages={pages}
               activePage={activePage}
-              onSelectPage={onSelectPage}
-              onCreatePage={onCreatePage}
             />
             <SidebarBlogs />
 

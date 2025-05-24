@@ -8,7 +8,6 @@ import { useModulePageEditor } from '../hooks/useModulePageEditor'
 import { RichTextEditor } from './RichTextEditor'
 import { useDebounce } from '../hooks/useDebounce'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
-import { ModulePage, ContentBlock, ContentBlockType } from '../types'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts'
 import { NAVIGATION_SHORTCUTS, SYSTEM_SHORTCUTS } from '../constants/shortcuts'
 import ShortcutHelp from './ShortcutHelp'
@@ -22,25 +21,11 @@ import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface ModulePageEditorProps {
-  moduleId: string
-  initialPageId?: string
-  pageData?: ModulePage | null
-  pages?: ModulePage[]
   isLoading?: boolean
-  onPageChange?: (pageId: string) => void
-  onSelectPage?: (page: ModulePage) => void
-  onCreatePage?: () => Promise<void>
 }
 
 export default function ModulePageEditor({
-  moduleId,
-  initialPageId,
-  pageData,
-  pages: propPages,
   isLoading: propIsLoading,
-  onPageChange,
-  onSelectPage,
-  onCreatePage,
 }: ModulePageEditorProps) {
   // State for shortcut help dialog
   const [isShortcutHelpOpen, setIsShortcutHelpOpen] = useState(false)
@@ -59,38 +44,25 @@ export default function ModulePageEditor({
 
   // Get CRUD context
   const {
-    pages: contextPages,
-    activePage: crudActivePage,
-    setActivePage: setCrudActivePage,
-    savePage,
+    moduleId,
+    pages,
+    activePage,
     isLoading: crudLoading,
     getNextPage,
     getPreviousPage,
-    getFirstPage,
-    getLastPage,
+    handlePageChange,
+    handleEditorChange,
+    saveStatus,
+    isNavigating,
+    savePage,
   } = useModulePageCRUDContext()
 
-  // State untuk halaman aktif
-  const [activePageId, setActivePageId] = useState<string | undefined>(
-    initialPageId
-  )
-
-  // Gunakan pages dari props jika tersedia, jika tidak gunakan dari context
-  const pages = propPages || contextPages
-
-  // Jika initialPageId tidak ditemukan, gunakan halaman pertama sebagai default
+  // Gunakan pages dari context
   const firstPage = pages && pages.length > 0 ? pages[0] : null
-  const activePageIdToUse =
-    activePageId || (firstPage?.id as string | undefined)
-
-  // Gunakan activePage dari props jika tersedia, jika tidak gunakan dari CRUD context atau query
-  const activePage = pageData || crudActivePage || null
+  const activePageIdToUse = activePage?.id || firstPage?.id
 
   // Editor state untuk halaman aktif
-  const { title, saveStatus, handleTitleChange } = useModulePageEditor(
-    moduleId,
-    activePage
-  )
+  const { title, handleTitleChange } = useModulePageEditor(moduleId, activePage)
 
   // Use savePage from CRUD context for enhanced saving with optimistic updates
   const handleSave = useCallback(async () => {
@@ -110,9 +82,6 @@ export default function ModulePageEditor({
     }
   }, [activePage, title, savePage])
 
-  // Tambahkan state loading
-  const [isNavigating, setIsNavigating] = useState(false)
-
   // Gabungkan status loading dari props dan context
   const isLoading = propIsLoading || crudLoading
 
@@ -121,14 +90,12 @@ export default function ModulePageEditor({
     (direction: 'prev' | 'next' | 'first' | 'last') => {
       if (!pages || !activePageIdToUse || isNavigating) return
 
-      setIsNavigating(true)
-
-      let nextPage: ModulePage | null = null
+      let nextPage = null
 
       if (direction === 'first') {
-        nextPage = getFirstPage()
+        nextPage = pages[0]
       } else if (direction === 'last') {
-        nextPage = getLastPage()
+        nextPage = pages[pages.length - 1]
       } else if (direction === 'prev') {
         nextPage = getPreviousPage(activePageIdToUse)
       } else if (direction === 'next') {
@@ -136,44 +103,22 @@ export default function ModulePageEditor({
       }
 
       if (nextPage?.id) {
-        setActivePageId(nextPage.id)
-        if (onPageChange) onPageChange(nextPage.id)
-
-        // Update activePage in CRUD context
-        setCrudActivePage(nextPage)
-
-        // Reset loading state after a short delay
-        setTimeout(() => {
-          setIsNavigating(false)
-        }, 500)
-      } else {
-        setIsNavigating(false)
+        handlePageChange(nextPage.id)
       }
     },
     [
       activePageIdToUse,
-      onPageChange,
       pages,
       isNavigating,
-      getFirstPage,
-      getLastPage,
       getPreviousPage,
       getNextPage,
-      setCrudActivePage,
+      handlePageChange,
     ]
   )
-
-  // Update context whenever activePage changes
-  useEffect(() => {
-    if (activePage) {
-      setCrudActivePage(activePage as ModulePage)
-    }
-  }, [activePage, setCrudActivePage])
 
   // Update announcement saat saveStatus berubah
   useEffect(() => {
     if (saveStatus) {
-      // @ts-expect-error - Tipe SaveStatus tidak kompatibel, tapi masih berfungsi
       setStatusAnnouncement(getStatusAnnouncement(saveStatus))
     }
   }, [saveStatus])
@@ -203,12 +148,6 @@ export default function ModulePageEditor({
     'toggle-sidebar': toggleSidebar,
     'show-shortcut-help': () => setIsShortcutHelpOpen(true),
     'save-page': () => handleSave(),
-    // Tambahkan shortcut untuk membuat halaman baru jika onCreatePage tersedia
-    ...(onCreatePage ? { 'create-page': onCreatePage } : {}),
-    // Tambahkan shortcut untuk memilih halaman jika onSelectPage tersedia
-    ...(onSelectPage && activePage
-      ? { 'select-page': () => onSelectPage(activePage) }
-      : {}),
   }
 
   // Register keyboard shortcuts
@@ -223,58 +162,10 @@ export default function ModulePageEditor({
     ? JSON.stringify(activePage.blocks)
     : ''
 
-  // Log untuk debugging nilai initialContent
-  console.log(
-    '[ModulePageEditor] Sending initialContent to RichTextEditor:',
-    initialContent
-      ? initialContent.length > 100
-        ? initialContent.substring(0, 100) + '...'
-        : initialContent
-      : 'empty'
-  )
-  console.log('[ModulePageEditor] activePage blocks:', activePage?.blocks)
-
-  // Callback untuk penanganan perubahan konten dari RichTextEditor
-  const handleEditorChange = useCallback(
-    (content: object) => {
-      // Log untuk debugging
-      console.log('[ModulePageEditor] Editor content changed')
-
-      // Konversi JSON ke string
-      const contentString = JSON.stringify(content)
-
-      // Simpan perubahan hanya jika ada activePage dan konten berubah
-      if (activePage?.id && contentString !== initialContent) {
-        // Jika hanya mengisi satu block type TEXT
-        const updatedBlocks: ContentBlock[] = [
-          {
-            type: ContentBlockType.TEXT,
-            content: contentString,
-          },
-        ]
-
-        // Simpan perubahan melalui context
-        savePage({
-          pageId: activePage.id,
-          title: title,
-          blocks: updatedBlocks,
-        }).catch((error) => {
-          console.error('[ModulePageEditor] Error saving page:', error)
-        })
-      }
-    },
-    [activePage, initialContent, savePage, title]
-  )
-
   // Status loading
   if (isLoading) {
     return <div className="p-4">Memuat halaman...</div>
   }
-
-  // Hitung currentPage dan totalPages untuk navigasi
-  const currentPage =
-    (pages?.findIndex((page) => page.id === activePageIdToUse) || 0) + 1
-  const totalPages = pages?.length || 0
 
   return (
     <>
@@ -288,10 +179,10 @@ export default function ModulePageEditor({
       >
         {/* Header */}
         <DocumentHeader
-          title={title}
-          onTitleChange={handleTitleChange}
+          title={activePage?.title || 'Untitled Page'}
           saveStatus={saveStatus}
-          pageId={activePageIdToUse}
+          onTitleChange={handleTitleChange}
+          isLoading={isLoading}
         />
 
         {/* Editor Area */}
@@ -327,10 +218,11 @@ export default function ModulePageEditor({
             >
               <RichTextEditor
                 className="h-full"
-                onChange={handleEditorChange}
+                onChange={(content) =>
+                  handleEditorChange(content, activePageIdToUse || '')
+                }
                 initialContent={initialContent}
                 pageId={activePageIdToUse}
-                moduleId={moduleId}
                 autosave={true}
               />
             </ErrorBoundary>
@@ -338,13 +230,7 @@ export default function ModulePageEditor({
         </div>
 
         {/* Footer Navigation */}
-        <ModulePageFooterNav
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPrevious={() => handleNavigation('prev')}
-          onNext={() => handleNavigation('next')}
-          isLoading={isNavigating}
-        />
+        {activePage && <ModulePageFooterNav />}
 
         {/* Shortcut Help */}
         <ShortcutHelp

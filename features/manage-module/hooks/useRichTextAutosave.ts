@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Editor } from '@tiptap/react'
-import axios from 'axios'
 import { ContentBlockType } from '../types'
 import { formatDistanceToNow } from 'date-fns'
 import { id } from 'date-fns/locale'
+import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 
 export type SaveStatus = 'saved' | 'saving' | 'unsaved' | 'error'
 
@@ -32,12 +32,24 @@ export function useRichTextAutosave({
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved')
   const [isSaving, setIsSaving] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
+
   // Ref untuk menandai jika konten sudah berubah sejak penyimpanan terakhir
   const contentChangedRef = useRef(false)
+
   // Ref untuk menyimpan timeout ID untuk debounce
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+
   // Ref untuk menandai jika proses menyimpan sedang berlangsung
   const isSavingRef = useRef(false)
+
+  // Ref untuk menyimpan konten terakhir yang disimpan
+  const lastSavedContentRef = useRef<string>('')
+
+  // Ref untuk timestamp terakhir kali content disimpan
+  const lastSaveTimeRef = useRef<number>(0)
+
+  // Gunakan context untuk mengakses savePage
+  const { savePage } = useModulePageCRUDContext()
 
   // Mendapatkan string lastSaved yang diformat
   const lastSaved = lastSavedAt
@@ -67,47 +79,69 @@ export function useRichTextAutosave({
       return
     }
 
+    // Dapatkan konten dari editor
+    const content = editor.getJSON()
+    const contentString = JSON.stringify(content)
+
+    // Hanya simpan jika konten benar-benar berubah
+    if (contentString === lastSavedContentRef.current) {
+      console.log('[useRichTextAutosave] Content unchanged, skipping save')
+      contentChangedRef.current = false
+      return
+    }
+
+    // Throttling: jangan simpan jika konten baru saja disimpan (dalam 2 detik terakhir)
+    const now = Date.now()
+    if (now - lastSaveTimeRef.current < 2000) {
+      console.log('[useRichTextAutosave] Save throttled, too recent')
+      return
+    }
+
     try {
       // Set status saving
       setIsSaving(true)
       isSavingRef.current = true
 
-      // Dapatkan konten dari editor
-      const content = editor.getJSON()
+      // Update terakhir kali disimpan
+      lastSaveTimeRef.current = now
 
       // Siapkan data untuk API
       const blocks = [
         {
           type: ContentBlockType.TEXT,
-          content: JSON.stringify(content),
+          content: contentString,
         },
       ]
 
-      // Panggil API untuk menyimpan
+      // Optimistic update untuk status
+      setSaveStatus('saving')
+
       console.log(`[useRichTextAutosave] Saving content for pageId: ${pageId}`)
-      const response = await axios.put(`/api/module/pages/${pageId}`, {
+
+      // Gunakan savePage dari context alih-alih panggilan axios langsung
+      await savePage({
+        pageId,
         blocks,
       })
 
-      // Update status setelah berhasil
-      if (response.data && response.data.success) {
-        setLastSavedAt(new Date())
-        console.log('[useRichTextAutosave] Content saved successfully')
-      } else {
-        console.error(
-          '[useRichTextAutosave] API returned error:',
-          response.data
-        )
-        throw new Error(response.data?.error || 'Failed to save content')
-      }
+      // Simpan konten terakhir yang disimpan untuk perbandingan
+      lastSavedContentRef.current = contentString
+
+      // Update UI state
+      setLastSavedAt(new Date())
+      setSaveStatus('saved')
+      contentChangedRef.current = false
+
+      console.log('[useRichTextAutosave] Content saved successfully')
     } catch (error) {
       console.error('[useRichTextAutosave] Error saving content:', error)
+      setSaveStatus('error')
       throw error
     } finally {
       setIsSaving(false)
       isSavingRef.current = false
     }
-  }, [editor, enabled, pageId])
+  }, [editor, enabled, pageId, savePage])
 
   // Inisialisasi event listener untuk perubahan editor
   useEffect(() => {
@@ -124,12 +158,12 @@ export function useRichTextAutosave({
         clearTimeout(timeoutRef.current)
       }
 
-      // Buat timeout baru untuk autosave
+      // Buat timeout baru untuk autosave dengan debounce yang lebih lama (2 detik)
       timeoutRef.current = setTimeout(() => {
         if (contentChangedRef.current) {
           saveContent()
         }
-      }, 2000) // 2 detik debounce
+      }, 2000) // Ditingkatkan dari 2 detik ke 3 detik
     }
 
     // Register update handler

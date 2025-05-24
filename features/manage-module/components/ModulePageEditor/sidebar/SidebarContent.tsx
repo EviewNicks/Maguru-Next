@@ -25,7 +25,6 @@ import { useModulePageCRUDContext } from '@/features/manage-module/context/Modul
 import {
   ModulePage,
   ContentBlockType,
-  CreateModulePageInput,
 } from '@/features/manage-module/types/modulePageSchema'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
@@ -36,8 +35,6 @@ interface SidebarContentProps {
   toggleExpand: (item: string) => void
   pages?: ModulePage[]
   activePage?: ModulePage | null
-  onSelectPage?: (page: ModulePage) => void
-  onCreatePage?: () => Promise<void>
 }
 
 export default function SidebarContent({
@@ -45,8 +42,6 @@ export default function SidebarContent({
   toggleExpand,
   pages = [],
   activePage,
-  onSelectPage,
-  onCreatePage,
 }: SidebarContentProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -61,6 +56,7 @@ export default function SidebarContent({
     moduleId,
     createPage,
     setActivePage,
+    handleSelectPage: contextHandleSelectPage,
     pages: allPages,
   } = useModulePageCRUDContext()
   const router = useRouter()
@@ -94,60 +90,8 @@ export default function SidebarContent({
     setDeleteDialogOpen(true)
   }
 
-  // Handle selecting a page
-  const handleSelectPage = (page: ModulePage) => {
-    // Log page selection untuk debugging
-    console.log(`[SidebarContent] Selected page: ${page.id} - ${page.title}`)
-
-    // Buat deep clone page object untuk mencegah referensi yang tidak diinginkan
-    // Ini penting untuk memastikan tidak ada perubahan yang tidak disengaja pada objek asli
-    const pageClone = JSON.parse(JSON.stringify(page)) as ModulePage
-
-    console.log(`[SidebarContent] Created clone with title: ${pageClone.title}`)
-
-    // Tandai bahwa ini adalah navigasi halaman, bukan perubahan konten
-    // Ini akan mencegah autosave yang tidak perlu
-    window.sessionStorage.setItem('isNavigating', 'true')
-
-    // Tambahkan delay kecil untuk memastikan state diperbarui sebelum navigasi
-    setTimeout(() => {
-      // Update activePage di context
-      setActivePage(pageClone)
-
-      // Jika prop onSelectPage tersedia, gunakan itu
-      if (onSelectPage) {
-        onSelectPage(pageClone)
-      } else {
-        // Jika tidak, gunakan router untuk navigasi langsung
-        router.push(`/manage-module/pages/${moduleId}?pageId=${page.id}`)
-      }
-
-      // Hapus flag navigasi setelah navigasi selesai
-      setTimeout(() => {
-        window.sessionStorage.removeItem('isNavigating')
-      }, 500)
-    }, 0)
-  }
-
   // Handle creating a new page
   const handleCreatePage = async () => {
-    if (onCreatePage) {
-      // Jika prop onCreatePage tersedia, gunakan itu
-      setIsCreating(true)
-      try {
-        await onCreatePage()
-      } catch (error) {
-        console.error('Error creating page:', error)
-        toast.error('Gagal membuat halaman. Silakan coba lagi.')
-      } finally {
-        setTimeout(() => {
-          setIsCreating(false)
-        }, 300)
-      }
-      return
-    }
-
-    // Fallback ke implementasi lama jika onCreatePage tidak tersedia
     if (!moduleId) {
       toast.error('ID Modul tidak ditemukan')
       return
@@ -170,7 +114,7 @@ export default function SidebarContent({
           : 1
 
       // Prepare new page data
-      const newPageData: CreateModulePageInput = {
+      const newPageData = {
         title: defaultTitle,
         moduleId,
         type: 'content',
@@ -311,7 +255,7 @@ export default function SidebarContent({
                     <div className="flex-grow">
                       <SidebarNestedItem
                         label={page.title || 'Untitled Page'}
-                        onClick={() => handleSelectPage(page)}
+                        onClick={() => contextHandleSelectPage(page)}
                         className={
                           activePage?.id === page.id
                             ? 'text-[#669df1] bg-[#1c2b42]'
@@ -377,7 +321,7 @@ export default function SidebarContent({
         )}
       </div>
 
-      {/* Dialog hapus halaman */}
+      {/* Delete Confirmation Dialog */}
       {pageToDelete && (
         <DeletePageConfirmation
           open={deleteDialogOpen}

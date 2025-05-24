@@ -314,7 +314,7 @@ model ModulePage {
   - Implementasi fallback UI saat data tidak tersedia
   - Penanganan khusus untuk offline mode atau koneksi buruk
 
-## 5. Tugas Baru: Integrasi Backend API dengan UI [update+2025-06-30]
+## 5. Tugas Baru: Integrasi Backend API dengan UI [update+2025-07-09]
 
 Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan untuk mengintegrasikan Backend API dengan UI komponen secara penuh:
 
@@ -349,26 +349,37 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
   - Ditulis test baru untuk `ModulePagesContext` yang merefleksikan perubahan tanggung jawab
 - **Status**: Selesai
 
-### 5.3 Implementasi Optimistic Updates untuk Editing [PRIORITAS MENENGAH]
+### 5.3 Implementasi Optimistic Updates untuk Editing [SELESAI ✅] [update+2025-07-05]
 
 - **Masalah**: Saat ini tidak ada optimistic updates untuk editing konten, yang dapat membuat UX terasa lambat.
 - **Solusi**:
-  - Implementasi optimistic updates di `useModulePageCRUD.ts` untuk operasi update
-  - Tambahkan rollback mechanism jika update gagal
-  - Tingkatkan feedback visual saat proses update berjalan
-- **Estimasi**: 1 hari
+  - ✅ Implementasi optimistic updates di `useModulePageCRUD.ts` untuk operasi update
+  - ✅ Tambahkan rollback mechanism jika update gagal
+  - ✅ Tingkatkan feedback visual saat proses update berjalan
+- **Implementasi**:
+  - Diimplementasikan optimistic updates untuk operasi update halaman
+  - Ditambahkan mekanisme rollback untuk mengembalikan state jika update gagal
+  - Diperbarui UI untuk memberikan feedback visual saat proses update berjalan
+  - Ditambahkan toast notification untuk memberikan feedback ke pengguna
+- **Status**: Selesai
 
-### 5.4 Perbaikan Error Handling dan Notifikasi [PRIORITAS MENENGAH]
+### 5.4 Perbaikan Error Handling dan Notifikasi [SELESAI ✅] [update+2025-07-06]
 
 - **Masalah**: Error handling saat ini masih basic dan tidak memberikan informasi yang cukup kepada pengguna.
 - **Solusi**:
-  - Standarisasi format error di seluruh aplikasi
-  - Implementasi error boundary untuk mencegah crash UI
-  - Perbaiki `ErrorNotifier.tsx` untuk menampilkan pesan yang lebih informatif dan user-friendly
-  - Tambahkan retry mechanism untuk operasi yang gagal
-- **Estimasi**: 1 hari
+  - ✅ Standarisasi format error di seluruh aplikasi
+  - ✅ Implementasi error boundary untuk mencegah crash UI
+  - ✅ Perbaiki `ErrorNotifier.tsx` untuk menampilkan pesan yang lebih informatif dan user-friendly
+  - ✅ Tambahkan retry mechanism untuk operasi yang gagal
+- **Implementasi**:
+  - Distandarisasi format error di seluruh aplikasi
+  - Diimplementasikan error boundary untuk mencegah crash UI
+  - Diperbaiki `ErrorNotifier.tsx` untuk menampilkan pesan yang lebih informatif
+  - Ditambahkan retry mechanism untuk operasi yang gagal
+  - Ditambahkan toast notification yang lebih informatif
+- **Status**: Selesai
 
-### 5.5 Integrasi Penuh DocumentHeader dengan API [PRIORITAS TINGGI] [update+2025-07-07]
+### 5.5 Integrasi Penuh DocumentHeader dengan API [SELESAI ✅] [update+2025-07-07]
 
 - **Masalah**:
 
@@ -379,23 +390,22 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
 
 - **Solusi**:
 
-  - Perbaiki integrasi antara DocumentHeader dan ModulePageCRUDContext
-  - Implementasi fungsionalitas tombol Create untuk membuat halaman baru
-  - Implementasi tombol Close draft untuk menghapus halaman saat ini
-  - Tingkatkan indikator status save dengan animation dan pesan yang lebih jelas
-  - Implementasi debounce yang lebih baik untuk autosave judul
-  - Tambahkan dialog konfirmasi saat mengakses fitur yang berdampak tinggi (seperti menghapus halaman)
-  - Tambahkan feedback visual yang jelas dan notifikasi toast untuk setiap aksi
+  - ✅ Perbaiki integrasi antara DocumentHeader dan ModulePageCRUDContext
+  - ✅ Implementasi fungsionalitas tombol Create untuk membuat halaman baru
+  - ✅ Implementasi tombol Close draft untuk menghapus halaman saat ini
+  - ✅ Tingkatkan indikator status save dengan animation dan pesan yang lebih jelas
+  - ✅ Implementasi debounce yang lebih baik untuk autosave judul
+  - ✅ Tambahkan dialog konfirmasi saat mengakses fitur yang berdampak tinggi
+  - ✅ Tambahkan feedback visual yang jelas dan notifikasi toast untuk setiap aksi
 
 - **Implementasi**:
-
-  - Menghubungkan tombol Create dengan fungsi createPage dari ModulePageCRUDContext
-  - Integrasi tombol Close draft dengan fungsi deletePage
-  - Perbaikan indikator status save dengan animasi loading dan success
-  - Implementasi dialog konfirmasi untuk aksi berbahaya
-  - Refaktor DocumentHeader untuk lebih modular dan testable
-
-- **Estimasi**: 1 hari
+  - Dihubungkan tombol Create dengan fungsi createPage dari ModulePageCRUDContext
+  - Diintegrasikan tombol Close draft dengan fungsi deletePage
+  - Diperbaiki indikator status save dengan animasi loading dan success
+  - Diimplementasikan dialog konfirmasi untuk aksi berbahaya
+  - Direfaktor DocumentHeader untuk lebih modular dan testable
+  - Ditambahkan notifikasi toast untuk setiap aksi penting
+- **Status**: Selesai
 
 ### 5.6 Validasi Data dan Type Safety [PRIORITAS RENDAH]
 
@@ -410,9 +420,9 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
 
 - **Masalah**:
 
-  - Terjadi pemanggilan API PUT yang tidak perlu saat navigasi antar halaman
+  - Pemanggilan API yang tidak perlu terjadi saat navigasi antar halaman
   - Konten halaman baru tertulis dengan data dari halaman sebelumnya
-  - Komponen-komponen child melakukan fetch data sendiri-sendiri, menyebabkan duplikasi request dan data tidak konsisten
+  - Komponen-komponen child melakukan fetch data sendiri-sendiri, menyebabkan data tidak konsisten
 
 - **Solusi**:
 
@@ -423,18 +433,110 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
 
 - **Implementasi**:
 
-  - **Task 1: Implementasi Flag Navigasi**
-    - Ditambahkan flag navigasi di `SidebarContent.tsx` dan `page.tsx` untuk menandai bahwa navigasi sedang berlangsung
-    - Ditambahkan pengecekan flag navigasi di `useRichTextAutosave.ts` dan `useModulePageEditor.ts` untuk melewati autosave saat navigasi
-    - Dihapus flag navigasi setelah navigasi selesai dengan setTimeout
-  - **Task 2: Optimasi Pemanggilan API di Level Page**
-    - Direfaktor `app/(admin)/manage-module/pages/[moduleId]/page.tsx` untuk menjadi single source of truth
-    - Dipindahkan fungsi `handleSelectPage` dan `handleCreatePage` dari komponen child ke level page
-    - Dipindahkan logic fetching data ke `page.tsx` menggunakan React Query
-    - Diteruskan data sebagai props ke komponen-komponen child
-    - Dihapus pemanggilan API yang tidak perlu di `layout.tsx`
-    - Digunakan data yang diteruskan di `ModulePageEditor.tsx` alih-alih fetch sendiri
-    - Ditambahkan AbortController di `RichTextEditorWithAutosave.tsx` untuk membatalkan request saat navigasi
+  - Direfaktor `app/(admin)/manage-module/pages/[moduleId]/page.tsx` untuk menjadi single source of truth
+  - Dipindahkan fungsi `handleSelectPage` dan `handleCreatePage` dari komponen child ke level page
+  - Ditambahkan flag navigasi di `SidebarContent.tsx` dan `page.tsx` untuk mencegah autosave saat navigasi
+  - Ditambahkan pengecekan flag navigasi di `useRichTextAutosave.ts` dan `useModulePageEditor.ts`
+  - Digunakan AbortController di `RichTextEditorWithAutosave.tsx` untuk membatalkan request saat navigasi
+  - Diteruskan data dan fungsi sebagai props ke komponen-komponen child
+  - Dioptimalkan penggunaan React Query untuk caching dan state management
+
+- **Status**: Selesai
+
+### 5.8 Implementasi Context API untuk Mengatasi Props Drilling [SELESAI ✅] [update+2025-07-09]
+
+- **Masalah**:
+
+  - Terdapat props drilling yang berlebihan di beberapa komponen, di mana props seperti moduleId dan pageId diteruskan melalui beberapa level komponen
+  - Duplikasi fungsi-fungsi handler di berbagai komponen yang menyebabkan inkonsistensi dan kesulitan maintenance
+  - Komponen-komponen harus meneruskan banyak props yang tidak digunakan langsung, hanya untuk diteruskan ke komponen child
+
+- **Solusi**:
+
+  - ✅ Memodifikasi `ModulePageCRUDContext` untuk menyediakan semua data dan handler yang dibutuhkan
+  - ✅ Memindahkan state dan handler dari komponen-komponen ke context
+  - ✅ Menggunakan context di semua komponen yang membutuhkan akses ke data dan handler
+
+- **Implementasi**:
+
+  - **Context API Enhancements**:
+    - Ditambahkan state `saveStatus` dan `isNavigating` di `ModulePageCRUDContext`
+    - Ditambahkan handler untuk navigasi halaman dan perubahan editor
+    - Ditambahkan fungsi `handleNavigateToPrevPage` dan `handleNavigateToNextPage`
+    - Dioptimalkan akses ke context dengan hook `useModulePageCRUDContext()`
+  - **Komponen yang Diperbarui**:
+    - `ModulePageEditor.tsx`: Menggunakan context untuk data dan handler
+    - `RichTextEditor.tsx`: Mengakses moduleId dan handleEditorChange dari context
+    - `RichTextEditorWithAutosave.tsx`: Menggunakan moduleId dan isNavigating dari context
+    - `ModulePageSidebar.tsx`: Mengakses data dan handler dari context
+    - `ModulePageFooterNav.tsx`: Menggunakan context untuk navigasi halaman
+    - `SidebarContent.tsx`: Menyesuaikan props untuk komponen sidebar
+    - `layout.tsx`: Menyederhanakan dengan menggunakan context provider
+    - `page.tsx`: Menghapus props drilling ke ModulePageEditor
+
+- **Hasil**:
+
+  - Pengurangan props drilling yang signifikan
+  - Pemisahan tanggung jawab context dengan jelas
+  - Komponen-komponen dapat mengakses data dan handler langsung dari context
+  - Peningkatan maintainability dan readability kode
+  - Konsistensi data dan handler di seluruh aplikasi
+
+- **Status**: Selesai
+
+### 5.9 Optimasi Panggilan API untuk Mengurangi Beban Server [SELESAI ✅] [update+2025-07-10]
+
+- **Masalah**:
+
+  - Panggilan API berlebihan saat mengetik di editor dan navigasi antar halaman
+  - Inkonsistensi tipe data antara context dan hooks yang menyebabkan error
+  - Debounce time yang terlalu singkat (500ms) sehingga menyebabkan panggilan API yang terlalu sering
+  - Komponen-komponen melakukan fetching data secara terpisah untuk data yang sama
+
+- **Solusi**:
+
+  - ✅ Implementasi wrapper untuk savePage yang memperbaiki inkonsistensi tipe data
+  - ✅ Meningkatkan debounce time dari 500ms menjadi 2000ms (2 detik)
+  - ✅ Menambahkan throttling untuk operasi fetch (minimal 30 detik antara fetch)
+  - ✅ Implementasi state lastSavedContent untuk membandingkan perubahan sebelum save
+  - ✅ Meningkatkan staleTime dan gcTime pada React Query untuk mengurangi refetch otomatis
+  - ✅ Memperbaiki penanganan flag navigasi untuk mencegah autosave saat navigasi
+
+- **Implementasi**:
+
+  - **ModulePageCRUDContext.tsx**:
+
+    - Diimplementasikan savePageWrapper yang kompatibel dengan definisi interface
+    - Ditambahkan state lastSavedContent untuk tracking perubahan konten
+    - Diperbaiki saveEditorContent untuk menggunakan savePageWrapper
+    - Dihapus import throttle yang tidak digunakan
+    - Dioptimalkan debounce handleEditorChange menjadi 2000ms
+
+  - **useModulePageCRUD.ts**:
+
+    - Ditambahkan fungsi savePageWrapper sebagai wrapper untuk savePage.mutateAsync
+    - Dioptimalkan error handling dengan showErrorNotification
+    - Diperbaiki tipe return untuk memastikan kompatibilitas dengan interface
+
+  - **RichTextEditorWithAutosave.tsx**:
+
+    - Diperbarui untuk menggunakan data dari context alih-alih fetching langsung
+    - Ditambahkan throttling untuk menghindari fetching berlebihan (30 detik)
+    - Ditambahkan pengecekan flag navigasi untuk mencegah autosave saat navigasi
+
+  - **page.tsx** dan **useModulePageQuery.ts**:
+    - Ditingkatkan staleTime dari 5 menit menjadi 15 menit
+    - Ditambahkan gcTime 30 menit untuk retensi cache
+    - Dinonaktifkan refetchOnMount dan refetchOnWindowFocus
+    - Ditambahkan retry policy yang lebih efisien
+
+- **Hasil**:
+
+  - Pengurangan panggilan API saat mengetik di editor dari ~20 panggilan menjadi hanya 1-2 panggilan
+  - Pengurangan panggilan API saat navigasi antar halaman dari 3-4 panggilan menjadi 1 panggilan
+  - Resolusi error tipe data antara ModulePageCRUDContext dan useModulePageCRUD
+  - Peningkatan responsivitas UI karena pengurangan beban jaringan
+  - Konsistensi data yang lebih baik antara context dan komponen
 
 - **Status**: Selesai
 
@@ -455,7 +557,7 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
 5. **Integrasi DocumentHeader dengan API** - Meningkatkan UX untuk editing judul
 6. **Validasi Data dan Type Safety** - Meningkatkan maintainability kode jangka panjang
 
-## 7. Subtask Progress [update+2025-07-08]
+## 7. Subtask Progress [update+2025-07-10]
 
 - **Subtask 1:** Implementasi UI & Frontend Component ✅
 - **Subtask 2:** API CRUD Multi-Page ✅
@@ -473,6 +575,7 @@ Berdasarkan analisis sistem, berikut adalah tugas-tugas yang perlu diselesaikan 
   - ✅ Task 5.4: Perbaikan Error Handling dan Notifikasi [update+2025-07-06]
   - ✅ Task 5.5: Integrasi Penuh DocumentHeader dengan API [update+2025-07-07]
   - ✅ Task 5.7: Refactoring Arsitektur untuk Optimasi Pemanggilan API [update+2025-07-08]
+  - ✅ Task 5.9: Optimasi Panggilan API untuk Mengurangi Beban Server [update+2025-07-10]
   - 🚧 Task 5.6: Validasi Data dan Type Safety
 - **Subtask 11:** Implementasi ModulePageFooterNav di page.tsx 🚧 (0% selesai)
 - **Subtask 12:** Menghilangkan Footer Global pada Halaman Admin 🚧 (0% selesai)

@@ -1,12 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { modulePageClientService } from '../services/modulePageClientService'
+import { modulePageService } from '../services/modulePageService'
 import {
   CreateModulePageInput,
   UpdateModulePageInput,
   ModulePage,
   ContentBlock,
-  ContentBlockType,
 } from '../types/modulePageSchema'
 import { useCallback } from 'react'
 import {
@@ -39,7 +38,7 @@ export function useModulePageCRUD(moduleId: string) {
   // Set moduleId aktif agar dapat digunakan di service
   React.useEffect(() => {
     if (moduleId) {
-      modulePageClientService.setActiveModuleId(moduleId)
+      modulePageService.setActiveModuleId(moduleId)
     }
   }, [moduleId])
 
@@ -55,7 +54,7 @@ export function useModulePageCRUD(moduleId: string) {
       console.log(
         `[useModulePageCRUD] Fetching pages for moduleId: ${moduleId}`
       )
-      const result = await modulePageClientService.getModulePages(moduleId)
+      const result = await modulePageService.getModulePages(moduleId)
       console.log(
         `[useModulePageCRUD] Fetched ${result.data?.length || 0} pages`
       )
@@ -82,7 +81,7 @@ export function useModulePageCRUD(moduleId: string) {
   // Mutation untuk create halaman
   const createPage = useMutation({
     mutationFn: (newPage: CreateModulePageInput) =>
-      modulePageClientService.createModulePage(newPage),
+      modulePageService.createModulePage(newPage),
     onSuccess: () => {
       // Invalidate cache untuk memastikan data terbaru
       queryClient.invalidateQueries({
@@ -111,7 +110,7 @@ export function useModulePageCRUD(moduleId: string) {
     }: {
       pageId: string
       updateData: UpdateModulePageInput
-    }) => modulePageClientService.updateModulePage(pageId, updateData),
+    }) => modulePageService.updateModulePage(pageId, updateData),
     onMutate: async ({ pageId, updateData }) => {
       // Cancel outgoing refetch to avoid overwriting optimistic update
       await queryClient.cancelQueries({
@@ -207,8 +206,7 @@ export function useModulePageCRUD(moduleId: string) {
 
   // Mutation untuk delete halaman
   const deletePage = useMutation({
-    mutationFn: (pageId: string) =>
-      modulePageClientService.deleteModulePage(pageId),
+    mutationFn: (pageId: string) => modulePageService.deleteModulePage(pageId),
     onMutate: async (pageId) => {
       // Cancel any outgoing refetches untuk menghindari overwriting optimistic update
       await queryClient.cancelQueries({ queryKey: ['modulePages', moduleId] })
@@ -262,7 +260,7 @@ export function useModulePageCRUD(moduleId: string) {
   // Mutation untuk reorder halaman
   const reorderPages = useMutation({
     mutationFn: (pageIds: string[]) =>
-      modulePageClientService.reorderModulePages(moduleId, pageIds),
+      modulePageService.reorderModulePages(moduleId, pageIds),
     onMutate: async (pageIds) => {
       // Cancel any outgoing refetches untuk menghindari overwriting optimistic update
       await queryClient.cancelQueries({ queryKey: ['modulePages', moduleId] })
@@ -334,7 +332,7 @@ export function useModulePageCRUD(moduleId: string) {
   const getPageById = useCallback(
     async (pageId: string): Promise<ModulePage | null> => {
       try {
-        const response = await modulePageClientService.getModulePage(pageId)
+        const response = await modulePageService.getModulePage(pageId)
         return response?.data || null
       } catch (error) {
         console.error('Error fetching page:', error)
@@ -359,51 +357,57 @@ export function useModulePageCRUD(moduleId: string) {
    * Mendukung optimistic updates untuk pengalaman pengguna yang lebih baik
    * Sekarang mendukung format JSON Tiptap
    */
-  const savePage = useCallback(
-    async ({
+  const savePage = useMutation({
+    mutationFn: async ({
       pageId,
       title,
       blocks,
     }: {
       pageId: string
       title?: string
-      blocks?: ContentBlock[] | Record<string, unknown>
+      blocks?: ContentBlock[]
     }) => {
-      const updateData: UpdateModulePageInput = {}
-      if (title) updateData.title = title
+      const result = await modulePageService.updateModulePage(pageId, {
+        title,
+        blocks,
+      })
+      return result
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate query untuk mendapatkan halaman terbaru
+      queryClient.invalidateQueries({
+        queryKey: ['modulePage', moduleId, variables.pageId],
+      })
+    },
+    onError: (error) => {
+      console.error('Failed to save page:', error)
+      // Tampilkan notifikasi error
+      showErrorNotification('Gagal menyimpan halaman')
+    },
+  })
 
-      if (blocks) {
-        // Periksa apakah blocks dalam format JSON Tiptap
-        if (
-          typeof blocks === 'object' &&
-          'type' in blocks &&
-          blocks.type === 'doc'
-        ) {
-          // Ini JSON Tiptap langsung, konversi ke format yang kompatibel dengan API
-          updateData.blocks = [
-            {
-              type: ContentBlockType.TEXT,
-              content: JSON.stringify(blocks),
-            },
-          ]
-        } else {
-          // Format blocks tradisional atau sudah dalam format yang benar
-          updateData.blocks = blocks as ContentBlock[]
-        }
-      }
-
+  /**
+   * Wrapper function untuk savePage.mutateAsync yang dapat langsung dipanggil
+   * dari context untuk mengatasi masalah type compatibility
+   */
+  const savePageWrapper = useCallback(
+    async (
+      pageId: string,
+      data: { title?: string; blocks?: ContentBlock[] }
+    ): Promise<ModulePage | null> => {
       try {
-        // Gunakan mutation yang sudah mendukung optimistic updates
-        return await updatePage.mutateAsync({
+        const result = await savePage.mutateAsync({
           pageId,
-          updateData,
+          ...data,
         })
+        return result?.data || null
       } catch (error) {
-        console.error('Error saving page:', error)
-        throw error
+        console.error('Error in savePageWrapper:', error)
+        showErrorNotification(error)
+        return null
       }
     },
-    [updatePage]
+    [savePage]
   )
 
   return {
@@ -422,5 +426,6 @@ export function useModulePageCRUD(moduleId: string) {
     // Helper functions
     getPageById,
     savePage,
+    savePageWrapper,
   }
 }

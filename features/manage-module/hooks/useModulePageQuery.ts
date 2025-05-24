@@ -8,6 +8,10 @@ export function useModulePageQuery(moduleId: string) {
     queryKey: ['modulePages', moduleId],
     queryFn: () => modulePageService.getModulePages(moduleId),
     staleTime: 5 * 60 * 1000, // 5 menit
+    gcTime: 10 * 60 * 1000, // 10 menit
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 3,
   })
 
   // Function untuk mendapatkan detail halaman berdasarkan ID
@@ -18,6 +22,10 @@ export function useModulePageQuery(moduleId: string) {
       queryFn: () => modulePageService.getModulePage(pageId),
       staleTime: 5 * 60 * 1000,
       enabled: !!pageId, // Hanya dijalankan jika pageId ada
+      gcTime: 10 * 60 * 1000, // 10 menit
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: 3,
     })
 
   // Function helpers untuk mendapatkan halaman berikutnya atau sebelumnya

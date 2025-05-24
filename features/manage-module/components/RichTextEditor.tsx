@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/tooltip'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Button } from '@/components/ui/button'
+import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 
 // Import RichTextEditorWithAutosave dari file terpisah
 import { RichTextEditorWithAutosave } from './RichTextEditorWithAutosave'
@@ -91,10 +92,9 @@ const extensions = [
 
 export interface RichTextEditorProps {
   className?: string
-  onChange?: (content: object) => void
+  onChange?: (content: object, pageId?: string) => void
   initialContent?: string
   pageId?: string
-  moduleId?: string
   autosave?: boolean
   onEditorReady?: (editor: Editor | null) => void
 }
@@ -106,9 +106,11 @@ export function RichTextEditor({
   initialContent,
   autosave = false,
   pageId,
-  moduleId,
   onEditorReady,
 }: RichTextEditorProps) {
+  // Gunakan context untuk mengakses handler
+  const { handleEditorChange } = useModulePageCRUDContext()
+
   // State untuk menyimpan instance editor
   const [editor, setEditor] = useState<Editor | null>(null)
 
@@ -177,12 +179,12 @@ export function RichTextEditor({
     if (editor && onChange) {
       try {
         const json = editor.getJSON()
-        onChange(json)
+        onChange(json, pageId)
       } catch (error) {
         console.error('RichTextEditor: error di handleUpdate:', error)
       }
     }
-  }, [editor, onChange])
+  }, [editor, onChange, pageId])
 
   // Buat editor instance
   const createEditor = useCallback(() => {
@@ -193,6 +195,7 @@ export function RichTextEditor({
       const parsedContent = getParsedContent()
       console.log('RichTextEditor: parsedContent for editor:', parsedContent)
 
+      // @ts-expect-error - Ada masalah tipe dengan extensions, tapi ini masih berfungsi
       const newEditor = new Editor({
         extensions,
         content: parsedContent,
@@ -232,8 +235,11 @@ export function RichTextEditor({
         pageId={pageId}
         className={className}
         initialContent={initialContent}
-        onChange={onChange}
-        moduleId={moduleId}
+        onChange={(content) => {
+          // Gunakan handler dari context untuk mengelola perubahan konten
+          if (onChange) onChange(content, pageId)
+          if (pageId) handleEditorChange(content, pageId)
+        }}
       />
     )
   }
