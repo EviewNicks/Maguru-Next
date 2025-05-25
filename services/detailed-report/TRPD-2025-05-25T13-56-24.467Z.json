@@ -1,0 +1,241 @@
+{
+  "summary": {
+    "timestamp": "2025-05-25T13-56-24.467Z",
+    "totalTests": 3,
+    "passedTests": 0,
+    "failedTests": 3,
+    "pendingTests": 0,
+    "skippedTests": 0,
+    "totalTestSuites": 1,
+    "passedTestSuites": 0,
+    "failedTestSuites": 1,
+    "executionTime": "2.53s",
+    "startTime": "2025-05-25T13:56:20.815Z",
+    "endTime": "2025-05-25T13:56:23.343Z",
+    "errorPatterns": {
+      "Error": 3
+    }
+  },
+  "testFiles": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\refinement.integration.test.tsx",
+      "relativePath": "features\\manage-module\\__tests__\\integration\\module-page\\refinement.integration.test.tsx",
+      "numFailingTests": 3,
+      "numPassingTests": 0,
+      "numPendingTests": 0,
+      "perfStats": {
+        "runtime": 2528,
+        "slowest": false,
+        "startTime": "2025-05-25T13:56:21.918Z",
+        "endTime": "2025-05-25T13:56:24.446Z"
+      },
+      "testResults": [
+        {
+          "title": "tidak mengirim permintaan jika konten tidak berubah",
+          "fullName": "Refinement & Edge Cases Tests Content Optimization Tests tidak mengirim permintaan jika konten tidak berubah",
+          "ancestorTitles": [
+            "Refinement & Edge Cases Tests",
+            "Content Optimization Tests"
+          ],
+          "status": "failed",
+          "duration": 1058,
+          "failureDetails": {
+            "failureMessages": [
+              [
+                "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m",
+                "",
+                "Expected: \u001b[32m\"API calls: \u001b[7m1\u001b[27m\"\u001b[39m",
+                "Received: \u001b[31m\"API calls: \u001b[7m0\u001b[27m\"\u001b[39m",
+                "",
+                "Ignored nodes: comments, script, style",
+                "\u001b[36m<html>\u001b[39m",
+                "  \u001b[36m<head />\u001b[39m",
+                "  \u001b[36m<body>\u001b[39m",
+                "    \u001b[36m<div>\u001b[39m",
+                "      \u001b[36m<div>\u001b[39m",
+                "        \u001b[36m<textarea\u001b[39m",
+                "          \u001b[33mdata-testid\u001b[39m=\u001b[32m\"content-editor\"\u001b[39m",
+                "          \u001b[33mplaceholder\u001b[39m=\u001b[32m\"Type content here\"\u001b[39m",
+                "        \u001b[36m>\u001b[39m",
+                "          \u001b[0mHello World\u001b[0m",
+                "        \u001b[36m</textarea>\u001b[39m",
+                "        \u001b[36m<div\u001b[39m",
+                "          \u001b[33mdata-testid\u001b[39m=\u001b[32m\"api-calls\"\u001b[39m",
+                "        \u001b[36m>\u001b[39m",
+                "          \u001b[0mAPI calls: \u001b[0m",
+                "          \u001b[0m0\u001b[0m",
+                "        \u001b[36m</div>\u001b[39m",
+                "        \u001b[36m<div\u001b[39m",
+                "          \u001b[33mdata-testid\u001b[39m=\u001b[32m\"last-saved\"\u001b[39m",
+                "        \u001b[36m>\u001b[39m",
+                "          \u001b[0mLast saved: \u001b[0m",
+                "        \u001b[36m</div>\u001b[39m",
+                "      \u001b[36m</div>\u001b[39m",
+                "    \u001b[36m</div>\u001b[39m",
+                "  \u001b[36m</body>\u001b[39m",
+                "\u001b[36m</html>\u001b[39m",
+                "    at toBe (D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\refinement.integration.test.tsx:170:61)",
+                "    at runWithExpensiveErrorDiagnosticsDisabled (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\@testing-library\\react\\node_modules\\@testing-library\\dom\\dist\\config.js:47:12)",
+                "    at checkCallback (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\@testing-library\\react\\node_modules\\@testing-library\\dom\\dist\\wait-for.js:124:77)",
+                "    at checkRealTimersCallback (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\@testing-library\\react\\node_modules\\@testing-library\\dom\\dist\\wait-for.js:118:16)",
+                "    at Timeout.task [as _onTimeout] (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-environment-jsdom\\node_modules\\jsdom\\lib\\jsdom\\browser\\Window.js:520:19)",
+                "    at listOnTimeout (node:internal/timers:594:17)",
+                "    at processTimers (node:internal/timers:529:7)"
+              ]
+            ],
+            "location": null
+          }
+        },
+        {
+          "title": "menangani kondisi jaringan lambat",
+          "fullName": "Refinement & Edge Cases Tests Network Conditions Tests menangani kondisi jaringan lambat",
+          "ancestorTitles": [
+            "Refinement & Edge Cases Tests",
+            "Network Conditions Tests"
+          ],
+          "status": "failed",
+          "duration": 56,
+          "failureDetails": {
+            "failureMessages": [
+              [
+                "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m",
+                "",
+                "Expected substring: \u001b[32m\"slow: Slow response\"\u001b[39m",
+                "Received string:    \u001b[31m\"\"\u001b[39m",
+                "    at Object.toContain (D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\refinement.integration.test.tsx:229:40)"
+              ]
+            ],
+            "location": null
+          }
+        },
+        {
+          "title": "menangani multiple requests dengan benar",
+          "fullName": "Refinement & Edge Cases Tests Network Conditions Tests menangani multiple requests dengan benar",
+          "ancestorTitles": [
+            "Refinement & Edge Cases Tests",
+            "Network Conditions Tests"
+          ],
+          "status": "failed",
+          "duration": 9,
+          "failureDetails": {
+            "failureMessages": [
+              [
+                "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m",
+                "",
+                "Expected substring: \u001b[32m\"req1: Response for req1\"\u001b[39m",
+                "Received string:    \u001b[31m\"\"\u001b[39m",
+                "    at Object.toContain (D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\refinement.integration.test.tsx:252:40)"
+              ]
+            ],
+            "location": null
+          }
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "testFilePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\refinement.integration.test.tsx",
+      "testName": "Refinement & Edge Cases Tests Content Optimization Tests tidak mengirim permintaan jika konten tidak berubah",
+      "duration": 1058,
+      "failureMessages": [
+        [
+          "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m",
+          "",
+          "Expected: \u001b[32m\"API calls: \u001b[7m1\u001b[27m\"\u001b[39m",
+          "Received: \u001b[31m\"API calls: \u001b[7m0\u001b[27m\"\u001b[39m",
+          "",
+          "Ignored nodes: comments, script, style",
+          "\u001b[36m<html>\u001b[39m",
+          "  \u001b[36m<head />\u001b[39m",
+          "  \u001b[36m<body>\u001b[39m",
+          "    \u001b[36m<div>\u001b[39m",
+          "      \u001b[36m<div>\u001b[39m",
+          "        \u001b[36m<textarea\u001b[39m",
+          "          \u001b[33mdata-testid\u001b[39m=\u001b[32m\"content-editor\"\u001b[39m",
+          "          \u001b[33mplaceholder\u001b[39m=\u001b[32m\"Type content here\"\u001b[39m",
+          "        \u001b[36m>\u001b[39m",
+          "          \u001b[0mHello World\u001b[0m",
+          "        \u001b[36m</textarea>\u001b[39m",
+          "        \u001b[36m<div\u001b[39m",
+          "          \u001b[33mdata-testid\u001b[39m=\u001b[32m\"api-calls\"\u001b[39m",
+          "        \u001b[36m>\u001b[39m",
+          "          \u001b[0mAPI calls: \u001b[0m",
+          "          \u001b[0m0\u001b[0m",
+          "        \u001b[36m</div>\u001b[39m",
+          "        \u001b[36m<div\u001b[39m",
+          "          \u001b[33mdata-testid\u001b[39m=\u001b[32m\"last-saved\"\u001b[39m",
+          "        \u001b[36m>\u001b[39m",
+          "          \u001b[0mLast saved: \u001b[0m",
+          "        \u001b[36m</div>\u001b[39m",
+          "      \u001b[36m</div>\u001b[39m",
+          "    \u001b[36m</div>\u001b[39m",
+          "  \u001b[36m</body>\u001b[39m",
+          "\u001b[36m</html>\u001b[39m",
+          "    at toBe (D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\refinement.integration.test.tsx:170:61)",
+          "    at runWithExpensiveErrorDiagnosticsDisabled (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\@testing-library\\react\\node_modules\\@testing-library\\dom\\dist\\config.js:47:12)",
+          "    at checkCallback (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\@testing-library\\react\\node_modules\\@testing-library\\dom\\dist\\wait-for.js:124:77)",
+          "    at checkRealTimersCallback (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\@testing-library\\react\\node_modules\\@testing-library\\dom\\dist\\wait-for.js:118:16)",
+          "    at Timeout.task [as _onTimeout] (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-environment-jsdom\\node_modules\\jsdom\\lib\\jsdom\\browser\\Window.js:520:19)",
+          "    at listOnTimeout (node:internal/timers:594:17)",
+          "    at processTimers (node:internal/timers:529:7)"
+        ]
+      ],
+      "ancestorTitles": [
+        "Refinement & Edge Cases Tests",
+        "Content Optimization Tests"
+      ],
+      "status": "failed"
+    },
+    {
+      "testFilePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\refinement.integration.test.tsx",
+      "testName": "Refinement & Edge Cases Tests Network Conditions Tests menangani kondisi jaringan lambat",
+      "duration": 56,
+      "failureMessages": [
+        [
+          "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m",
+          "",
+          "Expected substring: \u001b[32m\"slow: Slow response\"\u001b[39m",
+          "Received string:    \u001b[31m\"\"\u001b[39m",
+          "    at Object.toContain (D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\refinement.integration.test.tsx:229:40)"
+        ]
+      ],
+      "ancestorTitles": [
+        "Refinement & Edge Cases Tests",
+        "Network Conditions Tests"
+      ],
+      "status": "failed"
+    },
+    {
+      "testFilePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\refinement.integration.test.tsx",
+      "testName": "Refinement & Edge Cases Tests Network Conditions Tests menangani multiple requests dengan benar",
+      "duration": 9,
+      "failureMessages": [
+        [
+          "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoContain\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // indexOf\u001b[22m",
+          "",
+          "Expected substring: \u001b[32m\"req1: Response for req1\"\u001b[39m",
+          "Received string:    \u001b[31m\"\"\u001b[39m",
+          "    at Object.toContain (D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\refinement.integration.test.tsx:252:40)"
+        ]
+      ],
+      "ancestorTitles": [
+        "Refinement & Edge Cases Tests",
+        "Network Conditions Tests"
+      ],
+      "status": "failed"
+    }
+  ],
+  "snapshots": {
+    "total": 0,
+    "matched": 0,
+    "added": 0,
+    "updated": 0,
+    "unmatched": 0,
+    "unchecked": 0,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesUnmatched": 0,
+    "filesUpdated": 0
+  }
+}

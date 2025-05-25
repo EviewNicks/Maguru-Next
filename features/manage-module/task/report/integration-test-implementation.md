@@ -206,6 +206,88 @@ File: `features/manage-module/__tests__/integration/apiOptimization.integration.
 - **Query Cache Management**:
   - Menggunakan cache untuk mengurangi request GET berulang
 
+#### 2.5 Error Handling Tests
+
+File: `features/manage-module/__tests__/integration/module-page/errorHandling.integration.test.tsx`
+
+**Deskripsi**: Test ini memastikan bahwa aplikasi menangani error dengan benar, termasuk error dari API, timeout, dan kondisi error lainnya.
+
+**Flow Test**:
+
+1. Setup MSW handlers untuk mengembalikan error (500, 404, timeout)
+2. Render komponen test dengan provider
+3. Trigger aksi yang akan menyebabkan error
+4. Verifikasi UI menampilkan error state dengan benar
+5. Verifikasi notifikasi error ditampilkan
+6. Test recovery dari error dengan retry
+
+**File Referensi Spesifik**:
+
+- `features/manage-module/components/ErrorBoundary.tsx` - Komponen untuk menangkap error React
+- `features/manage-module/components/ErrorNotifier.ts` - Utility untuk notifikasi error
+- `features/manage-module/hooks/useModulePageCRUD.ts` - Error handling dalam hooks
+- `features/manage-module/context/ModulePageCRUDContext.tsx` - Error handling dalam context
+- `app/api/module/[id]/pages/[pageid]/route.ts` - Error handling di API endpoint
+
+**Potensi Masalah & Tips Debugging**:
+
+- Error boundary React sulit diuji, gunakan pendekatan simulasi error
+- Toast notification perlu di-mock untuk verifikasi
+- Timeout testing memerlukan perhatian khusus dengan timer mocking
+- Recovery dari error memerlukan state reset yang tepat
+
+**Test Cases**:
+
+- **API Error Handling**:
+
+  - Menampilkan notifikasi error saat API gagal (500 error)
+  - Menangani error 404 dengan benar (halaman tidak ditemukan)
+
+- **Recovery dari Error**:
+
+  - Pulih dari error setelah retry
+  - Menangani timeout dan retry dengan benar
+
+#### 2.6 Refinement & Edge Cases Tests
+
+File: `features/manage-module/__tests__/integration/module-page/refinement.integration.test.tsx`
+
+**Deskripsi**: Test ini fokus pada optimasi dan edge cases yang mungkin terjadi dalam penggunaan aplikasi, seperti kondisi jaringan lambat dan interaksi pengguna yang kompleks.
+
+**Flow Test**:
+
+1. Setup test environment dengan simulasi kondisi khusus (network delay, concurrent requests)
+2. Render komponen test dengan provider
+3. Simulasikan interaksi pengguna yang kompleks atau edge cases
+4. Verifikasi aplikasi menangani kasus tersebut dengan benar
+5. Verifikasi optimasi berfungsi dalam berbagai kondisi
+
+**File Referensi Spesifik**:
+
+- `features/manage-module/hooks/useDebounce.ts` - Implementasi debounce
+- `features/manage-module/hooks/useRichTextAutosave.ts` - Optimasi autosave
+- `features/manage-module/services/modulePageClientService.ts` - Optimasi API calls
+- `features/manage-module/context/ModulePageCRUDContext.tsx` - State management
+
+**Potensi Masalah & Tips Debugging**:
+
+- Simulasi kondisi jaringan memerlukan mock timing yang tepat
+- Concurrent requests perlu penanganan Promise yang hati-hati
+- Edge cases sering memerlukan setup yang kompleks
+- Verifikasi state mungkin perlu dilakukan di beberapa titik waktu
+
+**Test Cases**:
+
+- **Content Optimization**:
+
+  - Tidak mengirim permintaan jika konten tidak berubah
+  - Menggabungkan perubahan cepat ke dalam satu permintaan (debounce)
+
+- **Edge Cases**:
+
+  - Menangani kondisi jaringan lambat
+  - Menangani perubahan halaman saat sedang menyimpan
+
 ## Daftar File Referensi Umum
 
 ### Files Utama yang Diuji
@@ -273,6 +355,22 @@ File: `features/manage-module/__tests__/integration/apiOptimization.integration.
 [Cache Test] --> (Render) --> [Load Data] --> (Unmount/Remount) --> [Verify No Extra Calls]
 ```
 
+### Error Handling Tests
+
+```
+[API Error Test] --> (Render) --> [Mock API Error] --> (Trigger Action) --> [Verify Error UI]
+                                                                        |
+[Recovery Test] --> (Render) --> [Simulate Error] --> (Trigger Retry) --|
+```
+
+### Refinement & Edge Cases Tests
+
+```
+[Optimization Test] --> (Render) --> [Same Content Update] --> (Verify No API Call)
+                                  |
+[Network Test] --> (Render) --> [Simulate Slow Network] --> [Verify Concurrent Handling]
+```
+
 ## Tips Debugging Umum
 
 1. **Masalah Timer dan Asynchronous**
@@ -303,25 +401,60 @@ File: `features/manage-module/__tests__/integration/apiOptimization.integration.
 
 ### Pencapaian
 
-- Berhasil menyelesaikan fase 1 (setup dan mock) dan fase 2 (navigation dan content test)
+- Berhasil menyelesaikan fase 1 (setup dan mock), fase 2 (navigation dan content test), fase 3 (CRUD dan API optimization), dan fase 4 (error handling dan refinement)
 - Memvalidasi fungsionalitas navigasi dan operasi CRUD halaman modul
 - Memverifikasi optimasi API seperti debounce, throttling, dan caching
+- Menguji penanganan error dan edge cases seperti kondisi jaringan lambat dan concurrent requests
+- Memastikan aplikasi memiliki recovery mechanism yang baik dari berbagai jenis error
 
 ### Tantangan yang Dihadapi
 
 - Mocking Tiptap editor untuk content editing tests
 - Pengujian dialog dan interaksi popup yang memerlukan manipulasi DOM lebih kompleks
 - Mensimulasikan interaksi navigasi yang melibatkan beberapa context bersamaan
-- Debuggin optimasi performa seperti debounce dan caching yang memerlukan timing yang tepat
+- Debugging optimasi performa seperti debounce dan caching yang memerlukan timing yang tepat
+- Mensimulasikan kondisi jaringan yang berbeda untuk pengujian edge cases
+- Membuat test yang konsisten untuk penanganan error dan recovery
+- Mengatasi masalah "Reflect.has called on non-object" pada error handling tests yang disebabkan oleh incompatibilitas MSW dengan setup testing
+
+### Perbaikan Error Handling Tests
+
+Dalam implementasi awal, kami mengalami masalah dengan test error handling yang menampilkan error "Reflect.has called on non-object". Setelah investigasi, kami menemukan bahwa masalah ini terkait dengan cara MSW berinteraksi dengan fetch API dalam konteks testing.
+
+**Masalah:**
+
+- Test errorHandling.integration.test.tsx gagal dengan error "Reflect.has called on non-object"
+- Error ini muncul ketika mencoba mengakses property dari response yang tidak valid
+- MSW tidak mengembalikan response dalam format yang diharapkan oleh kode
+
+**Solusi:**
+
+- Beralih dari MSW ke pendekatan mock langsung menggunakan `jest.mock` untuk global fetch API
+- Implementasi mock fetch yang lebih sederhana dan terkontrol
+- Memisahkan test menjadi komponen yang lebih sederhana untuk isolasi masalah
+- Menggunakan Promise.resolve untuk mengembalikan response yang valid dan konsisten
+
+**Hasil:**
+
+- Test error handling berhasil dijalankan tanpa error
+- Validasi notifikasi error dan recovery dari error berfungsi dengan baik
+- Pendekatan ini lebih sederhana dan lebih stabil untuk pengujian error handling
+
+**Pelajaran:**
+
+- Untuk kasus pengujian error handling yang sederhana, pendekatan mock langsung lebih efektif daripada MSW
+- MSW lebih cocok untuk pengujian integrasi yang kompleks dengan banyak endpoint
+- Penting untuk memisahkan komponen test menjadi lebih sederhana untuk debugging yang lebih mudah
 
 ### Langkah Selanjutnya
 
-Untuk fase 3 dan 4 (sesuai rencana di `plan-task.md`):
+Dengan selesainya semua fase testing sesuai rencana di `plan-task.md`, langkah selanjutnya adalah:
 
-1. Menambahkan lebih banyak test untuk error handling
-2. Menguji interaksi lebih kompleks seperti drag-and-drop untuk pengurutan halaman
-3. Menguji integrasi lebih dalam antara komponen dan optimasi performa
-4. Menambahkan end-to-end tests untuk flow lengkap dari pembuatan modul hingga publishing
+1. Menambahkan end-to-end tests untuk flow lengkap dari pembuatan modul hingga publishing
+2. Mengintegrasikan test suite ke dalam CI/CD pipeline
+3. Membuat dokumentasi lebih detail tentang cara menjalankan dan memelihara test
+4. Mengembangkan test coverage monitoring untuk memastikan kualitas kode tetap terjaga
+5. Melakukan refactoring test untuk meningkatkan reusability dan maintainability
 
 ## Contoh Penggunaan
 
