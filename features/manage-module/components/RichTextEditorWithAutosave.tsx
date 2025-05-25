@@ -4,25 +4,19 @@ import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import { defaultContentJSON } from '@/features/manage-module/lib/content'
 import { RichTextEditor, RichTextEditorProps } from './RichTextEditor'
-import { ContentBlock, ContentBlockType } from '../types/modulePageSchema'
+import {
+  ContentBlock,
+  ContentBlockType,
+  ModulePage,
+} from '../types/modulePageSchema'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
-
-// Definisikan interface untuk data halaman dari API
-interface PageData {
-  id: string
-  moduleId: string
-  title: string
-  order: number
-  blocks: ContentBlock[]
-  status: string
-  createdAt: string
-  updatedAt: string
-}
+import { useQuery } from '@tanstack/react-query'
+import { modulePageService } from '../services/modulePageService'
 
 // Fungsi untuk mengkonversi format blok dari API ke JSON Tiptap
 function parseContent(
   content: string | undefined,
-  pageData?: PageData
+  pageData?: ModulePage
 ): object {
   // Debug logs untuk melihat nilai input
   console.log(
@@ -249,127 +243,106 @@ export function RichTextEditorWithAutosave({
   onChange,
 }: Omit<RichTextEditorProps, 'autosave'> & { pageId: string }) {
   // Gunakan context untuk mengakses moduleId, isNavigating, dan getPageById
-  const { moduleId, isNavigating, getPageById, activePage, pages } =
-    useModulePageCRUDContext()
+  const { moduleId, activePage, pages } = useModulePageCRUDContext()
 
   const [parsedContent, setParsedContent] = useState<object>(defaultContentJSON)
-  const [pageData, setPageData] = useState<PageData | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0)
 
-  // Penggunaan data dari context jika tersedia
+  // Penggunaan data dari context jika tersedia atau fetch dengan useQuery
   useEffect(() => {
-    if (activePage && activePage.id === pageId) {
-      // Gunakan data dari context jika pageId sama dengan activePage
-      console.log('[RichTextEditorWithAutosave] Using active page from context')
-      setPageData(activePage as unknown as PageData)
-      const parsedContent = parseContent(
-        initialContent,
-        activePage as unknown as PageData
-      )
-      setParsedContent(parsedContent)
+    if (!pageId) {
+      setError('Page ID tidak tersedia')
       setIsLoading(false)
       return
     }
 
-    // Cari dalam pages dari context
+    // Coba gunakan data dari context terlebih dahulu
+    if (activePage && activePage.id === pageId) {
+      console.log('[RichTextEditorWithAutosave] Using active page from context')
+      const parsedContent = parseContent(initialContent, activePage)
+      setParsedContent(parsedContent)
+      setIsLoading(false)
+      setError(null)
+      return
+    }
+
     const pageFromContext = pages.find((p) => p.id === pageId)
     if (pageFromContext && pageFromContext.blocks) {
       console.log('[RichTextEditorWithAutosave] Using page from context pages')
-      setPageData(pageFromContext as unknown as PageData)
-      const parsedContent = parseContent(
-        initialContent,
-        pageFromContext as unknown as PageData
-      )
+      const parsedContent = parseContent(initialContent, pageFromContext)
       setParsedContent(parsedContent)
       setIsLoading(false)
+      setError(null)
       return
     }
 
-    // Fetch page data dari API hanya jika tidak ada di context
-    const fetchPageData = async () => {
-      if (!pageId) return
+    // Jika tidak ada di context, fetch menggunakan useQuery
+    // useQuery hook ini akan menangani caching dan re-fetching secara otomatis
+  }, [pageId, initialContent, activePage, pages])
 
-      // Throttle: Jangan fetch jika baru saja fetch (dalam 30 detik terakhir)
-      const now = Date.now()
-      if (now - lastFetchTime < 30000) {
-        console.log(
-          '[RichTextEditorWithAutosave] Throttling API call, last fetch was too recent'
-        )
-        return
-      }
+  // Fetch page data menggunakan useQuery jika tidak tersedia di context
+  const pageQuery = useQuery({
+    queryKey: ['modulePage', moduleId, pageId],
+    queryFn: () => modulePageService.getModulePage(pageId),
+    enabled:
+      !!pageId &&
+      (!activePage || activePage.id !== pageId) &&
+      !pages.some((p) => p.id === pageId), // Hanya jalankan jika pageId ada, tidak ada di activePage atau pages list
+    staleTime: 5 * 60 * 1000, // 5 menit
+    gcTime: 10 * 60 * 1000, // 10 menit
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 3,
+  })
 
-      // Periksa flag navigasi - jangan fetch jika sedang navigasi halaman
-      if (isNavigating) {
-        console.log(
-          '[RichTextEditorWithAutosave] Navigation in progress, skipping fetch'
-        )
-        return
-      }
-
+  // Update state saat data dari query berubah
+  useEffect(() => {
+    if (pageQuery.data?.data) {
+      console.log(
+        '[RichTextEditorWithAutosave] Data fetched from query',
+        pageQuery.data.data
+      )
+      const parsed = parseContent(
+        initialContent,
+        pageQuery.data.data as unknown as ModulePage
+      )
+      setParsedContent(parsed)
+      setIsLoading(false)
+      setError(null)
+    } else if (pageQuery.error) {
+      console.error(
+        '[RichTextEditorWithAutosave] Error fetching data from query',
+        pageQuery.error
+      )
+      setError('Error loading page data')
+      setIsLoading(false)
+    } else if (pageQuery.isLoading) {
       setIsLoading(true)
       setError(null)
-      setLastFetchTime(now)
-
-      try {
-        // Pastikan moduleId tersedia sebelum melakukan fetch
-        if (!moduleId) {
-          console.error('[RichTextEditorWithAutosave] moduleId tidak tersedia')
-          setError('Module ID tidak tersedia')
-          setIsLoading(false)
-          return
-        }
-
-        console.log(
-          `[RichTextEditorWithAutosave] Fetching data for pageId: ${pageId} using getPageById`
-        )
-
-        // Gunakan getPageById dari context alih-alih axios langsung
-        const fetchedPage = await getPageById(pageId)
-
-        if (fetchedPage) {
-          console.log(
-            '[RichTextEditorWithAutosave] Data fetched successfully',
-            fetchedPage
-          )
-          setPageData(fetchedPage as unknown as PageData)
-
-          // Parse content untuk editor
-          const parsedContent = parseContent(
-            initialContent,
-            fetchedPage as unknown as PageData
-          )
-          setParsedContent(parsedContent)
-        } else {
-          console.error('[RichTextEditorWithAutosave] Page not found')
-          setError('Halaman tidak ditemukan')
-        }
-      } catch (err) {
-        console.error('[RichTextEditorWithAutosave] Fetch error:', err)
-        setError('Error loading page data')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    // Hanya jalankan fetchPageData jika moduleId sudah tersedia
-    if (moduleId && pageId) {
-      fetchPageData()
+    } else if (
+      !pageQuery.data &&
+      !pageQuery.isLoading &&
+      !pageQuery.error &&
+      pageId
+    ) {
+      // Case page not found after fetch attempt
+      setError('Halaman tidak ditemukan')
+      setIsLoading(false)
     }
   }, [
-    pageId,
+    pageQuery.data,
+    pageQuery.error,
+    pageQuery.isLoading,
     initialContent,
-    moduleId,
-    isNavigating,
-    getPageById,
-    activePage,
-    pages,
-    lastFetchTime,
+    pageId,
   ])
 
+  // Tangani status loading gabungan
+  const combinedIsLoading = isLoading || pageQuery.isLoading
+
   // Tampilkan loader selama data diambil
-  if (isLoading) {
+  if (combinedIsLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-gray-400" />

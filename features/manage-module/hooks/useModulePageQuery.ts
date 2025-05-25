@@ -14,20 +14,6 @@ export function useModulePageQuery(moduleId: string) {
     retry: 3,
   })
 
-  // Function untuk mendapatkan detail halaman berdasarkan ID
-
-  const getPageById = (pageId: string) =>
-    useQuery({
-      queryKey: ['modulePage', moduleId, pageId],
-      queryFn: () => modulePageService.getModulePage(pageId),
-      staleTime: 5 * 60 * 1000,
-      enabled: !!pageId, // Hanya dijalankan jika pageId ada
-      gcTime: 10 * 60 * 1000, // 10 menit
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      retry: 3,
-    })
-
   // Function helpers untuk mendapatkan halaman berikutnya atau sebelumnya
   const getAdjacentPages = (
     currentPageId: string
@@ -55,7 +41,6 @@ export function useModulePageQuery(moduleId: string) {
 
   return {
     getAllPages,
-    getPageById,
     getAdjacentPages,
   }
 }

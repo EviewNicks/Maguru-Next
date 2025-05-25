@@ -1,0 +1,102 @@
+{
+  "summary": {
+    "timestamp": "2025-05-25T09-02-56.499Z",
+    "totalTests": 5,
+    "passedTests": 5,
+    "failedTests": 0,
+    "pendingTests": 0,
+    "skippedTests": 0,
+    "totalTestSuites": 1,
+    "passedTestSuites": 1,
+    "failedTestSuites": 0,
+    "executionTime": "2.73s",
+    "startTime": "2025-05-25T09:02:52.084Z",
+    "endTime": "2025-05-25T09:02:54.811Z",
+    "errorPatterns": {}
+  },
+  "testFiles": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\contentEditing.integration.test.tsx",
+      "relativePath": "features\\manage-module\\__tests__\\integration\\module-page\\contentEditing.integration.test.tsx",
+      "numFailingTests": 0,
+      "numPassingTests": 5,
+      "numPendingTests": 0,
+      "perfStats": {
+        "runtime": 2727,
+        "slowest": false,
+        "startTime": "2025-05-25T09:02:53.742Z",
+        "endTime": "2025-05-25T09:02:56.469Z"
+      },
+      "testResults": [
+        {
+          "title": "memperbarui judul halaman ketika onTitleChange dipanggil",
+          "fullName": "Content Editing - Integration Tests Document Header Title Editing memperbarui judul halaman ketika onTitleChange dipanggil",
+          "ancestorTitles": [
+            "Content Editing - Integration Tests",
+            "Document Header Title Editing"
+          ],
+          "status": "passed",
+          "duration": 178,
+          "failureDetails": null
+        },
+        {
+          "title": "menampilkan indikator loading saat menyimpan judul",
+          "fullName": "Content Editing - Integration Tests Document Header Title Editing menampilkan indikator loading saat menyimpan judul",
+          "ancestorTitles": [
+            "Content Editing - Integration Tests",
+            "Document Header Title Editing"
+          ],
+          "status": "passed",
+          "duration": 25,
+          "failureDetails": null
+        },
+        {
+          "title": "mengirim permintaan save setelah perubahan konten dan debounce",
+          "fullName": "Content Editing - Integration Tests RichTextEditor Autosave mengirim permintaan save setelah perubahan konten dan debounce",
+          "ancestorTitles": [
+            "Content Editing - Integration Tests",
+            "RichTextEditor Autosave"
+          ],
+          "status": "passed",
+          "duration": 21,
+          "failureDetails": null
+        },
+        {
+          "title": "menyimpan konten hanya jika ada perubahan",
+          "fullName": "Content Editing - Integration Tests RichTextEditor Autosave menyimpan konten hanya jika ada perubahan",
+          "ancestorTitles": [
+            "Content Editing - Integration Tests",
+            "RichTextEditor Autosave"
+          ],
+          "status": "passed",
+          "duration": 26,
+          "failureDetails": null
+        },
+        {
+          "title": "menangani error saat menyimpan",
+          "fullName": "Content Editing - Integration Tests RichTextEditor Autosave menangani error saat menyimpan",
+          "ancestorTitles": [
+            "Content Editing - Integration Tests",
+            "RichTextEditor Autosave"
+          ],
+          "status": "passed",
+          "duration": 23,
+          "failureDetails": null
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "snapshots": {
+    "total": 0,
+    "matched": 0,
+    "added": 0,
+    "updated": 0,
+    "unmatched": 0,
+    "unchecked": 0,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesUnmatched": 0,
+    "filesUpdated": 0
+  }
+}
