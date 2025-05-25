@@ -39,8 +39,8 @@ class SimpleJsonReporter {
       })),
     }
 
-    // Simpan hasil ringkasan ke file JSON dengan timestamp
-    const reportPath = path.join(reportDir, `test-report-${timestamp}.json`)
+    // Simpan hasil ringkasan ke file JSON dengan format nama baru
+    const reportPath = path.join(reportDir, `TRPS-${timestamp}.json`)
     try {
       fs.writeFileSync(reportPath, JSON.stringify(simpleResults, null, 2))
       console.log(`Test report saved to: ${reportPath}`)

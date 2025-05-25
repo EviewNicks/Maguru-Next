@@ -1,0 +1,46 @@
+{
+  "summary": {
+    "timestamp": "2025-05-25T07-15-44.606Z",
+    "totalTests": 0,
+    "passedTests": 0,
+    "failedTests": 0,
+    "pendingTests": 0,
+    "skippedTests": 0,
+    "totalTestSuites": 1,
+    "passedTestSuites": 0,
+    "failedTestSuites": 1,
+    "executionTime": "0.00s",
+    "startTime": "2025-05-25T07:15:41.780Z",
+    "endTime": "2025-05-25T07:15:41.780Z",
+    "errorPatterns": {}
+  },
+  "testFiles": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\contentEditing.integration.test.tsx",
+      "relativePath": "features\\manage-module\\__tests__\\integration\\module-page\\contentEditing.integration.test.tsx",
+      "numFailingTests": 0,
+      "numPassingTests": 0,
+      "numPendingTests": 0,
+      "perfStats": {
+        "runtime": 0,
+        "slowest": false,
+        "startTime": "1970-01-01T00:00:00.000Z",
+        "endTime": "1970-01-01T00:00:00.000Z"
+      },
+      "testResults": []
+    }
+  ],
+  "errors": [],
+  "snapshots": {
+    "total": 0,
+    "matched": 0,
+    "added": 0,
+    "updated": 0,
+    "unmatched": 0,
+    "unchecked": 0,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesUnmatched": 0,
+    "filesUpdated": 0
+  }
+}

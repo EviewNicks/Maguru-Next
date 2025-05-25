@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { modulePageService } from '../services/modulePageService'
+import { modulePageClientService } from '../services/modulePageClientService'
 import {
   CreateModulePageInput,
   UpdateModulePageInput,
@@ -38,7 +39,21 @@ export function useModulePageCRUD(moduleId: string) {
   // Set moduleId aktif agar dapat digunakan di service
   React.useEffect(() => {
     if (moduleId) {
+      console.log(`[useModulePageCRUD] Setting active moduleId: ${moduleId}`)
+
+      // Gunakan kedua service untuk memastikan kompabilitas
       modulePageService.setActiveModuleId(moduleId)
+      modulePageClientService.setActiveModuleId(moduleId)
+
+      // Verifikasi bahwa moduleId telah disimpan dengan benar
+      const storedModuleId = modulePageService.getActiveModuleId()
+      const storedClientModuleId = modulePageClientService.getActiveModuleId()
+      console.log(
+        `[useModulePageCRUD] Verified stored moduleId: ${storedModuleId}`
+      )
+      console.log(
+        `[useModulePageCRUD] Verified client stored moduleId: ${storedClientModuleId}`
+      )
     }
   }, [moduleId])
 

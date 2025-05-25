@@ -14,6 +14,32 @@ type ModulePageStatus = 'DRAFT' | 'PUBLISHED'
  * Service untuk operasi CRUD halaman modul
  */
 export const modulePageService = {
+  // Variabel untuk menyimpan active moduleId
+  _activeModuleId: null as string | null,
+
+  /**
+   * Set moduleId aktif untuk operasi-operasi lain
+   * @param moduleId - ID modul yang aktif
+   */
+  setActiveModuleId(moduleId: string) {
+    // Simpan moduleId dalam variabel lokal
+    this._activeModuleId = moduleId
+    console.log(`[Service] Setting active moduleId: ${moduleId}`)
+
+    // Simpan di sessionStorage jika dalam lingkungan browser
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('activeModuleId', moduleId)
+    }
+  },
+
+  /**
+   * Mendapatkan moduleId aktif
+   * @returns moduleId yang aktif atau null jika belum diset
+   */
+  getActiveModuleId(): string | null {
+    return this._activeModuleId
+  },
+
   /**
    * Membuat halaman baru dalam modul
    * @param data - Data halaman yang akan dibuat

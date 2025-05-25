@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-05-25T07-15-44.604Z",
+  "environment": "test",
+  "numFailedTests": 0,
+  "numPassedTests": 0,
+  "numTotalTests": 0,
+  "executionTime": "1748157341780ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\contentEditing.integration.test.tsx",
+      "failureMessages": [],
+      "testResults": []
+    }
+  ]
+}
