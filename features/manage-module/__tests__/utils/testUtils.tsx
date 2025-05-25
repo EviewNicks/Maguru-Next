@@ -106,6 +106,7 @@ const generateTestQueryClient = () =>
 // Tipe untuk opsi render kustom
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   moduleId?: string
+  mockValues?: Record<string, any>
 }
 
 // Render komponen dengan semua providers yang diperlukan
@@ -113,13 +114,13 @@ export function renderWithProviders(
   ui: ReactElement,
   options: CustomRenderOptions = {}
 ) {
-  const { moduleId = 'module-1', ...renderOptions } = options
+  const { moduleId = 'module-1', mockValues = {}, ...renderOptions } = options
   const queryClient = generateTestQueryClient()
 
   const AllTheProviders = ({ children }: { children: ReactNode }) => {
     return (
       <QueryClientProvider client={queryClient}>
-        <ModulePageCRUDProvider moduleId={moduleId}>
+        <ModulePageCRUDProvider moduleId={moduleId} mockValues={mockValues}>
           <ModulePagesProvider>{children}</ModulePagesProvider>
         </ModulePageCRUDProvider>
       </QueryClientProvider>

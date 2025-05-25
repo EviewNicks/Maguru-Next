@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-05-25T12-31-36.761Z",
+  "environment": "test",
+  "numFailedTests": 3,
+  "numPassedTests": 0,
+  "numTotalTests": 3,
+  "executionTime": "1748176288159ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\apiOptimization.integration.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "menerapkan debounce untuk perubahan editor, hanya mengirim request setelah jeda tertentu",
+          "status": "failed",
+          "duration": 133,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31melement\u001b[39m\u001b[2m).toHaveTextContent()\u001b[22m"
+          ]
+        },
+        {
+          "title": "tidak mengirim request berulang jika konten tidak berubah",
+          "status": "failed",
+          "duration": 38,
+          "failureMessages": [
+            "Error: \u001b[2mexpect(\u001b[22m\u001b[31melement\u001b[39m\u001b[2m).toHaveTextContent()\u001b[22m"
+          ]
+        },
+        {
+          "title": "menggunakan cache untuk mengurangi request GET berulang",
+          "status": "failed",
+          "duration": 5005,
+          "failureMessages": [
+            "Error: thrown: \"Exceeded timeout of 5000 ms for a test."
+          ]
+        }
+      ]
+    }
+  ]
+}

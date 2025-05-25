@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-05-25T12-44-26.578Z",
+  "environment": "test",
+  "numFailedTests": 3,
+  "numPassedTests": 0,
+  "numTotalTests": 3,
+  "executionTime": "1748177057902ms",
+  "testResults": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\apiOptimization.integration.test.tsx",
+      "failureMessages": [],
+      "testResults": [
+        {
+          "title": "menerapkan debounce untuk perubahan editor, hanya mengirim request setelah jeda tertentu",
+          "status": "failed",
+          "duration": 5020,
+          "failureMessages": [
+            "Error: thrown: \"Exceeded timeout of 5000 ms for a test."
+          ]
+        },
+        {
+          "title": "tidak mengirim request berulang jika konten tidak berubah",
+          "status": "failed",
+          "duration": 13,
+          "failureMessages": [
+            "Error: Unable to find an element by: [data-testid=\"active-page-id\"]"
+          ]
+        },
+        {
+          "title": "menggunakan cache untuk mengurangi request GET berulang",
+          "status": "failed",
+          "duration": 9,
+          "failureMessages": [
+            "Error: Unable to find an element with the text: Test Component. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible."
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,211 @@
+{
+  "summary": {
+    "timestamp": "2025-05-25T12-46-40.967Z",
+    "totalTests": 3,
+    "passedTests": 1,
+    "failedTests": 2,
+    "pendingTests": 0,
+    "skippedTests": 0,
+    "totalTestSuites": 1,
+    "passedTestSuites": 0,
+    "failedTestSuites": 1,
+    "executionTime": "1.58s",
+    "startTime": "2025-05-25T12:46:38.225Z",
+    "endTime": "2025-05-25T12:46:39.802Z",
+    "errorPatterns": {
+      "Error": 2
+    }
+  },
+  "testFiles": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\apiOptimization.integration.test.tsx",
+      "relativePath": "features\\manage-module\\__tests__\\integration\\module-page\\apiOptimization.integration.test.tsx",
+      "numFailingTests": 2,
+      "numPassingTests": 1,
+      "numPendingTests": 0,
+      "perfStats": {
+        "runtime": 1577,
+        "slowest": false,
+        "startTime": "2025-05-25T12:46:39.372Z",
+        "endTime": "2025-05-25T12:46:40.949Z"
+      },
+      "testResults": [
+        {
+          "title": "menerapkan debounce untuk perubahan editor, hanya mengirim request setelah jeda tertentu",
+          "fullName": "API Optimization - Integration Tests Debounce Editor Updates menerapkan debounce untuk perubahan editor, hanya mengirim request setelah jeda tertentu",
+          "ancestorTitles": [
+            "API Optimization - Integration Tests",
+            "Debounce Editor Updates"
+          ],
+          "status": "passed",
+          "duration": 76,
+          "failureDetails": null
+        },
+        {
+          "title": "tidak mengirim request berulang jika konten tidak berubah",
+          "fullName": "API Optimization - Integration Tests Debounce Editor Updates tidak mengirim request berulang jika konten tidak berubah",
+          "ancestorTitles": [
+            "API Optimization - Integration Tests",
+            "Debounce Editor Updates"
+          ],
+          "status": "failed",
+          "duration": 11,
+          "failureDetails": {
+            "failureMessages": [
+              [
+                "Error: Unable to find an element with the text: Test Component. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.",
+                "",
+                "Ignored nodes: comments, script, style",
+                "\u001b[36m<body>\u001b[39m",
+                "  \u001b[36m<div />\u001b[39m",
+                "\u001b[36m</body>\u001b[39m",
+                "    at waitForWrapper (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\@testing-library\\react\\node_modules\\@testing-library\\dom\\dist\\wait-for.js:163:27)",
+                "    at Object.<anonymous> (D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\apiOptimization.integration.test.tsx:181:20)",
+                "    at Promise.then.completed (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\utils.js:298:28)",
+                "    at new Promise (<anonymous>)",
+                "    at callAsyncCircusFn (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\utils.js:231:10)",
+                "    at _callCircusTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:316:40)",
+                "    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+                "    at _runTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:252:3)",
+                "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:126:9)",
+                "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:121:9)",
+                "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:121:9)",
+                "    at run (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:71:3)",
+                "    at runAndTransformResultsToJestFormat (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)",
+                "    at jestAdapter (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)",
+                "    at runTestInternal (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-runner\\build\\runTest.js:367:16)",
+                "    at runTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-runner\\build\\runTest.js:444:34)"
+              ]
+            ],
+            "location": null
+          }
+        },
+        {
+          "title": "menggunakan cache untuk mengurangi request GET berulang",
+          "fullName": "API Optimization - Integration Tests Query Cache Management menggunakan cache untuk mengurangi request GET berulang",
+          "ancestorTitles": [
+            "API Optimization - Integration Tests",
+            "Query Cache Management"
+          ],
+          "status": "failed",
+          "duration": 12,
+          "failureDetails": {
+            "failureMessages": [
+              [
+                "Error: Unable to find an element with the text: Test Component. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.",
+                "",
+                "Ignored nodes: comments, script, style",
+                "\u001b[36m<body>\u001b[39m",
+                "  \u001b[36m<div />\u001b[39m",
+                "\u001b[36m</body>\u001b[39m",
+                "    at waitForWrapper (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\@testing-library\\react\\node_modules\\@testing-library\\dom\\dist\\wait-for.js:163:27)",
+                "    at Object.<anonymous> (D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\apiOptimization.integration.test.tsx:241:20)",
+                "    at Promise.then.completed (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\utils.js:298:28)",
+                "    at new Promise (<anonymous>)",
+                "    at callAsyncCircusFn (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\utils.js:231:10)",
+                "    at _callCircusTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:316:40)",
+                "    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+                "    at _runTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:252:3)",
+                "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:126:9)",
+                "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:121:9)",
+                "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:121:9)",
+                "    at run (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:71:3)",
+                "    at runAndTransformResultsToJestFormat (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)",
+                "    at jestAdapter (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)",
+                "    at runTestInternal (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-runner\\build\\runTest.js:367:16)",
+                "    at runTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-runner\\build\\runTest.js:444:34)"
+              ]
+            ],
+            "location": null
+          }
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "testFilePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\apiOptimization.integration.test.tsx",
+      "testName": "API Optimization - Integration Tests Debounce Editor Updates tidak mengirim request berulang jika konten tidak berubah",
+      "duration": 11,
+      "failureMessages": [
+        [
+          "Error: Unable to find an element with the text: Test Component. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.",
+          "",
+          "Ignored nodes: comments, script, style",
+          "\u001b[36m<body>\u001b[39m",
+          "  \u001b[36m<div />\u001b[39m",
+          "\u001b[36m</body>\u001b[39m",
+          "    at waitForWrapper (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\@testing-library\\react\\node_modules\\@testing-library\\dom\\dist\\wait-for.js:163:27)",
+          "    at Object.<anonymous> (D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\apiOptimization.integration.test.tsx:181:20)",
+          "    at Promise.then.completed (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\utils.js:298:28)",
+          "    at new Promise (<anonymous>)",
+          "    at callAsyncCircusFn (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\utils.js:231:10)",
+          "    at _callCircusTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:316:40)",
+          "    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+          "    at _runTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:252:3)",
+          "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:126:9)",
+          "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:121:9)",
+          "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:121:9)",
+          "    at run (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:71:3)",
+          "    at runAndTransformResultsToJestFormat (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)",
+          "    at jestAdapter (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)",
+          "    at runTestInternal (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-runner\\build\\runTest.js:367:16)",
+          "    at runTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-runner\\build\\runTest.js:444:34)"
+        ]
+      ],
+      "ancestorTitles": [
+        "API Optimization - Integration Tests",
+        "Debounce Editor Updates"
+      ],
+      "status": "failed"
+    },
+    {
+      "testFilePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\apiOptimization.integration.test.tsx",
+      "testName": "API Optimization - Integration Tests Query Cache Management menggunakan cache untuk mengurangi request GET berulang",
+      "duration": 12,
+      "failureMessages": [
+        [
+          "Error: Unable to find an element with the text: Test Component. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.",
+          "",
+          "Ignored nodes: comments, script, style",
+          "\u001b[36m<body>\u001b[39m",
+          "  \u001b[36m<div />\u001b[39m",
+          "\u001b[36m</body>\u001b[39m",
+          "    at waitForWrapper (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\@testing-library\\react\\node_modules\\@testing-library\\dom\\dist\\wait-for.js:163:27)",
+          "    at Object.<anonymous> (D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\integration\\module-page\\apiOptimization.integration.test.tsx:241:20)",
+          "    at Promise.then.completed (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\utils.js:298:28)",
+          "    at new Promise (<anonymous>)",
+          "    at callAsyncCircusFn (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\utils.js:231:10)",
+          "    at _callCircusTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:316:40)",
+          "    at processTicksAndRejections (node:internal/process/task_queues:105:5)",
+          "    at _runTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:252:3)",
+          "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:126:9)",
+          "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:121:9)",
+          "    at _runTestsForDescribeBlock (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:121:9)",
+          "    at run (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\run.js:71:3)",
+          "    at runAndTransformResultsToJestFormat (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapterInit.js:122:21)",
+          "    at jestAdapter (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-circus\\build\\legacy-code-todo-rewrite\\jestAdapter.js:79:19)",
+          "    at runTestInternal (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-runner\\build\\runTest.js:367:16)",
+          "    at runTest (D:\\2-Project\\Data_Project_6\\Maguru\\node_modules\\jest-runner\\build\\runTest.js:444:34)"
+        ]
+      ],
+      "ancestorTitles": [
+        "API Optimization - Integration Tests",
+        "Query Cache Management"
+      ],
+      "status": "failed"
+    }
+  ],
+  "snapshots": {
+    "total": 0,
+    "matched": 0,
+    "added": 0,
+    "updated": 0,
+    "unmatched": 0,
+    "unchecked": 0,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesUnmatched": 0,
+    "filesUpdated": 0
+  }
+}

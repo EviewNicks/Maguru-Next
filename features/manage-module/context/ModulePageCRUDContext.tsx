@@ -99,20 +99,28 @@ export function useModulePageCRUDContext() {
 interface ModulePageCRUDProviderProps {
   children: ReactNode
   moduleId: string
+  mockValues?: Partial<ModulePageCRUDContextProps> // Tambahkan prop untuk testing
 }
 
 export function ModulePageCRUDProvider({
   children,
   moduleId,
+  mockValues = {}, // Default ke object kosong
 }: ModulePageCRUDProviderProps) {
   const router = useRouter()
 
   // State untuk halaman aktif
-  const [activePage, setActivePage] = useState<ModulePage | null>(null)
+  const [activePage, setActivePage] = useState<ModulePage | null>(
+    mockValues.activePage || null
+  )
 
   // State untuk editor
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved')
-  const [isNavigating, setIsNavigating] = useState<boolean>(false)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>(
+    mockValues.saveStatus || 'saved'
+  )
+  const [isNavigating, setIsNavigating] = useState<boolean>(
+    mockValues.isNavigating || false
+  )
 
   // State untuk menyimpan konten terakhir yang dikirim
   const [lastSavedContent, setLastSavedContent] = useState<
@@ -121,7 +129,7 @@ export function ModulePageCRUDProvider({
 
   // Gunakan hook untuk operasi CRUD
   const {
-    pages,
+    pages: hookPages,
     isLoading,
     error,
     refetch,
@@ -133,6 +141,9 @@ export function ModulePageCRUDProvider({
     savePage: savePageMutation,
     savePageWrapper,
   } = useModulePageCRUD(moduleId)
+
+  // Gunakan mock pages jika disediakan, atau pages dari hook
+  const pages = mockValues.pages || hookPages
 
   // Set active page otomatis ke halaman pertama jika belum diset
   React.useEffect(() => {
@@ -388,30 +399,32 @@ export function ModulePageCRUDProvider({
       isLoading,
       error,
       refetch,
-      createPage,
-      updatePage,
-      deletePage,
-      reorderPages,
-      setActivePage,
-      getPageById,
-      savePage,
-      savePageWrapper,
+      createPage: mockValues.createPage || createPage,
+      updatePage: mockValues.updatePage || updatePage,
+      deletePage: mockValues.deletePage || deletePage,
+      reorderPages: mockValues.reorderPages || reorderPages,
+      setActivePage: mockValues.setActivePage || setActivePage,
+      getPageById: mockValues.getPageById || getPageById,
+      savePage: mockValues.savePage || savePage,
+      savePageWrapper: mockValues.savePageWrapper || savePageWrapper,
       // Navigation helpers
-      getNextPage,
-      getPreviousPage,
-      getFirstPage,
-      getLastPage,
+      getNextPage: mockValues.getNextPage || getNextPage,
+      getPreviousPage: mockValues.getPreviousPage || getPreviousPage,
+      getFirstPage: mockValues.getFirstPage || getFirstPage,
+      getLastPage: mockValues.getLastPage || getLastPage,
       // Editor state
       saveStatus,
-      setSaveStatus,
+      setSaveStatus: mockValues.setSaveStatus || setSaveStatus,
       isNavigating,
-      setIsNavigating,
+      setIsNavigating: mockValues.setIsNavigating || setIsNavigating,
       // Handler functions
-      handlePageChange,
-      handleSelectPage,
-      handleEditorChange,
-      handleNavigateToPrevPage,
-      handleNavigateToNextPage,
+      handlePageChange: mockValues.handlePageChange || handlePageChange,
+      handleSelectPage: mockValues.handleSelectPage || handleSelectPage,
+      handleEditorChange: mockValues.handleEditorChange || handleEditorChange,
+      handleNavigateToPrevPage:
+        mockValues.handleNavigateToPrevPage || handleNavigateToPrevPage,
+      handleNavigateToNextPage:
+        mockValues.handleNavigateToNextPage || handleNavigateToNextPage,
     }),
     [
       moduleId,
@@ -440,6 +453,7 @@ export function ModulePageCRUDProvider({
       handleEditorChange,
       handleNavigateToPrevPage,
       handleNavigateToNextPage,
+      mockValues, // Tambahkan mockValues ke dependencies array
     ]
   )
 
