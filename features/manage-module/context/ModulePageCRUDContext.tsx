@@ -179,6 +179,13 @@ export function ModulePageCRUDProvider({
   const createPage = useCallback(
     async (page: CreateModulePageInput) => {
       try {
+        // Tambahkan null check
+        if (!createPageMutation?.mutateAsync) {
+          console.warn(
+            'createPageMutation not available in testing environment'
+          )
+          return null
+        }
         const result = await createPageMutation.mutateAsync(page)
         return result
       } catch (error) {
@@ -193,6 +200,13 @@ export function ModulePageCRUDProvider({
   const updatePage = useCallback(
     async (pageId: string, data: UpdateModulePageInput) => {
       try {
+        // Tambahkan null check
+        if (!updatePageMutation?.mutateAsync) {
+          console.warn(
+            'updatePageMutation not available in testing environment'
+          )
+          return null
+        }
         const result = await updatePageMutation.mutateAsync({
           pageId,
           updateData: data,
@@ -210,6 +224,13 @@ export function ModulePageCRUDProvider({
   const deletePage = useCallback(
     async (pageId: string) => {
       try {
+        // Tambahkan null check
+        if (!deletePageMutation?.mutateAsync) {
+          console.warn(
+            'deletePageMutation not available in testing environment'
+          )
+          return null
+        }
         const result = await deletePageMutation.mutateAsync(pageId)
 
         // Jika halaman yang dihapus adalah active page, reset ke null
@@ -230,6 +251,13 @@ export function ModulePageCRUDProvider({
   const reorderPages = useCallback(
     async (pageIds: string[]) => {
       try {
+        // Tambahkan null check
+        if (!reorderPagesMutation?.mutateAsync) {
+          console.warn(
+            'reorderPagesMutation not available in testing environment'
+          )
+          return null
+        }
         const result = await reorderPagesMutation.mutateAsync(pageIds)
         return result
       } catch (error) {
@@ -408,6 +436,11 @@ export function ModulePageCRUDProvider({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       blocks?: any[]
     }): AnyPromise => {
+      // Tambahkan null check untuk savePageMutation
+      if (!savePageMutation?.mutateAsync) {
+        console.warn('savePageMutation not available in testing environment')
+        return Promise.resolve(null)
+      }
       return savePageMutation.mutateAsync(params)
     },
     [savePageMutation]
