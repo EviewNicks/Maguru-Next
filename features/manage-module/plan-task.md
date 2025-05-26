@@ -511,3 +511,442 @@ Dengan menerapkan test cases di atas, kita dapat:
 4. Meningkatkan kepercayaan pada codebase secara keseluruhan
 
 Hasil akhirnya akan berupa suite pengujian yang komprehensif yang dapat dijalankan secara otomatis dalam CI/CD pipeline, yang memberikan jaminan bahwa fitur modul pembelajaran berfungsi dengan benar sebelum direlease ke production.
+
+## 11. Test Tambahan untuk Debugging dan Masalah Integrasi
+
+### 11.1 Data Flow Test Suite
+
+#### 11.1.1 Test Case: API ke UI data flow
+
+**Tujuan**: Memastikan data dari API benar-benar sampai ke komponen UI
+
+**Skenario**:
+
+1. Mock API response dengan data lengkap (seperti contoh response API)
+2. Render `ModulePageEditor` dengan context providers
+3. Verifikasi data di context sudah sesuai dengan API response
+4. Verifikasi `SidebarContent` menerima pages dari context
+5. Verifikasi rendering daftar halaman di sidebar dengan data yang benar
+
+**File yang terlibat**:
+
+- `ModulePageEditor.tsx`
+- `SidebarContent.tsx`
+- `ModulePageCRUDContext.tsx`
+- `useModulePageQuery.ts`
+
+**Test Code Outline**:
+
+```typescript
+test('loads module page data from API and displays in sidebar', async () => {
+  // Setup mock API response dengan data dari contoh
+  server.use(
+    rest.get('/api/module/:moduleId/pages', (req, res, ctx) => {
+      return res(ctx.json({
+        success: true,
+        data: [
+          {
+            id: "ff006ad1-939f-43dd-82a7-20623f4494b2",
+            moduleId: "e82e800c-93f5-48ef-b17b-2dfe5624f4fb",
+            title: "Halaman Baru 1",
+            order: 1,
+            status: "DRAFT",
+            createdAt: "2025-05-23T08:57:01.575Z",
+            updatedAt: "2025-05-23T12:07:13.365Z",
+            blocks: []
+          },
+          // ... data lainnya
+        ],
+        meta: {
+          currentPage: 1,
+          pageSize: 10,
+          totalItems: 3,
+          totalPages: 1
+        }
+      }))
+    })
+  )
+
+  // Render komponen dengan context
+  const { findAllByText } = renderWithProviders(<ModulePageEditor />)
+
+  // Tunggu data dimuat dan sidebar dirender
+  const pageItems = await findAllByText("Halaman Baru 1")
+
+  // Verifikasi jumlah item sesuai dengan data API (3 item)
+  expect(pageItems.length).toBe(3)
+})
+```
+
+### 11.2 Component Interaction Test Suite
+
+#### 11.2.1 Test Case: Context Provider Data Propagation
+
+**Tujuan**: Memastikan data dari context provider benar-benar sampai ke komponen child
+
+**Skenario**:
+
+1. Setup mock data di ModulePageCRUDProvider
+2. Render SidebarContent dengan provider
+3. Verifikasi SidebarContent menerima dan menggunakan data dengan benar
+
+**File yang terlibat**:
+
+- `ModulePageCRUDContext.tsx`
+- `SidebarContent.tsx`
+
+**Test Code Outline**:
+
+```typescript
+test('passes data from context provider to SidebarContent correctly', async () => {
+  // Setup mock pages data
+  const mockPages = [
+    {
+      id: "test-page-1",
+      title: "Test Page 1",
+      moduleId: "test-module",
+      order: 1,
+      status: "DRAFT",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      blocks: []
+    }
+  ]
+
+  // Render dengan mock provider
+  const { getByText } = render(
+    <ModulePageCRUDProvider moduleId="test-module" mockValues={{ pages: mockPages }}>
+      <SidebarContent
+        expandedItems={{ ModuleContent: true }}
+        toggleExpand={() => {}}
+      />
+    </ModulePageCRUDProvider>
+  )
+
+  // Verifikasi item muncul di SidebarContent
+  expect(getByText("Test Page 1")).toBeInTheDocument()
+})
+```
+
+### 11.3 Create Page Test Suite
+
+#### 11.3.1 Test Case: handleCreatePage function end-to-end
+
+**Tujuan**: Memastikan fungsi handleCreatePage bekerja dengan benar dari UI hingga API call
+
+**Skenario**:
+
+1. Mock API untuk create page (POST)
+2. Render SidebarContent dengan providers
+3. Klik tombol "Tambah Halaman"
+4. Verifikasi loading state muncul
+5. Verifikasi API call dilakukan dengan parameter yang benar
+6. Verifikasi halaman baru ditambahkan ke sidebar
+7. Verifikasi navigasi ke halaman baru
+
+**File yang terlibat**:
+
+- `SidebarContent.tsx`
+- `ModulePageCRUDContext.tsx`
+- `useModulePageCRUD.ts`
+
+**Test Code Outline**:
+
+```typescript
+test('creates new page and navigates to it when Add Page button is clicked', async () => {
+  // Setup mock untuk createPage API
+  const createPageMock = jest.fn().mockResolvedValue({
+    success: true,
+    data: {
+      id: "new-page-id",
+      title: "Halaman Baru 1",
+      moduleId: "test-module",
+      order: 1,
+      status: "DRAFT",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      blocks: []
+    }
+  })
+
+  // Mock router
+  const mockRouter = { push: jest.fn() }
+
+  // Render dengan mocks
+  const { getByText, findByText } = renderWithMockProviders(
+    <SidebarContent
+      expandedItems={{ ModuleContent: true }}
+      toggleExpand={() => {}}
+    />,
+    {
+      createPage: createPageMock,
+      router: mockRouter
+    }
+  )
+
+  // Klik tombol tambah halaman
+  fireEvent.click(getByText("Tambah Halaman"))
+
+  // Verifikasi loading state
+  expect(await findByText("Membuat halaman...")).toBeInTheDocument()
+
+  // Verifikasi API call
+  expect(createPageMock).toHaveBeenCalledWith(expect.objectContaining({
+    title: "Halaman Baru 1",
+    moduleId: "test-module"
+  }))
+
+  // Verifikasi navigasi
+  expect(mockRouter.push).toHaveBeenCalledWith(
+    expect.stringContaining("new-page-id")
+  )
+})
+```
+
+### 11.4 Error State and Loading Test Suite
+
+#### 11.4.1 Test Case: API Error State in SidebarContent
+
+**Tujuan**: Memastikan SidebarContent menampilkan UI yang tepat saat API error
+
+**Skenario**:
+
+1. Mock API untuk mengembalikan error
+2. Render SidebarContent dengan providers
+3. Verifikasi pesan error ditampilkan
+4. Verifikasi UI menangani error dengan benar
+
+**File yang terlibat**:
+
+- `SidebarContent.tsx`
+- `ModulePageCRUDContext.tsx`
+- `useModulePageQuery.ts`
+
+**Test Code Outline**:
+
+```typescript
+test('displays appropriate error state when API fails', async () => {
+  // Setup mock API error
+  server.use(
+    rest.get('/api/module/:moduleId/pages', (req, res, ctx) => {
+      return res(ctx.status(500), ctx.json({ message: "Server error" }))
+    })
+  )
+
+  // Render komponen
+  const { findByText } = renderWithProviders(<SidebarContent
+    expandedItems={{ ModuleContent: true }}
+    toggleExpand={() => {}}
+  />)
+
+  // Verifikasi pesan error
+  expect(await findByText("Tidak ada halaman ditemukan")).toBeInTheDocument()
+})
+```
+
+#### 11.4.2 Test Case: Initial Loading State
+
+**Tujuan**: Memastikan loading state ditampilkan dengan benar saat data dimuat
+
+**Skenario**:
+
+1. Mock API untuk menunda response
+2. Render ModulePageEditor dengan providers
+3. Verifikasi loading state ditampilkan
+4. Setelah data dimuat, verifikasi content ditampilkan
+
+**File yang terlibat**:
+
+- `ModulePageEditor.tsx`
+- `SidebarContent.tsx`
+- `ModulePageCRUDContext.tsx`
+
+**Test Code Outline**:
+
+```typescript
+test('displays loading state while fetching data', async () => {
+  // Setup delayed API response
+  server.use(
+    rest.get('/api/module/:moduleId/pages', async (req, res, ctx) => {
+      await new Promise(resolve => setTimeout(resolve, 100))
+      return res(ctx.json({ success: true, data: [] }))
+    })
+  )
+
+  // Render komponen
+  const { getByTestId, findByText } = renderWithProviders(
+    <ModulePageEditor isLoading={true} />
+  )
+
+  // Verifikasi loading skeleton ditampilkan
+  expect(getByTestId("module-page-skeleton")).toBeInTheDocument()
+
+  // Verifikasi content muncul setelah loading
+  expect(await findByText("Belum ada halaman")).toBeInTheDocument()
+})
+```
+
+### 11.5 Page Data Transformation Test Suite
+
+#### 11.5.1 Test Case: Data transformasi dari API ke UI model
+
+**Tujuan**: Memastikan data dari API ditransformasi dengan benar ke model yang digunakan UI
+
+**Skenario**:
+
+1. Mock data API dengan format yang kompleks
+2. Render komponen dengan providers
+3. Verifikasi data ditransformasi dengan benar
+4. Verifikasi UI menampilkan data dengan format yang benar
+
+**File yang terlibat**:
+
+- `useModulePageQuery.ts`
+- `useModulePageCRUD.ts`
+- `ModulePageCRUDContext.tsx`
+
+**Test Code Outline**:
+
+```typescript
+test('transforms API data correctly for UI components', async () => {
+  // Setup mock API response dengan data kompleks (termasuk blocks)
+  const complexApiData = {
+    success: true,
+    data: [
+      {
+        id: "test-page",
+        moduleId: "test-module",
+        title: "Test Page",
+        order: 1,
+        status: "DRAFT",
+        blocks: [
+          {
+            type: "TEXT",
+            content: JSON.stringify({
+              type: "doc",
+              content: [{ type: "paragraph", content: [{ type: "text", text: "Test content" }] }]
+            })
+          }
+        ],
+        createdAt: "2025-05-23T08:57:01.575Z",
+        updatedAt: "2025-05-23T12:07:13.365Z"
+      }
+    ]
+  }
+
+  // Mock API call
+  server.use(
+    rest.get('/api/module/:moduleId/pages', (req, res, ctx) => {
+      return res(ctx.json(complexApiData))
+    })
+  )
+
+  // Render komponen yang menggunakan data
+  const { findByText } = renderWithProviders(
+    <TestComponent />
+  )
+
+  // Verifikasi data ditampilkan dengan benar
+  expect(await findByText("Test Page")).toBeInTheDocument()
+
+  // Verifikasi transformasi data (misal: date formatting, content parsing)
+  // Ini membutuhkan komponen test khusus yang menampilkan data yang ditransformasi
+})
+```
+
+### 11.6 Edge Cases Test Suite
+
+#### 11.6.1 Test Case: Navigasi dengan Zero Pages
+
+**Tujuan**: Memastikan aplikasi menangani kasus ketika tidak ada halaman modul
+
+**Skenario**:
+
+1. Mock API untuk mengembalikan array kosong
+2. Render ModulePageEditor
+3. Verifikasi UI menampilkan state "tidak ada halaman"
+4. Verifikasi tombol navigasi dinonaktifkan
+5. Verifikasi create page masih berfungsi
+
+**File yang terlibat**:
+
+- `ModulePageEditor.tsx`
+- `ModulePageFooterNav.tsx`
+- `SidebarContent.tsx`
+
+**Test Code Outline**:
+
+```typescript
+test('handles zero pages state correctly', async () => {
+  // Setup empty pages API response
+  server.use(
+    rest.get('/api/module/:moduleId/pages', (req, res, ctx) => {
+      return res(ctx.json({ success: true, data: [] }))
+    })
+  )
+
+  // Render komponen
+  const { findByText, getByText } = renderWithProviders(<ModulePageEditor />)
+
+  // Verifikasi pesan "tidak ada halaman"
+  expect(await findByText("Belum ada halaman")).toBeInTheDocument()
+
+  // Klik tombol create page
+  fireEvent.click(getByText("Tambah Halaman"))
+
+  // Verifikasi create page dipanggil
+  // (Butuh setup tambahan untuk mock createPage)
+})
+```
+
+#### 11.6.2 Test Case: Race Condition saat Multiple API Calls
+
+**Tujuan**: Memastikan aplikasi menangani kasus ketika multiple API calls terjadi bersamaan
+
+**Skenario**:
+
+1. Mock API dengan response time yang berbeda
+2. Trigger multiple API calls bersamaan
+3. Verifikasi aplikasi menangani race condition dengan benar
+
+**File yang terlibat**:
+
+- `useModulePageCRUD.ts`
+- `ModulePageCRUDContext.tsx`
+- `SidebarContent.tsx`
+
+**Test Code Outline**:
+
+```typescript
+test('handles race conditions with multiple API calls', async () => {
+  // Setup mocks dengan response time yang berbeda
+  const slowCreateMock = jest.fn().mockImplementation(() =>
+    new Promise(resolve => setTimeout(() => resolve({
+      success: true,
+      data: { id: "slow-page", title: "Slow Page" }
+    }), 200))
+  )
+
+  const fastCreateMock = jest.fn().mockImplementation(() =>
+    new Promise(resolve => setTimeout(() => resolve({
+      success: true,
+      data: { id: "fast-page", title: "Fast Page" }
+    }), 50))
+  )
+
+  // Render komponen dengan context yang menggunakan mocks
+  const { getAllByText } = renderWithTestContext(<TestComponent />, {
+    createPageMocks: [slowCreateMock, fastCreateMock]
+  })
+
+  // Trigger multiple API calls
+  fireEvent.click(getAllByText("Create Page")[0])
+  fireEvent.click(getAllByText("Create Page")[1])
+
+  // Fast-forward timers dan verifikasi state akhir
+  jest.advanceTimersByTime(250)
+
+  // Verifikasi state handling yang benar
+  // (Implementasi spesifik tergantung bagaimana kode menangani race condition)
+})
+```

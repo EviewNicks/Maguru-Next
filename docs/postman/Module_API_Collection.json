@@ -257,6 +257,36 @@
           "response": []
         },
         {
+          "name": "Update Module Page Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PUBLISHED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages/{{pageId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "module",
+                "{{moduleId}}",
+                "pages",
+                "{{pageId}}",
+                "status"
+              ]
+            },
+            "description": "Mengubah status halaman modul (DRAFT, PUBLISHED, ARCHIVED)."
+          },
+          "response": []
+        },
+        {
           "name": "Delete Module Page",
           "request": {
             "method": "DELETE",

@@ -288,6 +288,226 @@ File: `features/manage-module/__tests__/integration/module-page/refinement.integ
   - Menangani kondisi jaringan lambat
   - Menangani perubahan halaman saat sedang menyimpan
 
+#### 2.7 Data Flow Tests
+
+File: `features/manage-module/__tests__/integration/module-page/data-flow.integration.test.tsx`
+
+**Deskripsi**: Test ini memastikan bahwa data mengalir dengan benar dari API menuju komponen UI melalui Context API.
+
+**Flow Test**:
+
+1. Setup MSW mock server untuk intercept API requests
+2. Render komponen SidebarContent yang akan menerima data
+3. Verifikasi bahwa API dipanggil dan data sampai ke UI
+4. Periksa berbagai kasus seperti data kosong, error response, dan loading state
+
+**File Referensi Spesifik**:
+
+- `features/manage-module/components/ModulePageEditor/sidebar/SidebarContent.tsx` - Komponen yang menampilkan daftar halaman
+- `features/manage-module/context/ModulePageCRUDContext.tsx` - Context Provider untuk data halaman
+- `app/api/module/[id]/pages/route.ts` - API endpoint untuk mengambil data halaman
+- `features/manage-module/hooks/useModulePageCRUD.ts` - Hook untuk operasi CRUD halaman
+
+**Implementasi Test**:
+
+1. **Mock Data dan API**: Test menggunakan MSW untuk mock API responses dengan wildcard path `*/api/module/:moduleId/pages*` untuk memastikan semua variasi URL tertangkap
+2. **Teknik Rendering**: Menggunakan dua pendekatan rendering:
+   - `renderWithProviders`: Menggunakan provider asli dan MSW untuk flow lengkap
+   - `renderWithDirectContext`: Bypass API dan langsung inject data ke context untuk isolasi test
+3. **Verifikasi Data Flow**: Menggunakan console spy untuk memverifikasi MSW handler terpanggil
+
+**Kasus Test**:
+
+- **Data Fetching dari API**: Menguji apakah data dari API muncul di UI
+- **Context Provider Injection**: Memastikan context meneruskan data dengan benar
+- **Loading State**: Memverifikasi komponen menampilkan loading state
+- **Empty State**: Menguji tampilan ketika tidak ada data
+- **Error Handling**: Memastikan penanganan error berjalan dengan baik
+
+**Tantangan dan Solusi**:
+
+- **MSW Path Matching**: Menggunakan `*/path*` sebagai wildcard untuk menangkap semua variasi URL
+- **Context Testing**: Menggunakan pendekatan direct context untuk isolasi testing
+- **Error dengan Router**: Mocking Next.js navigation di awal file untuk menghindari error "app router to be mounted"
+- **Linting Issues**: Terdapat masalah dengan penggunaan `any` dan impor `ModulePageCRUDContext`
+
+**Masalah Implementasi Saat Ini:**
+
+1. **Struktur Context API Tidak Konsisten**: File context kita menggunakan pattern yang tidak membuka `ModulePageCRUDContext` secara langsung, melainkan hanya memperlihatkan hook `useModulePageCRUDContext` dan provider `ModulePageCRUDProvider`.
+
+2. **Typing Issues**: Penggunaan `any` pada parameter context yang melanggar aturan TypeScript di proyek.
+
+3. **Test Integration Tidak Lengkap**: Pendekatan mock API belum terintegrasi dengan baik dengan context, menyebabkan test gagal menemukan elemen.
+
+**Rekomendasi Perbaikan:**
+
+1. **Perbaikan Context API**:
+
+   ```typescript
+   // Refactor context untuk expose Context object
+   export const ModulePageCRUDContext = createContext<ModulePageCRUDContextValue | undefined>(undefined);
+
+   // Hook tetap sama
+   export function useModulePageCRUDContext() { ... }
+
+   // Provider dapat menerima mockValues untuk testing
+   export function ModulePageCRUDProvider({ children, moduleId, mockValues = {} }) { ... }
+   ```
+
+2. **Pendekatan Testing yang Disarankan**:
+
+   - Gunakan pendekatan "Provider with Props" untuk mempermudah testing
+   - Implementasikan interface yang jelas untuk context value
+   - Buat helper function khusus untuk rendering dengan context mock
+
+3. **Solusi Jangka Pendek**:
+
+   - Gunakan `renderWithProviders` dengan MSW mock saja (pendekatan yang lebih reliable)
+   - Tambahkan delay dan retry yang tepat untuk memastikan data berhasil di-load
+   - Tambahkan debug log untuk trace aliran data
+
+4. **Perbaikan Struktur Test**:
+   - Pisahkan logic test rendering dari test cases
+   - Gunakan pendekatan "given-when-then" yang lebih eksplisit
+   - Fokus pada hasil akhir (UI) daripada implementasi internal
+
+#### 2.8 Create Page Tests
+
+File: `features/manage-module/__tests__/integration/module-page/create-page.integration.test.tsx`
+
+**Deskripsi**: Test ini memastikan fungsionalitas pembuatan halaman baru berjalan dengan benar, termasuk loading state, error handling, dan navigasi setelah pembuatan.
+
+**Flow Test**:
+
+1. Setup MSW untuk intercept GET dan POST requests
+2. Render SidebarContent dengan mock data awal
+3. Trigger aksi "Tambah Halaman"
+4. Verifikasi loading state dan API calls
+5. Verifikasi navigasi ke halaman baru setelah berhasil dibuat
+6. Test error handling saat pembuatan gagal
+
+**File Referensi Spesifik**:
+
+- `features/manage-module/components/ModulePageEditor/sidebar/SidebarContent.tsx` - UI untuk pembuatan halaman
+- `features/manage-module/context/ModulePageCRUDContext.tsx` - Fungsi handleCreatePage
+- `app/api/module/[id]/pages/route.ts` - API endpoint untuk create halaman
+- `features/manage-module/hooks/useModulePageCRUD.ts` - Hook dengan handleCreatePage
+
+**Implementasi Test**:
+
+1. **Mock Router**: Menggunakan jest.mock untuk mengganti Next.js router dengan mock
+2. **Toast Notifications**: Mocking sonner untuk memverifikasi notifikasi sukses/error
+3. **Request Capture**: Meng-capture request body untuk memastikan struktur data benar
+4. **Multiple Create**: Menguji pembuatan beberapa halaman secara berurutan
+
+**Kasus Test**:
+
+- **Pembuatan Berhasil**: Membuat halaman baru dan memeriksa navigasi
+- **Error Handling**: Menampilkan error ketika API gagal
+- **Struktur Data**: Memastikan data yang dikirim ke API memiliki format yang benar
+- **Multiple Creations**: Memastikan bisa membuat beberapa halaman berurutan tanpa konflik
+
+**Masalah dan Solusi**:
+
+- **API Response Consistency**: Menggunakan dynamic response generator untuk id dan judul berbeda
+- **Toast Verification**: Mocking sonner.toast.success/error dan verifikasi dengan waitFor
+- **Multiple Sequential Actions**: Menggunakan counter dan unique IDs untuk memastikan urutan aksi benar
+
+### Integrasi Antar Tests
+
+Kedua test ini (data-flow dan create-page) bekerja bersama untuk memastikan alur data dalam aplikasi berjalan dengan baik. Data-flow test memverifikasi data yang sudah ada bisa ditampilkan dengan benar, sementara create-page test memastikan data baru bisa dibuat dan kemudian diintegrasikan ke dalam alur.
+
+Perbandingan kedua test:
+
+| Aspek              | Data Flow Test              | Create Page Test             |
+| ------------------ | --------------------------- | ---------------------------- |
+| Fokus              | Membaca data dari API ke UI | Mengirim data dari UI ke API |
+| Path               | GET /api/module/:id/pages   | POST /api/module/:id/pages   |
+| Verifikasi         | Data ditampilkan di UI      | Navigation & loading state   |
+| Error Case         | API error, empty data       | Creation failure             |
+| Rendering Approach | Direct context & provider   | Provider only                |
+
+Dengan kombinasi kedua test ini, kita memastikan alur data bidirectional (dua arah) berjalan dengan benar:
+
+```
+[Data Flow Test]
+API ─→ MSW Mock Server ─→ Context ─→ UI Components
+       │                   │           │
+       └───────────────────┴───────────┘
+              Verification Points
+
+[Create Page Test]
+UI ─→ Context API ─→ MSW Mock Server ─→ Response ─→ UI Update
+      │               │                   │           │
+      └───────────────┴───────────────────┴───────────┘
+                   Verification Points
+```
+
+## Kesimpulan dan Langkah Selanjutnya
+
+### Pencapaian
+
+- Berhasil menyelesaikan fase 1 (setup dan mock), fase 2 (navigation dan content test), fase 3 (CRUD dan API optimization), dan fase 4 (error handling dan refinement)
+- Memvalidasi fungsionalitas navigasi dan operasi CRUD halaman modul
+- Memverifikasi optimasi API seperti debounce, throttling, dan caching
+- Menguji penanganan error dan edge cases seperti kondisi jaringan lambat dan concurrent requests
+- Memastikan aplikasi memiliki recovery mechanism yang baik dari berbagai jenis error
+- **Update 2025-05-26:** Menambahkan Data Flow Test dan Create Page Test untuk memperkuat validasi aliran data dua arah dalam aplikasi
+
+### Tantangan yang Dihadapi
+
+- Mocking Tiptap editor untuk content editing tests
+- Pengujian dialog dan interaksi popup yang memerlukan manipulasi DOM lebih kompleks
+- Mensimulasikan interaksi navigasi yang melibatkan beberapa context bersamaan
+- Debugging optimasi performa seperti debounce dan caching yang memerlukan timing yang tepat
+- Mensimulasikan kondisi jaringan yang berbeda untuk pengujian edge cases
+- Membuat test yang konsisten untuk penanganan error dan recovery
+- Mengatasi masalah "Reflect.has called on non-object" pada error handling tests yang disebabkan oleh incompatibilitas MSW dengan setup testing
+- **Update 2025-05-26:** Menghadapi masalah integration dengan Next.js router dalam test environment (Error: "invariant expected app router to be mounted")
+
+### Perbaikan Pada Data Flow dan Create Page Tests
+
+Dalam implementasi terbaru, kami menghadapi beberapa tantangan dengan Data Flow dan Create Page Tests:
+
+**Masalah Data Flow Test:**
+
+- Test tidak berhasil menemukan elemen yang seharusnya ditampilkan ("Unable to find element with text: Halaman Baru 1")
+- Context Provider tidak menerima data dari MSW dengan benar
+- Error "invariant expected app router to be mounted" ketika menggunakan Next.js router hooks
+
+**Solusi:**
+
+- Mengimplementasikan pendekatan dual-rendering:
+  1. `renderWithProviders`: Untuk flow lengkap API → Context → UI
+  2. `renderWithDirectContext`: Untuk bypass API dan langsung menguji rendering UI dengan data yang sudah disiapkan
+- Mocking Next.js navigation di awal file untuk menghindari error router
+- Menggunakan MSW dengan wildcard path matching (`*/path*`) untuk menangkap semua variasi URL
+- Menggunakan console spy untuk memverifikasi MSW handler terpanggil
+
+**Masalah Create Page Test:**
+
+- Dependency pada Next.js router untuk navigasi setelah pembuatan halaman
+- Kesulitan memverifikasi UI updates setelah operasi asynchronous
+- Verifikasi struktur data yang dikirim ke API
+
+**Solusi:**
+
+- Mocking router.push dan memverifikasi pemanggilan dengan parameter yang tepat
+- Menggunakan request capture untuk memeriksa payload yang dikirim ke API
+- Implementasi counter untuk memastikan urutan pemanggilan API dan unique responses
+- Mocking toast notification untuk memverifikasi feedback ke user
+
+### Langkah Selanjutnya
+
+Dengan selesainya semua fase testing sesuai rencana di `plan-task.md`, langkah selanjutnya adalah:
+
+1. Menambahkan end-to-end tests untuk flow lengkap dari pembuatan modul hingga publishing
+2. Mengintegrasikan test suite ke dalam CI/CD pipeline
+3. Membuat dokumentasi lebih detail tentang cara menjalankan dan memelihara test
+4. Mengembangkan test coverage monitoring untuk memastikan kualitas kode tetap terjaga
+5. Melakukan refactoring test untuk meningkatkan reusability dan maintainability
+6. **Update 2025-05-26:** Menstandarisasi pola mocking untuk MSW dan Next.js router di seluruh test suite
+
 ## Daftar File Referensi Umum
 
 ### Files Utama yang Diuji
@@ -397,65 +617,6 @@ File: `features/manage-module/__tests__/integration/module-page/refinement.integ
    - Cek CSS selector apakah element benar-benar visible/enabled
    - Gunakan `fireEvent` atau `userEvent` dengan benar (userEvent lebih realistis)
 
-## Kesimpulan dan Langkah Selanjutnya
-
-### Pencapaian
-
-- Berhasil menyelesaikan fase 1 (setup dan mock), fase 2 (navigation dan content test), fase 3 (CRUD dan API optimization), dan fase 4 (error handling dan refinement)
-- Memvalidasi fungsionalitas navigasi dan operasi CRUD halaman modul
-- Memverifikasi optimasi API seperti debounce, throttling, dan caching
-- Menguji penanganan error dan edge cases seperti kondisi jaringan lambat dan concurrent requests
-- Memastikan aplikasi memiliki recovery mechanism yang baik dari berbagai jenis error
-
-### Tantangan yang Dihadapi
-
-- Mocking Tiptap editor untuk content editing tests
-- Pengujian dialog dan interaksi popup yang memerlukan manipulasi DOM lebih kompleks
-- Mensimulasikan interaksi navigasi yang melibatkan beberapa context bersamaan
-- Debugging optimasi performa seperti debounce dan caching yang memerlukan timing yang tepat
-- Mensimulasikan kondisi jaringan yang berbeda untuk pengujian edge cases
-- Membuat test yang konsisten untuk penanganan error dan recovery
-- Mengatasi masalah "Reflect.has called on non-object" pada error handling tests yang disebabkan oleh incompatibilitas MSW dengan setup testing
-
-### Perbaikan Error Handling Tests
-
-Dalam implementasi awal, kami mengalami masalah dengan test error handling yang menampilkan error "Reflect.has called on non-object". Setelah investigasi, kami menemukan bahwa masalah ini terkait dengan cara MSW berinteraksi dengan fetch API dalam konteks testing.
-
-**Masalah:**
-
-- Test errorHandling.integration.test.tsx gagal dengan error "Reflect.has called on non-object"
-- Error ini muncul ketika mencoba mengakses property dari response yang tidak valid
-- MSW tidak mengembalikan response dalam format yang diharapkan oleh kode
-
-**Solusi:**
-
-- Beralih dari MSW ke pendekatan mock langsung menggunakan `jest.mock` untuk global fetch API
-- Implementasi mock fetch yang lebih sederhana dan terkontrol
-- Memisahkan test menjadi komponen yang lebih sederhana untuk isolasi masalah
-- Menggunakan Promise.resolve untuk mengembalikan response yang valid dan konsisten
-
-**Hasil:**
-
-- Test error handling berhasil dijalankan tanpa error
-- Validasi notifikasi error dan recovery dari error berfungsi dengan baik
-- Pendekatan ini lebih sederhana dan lebih stabil untuk pengujian error handling
-
-**Pelajaran:**
-
-- Untuk kasus pengujian error handling yang sederhana, pendekatan mock langsung lebih efektif daripada MSW
-- MSW lebih cocok untuk pengujian integrasi yang kompleks dengan banyak endpoint
-- Penting untuk memisahkan komponen test menjadi lebih sederhana untuk debugging yang lebih mudah
-
-### Langkah Selanjutnya
-
-Dengan selesainya semua fase testing sesuai rencana di `plan-task.md`, langkah selanjutnya adalah:
-
-1. Menambahkan end-to-end tests untuk flow lengkap dari pembuatan modul hingga publishing
-2. Mengintegrasikan test suite ke dalam CI/CD pipeline
-3. Membuat dokumentasi lebih detail tentang cara menjalankan dan memelihara test
-4. Mengembangkan test coverage monitoring untuk memastikan kualitas kode tetap terjaga
-5. Melakukan refactoring test untuk meningkatkan reusability dan maintainability
-
 ## Contoh Penggunaan
 
 Untuk menjalankan semua integration test:
@@ -479,6 +640,122 @@ yarn test features/manage-module/__tests__/integration/apiOptimization.integrati
 # Jalankan test dengan verbose output
 yarn test:integration -- --verbose
 ```
+
+## Prioritas Perbaikan Berikutnya
+
+Berdasarkan analisis yang telah dilakukan, berikut adalah prioritas perbaikan yang perlu segera diimplementasikan:
+
+### 1. Struktur Context dan Testing Utilities
+
+- **Refactor ModulePageCRUDContext.tsx**: Perbaiki struktur Context API untuk lebih mendukung testing
+
+  ```typescript
+  // Refactoring yang dibutuhkan:
+  export const ModulePageCRUDContext = createContext<
+    ModulePageCRUDContextValue | undefined
+  >(undefined)
+  export const useModulePageCRUDContext = () => {
+    /* implementasi tetap sama */
+  }
+  export const ModulePageCRUDProvider = ({
+    children,
+    moduleId,
+    mockValues = {},
+  }) => {
+    /* tambahkan support mockValues */
+  }
+  ```
+
+- **Buat Test Utils Standar**: Implementasikan utility functions di `features/manage-module/__tests__/utils/testUtils.tsx` yang standar untuk semua test:
+  ```typescript
+  // Contoh implementasi:
+  export function renderWithMockContext(
+    ui: React.ReactElement,
+    contextOverrides = {}
+  ) {
+    // Implementasi render dengan context yang bisa di-mock dengan lebih baik
+  }
+  ```
+
+### 2. Standarisasi Mock Pattern
+
+- **Create Global Mocks**: Buat mock standard untuk komponen dan hooks yang sering digunakan:
+
+  ```typescript
+  // __mocks__/nextNavigation.ts
+  export const setupNextNavigationMock = () => {
+    jest.mock('next/navigation', () => ({
+      // Implementasi mock standar yang bisa digunakan di semua test
+    }))
+  }
+  ```
+
+- **Mock MSW Handlers**: Standarisasi handler MSW untuk API yang sering digunakan:
+  ```typescript
+  // __mocks__/apiHandlers.ts
+  export const modulePageHandlers = [
+    // Implementasi handler standar untuk modul page API
+  ]
+  ```
+
+### 3. Data Flow Test Improvements
+
+- **Fix Direct Context Testing**: Perbaiki pendekatan testing dengan direct context:
+
+  ```typescript
+  // Perbaikan yang dibutuhkan pada renderWithDirectContext
+  const renderWithDirectContext = (ui, contextValue) => {
+    // Implementasi yang benar dengan TypeScript typing yang tepat
+  }
+  ```
+
+- **Improve API Mocking**: Gunakan pendekatan yang lebih robust untuk mocking API:
+  ```typescript
+  // Contoh implementasi:
+  server.use(
+    http.get('*/api/module/:moduleId/pages*', async ({ request, params }) => {
+      // Log lebih detail dan handling yang lebih baik
+      console.log(`[Mock] GET pages for module ${params.moduleId}`)
+      return HttpResponse.json(mockPages)
+    })
+  )
+  ```
+
+### 4. Create Page Test Improvements
+
+- **Improve Request Capture**: Implementasikan capture request yang lebih robust:
+
+  ```typescript
+  // Implementasi yang lebih baik:
+  let requestPayloads = []
+  server.use(
+    http.post('*/api/module/:moduleId/pages*', async ({ request }) => {
+      const payload = await request.json()
+      requestPayloads.push(payload)
+      console.log('[Mock] POST create page with payload:', payload)
+      return HttpResponse.json({
+        success: true,
+        data: { ...mockNewPage, id: `page-${Date.now()}` },
+      })
+    })
+  )
+  ```
+
+- **Better UI Verification**: Verifikasi UI dengan lebih baik:
+  ```typescript
+  // Contoh:
+  test('creates new page and updates UI', async () => {
+    // Implementasi yang lebih baik dengan verifikasi UI yang lebih komprehensif
+  })
+  ```
+
+### 5. Integrasi dengan Testing Plan
+
+- **Create Test Matrix**: Buat matrix untuk memastikan semua aspek penting sudah ter-cover
+- **Document Edge Cases**: Dokumentasikan edge cases yang perlu di-test
+- **Create Test Report Template**: Buat template untuk reporting hasil test yang lebih terstruktur
+
+Implementasi prioritas perbaikan ini akan meningkatkan kualitas dan maintainability test suite, serta memudahkan pengembangan test baru di masa depan.
 
 ## Referensi Tambahan
 

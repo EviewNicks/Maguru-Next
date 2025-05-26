@@ -1,23 +1,43 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect, useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { modulePageService } from '../services/modulePageService'
-import { modulePageClientService } from '../services/modulePageClientService'
+import { ModulePage } from '../types'
 import {
   CreateModulePageInput,
   UpdateModulePageInput,
-  ModulePage,
-  ContentBlock,
 } from '../types/modulePageSchema'
-import { useCallback } from 'react'
-import {
-  showErrorNotification,
-  categorizeError,
-  isErrorRetryable,
-} from '../components/ErrorNotifier'
-import React from 'react'
+import { modulePageClientService } from '../services/modulePageClientService'
+import { showErrorNotification } from '../components/ErrorNotifier'
 import axios from 'axios'
 
-// Mendefinisikan tipe untuk respons API
+// Kategori error untuk penanganan error yang lebih baik
+enum ErrorCategory {
+  NETWORK,
+  AUTH,
+  VALIDATION,
+  SERVER,
+  UNKNOWN,
+}
+
+// Helper untuk mengkategorikan error
+function categorizeError(error: unknown): ErrorCategory {
+  if (axios.isAxiosError(error)) {
+    if (error.code === 'ERR_NETWORK') return ErrorCategory.NETWORK
+    if (error.response?.status === 401 || error.response?.status === 403)
+      return ErrorCategory.AUTH
+    if (error.response?.status === 400) return ErrorCategory.VALIDATION
+    if (error.response?.status && error.response.status >= 500)
+      return ErrorCategory.SERVER
+  }
+  return ErrorCategory.UNKNOWN
+}
+
+// Helper untuk menentukan apakah error bisa di-retry
+function isErrorRetryable(category: ErrorCategory): boolean {
+  return category === ErrorCategory.NETWORK || category === ErrorCategory.SERVER
+}
+
 interface ApiResponse<T> {
   success: boolean
   data: T
@@ -35,24 +55,20 @@ interface ApiResponse<T> {
  */
 export function useModulePageCRUD(moduleId: string) {
   const queryClient = useQueryClient()
+  const router = useRouter()
+  const [activePage, setActivePage] = useState<ModulePage | null>(null)
+  const [isNavigating, setIsNavigating] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<
+    'saved' | 'saving' | 'unsaved' | 'error'
+  >('saved')
 
-  // Set moduleId aktif agar dapat digunakan di service
-  React.useEffect(() => {
+  // Simpan moduleId di service untuk operasi lain
+  useEffect(() => {
     if (moduleId) {
-      console.log(`[useModulePageCRUD] Setting active moduleId: ${moduleId}`)
-
-      // Gunakan kedua service untuk memastikan kompabilitas
-      modulePageService.setActiveModuleId(moduleId)
       modulePageClientService.setActiveModuleId(moduleId)
-
-      // Verifikasi bahwa moduleId telah disimpan dengan benar
-      const storedModuleId = modulePageService.getActiveModuleId()
-      const storedClientModuleId = modulePageClientService.getActiveModuleId()
+      const storedModuleId = modulePageClientService.getActiveModuleId()
       console.log(
         `[useModulePageCRUD] Verified stored moduleId: ${storedModuleId}`
-      )
-      console.log(
-        `[useModulePageCRUD] Verified client stored moduleId: ${storedClientModuleId}`
       )
     }
   }, [moduleId])
@@ -69,7 +85,7 @@ export function useModulePageCRUD(moduleId: string) {
       console.log(
         `[useModulePageCRUD] Fetching pages for moduleId: ${moduleId}`
       )
-      const result = await modulePageService.getModulePages(moduleId)
+      const result = await modulePageClientService.getModulePages(moduleId)
       console.log(
         `[useModulePageCRUD] Fetched ${result.data?.length || 0} pages`
       )
@@ -96,7 +112,7 @@ export function useModulePageCRUD(moduleId: string) {
   // Mutation untuk create halaman
   const createPage = useMutation({
     mutationFn: (newPage: CreateModulePageInput) =>
-      modulePageService.createModulePage(newPage),
+      modulePageClientService.createModulePage(newPage),
     onSuccess: () => {
       // Invalidate cache untuk memastikan data terbaru
       queryClient.invalidateQueries({
@@ -125,7 +141,7 @@ export function useModulePageCRUD(moduleId: string) {
     }: {
       pageId: string
       updateData: UpdateModulePageInput
-    }) => modulePageService.updateModulePage(pageId, updateData),
+    }) => modulePageClientService.updateModulePage(pageId, updateData),
     onMutate: async ({ pageId, updateData }) => {
       // Cancel outgoing refetch to avoid overwriting optimistic update
       await queryClient.cancelQueries({
@@ -221,7 +237,8 @@ export function useModulePageCRUD(moduleId: string) {
 
   // Mutation untuk delete halaman
   const deletePage = useMutation({
-    mutationFn: (pageId: string) => modulePageService.deleteModulePage(pageId),
+    mutationFn: (pageId: string) =>
+      modulePageClientService.deleteModulePage(pageId),
     onMutate: async (pageId) => {
       // Cancel any outgoing refetches untuk menghindari overwriting optimistic update
       await queryClient.cancelQueries({ queryKey: ['modulePages', moduleId] })
@@ -251,10 +268,10 @@ export function useModulePageCRUD(moduleId: string) {
       })
       toast.success('Halaman berhasil dihapus')
     },
-    onError: (error, pageId, context) => {
+    onError: (error, variables, context) => {
       console.error('Error deleting page:', error)
 
-      // Rollback ke state sebelum optimistic update
+      // Rollback to previous state if mutation fails
       if (context?.previousPages) {
         queryClient.setQueryData(
           ['modulePages', moduleId],
@@ -266,7 +283,7 @@ export function useModulePageCRUD(moduleId: string) {
       const category = categorizeError(error)
       showErrorNotification(error, {
         retryFn: isErrorRetryable(category)
-          ? () => deletePage.mutate(pageId)
+          ? () => deletePage.mutate(variables)
           : undefined,
       })
     },
@@ -275,39 +292,42 @@ export function useModulePageCRUD(moduleId: string) {
   // Mutation untuk reorder halaman
   const reorderPages = useMutation({
     mutationFn: (pageIds: string[]) =>
-      modulePageService.reorderModulePages(moduleId, pageIds),
+      modulePageClientService.reorderModulePages(moduleId, pageIds),
     onMutate: async (pageIds) => {
-      // Cancel any outgoing refetches untuk menghindari overwriting optimistic update
+      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['modulePages', moduleId] })
 
-      // Snapshot state sebelumnya untuk rollback jika error
+      // Snapshot previous state
       const previousPages = queryClient.getQueryData<ApiResponse<ModulePage[]>>(
         ['modulePages', moduleId]
       )
 
-      // Optimistically update to the new order
+      // Optimistically update cache with new order
       queryClient.setQueryData<ApiResponse<ModulePage[]> | undefined>(
         ['modulePages', moduleId],
         (old) => {
           if (!old || !old.data) return old
 
-          // Create a map for faster lookups
-          const pagesMap = new Map(
-            old.data.map((page: ModulePage) => [page.id, page])
+          // Create a map of pages by ID for quick lookup
+          const pagesMap = old.data.reduce(
+            (acc, page) => {
+              acc[page.id] = page
+              return acc
+            },
+            {} as Record<string, ModulePage>
           )
 
-          // Reorder pages based on pageIds
-          const newOrder = pageIds
+          // Create new array with updated order
+          const reorderedPages = pageIds
             .map((id, index) => {
-              const page = pagesMap.get(id)
-              if (!page) return null
-              return { ...page, order: index }
+              if (!pagesMap[id]) return null
+              return { ...pagesMap[id], order: index + 1 }
             })
-            .filter(Boolean) as ModulePage[]
+            .filter((page): page is ModulePage => page !== null)
 
           return {
             ...old,
-            data: newOrder,
+            data: reorderedPages,
           }
         }
       )
@@ -320,10 +340,10 @@ export function useModulePageCRUD(moduleId: string) {
       })
       toast.success('Urutan halaman berhasil diperbarui')
     },
-    onError: (error, pageIds, context) => {
+    onError: (error, variables, context) => {
       console.error('Error reordering pages:', error)
 
-      // Rollback ke state sebelum optimistic update
+      // Rollback to previous state if mutation fails
       if (context?.previousPages) {
         queryClient.setQueryData(
           ['modulePages', moduleId],
@@ -335,112 +355,361 @@ export function useModulePageCRUD(moduleId: string) {
       const category = categorizeError(error)
       showErrorNotification(error, {
         retryFn: isErrorRetryable(category)
-          ? () => reorderPages.mutate(pageIds)
+          ? () => reorderPages.mutate(variables)
           : undefined,
       })
     },
   })
 
-  /**
-   * Mengambil halaman berdasarkan ID
-   */
+  // Mutation untuk update status halaman
+  const updatePageStatus = useMutation({
+    mutationFn: ({
+      pageId,
+      status,
+    }: {
+      pageId: string
+      status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+    }) => modulePageClientService.updatePageStatus(pageId, status),
+    onMutate: async ({ pageId, status }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: ['modulePage', moduleId, pageId],
+      })
+      await queryClient.cancelQueries({
+        queryKey: ['modulePages', moduleId],
+      })
+
+      // Snapshot previous states
+      const previousPageData = queryClient.getQueryData<
+        ApiResponse<ModulePage>
+      >(['modulePage', moduleId, pageId])
+      const previousPagesData = queryClient.getQueryData<
+        ApiResponse<ModulePage[]>
+      >(['modulePages', moduleId])
+
+      // Optimistically update cache for single page
+      queryClient.setQueryData<ApiResponse<ModulePage> | undefined>(
+        ['modulePage', moduleId, pageId],
+        (old) => {
+          if (!old || !old.data) return old
+          return {
+            ...old,
+            data: { ...old.data, status },
+          }
+        }
+      )
+
+      // Update status in pages list
+      queryClient.setQueryData<ApiResponse<ModulePage[]> | undefined>(
+        ['modulePages', moduleId],
+        (old) => {
+          if (!old || !old.data) return old
+          return {
+            ...old,
+            data: old.data.map((page: ModulePage) =>
+              page.id === pageId ? { ...page, status } : page
+            ),
+          }
+        }
+      )
+
+      return { previousPageData, previousPagesData, pageId }
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate queries to ensure data consistency
+      queryClient.invalidateQueries({
+        queryKey: ['modulePage', moduleId, variables.pageId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['modulePages', moduleId],
+      })
+      toast.success(
+        `Status halaman berhasil diubah menjadi ${variables.status}`
+      )
+    },
+    onError: (error, variables, context) => {
+      console.error('Error updating page status:', error)
+
+      // Rollback to previous states
+      if (context?.previousPageData) {
+        queryClient.setQueryData(
+          ['modulePage', moduleId, context.pageId],
+          context.previousPageData
+        )
+      }
+      if (context?.previousPagesData) {
+        queryClient.setQueryData(
+          ['modulePages', moduleId],
+          context.previousPagesData
+        )
+      }
+
+      // Kategorisasi error dan tambahkan opsi retry
+      const category = categorizeError(error)
+      showErrorNotification(error, {
+        retryFn: isErrorRetryable(category)
+          ? () => updatePageStatus.mutate(variables)
+          : undefined,
+      })
+    },
+  })
+
+  // Helper untuk mendapatkan halaman berdasarkan ID
   const getPageById = useCallback(
     async (pageId: string): Promise<ModulePage | null> => {
       try {
-        const response = await modulePageService.getModulePage(pageId)
+        const response = await modulePageClientService.getModulePage(pageId)
         return response?.data || null
       } catch (error) {
-        console.error('Error fetching page:', error)
-
-        // Kategorisasi error dan tambahkan opsi retry
-        const category = categorizeError(error)
-        showErrorNotification(error, {
-          retryFn: isErrorRetryable(category)
-            ? () => getPageById(pageId)
-            : undefined,
-        })
-
+        console.error('Error fetching page by ID:', error)
         return null
       }
     },
     []
   )
 
-  /**
-   * Helper function untuk menyimpan perubahan pada halaman
-   * Digunakan oleh DocumentHeader dan ModulePageEditor
-   * Mendukung optimistic updates untuk pengalaman pengguna yang lebih baik
-   * Sekarang mendukung format JSON Tiptap
-   */
-  const savePage = useMutation({
-    mutationFn: async ({
-      pageId,
-      title,
-      blocks,
-    }: {
+  // Helper untuk mendapatkan halaman berikutnya
+  const getNextPage = useCallback(
+    (currentPageId?: string): ModulePage | null => {
+      if (!pagesData?.data || pagesData.data.length === 0) return null
+
+      // Jika tidak ada currentPageId, kembalikan halaman pertama
+      if (!currentPageId) return pagesData.data[0]
+
+      // Temukan indeks halaman saat ini
+      const currentIndex = pagesData.data.findIndex(
+        (page) => page.id === currentPageId
+      )
+      if (currentIndex === -1) return null
+
+      // Kembalikan halaman berikutnya jika ada
+      return currentIndex < pagesData.data.length - 1
+        ? pagesData.data[currentIndex + 1]
+        : null
+    },
+    [pagesData?.data]
+  )
+
+  // Helper untuk mendapatkan halaman sebelumnya
+  const getPreviousPage = useCallback(
+    (currentPageId?: string): ModulePage | null => {
+      if (!pagesData?.data || pagesData.data.length === 0) return null
+
+      // Jika tidak ada currentPageId, kembalikan halaman terakhir
+      if (!currentPageId) return pagesData.data[pagesData.data.length - 1]
+
+      // Temukan indeks halaman saat ini
+      const currentIndex = pagesData.data.findIndex(
+        (page) => page.id === currentPageId
+      )
+      if (currentIndex === -1) return null
+
+      // Kembalikan halaman sebelumnya jika ada
+      return currentIndex > 0 ? pagesData.data[currentIndex - 1] : null
+    },
+    [pagesData?.data]
+  )
+
+  // Helper untuk mendapatkan halaman pertama
+  const getFirstPage = useCallback((): ModulePage | null => {
+    if (!pagesData?.data || pagesData.data.length === 0) return null
+    return pagesData.data[0]
+  }, [pagesData?.data])
+
+  // Helper untuk mendapatkan halaman terakhir
+  const getLastPage = useCallback((): ModulePage | null => {
+    if (!pagesData?.data || pagesData.data.length === 0) return null
+    return pagesData.data[pagesData.data.length - 1]
+  }, [pagesData?.data])
+
+  // Handler untuk navigasi ke halaman berikutnya
+  const handleNavigateToNextPage = useCallback(() => {
+    if (!activePage || isNavigating) return
+
+    const nextPage = getNextPage(activePage.id)
+    if (nextPage) {
+      setIsNavigating(true)
+      router.push(`/manage-module/pages/${moduleId}?pageId=${nextPage.id}`)
+      setActivePage(nextPage)
+      setIsNavigating(false)
+    }
+  }, [activePage, getNextPage, isNavigating, moduleId, router])
+
+  // Handler untuk navigasi ke halaman sebelumnya
+  const handleNavigateToPrevPage = useCallback(() => {
+    if (!activePage || isNavigating) return
+
+    const prevPage = getPreviousPage(activePage.id)
+    if (prevPage) {
+      setIsNavigating(true)
+      router.push(`/manage-module/pages/${moduleId}?pageId=${prevPage.id}`)
+      setActivePage(prevPage)
+      setIsNavigating(false)
+    }
+  }, [activePage, getPreviousPage, isNavigating, moduleId, router])
+
+  // Handler untuk mengubah halaman aktif
+  const handlePageChange = useCallback(
+    (newPageId: string) => {
+      if (isNavigating) return
+
+      setIsNavigating(true)
+      router.push(`/manage-module/pages/${moduleId}?pageId=${newPageId}`)
+
+      // Cari halaman dari cache jika ada
+      const pageFromCache = pagesData?.data?.find(
+        (page) => page.id === newPageId
+      )
+      if (pageFromCache) {
+        setActivePage(pageFromCache)
+      } else {
+        // Jika tidak ada di cache, fetch dari API
+        getPageById(newPageId).then((page) => {
+          if (page) setActivePage(page)
+        })
+      }
+
+      setIsNavigating(false)
+    },
+    [getPageById, isNavigating, moduleId, pagesData?.data, router]
+  )
+
+  // Handler untuk select halaman
+  const handleSelectPage = useCallback(
+    (page: ModulePage) => {
+      handlePageChange(page.id)
+    },
+    [handlePageChange]
+  )
+
+  // Handler untuk editor change
+  const handleEditorChange = useCallback(
+    (content: object, pageId: string) => {
+      if (!pageId) return
+
+      // Set save status to saving
+      setSaveStatus('saving')
+
+      // Perbarui halaman dengan konten baru
+      updatePage.mutate(
+        {
+          pageId,
+          updateData: { blocks: [content] },
+        },
+        {
+          onSuccess: () => {
+            setSaveStatus('saved')
+          },
+          onError: () => {
+            setSaveStatus('error')
+          },
+        }
+      )
+    },
+    [updatePage]
+  )
+
+  // Fungsi untuk menyimpan halaman
+  const savePage = useCallback(
+    async (params: {
       pageId: string
       title?: string
-      blocks?: ContentBlock[]
-    }) => {
-      const result = await modulePageService.updateModulePage(pageId, {
-        title,
-        blocks,
-      })
-      return result
-    },
-    onSuccess: (data, variables) => {
-      // Invalidate query untuk mendapatkan halaman terbaru
-      queryClient.invalidateQueries({
-        queryKey: ['modulePage', moduleId, variables.pageId],
-      })
-    },
-    onError: (error) => {
-      console.error('Failed to save page:', error)
-      // Tampilkan notifikasi error
-      showErrorNotification('Gagal menyimpan halaman')
-    },
-  })
+      blocks?: any[]
+    }): Promise<ModulePage | null> => {
+      try {
+        setSaveStatus('saving')
+        const { pageId, title, blocks } = params
 
-  /**
-   * Wrapper function untuk savePage.mutateAsync yang dapat langsung dipanggil
-   * dari context untuk mengatasi masalah type compatibility
-   */
+        const result = await modulePageClientService.updateModulePage(pageId, {
+          title,
+          blocks,
+        })
+
+        if (result) {
+          setSaveStatus('saved')
+          return result.data
+        }
+
+        setSaveStatus('error')
+        return null
+      } catch (error) {
+        console.error('Error saving page:', error)
+        setSaveStatus('error')
+        throw error
+      }
+    },
+    []
+  )
+
+  // Wrapper untuk savePageWrapper yang memanfaatkan optimistic update
   const savePageWrapper = useCallback(
     async (
       pageId: string,
-      data: { title?: string; blocks?: ContentBlock[] }
+      data: { title?: string; blocks?: any[] }
     ): Promise<ModulePage | null> => {
-      try {
-        const result = await savePage.mutateAsync({
-          pageId,
-          ...data,
-        })
-        return result?.data || null
-      } catch (error) {
-        console.error('Error in savePageWrapper:', error)
-        showErrorNotification(error)
-        return null
-      }
+      return new Promise((resolve, reject) => {
+        updatePage.mutate(
+          {
+            pageId,
+            updateData: data,
+          },
+          {
+            onSuccess: (result) => {
+              if (result?.data) {
+                resolve(result.data)
+              } else {
+                resolve(null)
+              }
+            },
+            onError: (error) => {
+              reject(error)
+            },
+          }
+        )
+      })
     },
-    [savePage]
+    [updatePage]
   )
 
   return {
     // Data
+    moduleId,
     pages: pagesData?.data || [],
+    activePage,
     isLoading,
     error,
     refetch,
 
-    // Mutations
-    createPage,
-    updatePage,
-    deletePage,
-    reorderPages,
+    // Mutation functions
+    createPage: createPage.mutate,
+    updatePage: updatePage.mutate,
+    deletePage: deletePage.mutate,
+    reorderPages: reorderPages.mutate,
+    updatePageStatus: updatePageStatus.mutate,
 
-    // Helper functions
+    // State management
+    setActivePage,
+    saveStatus,
+    setSaveStatus,
+    isNavigating,
+    setIsNavigating,
+
+    // Navigation helpers
+    getNextPage,
+    getPreviousPage,
+    getFirstPage,
+    getLastPage,
+
+    // Helpers
     getPageById,
     savePage,
     savePageWrapper,
+
+    // Handler functions
+    handlePageChange,
+    handleSelectPage,
+    handleEditorChange,
+    handleNavigateToPrevPage,
+    handleNavigateToNextPage,
   }
 }

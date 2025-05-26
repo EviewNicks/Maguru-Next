@@ -85,7 +85,7 @@ export const ModulePageSchema = z.object({
   order: z.number().int(),
   content: z.string().optional(), // Untuk editor sederhana
   blocks: z.array(ContentBlockSchema).optional(), // Untuk editor multi-block (future)
-  status: z.enum(['DRAFT', 'PUBLISHED']).default('DRAFT'),
+  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('DRAFT'),
   createdAt: z.date(),
   updatedAt: z.date(),
 })
@@ -100,7 +100,7 @@ export type ModulePage = {
   order: number
   content?: string
   blocks?: ContentBlock[]
-  status: 'DRAFT' | 'PUBLISHED'
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
   createdAt: Date
   updatedAt: Date
 }

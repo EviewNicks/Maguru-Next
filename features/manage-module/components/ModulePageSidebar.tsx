@@ -6,15 +6,11 @@ import SidebarHeader from './ModulePageEditor/sidebar/SidebarHeader'
 import SidebarShortcuts from './ModulePageEditor/sidebar/SidebarShortcuts'
 import SidebarBlogs from './ModulePageEditor/sidebar/SidebarBlogs'
 import { useModulePagesContext } from '../context/ModulePagesContext'
-import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 
 export default function ModulePageSidebar() {
   // UI state dari ModulePagesContext
   const { isSidebarOpen, toggleSidebar, expandedItems, toggleExpand } =
     useModulePagesContext()
-
-  // Data dari ModulePageCRUDContext
-  const { pages, activePage } = useModulePageCRUDContext()
 
   return (
     <div
@@ -50,8 +46,6 @@ export default function ModulePageSidebar() {
             <SidebarContent
               expandedItems={expandedItems}
               toggleExpand={toggleExpand}
-              pages={pages}
-              activePage={activePage}
             />
             <SidebarBlogs />
 

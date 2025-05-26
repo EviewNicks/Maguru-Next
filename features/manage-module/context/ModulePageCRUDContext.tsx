@@ -5,6 +5,7 @@ import React, {
   useCallback,
   ReactNode,
   useMemo,
+  useEffect,
 } from 'react'
 import {
   ModulePage,
@@ -17,6 +18,7 @@ import { useModulePageCRUD } from '../hooks/useModulePageCRUD'
 import { showErrorNotification } from '../components/ErrorNotifier'
 import { useRouter } from 'next/navigation'
 import debounce from 'lodash/debounce'
+import { debugDataFlow } from '../utils/debugUtils'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPromise = Promise<any>
@@ -145,9 +147,30 @@ export function ModulePageCRUDProvider({
   // Gunakan mock pages jika disediakan, atau pages dari hook
   const pages = mockValues.pages || hookPages
 
+  // Debug data flow ketika pages berubah
+  useEffect(() => {
+    if (pages.length > 0) {
+      debugDataFlow('ModulePageCRUDContext', pages)
+      console.log(
+        `[ModulePageCRUDContext] Received ${pages.length} pages:`,
+        pages.map((p) => ({ id: p.id, title: p.title, status: p.status }))
+      )
+    } else if (isLoading) {
+      console.log('[ModulePageCRUDContext] Loading pages...')
+    } else if (error) {
+      console.error('[ModulePageCRUDContext] Error loading pages:', error)
+    } else {
+      console.log('[ModulePageCRUDContext] No pages available')
+    }
+  }, [pages, isLoading, error])
+
   // Set active page otomatis ke halaman pertama jika belum diset
   React.useEffect(() => {
     if (!activePage && pages.length > 0) {
+      console.log(
+        '[ModulePageCRUDContext] Auto-setting active page to first page:',
+        pages[0].title
+      )
       setActivePage(pages[0])
     }
   }, [activePage, pages])

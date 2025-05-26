@@ -10,6 +10,10 @@ import {
   Trash,
   MoreVertical,
   Loader2,
+  FileText,
+  Eye,
+  EyeOff,
+  Archive,
 } from 'lucide-react'
 import SidebarItem from './SidebarItem'
 import SidebarNestedItem from './SIdebarNestedItem'
@@ -29,19 +33,22 @@ import {
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import {
+  debugDataFlow,
+  debugExpandedItems,
+  DebugLevel,
+  setDebugLevel,
+} from '@/features/manage-module/utils/debugUtils'
+import { StatusBadge } from '../../../components/StatusBadge'
 
 interface SidebarContentProps {
   expandedItems: Record<string, boolean>
   toggleExpand: (item: string) => void
-  pages?: ModulePage[]
-  activePage?: ModulePage | null
 }
 
 export default function SidebarContent({
   expandedItems,
   toggleExpand,
-  pages = [],
-  activePage,
 }: SidebarContentProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -57,14 +64,46 @@ export default function SidebarContent({
     createPage,
     setActivePage,
     handleSelectPage: contextHandleSelectPage,
-    pages: allPages,
+    pages,
+    activePage,
+    error,
+    updatePageStatus,
   } = useModulePageCRUDContext()
   const router = useRouter()
+
+  // Set debug level to INFO in development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setDebugLevel(DebugLevel.DEBUG)
+    }
+  }, [])
 
   // Filter pages based on search term
   const filteredPages = pages.filter((page) =>
     page.title.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  // Debug data flow when pages change
+  useEffect(() => {
+    debugDataFlow('SidebarContent', pages)
+  }, [pages])
+
+  // Debug expandedItems when they change
+  useEffect(() => {
+    debugExpandedItems(expandedItems)
+  }, [expandedItems])
+
+  // Tambahkan debugging untuk memahami data yang ada
+  useEffect(() => {
+    console.log(`[SidebarContent] Data loaded - Pages count: ${pages.length}`)
+    if (pages.length > 0) {
+      console.log(`[SidebarContent] First page title: ${pages[0].title}`)
+      console.log(`[SidebarContent] First page status: ${pages[0].status}`)
+    }
+    if (error) {
+      console.error(`[SidebarContent] Error loading pages:`, error)
+    }
+  }, [pages, error])
 
   // Highlight new item for 2 seconds
   useEffect(() => {
@@ -90,6 +129,19 @@ export default function SidebarContent({
     setDeleteDialogOpen(true)
   }
 
+  // Handle status change
+  const handleStatusChange = (
+    page: ModulePage,
+    newStatus: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+  ) => {
+    if (page.status === newStatus) return
+
+    updatePageStatus({
+      pageId: page.id,
+      status: newStatus,
+    })
+  }
+
   // Handle creating a new page
   const handleCreatePage = async () => {
     if (!moduleId) {
@@ -101,7 +153,7 @@ export default function SidebarContent({
       setIsCreating(true)
 
       // Generate default page number
-      const pageNumber = allPages.length + 1
+      const pageNumber = pages.length + 1
 
       // Generate default title
       const defaultTitle = `Halaman Baru ${pageNumber}`
@@ -254,13 +306,31 @@ export default function SidebarContent({
                   <div className="flex items-center">
                     <div className="flex-grow">
                       <SidebarNestedItem
-                        label={page.title || 'Untitled Page'}
+                        label={
+                          <div className="flex items-center justify-between w-full pr-6">
+                            <span
+                              className={
+                                page.status === 'ARCHIVED'
+                                  ? 'text-gray-400 line-through'
+                                  : ''
+                              }
+                            >
+                              {page.title || 'Untitled Page'}
+                            </span>
+                            <StatusBadge
+                              status={page.status}
+                              showText={false}
+                              className="ml-2"
+                            />
+                          </div>
+                        }
                         onClick={() => contextHandleSelectPage(page)}
                         className={
                           activePage?.id === page.id
                             ? 'text-[#669df1] bg-[#1c2b42]'
                             : ''
                         }
+                        icon={<FileText className="h-3.5 w-3.5 mr-1.5" />}
                       />
                     </div>
                     <DropdownMenu>
@@ -278,6 +348,48 @@ export default function SidebarContent({
                         align="end"
                         className="bg-[#1f1f21] border-[#3b3b3b] text-[#e3e4f2]"
                       >
+                        {page.status === 'DRAFT' && (
+                          <DropdownMenuItem
+                            className="flex items-center cursor-pointer hover:bg-[#242528]"
+                            onClick={() =>
+                              handleStatusChange(page, 'PUBLISHED')
+                            }
+                          >
+                            <Eye className="h-4 w-4 mr-2 text-green-400" />
+                            <span>Publikasikan</span>
+                          </DropdownMenuItem>
+                        )}
+
+                        {page.status === 'PUBLISHED' && (
+                          <DropdownMenuItem
+                            className="flex items-center cursor-pointer hover:bg-[#242528]"
+                            onClick={() => handleStatusChange(page, 'DRAFT')}
+                          >
+                            <EyeOff className="h-4 w-4 mr-2 text-yellow-400" />
+                            <span>Kembalikan ke Draft</span>
+                          </DropdownMenuItem>
+                        )}
+
+                        {page.status !== 'ARCHIVED' && (
+                          <DropdownMenuItem
+                            className="flex items-center cursor-pointer hover:bg-[#242528]"
+                            onClick={() => handleStatusChange(page, 'ARCHIVED')}
+                          >
+                            <Archive className="h-4 w-4 mr-2 text-gray-400" />
+                            <span>Arsipkan</span>
+                          </DropdownMenuItem>
+                        )}
+
+                        {page.status === 'ARCHIVED' && (
+                          <DropdownMenuItem
+                            className="flex items-center cursor-pointer hover:bg-[#242528]"
+                            onClick={() => handleStatusChange(page, 'DRAFT')}
+                          >
+                            <FileText className="h-4 w-4 mr-2 text-yellow-400" />
+                            <span>Pulihkan ke Draft</span>
+                          </DropdownMenuItem>
+                        )}
+
                         <DropdownMenuItem
                           className="flex items-center cursor-pointer hover:bg-[#242528]"
                           onClick={() => handleOpenDeleteDialog(page)}
