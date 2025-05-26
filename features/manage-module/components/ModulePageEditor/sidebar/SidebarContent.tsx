@@ -39,7 +39,6 @@ import {
   DebugLevel,
   setDebugLevel,
 } from '@/features/manage-module/utils/debugUtils'
-import { StatusBadge } from '../../../components/StatusBadge'
 
 interface SidebarContentProps {
   expandedItems: Record<string, boolean>
@@ -300,106 +299,78 @@ export default function SidebarContent({
                       'animate-pulse bg-[#1c2b42]/30 rounded'
                   )}
                 >
-                  {activePage?.id === page.id && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-[#669df1] rounded"></div>
-                  )}
-                  <div className="flex items-center">
-                    <div className="flex-grow">
-                      <SidebarNestedItem
-                        label={
-                          <div className="flex items-center justify-between w-full pr-6">
-                            <span
-                              className={
-                                page.status === 'ARCHIVED'
-                                  ? 'text-gray-400 line-through'
-                                  : ''
-                              }
-                            >
-                              {page.title || 'Untitled Page'}
-                            </span>
-                            <StatusBadge
-                              status={page.status}
-                              showText={false}
-                              className="ml-2"
-                            />
-                          </div>
-                        }
-                        onClick={() => contextHandleSelectPage(page)}
-                        className={
-                          activePage?.id === page.id
-                            ? 'text-[#669df1] bg-[#1c2b42]'
-                            : ''
-                        }
-                        icon={<FileText className="h-3.5 w-3.5 mr-1.5" />}
-                      />
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity absolute right-1 top-1"
-                          aria-label="Opsi halaman"
-                        >
-                          <MoreVertical className="h-3 w-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="bg-[#1f1f21] border-[#3b3b3b] text-[#e3e4f2]"
+                  <SidebarNestedItem
+                    label={page.title || 'Untitled Page'}
+                    onClick={() => contextHandleSelectPage(page)}
+                    isActive={activePage?.id === page.id}
+                    isArchived={page.status === 'ARCHIVED'}
+                    status={page.status}
+                    icon={<FileText className="h-3.5 w-3.5 mr-1.5" />}
+                  />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity absolute right-1 top-1"
+                        aria-label="Opsi halaman"
                       >
-                        {page.status === 'DRAFT' && (
-                          <DropdownMenuItem
-                            className="flex items-center cursor-pointer hover:bg-[#242528]"
-                            onClick={() =>
-                              handleStatusChange(page, 'PUBLISHED')
-                            }
-                          >
-                            <Eye className="h-4 w-4 mr-2 text-green-400" />
-                            <span>Publikasikan</span>
-                          </DropdownMenuItem>
-                        )}
-
-                        {page.status === 'PUBLISHED' && (
-                          <DropdownMenuItem
-                            className="flex items-center cursor-pointer hover:bg-[#242528]"
-                            onClick={() => handleStatusChange(page, 'DRAFT')}
-                          >
-                            <EyeOff className="h-4 w-4 mr-2 text-yellow-400" />
-                            <span>Kembalikan ke Draft</span>
-                          </DropdownMenuItem>
-                        )}
-
-                        {page.status !== 'ARCHIVED' && (
-                          <DropdownMenuItem
-                            className="flex items-center cursor-pointer hover:bg-[#242528]"
-                            onClick={() => handleStatusChange(page, 'ARCHIVED')}
-                          >
-                            <Archive className="h-4 w-4 mr-2 text-gray-400" />
-                            <span>Arsipkan</span>
-                          </DropdownMenuItem>
-                        )}
-
-                        {page.status === 'ARCHIVED' && (
-                          <DropdownMenuItem
-                            className="flex items-center cursor-pointer hover:bg-[#242528]"
-                            onClick={() => handleStatusChange(page, 'DRAFT')}
-                          >
-                            <FileText className="h-4 w-4 mr-2 text-yellow-400" />
-                            <span>Pulihkan ke Draft</span>
-                          </DropdownMenuItem>
-                        )}
-
+                        <MoreVertical className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="bg-[#1f1f21] border-[#3b3b3b] text-[#e3e4f2]"
+                    >
+                      {page.status === 'DRAFT' && (
                         <DropdownMenuItem
                           className="flex items-center cursor-pointer hover:bg-[#242528]"
-                          onClick={() => handleOpenDeleteDialog(page)}
+                          onClick={() => handleStatusChange(page, 'PUBLISHED')}
                         >
-                          <Trash className="h-4 w-4 mr-2 text-red-400" />
-                          <span>Hapus Halaman</span>
+                          <Eye className="h-4 w-4 mr-2 text-green-400" />
+                          <span>Publikasikan</span>
                         </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                      )}
+
+                      {page.status === 'PUBLISHED' && (
+                        <DropdownMenuItem
+                          className="flex items-center cursor-pointer hover:bg-[#242528]"
+                          onClick={() => handleStatusChange(page, 'DRAFT')}
+                        >
+                          <EyeOff className="h-4 w-4 mr-2 text-yellow-400" />
+                          <span>Kembalikan ke Draft</span>
+                        </DropdownMenuItem>
+                      )}
+
+                      {page.status !== 'ARCHIVED' && (
+                        <DropdownMenuItem
+                          className="flex items-center cursor-pointer hover:bg-[#242528]"
+                          onClick={() => handleStatusChange(page, 'ARCHIVED')}
+                        >
+                          <Archive className="h-4 w-4 mr-2 text-gray-400" />
+                          <span>Arsipkan</span>
+                        </DropdownMenuItem>
+                      )}
+
+                      {page.status === 'ARCHIVED' && (
+                        <DropdownMenuItem
+                          className="flex items-center cursor-pointer hover:bg-[#242528]"
+                          onClick={() => handleStatusChange(page, 'DRAFT')}
+                        >
+                          <FileText className="h-4 w-4 mr-2 text-yellow-400" />
+                          <span>Pulihkan ke Draft</span>
+                        </DropdownMenuItem>
+                      )}
+
+                      <DropdownMenuItem
+                        className="flex items-center cursor-pointer hover:bg-[#242528]"
+                        onClick={() => handleOpenDeleteDialog(page)}
+                      >
+                        <Trash className="h-4 w-4 mr-2 text-red-400" />
+                        <span>Hapus Halaman</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ))
             ) : (

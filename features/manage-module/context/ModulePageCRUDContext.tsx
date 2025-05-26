@@ -19,6 +19,7 @@ import { showErrorNotification } from '../components/ErrorNotifier'
 import { useRouter } from 'next/navigation'
 import debounce from 'lodash/debounce'
 import { debugDataFlow } from '../utils/debugUtils'
+import { toast } from 'sonner'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPromise = Promise<any>
@@ -44,6 +45,12 @@ interface ModulePageCRUDContextProps {
   deletePage: (pageId: string) => AnyPromise
 
   reorderPages: (pageIds: string[]) => AnyPromise
+
+  // Tambahkan fungsi updatePageStatus
+  updatePageStatus: (params: {
+    pageId: string
+    status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+  }) => AnyPromise
 
   // State management
   setActivePage: (page: ModulePage | null) => void
@@ -269,6 +276,41 @@ export function ModulePageCRUDProvider({
     [reorderPagesMutation]
   )
 
+  // Tambahkan implementasi updatePageStatus
+  const updatePageStatus = useCallback(
+    async (params: {
+      pageId: string
+      status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+    }) => {
+      try {
+        const { pageId, status } = params
+
+        // Gunakan updatePage yang sudah ada untuk mengubah status
+        const result = await updatePage(pageId, { status })
+
+        // Jika berhasil, tampilkan notifikasi sukses berdasarkan status
+        if (result?.data) {
+          const statusMessages = {
+            DRAFT: 'Halaman berhasil dikembalikan ke draft',
+            PUBLISHED: 'Halaman berhasil dipublikasikan',
+            ARCHIVED: 'Halaman berhasil diarsipkan',
+          }
+
+          toast.success(
+            statusMessages[status] || 'Status halaman berhasil diperbarui'
+          )
+        }
+
+        return result
+      } catch (error) {
+        console.error('Error updating page status:', error)
+        showErrorNotification(error)
+        throw error
+      }
+    },
+    [updatePage]
+  )
+
   // Navigation helpers
   const getNextPage = useCallback(
     (currentPageId?: string) => {
@@ -459,6 +501,7 @@ export function ModulePageCRUDProvider({
       updatePage: mockValues.updatePage || updatePage,
       deletePage: mockValues.deletePage || deletePage,
       reorderPages: mockValues.reorderPages || reorderPages,
+      updatePageStatus: mockValues.updatePageStatus || updatePageStatus,
       setActivePage: mockValues.setActivePage || setActivePage,
       getPageById: mockValues.getPageById || getPageById,
       savePage: mockValues.savePage || savePage,
@@ -493,6 +536,7 @@ export function ModulePageCRUDProvider({
       updatePage,
       deletePage,
       reorderPages,
+      updatePageStatus,
       getPageById,
       savePage,
       savePageWrapper,
