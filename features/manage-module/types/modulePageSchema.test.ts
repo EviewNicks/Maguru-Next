@@ -1,7 +1,7 @@
 import {
   ContentType,
-  createModulePageSchema,
-  updateModulePageSchema,
+  CreateModulePageSchema,
+  UpdateModulePageSchema,
   imageUploadSchema,
   videoUploadSchema,
   MAX_IMAGE_SIZE_BYTES,
@@ -19,7 +19,7 @@ describe('ModulePage Validation Schemas', () => {
         content: '<p>This is some content</p>',
       }
 
-      const result = createModulePageSchema.safeParse(validData)
+      const result = CreateModulePageSchema.safeParse(validData)
       expect(result.success).toBe(true)
     })
 
@@ -33,7 +33,7 @@ describe('ModulePage Validation Schemas', () => {
         language: 'javascript',
       }
 
-      const result = createModulePageSchema.safeParse(validData)
+      const result = CreateModulePageSchema.safeParse(validData)
       expect(result.success).toBe(true)
     })
 
@@ -46,7 +46,7 @@ describe('ModulePage Validation Schemas', () => {
         content: '<p>This is some content</p>',
       }
 
-      const result = createModulePageSchema.safeParse(invalidData)
+      const result = CreateModulePageSchema.safeParse(invalidData)
       expect(result.success).toBe(false)
 
       if (!result.success) {
@@ -63,7 +63,7 @@ describe('ModulePage Validation Schemas', () => {
         content: '<p>This is some content</p>',
       }
 
-      const result = createModulePageSchema.safeParse(invalidData)
+      const result = CreateModulePageSchema.safeParse(invalidData)
       expect(result.success).toBe(false)
 
       if (!result.success) {
@@ -82,7 +82,7 @@ describe('ModulePage Validation Schemas', () => {
         content: '<p>This is some content</p>',
       }
 
-      const result = createModulePageSchema.safeParse(invalidData)
+      const result = CreateModulePageSchema.safeParse(invalidData)
       expect(result.success).toBe(false)
 
       if (!result.success) {
@@ -99,7 +99,7 @@ describe('ModulePage Validation Schemas', () => {
         content: '',
       }
 
-      const result = createModulePageSchema.safeParse(invalidData)
+      const result = CreateModulePageSchema.safeParse(invalidData)
       expect(result.success).toBe(false)
 
       if (!result.success) {
@@ -117,7 +117,7 @@ describe('ModulePage Validation Schemas', () => {
         title: 'Updated Title',
       }
 
-      const result = updateModulePageSchema.safeParse(validData)
+      const result = UpdateModulePageSchema.safeParse(validData)
       expect(result.success).toBe(true)
     })
 
@@ -132,7 +132,7 @@ describe('ModulePage Validation Schemas', () => {
         language: 'typescript',
       }
 
-      const result = updateModulePageSchema.safeParse(validData)
+      const result = UpdateModulePageSchema.safeParse(validData)
       expect(result.success).toBe(true)
     })
 
@@ -141,7 +141,7 @@ describe('ModulePage Validation Schemas', () => {
         id: '123e4567-e89b-12d3-a456-426614174000',
       }
 
-      const result = updateModulePageSchema.safeParse(invalidData)
+      const result = UpdateModulePageSchema.safeParse(invalidData)
       expect(result.success).toBe(false)
 
       if (!result.success) {
@@ -157,7 +157,7 @@ describe('ModulePage Validation Schemas', () => {
         title: 'Updated Title',
       }
 
-      const result = updateModulePageSchema.safeParse(invalidData)
+      const result = UpdateModulePageSchema.safeParse(invalidData)
       expect(result.success).toBe(false)
 
       if (!result.success) {

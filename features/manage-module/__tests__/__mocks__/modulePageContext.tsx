@@ -1,5 +1,5 @@
-import React, { useContext, createContext, ReactNode } from 'react'
-import { ModulePage } from '../../../types/modulePageSchema'
+import { useContext, createContext, ReactNode } from 'react'
+import { ModulePage, ModulePageStatus } from '../../types'
 
 // Default mock values
 const defaultPages: ModulePage[] = [
@@ -8,7 +8,7 @@ const defaultPages: ModulePage[] = [
     title: 'Mock Page 1',
     moduleId: 'module1',
     order: 0,
-    status: 'DRAFT',
+    status: ModulePageStatus.DRAFT,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -17,7 +17,7 @@ const defaultPages: ModulePage[] = [
     title: 'Mock Page 2',
     moduleId: 'module1',
     order: 1,
-    status: 'PUBLISHED',
+    status: ModulePageStatus.PUBLISHED,
     createdAt: new Date(),
     updatedAt: new Date(),
   },

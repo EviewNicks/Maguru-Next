@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import ModulePageEditorPage from './page'
-import { useModulePageQuery } from '@/features/manage-module/hooks/useModulePageQuery'
+import { useModulePageData } from '@/features/manage-module/hooks/useModulePageMutation'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 
 // Mock dependencies
@@ -12,8 +12,8 @@ jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
 }))
 
-jest.mock('@/features/manage-module/hooks/useModulePageQuery', () => ({
-  useModulePageQuery: jest.fn(),
+jest.mock('@/features/manage-module/hooks/useModulePageData', () => ({
+  useModulePageData: jest.fn(),
 }))
 
 jest.mock('@/features/manage-module/components/ModulePageEditor', () => ({
@@ -46,7 +46,7 @@ describe('ModulePageEditorPage', () => {
     ;(useRouter as jest.Mock).mockReturnValue({
       push: jest.fn(),
     })
-    ;(useModulePageQuery as jest.Mock).mockReturnValue({
+    ;(useModulePageData as jest.Mock).mockReturnValue({
       getAllPages: {
         data: {
           data: [{ id: 'test-page-id' }],
@@ -63,7 +63,7 @@ describe('ModulePageEditorPage', () => {
   })
 
   test('renders Skeleton during loading', () => {
-    ;(useModulePageQuery as jest.Mock).mockReturnValue({
+    ;(useModulePageData as jest.Mock).mockReturnValue({
       getAllPages: {
         data: null,
         isLoading: true,
@@ -88,7 +88,7 @@ describe('ModulePageEditorPage', () => {
     ;(useSearchParams as jest.Mock).mockReturnValue({
       get: jest.fn().mockReturnValue(null),
     })
-    ;(useModulePageQuery as jest.Mock).mockReturnValue({
+    ;(useModulePageData as jest.Mock).mockReturnValue({
       getAllPages: {
         data: {
           data: [{ id: 'first-page-id' }],

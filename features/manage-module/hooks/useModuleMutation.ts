@@ -6,7 +6,7 @@ import {
   createModule,
   updateModule,
   deleteModule,
-} from '../services/moduleClientService'
+} from '../services/moduleService'
 import { Module, ModuleStatus } from '../types'
 import { handleError } from '../components/ErrorNotifier'
 

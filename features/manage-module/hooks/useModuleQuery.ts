@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { getModules, getModuleById } from '../services/moduleClientService'
+import { getModules, getModuleById } from '../services/moduleService'
 import { ModuleStatus } from '../types'
 
 interface QueryParams {

@@ -318,29 +318,29 @@ export default function SidebarContent({
                       'animate-pulse bg-[#1c2b42]/30 rounded'
                   )}
                 >
-                  <SidebarNestedItem
-                    label={page.title || 'Untitled Page'}
-                    onClick={() => contextHandleSelectPage(page)}
+                      <SidebarNestedItem
+                        label={page.title || 'Untitled Page'}
+                        onClick={() => contextHandleSelectPage(page)}
                     isActive={activePage?.id === page.id}
                     isArchived={page.status === 'ARCHIVED'}
                     status={page.status}
                     icon={<FileText className="h-3.5 w-3.5 mr-1.5" />}
-                  />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity absolute right-1 top-1"
-                        aria-label="Opsi halaman"
+                      />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity absolute right-1 top-1"
+                          aria-label="Opsi halaman"
+                        >
+                          <MoreVertical className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-[#1f1f21] border-[#3b3b3b] text-[#e3e4f2]"
                       >
-                        <MoreVertical className="h-3 w-3" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="bg-[#1f1f21] border-[#3b3b3b] text-[#e3e4f2]"
-                    >
                       {page.status === 'DRAFT' && (
                         <DropdownMenuItem
                           className="flex items-center cursor-pointer hover:bg-[#242528]"
@@ -383,13 +383,13 @@ export default function SidebarContent({
 
                       <DropdownMenuItem
                         className="flex items-center cursor-pointer hover:bg-[#242528]"
-                        onClick={() => handleOpenDeleteDialog(page)}
-                      >
-                        <Trash className="h-4 w-4 mr-2 text-red-400" />
-                        <span>Hapus Halaman</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                          onClick={() => handleOpenDeleteDialog(page)}
+                        >
+                          <Trash className="h-4 w-4 mr-2 text-red-400" />
+                          <span>Hapus Halaman</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
               ))
             ) : (

@@ -5,7 +5,7 @@ import {
   CreateModuleInput,
   UpdateModuleInput,
 } from './useModuleMutation'
-import * as moduleClientService from '../services/moduleClientService'
+import * as moduleClientService from '../services/moduleService'
 import { ReactNode } from 'react'
 import { Module, ModuleStatus } from '../types'
 import { toast } from 'sonner'

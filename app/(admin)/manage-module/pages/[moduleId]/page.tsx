@@ -4,7 +4,7 @@ import { Suspense, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import ModulePageEditor from '@/features/manage-module/components/ModulePageEditor'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useModulePageQuery } from '@/features/manage-module/hooks/useModulePageQuery'
+import { useModulePageData } from '@/features/manage-module/hooks/useModulePageMutation'
 import { ErrorBoundary } from '@/features/manage-module/components/ErrorBoundary'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -23,7 +23,7 @@ export default function ModulePageEditorPage() {
   const pageId = searchParams.get('pageId') || undefined
 
   // Gunakan hook untuk mendapatkan daftar semua halaman
-  const { getAllPages } = useModulePageQuery(moduleId)
+  const { getAllPages } = useModulePageData(moduleId)
   const { data: pagesData, isLoading: pagesLoading } = getAllPages
 
   // Fetch data halaman aktif
