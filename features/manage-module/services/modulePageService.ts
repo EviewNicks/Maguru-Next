@@ -2,42 +2,44 @@ import {
   ContentBlock,
   CreateModulePageInput,
   UpdateModulePageInput,
-  ContentBlockType,
 } from '../types/modulePageSchema'
-import { ModulePage, ApiListResponse, ApiEntityResponse } from '../types'
+import { ModulePage, ApiListResponse, ApiEntityResponse, ModulePageStatus, IModulePageService } from '../types'
 import prisma from '@/lib/prisma'
+import { defaultContentJSON } from '../lib/content'
+import { logger } from './logger'
+import { parseContent } from '../lib/dataFormats'
 
-// Fix type untuk status agar sesuai dengan enum ModulePage
-type ModulePageStatus = 'DRAFT' | 'PUBLISHED'
+// Konstanta untuk service name (context)
+const SERVICE = 'ModulePageService'
 
 /**
  * Service untuk operasi CRUD halaman modul
  */
-export const modulePageService = {
-  // Variabel untuk menyimpan active moduleId
-  _activeModuleId: null as string | null,
-
+export const modulePageService: IModulePageService = {
   /**
-   * Set moduleId aktif untuk operasi-operasi lain
-   * @param moduleId - ID modul yang aktif
+   * Mendapatkan moduleId dari storage
+   * @param moduleId - Optional moduleId untuk digunakan jika tidak ada di storage
+   * @returns moduleId dari storage atau parameter
    */
-  setActiveModuleId(moduleId: string) {
-    // Simpan moduleId dalam variabel lokal
-    this._activeModuleId = moduleId
-    console.log(`[Service] Setting active moduleId: ${moduleId}`)
-
-    // Simpan di sessionStorage jika dalam lingkungan browser
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('activeModuleId', moduleId)
+  getModuleIdFromStorage(moduleId?: string): string | null {
+    // Jika moduleId diberikan, gunakan itu
+    if (moduleId) {
+      return moduleId
     }
-  },
 
-  /**
-   * Mendapatkan moduleId aktif
-   * @returns moduleId yang aktif atau null jika belum diset
-   */
-  getActiveModuleId(): string | null {
-    return this._activeModuleId
+    // Coba ambil dari sessionStorage jika dalam lingkungan browser
+    if (typeof window !== 'undefined') {
+      const storedModuleId = sessionStorage.getItem('activeModuleId')
+      if (storedModuleId) {
+        logger.debug(
+          SERVICE,
+          `Retrieved moduleId from storage: ${storedModuleId}`
+        )
+        return storedModuleId
+      }
+    }
+
+    return null
   },
 
   /**
@@ -49,16 +51,13 @@ export const modulePageService = {
     data: CreateModulePageInput & { language?: string }
   ): Promise<ApiEntityResponse<ModulePage>> {
     try {
-      console.log(
-        '[Service] Creating module page with data:',
-        JSON.stringify({
-          moduleId: data.moduleId,
-          title: data.title,
-          type: data.type,
-          order: data.order,
-          hasBlocks: !!data.blocks && Array.isArray(data.blocks),
-        })
-      )
+      logger.info(SERVICE, 'Creating module page', {
+        moduleId: data.moduleId,
+        title: data.title,
+        type: data.type,
+        order: data.order,
+        hasBlocks: !!data.blocks && Array.isArray(data.blocks),
+      })
 
       // Validasi keberadaan modul
       const moduleData = await prisma.module.findUnique({
@@ -171,7 +170,7 @@ export const modulePageService = {
           title: createdPage.title,
           order: createdPage.order,
           blocks: data.blocks || [], // Gunakan data asli blocks, bukan string JSON
-          status: 'DRAFT' as ModulePageStatus, // Gunakan status yang valid sesuai enum
+          status: ModulePageStatus.DRAFT, // Gunakan enum
           createdAt: createdPage.createdAt,
           updatedAt: createdPage.updatedAt,
         },
@@ -218,7 +217,7 @@ export const modulePageService = {
         moduleId: page.moduleId,
         title: page.title,
         order: page.order,
-        status: 'DRAFT' as ModulePageStatus,
+        status: ModulePageStatus.DRAFT,
         createdAt: page.createdAt,
         updatedAt: page.updatedAt,
       }
@@ -271,7 +270,7 @@ export const modulePageService = {
         title: page.title,
         order: page.order,
         blocks: this.parseContent(page.content as string),
-        status: 'DRAFT' as ModulePageStatus,
+        status: ModulePageStatus.DRAFT,
         createdAt: page.createdAt,
         updatedAt: page.updatedAt,
       },
@@ -358,7 +357,7 @@ export const modulePageService = {
         title: updatedPage.title,
         order: updatedPage.order,
         blocks,
-        status: 'DRAFT' as ModulePageStatus,
+        status: ModulePageStatus.DRAFT,
         createdAt: updatedPage.createdAt,
         updatedAt: updatedPage.updatedAt,
       },
@@ -441,29 +440,18 @@ export const modulePageService = {
   },
 
   /**
-   * Parse content string dari database menjadi ContentBlock[]
-   * Mendukung format lama (array blocks) dan baru (JSON Tiptap)
+   * Parse konten dari string JSON atau data halaman
+   * Menggunakan fungsi dari dataFormats.ts
+   * @param content - String JSON konten
+   * @param pageData - Data halaman (opsional)
+   * @param returnRawJSON - Flag untuk mengembalikan JSON mentah
+   * @returns Hasil parsing (ContentBlock[] atau StandardEditorContent)
    */
-  parseContent(content: string): ContentBlock[] {
-    if (!content) return []
-
-    try {
-      // Cek jika content adalah format JSON Tiptap (dimulai dengan { dan memiliki type:'doc')
-      if (content.startsWith('{') && content.includes('"type":"doc"')) {
-        // Ini adalah format JSON Tiptap - buat satu block yang berisi konten tersebut
-        return [
-          {
-            type: ContentBlockType.TEXT,
-            content: content,
-          },
-        ]
-      }
-
-      // Format lama (array blocks) - parsing sebagai array
-      return JSON.parse(content) as ContentBlock[]
-    } catch (error) {
-      console.error('Error parsing content:', error)
-      return [] // Fallback jika parsing gagal
-    }
+  parseContent(
+    content: string | undefined,
+    pageData?: ModulePage,
+    returnRawJSON: boolean = false
+  ): any {
+    return parseContent(content, pageData, returnRawJSON)
   },
 }

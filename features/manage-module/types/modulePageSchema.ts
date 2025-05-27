@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ModulePageStatus } from './index'
 
 /**
  * Enum untuk tipe blok konten yang didukung
@@ -19,13 +20,26 @@ export const MAX_VIDEO_SIZE_BYTES = 20 * 1024 * 1024 // 20MB
 
 /**
  * Schema untuk blok konten
+ * Mendukung format Tiptap JSON dan format string
  */
-export const ContentBlockSchema = z.object({
-  type: z.nativeEnum(ContentBlockType),
-  content: z.string(),
-  caption: z.string().optional(),
-  language: z.string().optional(), // untuk blok kode
-})
+export const ContentBlockSchema = z.union([
+  // Format lama: type dari ContentBlockType dengan content (string atau objek)
+  z.object({
+    type: z.nativeEnum(ContentBlockType),
+    content: z.union([
+      z.string(),
+      z.object({}).passthrough(), // Untuk format Tiptap JSON
+    ]),
+    caption: z.string().optional(),
+    language: z.string().optional(), // untuk blok kode
+  }),
+
+  // Format baru: Langsung format Tiptap dengan type="doc"
+  z.object({
+    type: z.literal('doc'),
+    content: z.array(z.object({}).passthrough()),
+  }),
+])
 
 /**
  * Type untuk blok konten
@@ -85,7 +99,7 @@ export const ModulePageSchema = z.object({
   order: z.number().int(),
   content: z.string().optional(), // Untuk editor sederhana
   blocks: z.array(ContentBlockSchema).optional(), // Untuk editor multi-block (future)
-  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('DRAFT'),
+  status: z.nativeEnum(ModulePageStatus).default(ModulePageStatus.DRAFT),
   createdAt: z.date(),
   updatedAt: z.date(),
 })
@@ -100,7 +114,7 @@ export type ModulePage = {
   order: number
   content?: string
   blocks?: ContentBlock[]
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+  status: ModulePageStatus
   createdAt: Date
   updatedAt: Date
 }

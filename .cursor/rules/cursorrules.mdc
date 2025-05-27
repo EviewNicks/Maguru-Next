@@ -24,6 +24,7 @@ alwaysApply: true
 8. Code Modularity & Optimization
 9. Documentation & Guidelines
 10. Development Workflow
+11. selalu melakukan pengecekan Duplikasi Code (Clean Code)
 
 **`TypeScript menganggap penggunaan any sebagai praktik yang tidak baik karena:**
 `!important : jangan menggunaakan any, jika tidak ada apilihan lain maka silahkan menggunakan any`

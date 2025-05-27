@@ -164,7 +164,7 @@ export default function SidebarContent({
           ? Math.max(...pages.map((page) => page.order || 0)) + 1
           : 1
 
-      // Prepare new page data
+      // Prepare new page data dengan format Tiptap JSON yang benar
       const newPageData = {
         title: defaultTitle,
         moduleId,
@@ -172,9 +172,28 @@ export default function SidebarContent({
         order: newOrder,
         blocks: [
           {
-            type: ContentBlockType.TEXT,
-            content:
-              '<p>Halaman baru Anda telah dibuat. Mulai edit konten disini.</p>',
+            type: 'doc',
+            content: [
+              {
+                type: 'heading',
+                attrs: { level: 1 },
+                content: [
+                  {
+                    type: 'text',
+                    text: defaultTitle,
+                  },
+                ],
+              },
+              {
+                type: 'paragraph',
+                content: [
+                  {
+                    type: 'text',
+                    text: 'Halaman baru Anda telah dibuat. Mulai edit konten disini.',
+                  },
+                ],
+              },
+            ],
           },
         ],
       }

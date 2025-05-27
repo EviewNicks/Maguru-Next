@@ -185,14 +185,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Halaman Test 1\",\n  \"type\": \"content\",\n  \"order\": 1,\n  \"blocks\": [\n    {\n      \"type\": \"text\",\n      \"content\": \"Ini adalah konten halaman test pertama.\"\n    },\n    {\n      \"type\": \"heading\",\n      \"content\": \"Sub Judul\"\n    },\n    {\n      \"type\": \"code\",\n      \"content\": \"console.log('Hello World');\",\n      \"language\": \"javascript\"\n    }\n  ]\n}"
+              "raw": "{\n  \"title\": \"Halaman Test 1\",\n  \"type\": \"content\",\n  \"order\": 1,\n  \"blocks\": [\n    {\n      \"type\": \"text\",\n      \"content\": {\n        \"type\": \"doc\",\n        \"content\": [\n          {\n            \"type\": \"heading\",\n            \"attrs\": { \"level\": 1 },\n            \"content\": [\n              {\n                \"type\": \"text\",\n                \"text\": \"Halaman Test 1\"\n              }\n            ]\n          },\n          {\n            \"type\": \"paragraph\",\n            \"content\": [\n              {\n                \"type\": \"text\",\n                \"text\": \"Ini adalah konten halaman test pertama.\"\n              }\n            ]\n          },\n          {\n            \"type\": \"code_block\",\n            \"attrs\": { \"language\": \"javascript\" },\n            \"content\": [\n              {\n                \"type\": \"text\",\n                \"text\": \"console.log('Hello World');\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages",
               "host": ["{{baseUrl}}"],
               "path": ["api", "module", "{{moduleId}}", "pages"]
             },
-            "description": "Membuat halaman baru dalam modul tertentu."
+            "description": "Membuat halaman baru dalam modul tertentu. Format blocks menggunakan struktur Tiptap JSON untuk editor."
           },
           "response": []
         },
@@ -245,14 +245,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Halaman Test 1 (Updated)\",\n  \"blocks\": [\n    {\n      \"type\": \"paragraph\",\n      \"content\": \"Ini adalah konten halaman test pertama yang telah diperbarui.\"\n    },\n    {\n      \"type\": \"heading\",\n      \"content\": \"Sub Judul Baru\"\n    },\n    {\n      \"type\": \"code\",\n      \"content\": \"console.log('Hello Updated World');\",\n      \"language\": \"javascript\"\n    }\n  ]\n}"
+              "raw": "{\n  \"title\": \"Halaman Test 1 (Updated)\",\n  \"blocks\": [\n    {\n      \"type\": \"text\",\n      \"content\": {\n        \"type\": \"doc\",\n        \"content\": [\n          {\n            \"type\": \"paragraph\",\n            \"content\": [\n              {\n                \"type\": \"text\",\n                \"text\": \"Ini adalah konten halaman test pertama yang telah diperbarui dengan baik.\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages/{{pageId}}",
               "host": ["{{baseUrl}}"],
               "path": ["api", "module", "{{moduleId}}", "pages", "{{pageId}}"]
             },
-            "description": "Memperbarui halaman modul berdasarkan ID halaman."
+            "description": "Memperbarui halaman modul berdasarkan ID halaman. Format blocks menggunakan struktur Tiptap JSON untuk editor."
           },
           "response": []
         },

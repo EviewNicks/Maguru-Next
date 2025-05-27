@@ -12,6 +12,12 @@ export enum ModuleStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
+export enum ModulePageStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+}
+
 export interface Module {
   id: string
   title: string
@@ -106,4 +112,64 @@ export interface ApiEntityResponse<T> extends ApiResponse {
 export interface ApiListResponse<T> extends ApiResponse {
   data: T[]
   meta: PaginationMeta
+}
+
+// Interface untuk ModulePageService
+export interface IModulePageService {
+  getModuleIdFromStorage(moduleId?: string): string | null;
+  createModulePage(data: CreateModulePageInput & { language?: string }): Promise<ApiEntityResponse<ModulePage>>;
+  getModulePages(moduleId: string, options?: { page?: number; limit?: number; includeContent?: boolean }): Promise<ApiListResponse<ModulePage>>;
+  getModulePage(pageId: string): Promise<ApiEntityResponse<ModulePage> | null>;
+  updateModulePage(pageId: string, data: UpdateModulePageInput): Promise<ApiEntityResponse<ModulePage> | null>;
+  deleteModulePage(pageId: string): Promise<boolean>;
+  reorderModulePages(moduleId: string, pageIds: string[]): Promise<boolean>;
+  parseContent(content: string | undefined, pageData?: ModulePage, returnRawJSON?: boolean): any;
+}
+
+// Interface untuk StandardEditorContent
+// Interface ini seharusnya selaras dengan yang ada di dataFormats.ts
+export interface TiptapNode {
+  type: string;
+  attrs?: Record<string, unknown>;
+  content?: TiptapNode[];
+  text?: string;
+  marks?: Array<{
+    type: string;
+    attrs?: Record<string, unknown>;
+  }>;
+}
+
+export interface StandardEditorContent {
+  type: 'doc';
+  content: TiptapNode[];
+}
+
+// Interface untuk ModulePageAdapter
+export interface IModulePageAdapter {
+  _cache: {
+    pages: {
+      [moduleId: string]: {
+        data: ModulePage[]
+        timestamp: number
+      }
+    }
+    page: {
+      [pageId: string]: {
+        data: ModulePage
+        timestamp: number
+      }
+    }
+  };
+  invalidateModuleCache(moduleId: string): void;
+  invalidatePageCache(pageId: string): void;
+  validateModuleId(moduleId: string | null | undefined): asserts moduleId is string;
+  validatePageId(pageId: string | null | undefined): asserts pageId is string;
+  getPages(moduleId: string, skipCache?: boolean): Promise<ModulePage[]>;
+  getPage(pageId: string, skipCache?: boolean): Promise<ModulePage | null>;
+  createPage(data: CreateModulePageInput): Promise<ModulePage>;
+  updatePage(pageId: string, data: UpdateModulePageInput): Promise<ModulePage | null>;
+  deletePage(pageId: string): Promise<boolean>;
+  reorderPages(moduleId: string, pageIds: string[]): Promise<boolean>;
+  saveEditorContent(pageId: string, editorContent: unknown): Promise<ModulePage | null>;
+  getParsedEditorContent(page: ModulePage | null): StandardEditorContent;
 }

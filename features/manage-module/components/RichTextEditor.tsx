@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 import { ImageExtension } from '@/features/manage-module/components/ModulePageEditor/extension/Image'
 import { ImagePlaceholder } from '@/features/manage-module/components/ModulePageEditor/extension/ImagePlaceholder'
 import SearchAndReplace from '@/features/manage-module/components/ModulePageEditor/extension/SearchAndReplace'
-
 import { Color } from '@tiptap/extension-color'
 import Highlight from '@tiptap/extension-highlight'
 import Link from '@tiptap/extension-link'
@@ -16,12 +15,10 @@ import Typography from '@tiptap/extension-typography'
 import Underline from '@tiptap/extension-underline'
 import { EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-
 import { TipTapFloatingMenu } from '@/features/manage-module/components/ModulePageEditor/extension/FloatingMenu'
 import { FloatingToolbar } from '@/features/manage-module/components/ModulePageEditor/extension/FloatingToolbar'
 import { EditorToolbar } from '@/features/manage-module/components/ModulePageEditor/toolbars/EditorToolbar'
 import Placeholder from '@tiptap/extension-placeholder'
-
 import { defaultContentJSON } from '@/features/manage-module/lib/content'
 import { useRichTextAutosave } from '@/features/manage-module/hooks/useRichTextAutosave'
 import { useCallback, useEffect, useState } from 'react'
@@ -114,32 +111,32 @@ export function RichTextEditor({
   // State untuk menyimpan instance editor
   const [editor, setEditor] = useState<Editor | null>(null)
 
-  // Parse content dengan JSON.parse jika string, gunakan langsung jika object
-  // Tidak menggunakan parseContent di sini karena itu akan dilakukan di RichTextEditorWithAutosave
+  // Gunakan JSON.parse untuk mendapatkan konten yang sudah diparse oleh komponen parent
   const getParsedContent = useCallback(() => {
     try {
-      if (typeof initialContent === 'string') {
-        if (initialContent.trim() === '') {
-          console.log(
-            'RichTextEditor: initialContent kosong, menggunakan defaultContentJSON'
-          )
-          return defaultContentJSON
+      // Jika initialContent tidak ada, gunakan defaultContentJSON
+      if (!initialContent) {
+        console.log(
+          'RichTextEditor: initialContent kosong, menggunakan defaultContentJSON'
+        )
+        return defaultContentJSON
+      }
+
+      // Gunakan JSON.parse untuk string, atau gunakan langsung jika object
+      try {
+        if (typeof initialContent === 'string') {
+          console.log('RichTextEditor: parsing JSON string dari parent')
+          return JSON.parse(initialContent)
         }
 
-        // Coba parse initialContent
-        try {
-          console.log('RichTextEditor: mencoba parse initialContent')
-          return JSON.parse(initialContent)
-        } catch (error) {
-          console.error('RichTextEditor: error parsing initialContent:', error)
-          return defaultContentJSON
-        }
-      } else {
-        console.log('RichTextEditor: initialContent sudah berupa object')
-        return initialContent || defaultContentJSON
+        console.log('RichTextEditor: menggunakan object langsung dari parent')
+        return initialContent
+      } catch (error) {
+        console.error('RichTextEditor: error parsing JSON:', error)
+        return defaultContentJSON
       }
     } catch (error) {
-      console.error('RichTextEditor: error di getParsedContent:', error)
+      console.error('RichTextEditor: error in getParsedContent:', error)
       return defaultContentJSON
     }
   }, [initialContent])

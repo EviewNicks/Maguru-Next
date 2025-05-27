@@ -1,17 +1,14 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-// import TopNavigation from './ModulePageEditor/navigation/TopNavigation'
 import DocumentHeader from './ModulePageEditor/document/DocumentHeader'
 import ModulePageFooterNav from './ModulePageFooterNav'
-import { useModulePageEditor } from '../hooks/useModulePageEditor'
 import { RichTextEditor } from './RichTextEditor'
 import { useDebounce } from '../hooks/useDebounce'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts'
 import { NAVIGATION_SHORTCUTS, SYSTEM_SHORTCUTS } from '../constants/shortcuts'
 import ShortcutHelp from './ShortcutHelp'
-// import { FocusTrap } from './a11y/FocusTrap' - Tidak digunakan
 import SkipLink from './a11y/SkipLink'
 import A11yAnnouncer from './a11y/A11yAnnouncer'
 import { getStatusAnnouncement } from '../utils/a11yUtils'
@@ -19,6 +16,8 @@ import useFocusManagement from '../hooks/useFocusManagement'
 import { ErrorBoundary } from './ErrorBoundary'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { modulePageAdapter } from '../adapters/modulePageAdapter'
+import { defaultContentJSON } from '../lib/content'
 
 interface ModulePageEditorProps {
   isLoading?: boolean
@@ -44,7 +43,6 @@ export default function ModulePageEditor({
 
   // Get CRUD context
   const {
-    moduleId,
     pages,
     activePage,
     isLoading: crudLoading,
@@ -61,8 +59,19 @@ export default function ModulePageEditor({
   const firstPage = pages && pages.length > 0 ? pages[0] : null
   const activePageIdToUse = activePage?.id || firstPage?.id
 
-  // Editor state untuk halaman aktif
-  const { title, handleTitleChange } = useModulePageEditor(moduleId, activePage)
+  // Gunakan title dari activePage dan buat handler untuk title change
+  const title = activePage?.title || ''
+  const handleTitleChange = useCallback(
+    (newTitle: string) => {
+      if (!activePage?.id) return
+
+      savePage({
+        pageId: activePage.id,
+        title: newTitle,
+      })
+    },
+    [activePage, savePage]
+  )
 
   // Use savePage from CRUD context for enhanced saving with optimistic updates
   const handleSave = useCallback(async () => {
@@ -157,10 +166,23 @@ export default function ModulePageEditor({
     { scope: 'global' }
   )
 
-  // Get initial content - tidak perlu memformat karena RichTextEditor sudah dapat menangani langsung dari API
-  const initialContent = activePage?.blocks
-    ? JSON.stringify(activePage.blocks)
-    : ''
+  // Debug log untuk melihat struktur data blocks
+  if (activePage?.blocks && activePage.blocks.length > 0) {
+    console.log(
+      '[ModulePageEditor] activePage blocks:',
+      `Found ${activePage.blocks.length} blocks`
+    )
+  } else {
+    console.log('[ModulePageEditor] activePage blocks: Found 0 blocks')
+  }
+
+  // Dapatkan konten yang sudah diparse sekali saja di level komponen induk menggunakan adapter
+  const parsedContent = activePage
+    ? modulePageAdapter.getParsedEditorContent(activePage)
+    : defaultContentJSON
+
+  // Gunakan JSON string untuk diteruskan ke komponen RichTextEditor
+  const initialContent = JSON.stringify(parsedContent)
 
   // Status loading
   if (isLoading) {

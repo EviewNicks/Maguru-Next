@@ -64,26 +64,34 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. A
    - Integrasi dengan ModulePagesContext untuk toggle sidebar
    - Unit testing untuk ShortcutHelp dan useKeyboardShortcuts
 
-7. **Penyempurnaan Aksesibilitas (A11y) (Prioritas Medium)**
+7. **Penyempurnaan Aksesibilitas (A11y) (Prioritas Medium)** ✓
 
    - Jalankan audit aksesibilitas menggunakan axe
    - Tambahkan ARIA label pada semua elemen interaktif
    - Implementasikan fokus manajemen yang tepat untuk modal dan navigasi
    - Buat test aksesibilitas
 
-8. **Integration Testing**
+8. **Perbaikan Arsitektur dan Kualitas Kode (Prioritas High)** ✓
+
+   - Konsolidasi format data dengan memindahkan fungsi parsing dari `content-parser.ts` ke `dataFormats.ts`
+   - Standardisasi tipe data dengan mendefinisikan enum dan interface di `index.ts`
+   - Membuat interface untuk layanan (`IModulePageService`) dan adapter (`IModulePageAdapter`)
+   - Memastikan konsistensi tipe data di seluruh aplikasi
+   - Membuat dokumentasi arsitektur yang jelas
+
+9. **Integration Testing**
 
    - Buat integration test untuk alur CRUD halaman
    - Buat integration test untuk navigasi antar halaman
    - Buat integration test untuk interaksi editor
 
-9. **Testing & Validasi** _(1 Hari)_
+10. **Testing & Validasi** _(1 Hari)_
 
-   - Unit test untuk fungsi CRUD halaman.
-   - Integration test untuk API & UI.
-   - E2E test untuk alur admin mengelola halaman modul.
+    - Unit test untuk fungsi CRUD halaman.
+    - Integration test untuk API & UI.
+    - E2E test untuk alur admin mengelola halaman modul.
 
-10. **Dokumentasi & User Guide** _(0.5 Hari)_
+11. **Dokumentasi & User Guide** _(0.5 Hari)_
     - Update README/module docs untuk instruksi penggunaan fitur multi-page.
     - Contoh payload API & skenario penggunaan.
 
@@ -102,10 +110,12 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. A
 - [ ] Unit, integration, dan E2E test coverage minimal 80%. (80% unit test tercapai, integration & E2E dalam proses)
 - [x] Batasan upload gambar maksimal 2MB/file, video maksimal 20MB/file.
 - [x] Shortcut keyboard untuk navigasi dan editing telah terimplementasi.
+- [x] Arsitektur kode yang jelas dan terstruktur.
+- [x] Konsistensi tipe data di seluruh aplikasi.
 
 ---
 
-## Status Pengembangan [update+2025-05-14]
+## Status Pengembangan [update+2025-07-01]
 
 - **Completed:**
 
@@ -117,10 +127,11 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. A
   - ✅ Perbaikan tipe data
   - ✅ Implementasi keyboard shortcut
   - ✅ Komponen ShortcutHelp dialog
+  - ✅ Penyempurnaan aksesibilitas (A11y)
+  - ✅ Perbaikan arsitektur dan kualitas kode
 
 - **In Progress:**
 
-  - 🔄 Penyempurnaan aksesibilitas (A11y)
   - 🔄 Integration testing
   - 🔄 E2E testing
 
@@ -154,6 +165,10 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. A
 4. **Testing:**
    - Terapkan TDD, prioritaskan test untuk validasi, urutan, dan event handler.
    - Gunakan mock API untuk integration test.
+5. **Arsitektur:**
+   - Pastikan konsistensi tipe data di seluruh aplikasi.
+   - Gunakan interface untuk layanan dan adapter untuk meningkatkan maintainability.
+   - Dokumentasikan arsitektur dengan jelas untuk memudahkan onboarding developer baru.
 
 ---
 
@@ -165,3 +180,4 @@ Mengimplementasikan fitur manajemen konten multi-page pada modul pembelajaran. A
 - [Zod Validation](https://zod.dev/)
 - [Prisma Relations](https://www.prisma.io/docs/concepts/components/prisma-relations)
 - [TipTap Editor](https://tiptap.dev/)
+- [Architecture Documentation](../../features/manage-module/docs/architecture-improvements.md)

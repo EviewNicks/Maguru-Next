@@ -11,15 +11,19 @@ import {
   ModulePage,
   CreateModulePageInput,
   UpdateModulePageInput,
-  ContentBlockType,
   ContentBlock,
-} from '../types'
-import { useModulePageCRUD } from '../hooks/useModulePageCRUD'
+} from '../types/modulePageSchema'
+import { useModulePageData } from '../hooks/useModulePageData'
 import { showErrorNotification } from '../components/ErrorNotifier'
+import { logger } from '../services/logger'
 import { useRouter } from 'next/navigation'
 import debounce from 'lodash/debounce'
 import { debugDataFlow } from '../utils/debugUtils'
 import { toast } from 'sonner'
+import { StandardEditorContent } from '../lib/dataFormats'
+
+// Konstanta untuk context name (logging)
+const CONTEXT = 'ModulePageCRUDContext'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPromise = Promise<any>
@@ -37,13 +41,9 @@ interface ModulePageCRUDContextProps {
   refetch: () => Promise<unknown>
 
   // Mutation functions dengan tipe yang lebih fleksibel untuk menghindari type conflicts
-
   createPage: (page: CreateModulePageInput) => AnyPromise
-
   updatePage: (pageId: string, data: UpdateModulePageInput) => AnyPromise
-
   deletePage: (pageId: string) => AnyPromise
-
   reorderPages: (pageIds: string[]) => AnyPromise
 
   // Tambahkan fungsi updatePageStatus
@@ -73,8 +73,7 @@ interface ModulePageCRUDContextProps {
   savePage: (params: {
     pageId: string
     title?: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    blocks?: any[]
+    blocks?: ContentBlock[]
   }) => AnyPromise
 
   // Tambahkan savePageWrapper ke interface
@@ -86,7 +85,7 @@ interface ModulePageCRUDContextProps {
   // Handler functions
   handlePageChange: (newPageId: string) => void
   handleSelectPage: (page: ModulePage) => void
-  handleEditorChange: (content: object, pageId: string) => void
+  handleEditorChange: (content: StandardEditorContent, pageId: string) => void
   handleNavigateToPrevPage: () => void
   handleNavigateToNextPage: () => void
 }
@@ -136,109 +135,86 @@ export function ModulePageCRUDProvider({
     Record<string, string>
   >({})
 
-  // Gunakan hook untuk operasi CRUD
+  // Gunakan useModulePageData untuk akses data
   const {
-    pages: hookPages,
-    isLoading,
-    error,
-    refetch,
-    createPage: createPageMutation,
-    updatePage: updatePageMutation,
-    deletePage: deletePageMutation,
-    reorderPages: reorderPagesMutation,
-    getPageById,
-    savePage: savePageMutation,
-    savePageWrapper,
-  } = useModulePageCRUD(moduleId)
-
-  // Gunakan mock pages jika disediakan, atau pages dari hook
-  const pages = mockValues.pages || hookPages
+    pages,
+    isPagesLoading: isLoading,
+    pagesError: error,
+    refetchPages: refetch,
+    createPage: createPageOperation,
+    updatePage: updatePageOperation,
+    deletePage: deletePageOperation,
+    reorderPages: reorderPagesOperation,
+    saveEditorContent: saveEditorContentMutation,
+    getPage,
+  } = useModulePageData(moduleId)
 
   // Debug data flow ketika pages berubah
   useEffect(() => {
     if (pages.length > 0) {
       debugDataFlow('ModulePageCRUDContext', pages)
-      console.log(
-        `[ModulePageCRUDContext] Received ${pages.length} pages:`,
-        pages.map((p) => ({ id: p.id, title: p.title, status: p.status }))
+      logger.debug(
+        CONTEXT,
+        `Received ${pages.length} pages`,
+        pages.map((p: ModulePage) => ({
+          id: p.id,
+          title: p.title,
+          status: p.status,
+        }))
       )
     } else if (isLoading) {
-      console.log('[ModulePageCRUDContext] Loading pages...')
+      logger.debug(CONTEXT, 'Loading pages...')
     } else if (error) {
-      console.error('[ModulePageCRUDContext] Error loading pages:', error)
+      logger.error(CONTEXT, 'Error loading pages', error)
     } else {
-      console.log('[ModulePageCRUDContext] No pages available')
+      logger.debug(CONTEXT, 'No pages available')
     }
   }, [pages, isLoading, error])
 
   // Set active page otomatis ke halaman pertama jika belum diset
   React.useEffect(() => {
     if (!activePage && pages.length > 0) {
-      console.log(
-        '[ModulePageCRUDContext] Auto-setting active page to first page:',
-        pages[0].title
+      logger.info(
+        CONTEXT,
+        `Auto-setting active page to first page: ${pages[0].title}`
       )
       setActivePage(pages[0])
     }
-  }, [activePage, pages])
+  }, [activePage, pages, setActivePage])
 
   // Wrapper functions untuk mutations dengan error handling
   const createPage = useCallback(
     async (page: CreateModulePageInput) => {
       try {
-        // Tambahkan null check
-        if (!createPageMutation?.mutateAsync) {
-          console.warn(
-            'createPageMutation not available in testing environment'
-          )
-          return null
-        }
-        const result = await createPageMutation.mutateAsync(page)
+        const result = await createPageOperation(page)
         return result
       } catch (error) {
-        console.error('Error in createPage:', error)
+        logger.error(CONTEXT, 'Error creating page', error)
         showErrorNotification(error)
         throw error
       }
     },
-    [createPageMutation]
+    [createPageOperation]
   )
 
   const updatePage = useCallback(
     async (pageId: string, data: UpdateModulePageInput) => {
       try {
-        // Tambahkan null check
-        if (!updatePageMutation?.mutateAsync) {
-          console.warn(
-            'updatePageMutation not available in testing environment'
-          )
-          return null
-        }
-        const result = await updatePageMutation.mutateAsync({
-          pageId,
-          updateData: data,
-        })
+        const result = await updatePageOperation(pageId, data)
         return result
       } catch (error) {
-        console.error('Error in updatePage:', error)
+        logger.error(CONTEXT, 'Error updating page', error)
         showErrorNotification(error)
         throw error
       }
     },
-    [updatePageMutation]
+    [updatePageOperation]
   )
 
   const deletePage = useCallback(
     async (pageId: string) => {
       try {
-        // Tambahkan null check
-        if (!deletePageMutation?.mutateAsync) {
-          console.warn(
-            'deletePageMutation not available in testing environment'
-          )
-          return null
-        }
-        const result = await deletePageMutation.mutateAsync(pageId)
+        const result = await deletePageOperation(pageId)
 
         // Jika halaman yang dihapus adalah active page, reset ke null
         if (activePage && activePage.id === pageId) {
@@ -247,33 +223,26 @@ export function ModulePageCRUDProvider({
 
         return result
       } catch (error) {
-        console.error('Error in deletePage:', error)
+        logger.error(CONTEXT, 'Error deleting page', error)
         showErrorNotification(error)
         throw error
       }
     },
-    [deletePageMutation, activePage]
+    [deletePageOperation, activePage]
   )
 
   const reorderPages = useCallback(
     async (pageIds: string[]) => {
       try {
-        // Tambahkan null check
-        if (!reorderPagesMutation?.mutateAsync) {
-          console.warn(
-            'reorderPagesMutation not available in testing environment'
-          )
-          return null
-        }
-        const result = await reorderPagesMutation.mutateAsync(pageIds)
+        const result = await reorderPagesOperation(pageIds)
         return result
       } catch (error) {
-        console.error('Error in reorderPages:', error)
+        logger.error(CONTEXT, 'Error reordering pages', error)
         showErrorNotification(error)
         throw error
       }
     },
-    [reorderPagesMutation]
+    [reorderPagesOperation]
   )
 
   // Tambahkan implementasi updatePageStatus
@@ -286,10 +255,12 @@ export function ModulePageCRUDProvider({
         const { pageId, status } = params
 
         // Gunakan updatePage yang sudah ada untuk mengubah status
-        const result = await updatePage(pageId, { status })
+        const result = await updatePage(pageId, {
+          status,
+        } as UpdateModulePageInput)
 
         // Jika berhasil, tampilkan notifikasi sukses berdasarkan status
-        if (result?.data) {
+        if (result) {
           const statusMessages = {
             DRAFT: 'Halaman berhasil dikembalikan ke draft',
             PUBLISHED: 'Halaman berhasil dipublikasikan',
@@ -303,7 +274,7 @@ export function ModulePageCRUDProvider({
 
         return result
       } catch (error) {
-        console.error('Error updating page status:', error)
+        logger.error(CONTEXT, 'Error updating page status', error)
         showErrorNotification(error)
         throw error
       }
@@ -319,7 +290,7 @@ export function ModulePageCRUDProvider({
       const pageId = currentPageId || activePage?.id || ''
       if (!pageId) return null
 
-      const currentIndex = pages.findIndex((p) => p.id === pageId)
+      const currentIndex = pages.findIndex((p: ModulePage) => p.id === pageId)
       if (currentIndex === -1 || currentIndex >= pages.length - 1) return null
 
       return pages[currentIndex + 1]
@@ -334,7 +305,7 @@ export function ModulePageCRUDProvider({
       const pageId = currentPageId || activePage?.id || ''
       if (!pageId) return null
 
-      const currentIndex = pages.findIndex((p) => p.id === pageId)
+      const currentIndex = pages.findIndex((p: ModulePage) => p.id === pageId)
       if (currentIndex <= 0) return null
 
       return pages[currentIndex - 1]
@@ -349,6 +320,19 @@ export function ModulePageCRUDProvider({
   const getLastPage = useCallback(() => {
     return pages.length > 0 ? pages[pages.length - 1] : null
   }, [pages])
+
+  // Helper untuk mendapatkan halaman berdasarkan ID
+  const getPageById = useCallback(
+    async (pageId: string): Promise<ModulePage | null> => {
+      try {
+        return await getPage(pageId)
+      } catch (error) {
+        logger.error(CONTEXT, 'Error fetching page by ID', error)
+        return null
+      }
+    },
+    [getPage]
+  )
 
   // Handler untuk navigasi halaman
   const handlePageChange = useCallback(
@@ -377,7 +361,7 @@ export function ModulePageCRUDProvider({
       if (!page) return
 
       // Log page selection untuk debugging
-      console.log(`[Context] Selected page: ${page.id} - ${page.title}`)
+      logger.debug(CONTEXT, `Selected page: ${page.id} - ${page.title}`)
 
       // Buat deep clone page object untuk mencegah referensi yang tidak diinginkan
       const pageClone = JSON.parse(JSON.stringify(page)) as ModulePage
@@ -388,17 +372,17 @@ export function ModulePageCRUDProvider({
       // Navigasi ke halaman yang dipilih
       handlePageChange(page.id)
     },
-    [handlePageChange]
+    [handlePageChange, setActivePage]
   )
 
   // Handler untuk perubahan konten editor dengan debounce dan optimasi
   const saveEditorContent = useCallback(
-    (content: object, pageId: string) => {
+    (content: StandardEditorContent, pageId: string) => {
       if (!pageId) return
 
       // Jika sedang navigasi, jangan update konten
       if (isNavigating) {
-        console.log('[Context] Navigation in progress, skipping content update')
+        logger.debug(CONTEXT, 'Navigation in progress, skipping content update')
         return
       }
 
@@ -407,42 +391,34 @@ export function ModulePageCRUDProvider({
 
       // Periksa apakah konten benar-benar berubah dengan membandingkan dengan yang terakhir disimpan
       if (lastSavedContent[pageId] === contentString) {
-        console.log('[Context] Content unchanged, skipping save')
+        logger.debug(CONTEXT, 'Content unchanged, skipping save')
         return
       }
 
       // Update status UI
       setSaveStatus('saving')
-      console.log('[Context] Saving page content...')
+      logger.debug(CONTEXT, 'Saving page content...')
 
-      // Konversi konten ke format yang diharapkan API
-      const updatedBlocks: ContentBlock[] = [
-        {
-          type: ContentBlockType.TEXT,
-          content: contentString,
-        },
-      ]
-
-      // Simpan perubahan menggunakan savePageWrapper
-      savePageWrapper(pageId, { blocks: updatedBlocks })
+      // Gunakan hook untuk menyimpan konten editor
+      saveEditorContentMutation(pageId, content)
         .then(() => {
           setSaveStatus('saved')
           // Simpan referensi ke konten yang baru disimpan
           setLastSavedContent((prev) => ({ ...prev, [pageId]: contentString }))
-          console.log('[Context] Content saved successfully')
+          logger.debug(CONTEXT, 'Content saved successfully')
         })
         .catch((error: Error) => {
-          console.error('[Context] Error saving content:', error)
+          logger.error(CONTEXT, 'Error saving content', error)
           setSaveStatus('error')
         })
     },
-    [isNavigating, savePageWrapper, lastSavedContent]
+    [isNavigating, lastSavedContent, setSaveStatus, saveEditorContentMutation]
   )
 
   // Debounce saveEditorContent untuk mengurangi jumlah API calls
   const handleEditorChange = useMemo(
     () =>
-      debounce((content: object, pageId: string) => {
+      debounce((content: StandardEditorContent, pageId: string) => {
         saveEditorContent(content, pageId)
       }, 2000), // 2 detik debounce, meningkat dari 500ms
     [saveEditorContent]
@@ -452,40 +428,51 @@ export function ModulePageCRUDProvider({
   const handleNavigateToPrevPage = useCallback(() => {
     if (!activePage || isNavigating) return
 
-    const currentIndex = pages.findIndex((p) => p.id === activePage.id)
-    if (currentIndex > 0) {
-      const prevPage = pages[currentIndex - 1]
+    const prevPage = getPreviousPage(activePage.id)
+    if (prevPage) {
       handleSelectPage(prevPage)
     }
-  }, [activePage, pages, handleSelectPage, isNavigating])
+  }, [activePage, getPreviousPage, handleSelectPage, isNavigating])
 
   // Handler untuk navigasi ke halaman berikutnya
   const handleNavigateToNextPage = useCallback(() => {
     if (!activePage || isNavigating) return
 
-    const currentIndex = pages.findIndex((p) => p.id === activePage.id)
-    if (currentIndex < pages.length - 1) {
-      const nextPage = pages[currentIndex + 1]
+    const nextPage = getNextPage(activePage.id)
+    if (nextPage) {
       handleSelectPage(nextPage)
     }
-  }, [activePage, pages, handleSelectPage, isNavigating])
+  }, [activePage, getNextPage, handleSelectPage, isNavigating])
 
   // Wrapper untuk savePage agar sesuai dengan tipe yang diharapkan di interface
   const savePage = useCallback(
     (params: {
       pageId: string
       title?: string
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      blocks?: any[]
+      blocks?: ContentBlock[]
     }): AnyPromise => {
-      // Tambahkan null check untuk savePageMutation
-      if (!savePageMutation?.mutateAsync) {
-        console.warn('savePageMutation not available in testing environment')
-        return Promise.resolve(null)
-      }
-      return savePageMutation.mutateAsync(params)
+      return updatePage(params.pageId, {
+        title: params.title,
+        blocks: params.blocks,
+      })
     },
-    [savePageMutation]
+    [updatePage]
+  )
+
+  // Implementasi savePageWrapper yang menggunakan hooks
+  const savePageWrapper = useCallback(
+    async (
+      pageId: string,
+      data: { title?: string; blocks?: ContentBlock[] }
+    ): Promise<ModulePage | null> => {
+      try {
+        return await updatePageOperation(pageId, data as UpdateModulePageInput)
+      } catch (error) {
+        logger.error(CONTEXT, 'Error in savePageWrapper', error)
+        throw error
+      }
+    },
+    [updatePageOperation]
   )
 
   // Memoize context value untuk mencegah re-render yang tidak perlu
