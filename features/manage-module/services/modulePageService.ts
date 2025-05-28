@@ -3,7 +3,13 @@ import {
   CreateModulePageInput,
   UpdateModulePageInput,
 } from '../types/modulePageSchema'
-import { ModulePage, ApiListResponse, ApiEntityResponse, ModulePageStatus, IModulePageService } from '../types'
+import {
+  ModulePage,
+  ApiListResponse,
+  ApiEntityResponse,
+  ModulePageStatus,
+  IModulePageService,
+} from '../types'
 import prisma from '@/lib/prisma'
 import { defaultContentJSON } from '../lib/content'
 import { logger } from './logger'

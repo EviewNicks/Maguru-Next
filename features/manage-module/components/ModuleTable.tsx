@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useModuleQuery } from '@/features/manage-module/hooks/useModuleQuery'
+import { useModuleCRUD } from '@/features/manage-module/context/ModuleCRUDContext'
 import { ModuleStatus, Module } from '@/features/manage-module/types'
 import ModuleFormModal from './ModuleTable/ModuleFormModal'
 
@@ -34,84 +34,61 @@ export function ModuleTable() {
   const [activeView, setActiveView] = useState<'table' | 'card'>('table')
   const [searchInputValue, setSearchInputValue] = useState('')
 
-  // State untuk parameter query
-  const [queryParams, setQueryParams] = useState({
-    page: 1,
-    pageSize: 10,
-    search: '',
-    status: 'all' as string,
-    sortBy: 'createdAt',
-    sortOrder: 'desc' as 'asc' | 'desc',
-  })
+  // Menggunakan ModuleCRUDContext untuk state dan fungsi
+  const {
+    modules,
+    isLoading,
+    error,
+    page,
+    pageSize,
+    totalPages,
+    totalItems,
+    statusFilter,
+    setPage,
+    setPageSize,
+    setSearchQuery,
+    setStatusFilter,
+    setSortBy,
+    setSortOrder,
+    sortOrder,
+  } = useModuleCRUD()
 
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchInputValue !== queryParams.search) {
-        setQueryParams((prev) => ({
-          ...prev,
-          page: 1,
-          search: searchInputValue,
-        }))
-      }
+      setSearchQuery(searchInputValue)
     }, 300)
 
     return () => clearTimeout(timer)
-  }, [searchInputValue, queryParams.search])
-
-  // Konversi status untuk API
-  const getStatusFilter = (): ModuleStatus | undefined => {
-    switch (queryParams.status) {
-      case 'active':
-        return ModuleStatus.ACTIVE
-      case 'draft':
-        return ModuleStatus.DRAFT
-      case 'archived':
-        return ModuleStatus.ARCHIVED
-      case 'all':
-      default:
-        return undefined
-    }
-  }
-
-  // Fetch data menggunakan hook
-  const { useModuleListQuery } = useModuleQuery({
-    page: queryParams.page,
-    pageSize: queryParams.pageSize,
-    search: queryParams.search,
-    status: getStatusFilter(),
-    sortBy: queryParams.sortBy,
-    sortOrder: queryParams.sortOrder,
-  })
-
-  const { data, isLoading, error } = useModuleListQuery
+  }, [searchInputValue, setSearchQuery])
 
   // Handler untuk filter status
   const handleStatusFilter = (status: string) => {
-    setQueryParams((prev) => ({ ...prev, page: 1, status }))
-  }
-
-  // Handler untuk perubahan halaman
-  const handlePageChange = (newPage: number) => {
-    setQueryParams((prev) => ({ ...prev, page: newPage }))
-  }
-
-  // Handler untuk perubahan ukuran halaman
-  const handlePageSizeChange = (newSize: number) => {
-    setQueryParams((prev) => ({ ...prev, page: 1, pageSize: newSize }))
+    switch (status) {
+      case 'active':
+        setStatusFilter(ModuleStatus.ACTIVE)
+        break
+      case 'draft':
+        setStatusFilter(ModuleStatus.DRAFT)
+        break
+      case 'archived':
+        setStatusFilter(ModuleStatus.ARCHIVED)
+        break
+      case 'all':
+      default:
+        setStatusFilter(undefined)
+        break
+    }
   }
 
   // Hitung jumlah items yang ditampilkan
   const calculateItemRange = () => {
-    if (!data?.meta || data.data.length === 0) return '0 dari 0'
+    if (modules.length === 0) return '0 dari 0'
 
-    const start = (data.meta.currentPage - 1) * data.meta.pageSize + 1
-    const end = Math.min(
-      data.meta.currentPage * data.meta.pageSize,
-      data.meta.totalItems
-    )
+    const start = (page - 1) * pageSize + 1
+    const end = Math.min(page * pageSize, totalItems)
 
-    return `${start} - ${end} dari ${data.meta.totalItems}`
+    return `${start} - ${end} dari ${totalItems}`
   }
 
   // Tambahkan useLayoutEffect untuk mengatasi hydration mismatch
@@ -209,7 +186,15 @@ export function ModuleTable() {
             </div>
             <div className="flex items-center space-x-2">
               <Select
-                value={queryParams.status}
+                value={
+                  statusFilter === ModuleStatus.ACTIVE
+                    ? 'active'
+                    : statusFilter === ModuleStatus.DRAFT
+                    ? 'draft'
+                    : statusFilter === ModuleStatus.ARCHIVED
+                    ? 'archived'
+                    : 'all'
+                }
                 onValueChange={handleStatusFilter}
               >
                 <SelectTrigger className="w-[180px] bg-slate-800/50 border border-slate-700/50 text-slate-200">
@@ -234,6 +219,11 @@ export function ModuleTable() {
                 variant="outline"
                 size="icon"
                 className="bg-slate-800/50 border border-slate-700/50"
+                onClick={() => {
+                  // Toggle sort order
+                  const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+                  setSortOrder(newSortOrder);
+                }}
               >
                 <Filter className="h-4 w-4" />
               </Button>
@@ -247,10 +237,25 @@ export function ModuleTable() {
                 <thead>
                   <tr className="text-left text-xs text-slate-400 border-b border-slate-700/50 bg-slate-800/50">
                     <th className="px-4 py-3 font-medium">ID</th>
-                    <th className="px-4 py-3 font-medium">Judul</th>
+                    <th 
+                      className="px-4 py-3 font-medium cursor-pointer"
+                      onClick={() => setSortBy('title')}
+                    >
+                      Judul
+                    </th>
                     <th className="px-4 py-3 font-medium">Deskripsi</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium">Tanggal</th>
+                    <th 
+                      className="px-4 py-3 font-medium cursor-pointer"
+                      onClick={() => setSortBy('status')}
+                    >
+                      Status
+                    </th>
+                    <th 
+                      className="px-4 py-3 font-medium cursor-pointer"
+                      onClick={() => setSortBy('createdAt')}
+                    >
+                      Tanggal
+                    </th>
                     <th className="px-4 py-3 font-medium">Aksi</th>
                   </tr>
                 </thead>
@@ -293,7 +298,7 @@ export function ModuleTable() {
                         Gagal memuat data. Silakan coba lagi.
                       </td>
                     </tr>
-                  ) : data?.data.length === 0 ? (
+                  ) : modules.length === 0 ? (
                     <tr>
                       <td
                         colSpan={6}
@@ -303,7 +308,7 @@ export function ModuleTable() {
                       </td>
                     </tr>
                   ) : (
-                    data?.data.map((module: Module) => (
+                    modules.map((module: Module) => (
                       <tr
                         key={module.id}
                         className="border-b border-slate-700/30 text-sm"
@@ -383,12 +388,12 @@ export function ModuleTable() {
                 <div className="col-span-full text-center py-8 text-red-400">
                   Gagal memuat data. Silakan coba lagi.
                 </div>
-              ) : data?.data.length === 0 ? (
+              ) : modules.length === 0 ? (
                 <div className="col-span-full text-center py-8 text-slate-400">
                   Tidak ada data modul yang tersedia.
                 </div>
               ) : (
-                data?.data.map((module: Module) => (
+                modules.map((module: Module) => (
                   <div
                     key={module.id}
                     className="bg-slate-800/50 rounded-lg border border-slate-700/50 p-4"
@@ -434,33 +439,26 @@ export function ModuleTable() {
                 size="sm"
                 variant="outline"
                 className="bg-slate-800 text-slate-200 border-slate-700"
-                disabled={!data?.meta || data.meta.currentPage <= 1}
-                onClick={() =>
-                  handlePageChange((data?.meta?.currentPage ?? 1) - 1)
-                }
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm text-slate-300">
-                {data?.meta ? data?.meta?.currentPage : 1} /{' '}
-                {data?.meta ? data?.meta?.totalPages : 1}
+                {page} / {totalPages || 1}
               </span>
               <Button
                 size="sm"
                 variant="outline"
                 className="bg-slate-800 text-slate-200 border-slate-700"
-                disabled={
-                  !data?.meta || data.meta.currentPage >= data.meta.totalPages
-                }
-                onClick={() =>
-                  handlePageChange((data?.meta?.currentPage ?? 1) + 1)
-                }
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
               <Select
-                value={queryParams.pageSize.toString()}
-                onValueChange={(value) => handlePageSizeChange(Number(value))}
+                value={pageSize.toString()}
+                onValueChange={(value) => setPageSize(Number(value))}
               >
                 <SelectTrigger className="w-[90px] bg-slate-800 border-slate-700 text-slate-200">
                   <SelectValue />

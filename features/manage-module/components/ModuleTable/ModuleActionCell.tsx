@@ -13,7 +13,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { useModuleMutation } from '@/features/manage-module/hooks/useModuleMutation'
+import { useModuleCRUD } from '@/features/manage-module/context/ModuleCRUDContext'
 import { showErrorNotification } from '../ErrorNotifier'
 import { useRouter } from 'next/navigation'
 
@@ -24,17 +24,18 @@ interface ModuleActionCellProps {
 export default function ModuleActionCell({ module }: ModuleActionCellProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
 
-  // Gunakan hook useModuleMutation
-  const { deleteModuleMutation } = useModuleMutation()
+  // Gunakan context ModuleCRUD
+  const { deleteModule, error } = useModuleCRUD()
 
   // Tangani error jika ada
   useEffect(() => {
-    if (deleteModuleMutation.error) {
-      showErrorNotification(deleteModuleMutation.error)
+    if (error) {
+      showErrorNotification(error)
     }
-  }, [deleteModuleMutation.error])
+  }, [error])
 
   const handleEdit = () => {
     setIsEditModalOpen(true)
@@ -44,10 +45,16 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
     setIsDeleteModalOpen(true)
   }
 
-  const handleDeleteConfirm = () => {
-    // Gunakan mutation delete dari useModuleMutation
-    deleteModuleMutation.mutate(module.id)
-    setIsDeleteModalOpen(false)
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true)
+    try {
+      await deleteModule(module.id)
+      setIsDeleteModalOpen(false)
+    } catch (error) {
+      // Error akan ditangani oleh context
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   // Navigasi ke halaman editor konten modul
@@ -83,7 +90,7 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
           size="sm"
           onClick={handleDelete}
           className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/10 hover:text-red-300"
-          disabled={deleteModuleMutation.isPending}
+          disabled={isDeleting}
           title="Hapus Modul"
         >
           <Trash2 className="h-4 w-4" />
@@ -122,10 +129,10 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
             <Button
               variant="destructive"
               onClick={handleDeleteConfirm}
-              disabled={deleteModuleMutation.isPending}
+              disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"
             >
-              {deleteModuleMutation.isPending ? 'Menghapus...' : 'Hapus'}
+              {isDeleting ? 'Menghapus...' : 'Hapus'}
             </Button>
           </DialogFooter>
         </DialogContent>

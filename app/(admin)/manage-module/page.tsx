@@ -5,6 +5,7 @@ import {
   ModuleOverview,
   ModuleTable,
 } from '@/features/manage-module/components'
+import { ModuleCRUDWrapper } from '@/features/manage-module/wrapper/ModuleCRUDWrapper'
 
 // Menambahkan konfigurasi routing untuk mencegah static rendering
 export const dynamic = 'force-dynamic'
@@ -28,12 +29,14 @@ export const metadata: Metadata = {
 export default function ModuleManagementPage() {
   return (
     <RoleProtected allowedRoles={['admin']}>
-      <ModuleLayout>
-        <div className="space-y-8 min-h-[calc(100vh-4rem)]">
-          <ModuleOverview />
-          <ModuleTable />
-        </div>
-      </ModuleLayout>
+      <ModuleCRUDWrapper>
+        <ModuleLayout>
+          <div className="space-y-8 min-h-[calc(100vh-4rem)]">
+            <ModuleOverview />
+            <ModuleTable />
+          </div>
+        </ModuleLayout>
+      </ModuleCRUDWrapper>
     </RoleProtected>
   )
 }

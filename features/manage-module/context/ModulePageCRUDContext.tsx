@@ -13,7 +13,7 @@ import {
   UpdateModulePageInput,
   ContentBlock,
 } from '../types/modulePageSchema'
-import { useModulePageData } from '../hooks/useModulePageMutation'
+import { useModulePageData } from '../hooks/useModulePageData'
 import { showErrorNotification } from '../components/ErrorNotifier'
 import { logger } from '../services/logger'
 import { useRouter } from 'next/navigation'

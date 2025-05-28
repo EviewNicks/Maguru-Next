@@ -30,7 +30,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Module, ModuleStatus } from '@/features/manage-module/types'
-import { useModuleMutation } from '@/features/manage-module/hooks/useModuleMutation'
+import { useModuleCRUD } from '@/features/manage-module/context/ModuleCRUDContext'
 import { showErrorNotification } from '../ErrorNotifier'
 
 // Schema validasi untuk form
@@ -63,7 +63,8 @@ export default function ModuleFormModal({
   mode,
   module,
 }: ModuleFormModalProps) {
-  const { createModuleMutation, updateModuleMutation } = useModuleMutation()
+  // Menggunakan ModuleCRUD context sesuai arsitektur
+  const { createModule, updateModule, error } = useModuleCRUD()
 
   // Inisialisasi form dengan react-hook-form dan zod validator
   const form = useForm<ModuleFormValues>({
@@ -92,45 +93,34 @@ export default function ModuleFormModal({
     }
   }, [form, mode, module, isOpen])
 
-  // Tangani error
+  // Tangani error jika ada
   useEffect(() => {
-    if (createModuleMutation.error) {
-      showErrorNotification(createModuleMutation.error)
+    if (error) {
+      showErrorNotification(error)
     }
-  }, [createModuleMutation.error])
+  }, [error])
 
-  useEffect(() => {
-    if (updateModuleMutation.error) {
-      showErrorNotification(updateModuleMutation.error)
-    }
-  }, [updateModuleMutation.error])
+  // State untuk menangani status submitting
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   // Handler submit form
-  const onSubmit = (values: ModuleFormValues) => {
-    if (mode === 'create') {
-      createModuleMutation.mutate(values, {
-        onSuccess: () => {
-          onClose()
-          form.reset()
-        },
-      })
-    } else if (mode === 'edit' && module) {
-      updateModuleMutation.mutate(
-        {
-          id: module.id,
-          ...values,
-        },
-        {
-          onSuccess: () => {
-            onClose()
-          },
-        }
-      )
+  const onSubmit = async (values: ModuleFormValues) => {
+    setIsSubmitting(true)
+    try {
+      if (mode === 'create') {
+        await createModule(values)
+        onClose()
+        form.reset()
+      } else if (mode === 'edit' && module) {
+        await updateModule(module.id, values)
+        onClose()
+      }
+    } catch (err) {
+      showErrorNotification(err)
+    } finally {
+      setIsSubmitting(false)
     }
   }
-
-  const isSubmitting =
-    createModuleMutation.isPending || updateModuleMutation.isPending
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

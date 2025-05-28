@@ -58,7 +58,9 @@ export function validateEditorContent(content: unknown): boolean {
  * @param content - String JSON yang akan dicek
  * @returns Object Tiptap jika valid, null jika tidak
  */
-export function isValidTiptapJSON(content?: string): StandardEditorContent | null {
+export function isValidTiptapJSON(
+  content?: string
+): StandardEditorContent | null {
   if (!content) return null
 
   try {
@@ -82,7 +84,9 @@ export function isValidTiptapJSON(content?: string): StandardEditorContent | nul
  * @param blocks - Array ContentBlock dari halaman
  * @returns Object Tiptap jika valid, null jika tidak
  */
-export function parseFirstBlock(blocks?: ContentBlock[]): StandardEditorContent | null {
+export function parseFirstBlock(
+  blocks?: ContentBlock[]
+): StandardEditorContent | null {
   if (!blocks || blocks.length === 0) return null
 
   const firstBlock = blocks[0]
@@ -92,11 +96,11 @@ export function parseFirstBlock(blocks?: ContentBlock[]): StandardEditorContent 
     logger.debug(CONTEXT, 'Found direct Tiptap JSON structure')
     const content = {
       type: 'doc' as const,
-      content: Array.isArray(firstBlock.content) 
-        ? firstBlock.content.map(item => item as unknown as TiptapNode) 
-        : []
+      content: Array.isArray(firstBlock.content)
+        ? firstBlock.content.map((item) => item as unknown as TiptapNode)
+        : [],
     }
-    
+
     if (validateEditorContent(content)) {
       return content
     }
@@ -142,7 +146,9 @@ export function parseFirstBlock(blocks?: ContentBlock[]): StandardEditorContent 
  * @param blocks - Array ContentBlock yang akan dikonversi
  * @returns Object dengan format Tiptap doc
  */
-export function convertBlocksToTiptap(blocks: ContentBlock[]): StandardEditorContent {
+export function convertBlocksToTiptap(
+  blocks: ContentBlock[]
+): StandardEditorContent {
   logger.debug(CONTEXT, 'Converting blocks to Tiptap format', {
     blockCount: blocks.length,
   })
@@ -152,7 +158,9 @@ export function convertBlocksToTiptap(blocks: ContentBlock[]): StandardEditorCon
     content: blocks.flatMap((block) => {
       // Case 1: Blok dengan type 'doc' dan content array
       if (block.type === 'doc' && Array.isArray(block.content)) {
-        return (block.content as unknown[]).map(item => item as unknown as TiptapNode)
+        return (block.content as unknown[]).map(
+          (item) => item as unknown as TiptapNode
+        )
       }
 
       // Case 2: Blok dengan content berupa objek Tiptap
@@ -163,7 +171,9 @@ export function convertBlocksToTiptap(blocks: ContentBlock[]): StandardEditorCon
         block.content.type === 'doc' &&
         Array.isArray(block.content.content)
       ) {
-        return (block.content.content as unknown[]).map(item => item as unknown as TiptapNode)
+        return (block.content.content as unknown[]).map(
+          (item) => item as unknown as TiptapNode
+        )
       }
 
       // Case 3: Blok TEXT dengan content string
@@ -175,7 +185,9 @@ export function convertBlocksToTiptap(blocks: ContentBlock[]): StandardEditorCon
           // Coba parse sebagai JSON
           const parsed = JSON.parse(block.content)
           if (parsed.type === 'doc' && Array.isArray(parsed.content)) {
-            return (parsed.content as unknown[]).map(item => item as unknown as TiptapNode)
+            return (parsed.content as unknown[]).map(
+              (item) => item as unknown as TiptapNode
+            )
           }
         } catch (e) {
           // Jika bukan JSON, buat paragraf baru dengan teks
@@ -183,7 +195,7 @@ export function convertBlocksToTiptap(blocks: ContentBlock[]): StandardEditorCon
             {
               type: 'paragraph',
               content: [{ type: 'text', text: block.content }],
-            } as TiptapNode
+            } as TiptapNode,
           ]
         }
       }
@@ -193,7 +205,7 @@ export function convertBlocksToTiptap(blocks: ContentBlock[]): StandardEditorCon
         {
           type: 'paragraph',
           content: [{ type: 'text', text: 'Konten tidak valid' }],
-        } as TiptapNode
+        } as TiptapNode,
       ]
     }),
   }
@@ -204,7 +216,10 @@ export function convertBlocksToTiptap(blocks: ContentBlock[]): StandardEditorCon
   }
 
   // Jika tidak valid, kembalikan dokumen kosong
-  logger.warn(CONTEXT, 'Generated content failed validation, returning default content')
+  logger.warn(
+    CONTEXT,
+    'Generated content failed validation, returning default content'
+  )
   return defaultContentJSON as StandardEditorContent
 }
 
