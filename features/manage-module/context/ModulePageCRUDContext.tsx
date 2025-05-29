@@ -245,14 +245,32 @@ export function ModulePageCRUDProvider({
 
   // Set active page otomatis ke halaman pertama jika belum diset
   React.useEffect(() => {
-    if (!activePage && pages.length > 0) {
+    // Hanya set active page jika:
+    // 1. Belum ada active page
+    // 2. Ada halaman tersedia
+    // 3. Tidak sedang loading
+    if (!activePage && pages.length > 0 && !isLoading) {
+      const firstPage = pages[0]
       logger.info(
         CONTEXT,
-        `Auto-setting active page to first page: ${pages[0].title}`
+        `Auto-setting active page to first page: ${firstPage.title}`
       )
-      setActivePage(pages[0])
+
+      // Set active page tanpa memanggil API
+      setActivePage(firstPage)
+
+      // Update URL tanpa memanggil handleSelectPage yang mungkin memicu API calls
+      if (
+        typeof window !== 'undefined' &&
+        !window.location.href.includes(`pageId=${firstPage.id}`)
+      ) {
+        router.replace(
+          `/manage-module/pages/${moduleId}?pageId=${firstPage.id}`,
+          { scroll: false }
+        )
+      }
     }
-  }, [activePage, pages, setActivePage])
+  }, [activePage, pages, isLoading, moduleId, router, setActivePage])
 
   // Wrapper functions untuk mutations dengan error handling
   const createPage = useCallback(
@@ -449,9 +467,27 @@ export function ModulePageCRUDProvider({
         return
       }
 
+      // Throttling: implementasi throttling sederhana menggunakan timestamp
+      const now = Date.now()
+      const lastSaveTime = window.sessionStorage.getItem(
+        `lastSaveTime_${pageId}`
+      )
+      const minTimeBetweenSaves = 5000 // 5 detik minimum antara save operations
+
+      if (lastSaveTime && now - parseInt(lastSaveTime) < minTimeBetweenSaves) {
+        logger.debug(
+          CONTEXT,
+          'Save throttled, too recent. Skipping save operation.'
+        )
+        return
+      }
+
       // Update status UI
       setSaveStatus('saving')
       logger.debug(CONTEXT, 'Saving page content...')
+
+      // Simpan timestamp save terakhir
+      window.sessionStorage.setItem(`lastSaveTime_${pageId}`, now.toString())
 
       // Gunakan hook untuk menyimpan konten editor
       try {
@@ -472,9 +508,39 @@ export function ModulePageCRUDProvider({
   const handleEditorChange = useMemo(
     () =>
       debounce((content: StandardEditorContent, pageId: string) => {
-        saveEditorContent(content, pageId)
-      }, 2000), // 2 detik debounce, meningkat dari 500ms
-    [saveEditorContent]
+        // Pastikan pageId valid
+        if (!pageId) {
+          logger.debug(CONTEXT, 'Invalid pageId, skipping editor content save')
+          return
+        }
+
+        // Cek apakah halaman ada di cache
+        const currentPage = pages.find((p) => p.id === pageId)
+        if (!currentPage) {
+          logger.debug(
+            CONTEXT,
+            `Page ${pageId} not found in cache, proceeding with save`
+          )
+          saveEditorContent(content, pageId)
+          return
+        }
+
+        // Konversi konten ke string untuk perbandingan
+        const contentString = JSON.stringify(content)
+        const currentContentString = JSON.stringify(currentPage.content)
+
+        // Hanya simpan jika konten benar-benar berubah
+        if (contentString !== currentContentString) {
+          logger.debug(CONTEXT, `Content changed for page ${pageId}, saving...`)
+          saveEditorContent(content, pageId)
+        } else {
+          logger.debug(
+            CONTEXT,
+            `Content unchanged for page ${pageId}, skipping save`
+          )
+        }
+      }, 10000), // 10 detik debounce, meningkat dari 5 detik untuk lebih mengurangi API calls
+    [saveEditorContent, pages]
   )
 
   // Handler untuk navigasi ke halaman sebelumnya
@@ -594,12 +660,51 @@ export function ModulePageCRUDProvider({
       title?: string
       content?: StandardEditorContent
     }): AnyPromise => {
+      // Cek apakah halaman ada di cache
+      const currentPage = pages.find((p) => p.id === params.pageId)
+
+      // Jika tidak ada perubahan yang signifikan, skip update
+      if (currentPage) {
+        let hasChanges = false
+
+        // Cek perubahan title
+        if (params.title !== undefined && params.title !== currentPage.title) {
+          hasChanges = true
+          logger.debug(
+            CONTEXT,
+            `Title changed from "${currentPage.title}" to "${params.title}"`
+          )
+        }
+
+        // Cek perubahan content (jika ada)
+        if (params.content !== undefined) {
+          // Konversi konten ke string untuk perbandingan
+          const contentString = JSON.stringify(params.content)
+          const currentContentString = JSON.stringify(currentPage.content)
+
+          if (contentString !== currentContentString) {
+            hasChanges = true
+            logger.debug(CONTEXT, `Content changed for page ${params.pageId}`)
+          }
+        }
+
+        if (!hasChanges) {
+          logger.debug(
+            CONTEXT,
+            `No significant changes detected for page ${params.pageId}, skipping update`
+          )
+          return Promise.resolve(currentPage)
+        }
+      }
+
+      logger.debug(CONTEXT, `Saving page ${params.pageId} with data:`, params)
+
       return updatePage(params.pageId, {
         title: params.title,
         content: params.content as UpdateModulePageInput['content'],
       })
     },
-    [updatePage]
+    [updatePage, pages]
   )
 
   // Implementasi savePageWrapper yang menggunakan hooks
@@ -609,6 +714,40 @@ export function ModulePageCRUDProvider({
       data: { title?: string; blocks?: ContentBlock[] }
     ): Promise<ModulePage | null> => {
       try {
+        // Cek apakah halaman ada di cache
+        const currentPage = pages.find((p) => p.id === pageId)
+
+        // Jika tidak ada perubahan yang signifikan, skip update
+        if (currentPage) {
+          let hasChanges = false
+
+          // Cek perubahan title
+          if (data.title !== undefined && data.title !== currentPage.title) {
+            hasChanges = true
+            logger.debug(
+              CONTEXT,
+              `Title changed from "${currentPage.title}" to "${data.title}"`
+            )
+          }
+
+          // Cek perubahan blocks (jika ada)
+          if (data.blocks !== undefined) {
+            hasChanges = true
+            logger.debug(CONTEXT, `Content blocks changed for page ${pageId}`)
+          }
+
+          if (!hasChanges) {
+            logger.debug(
+              CONTEXT,
+              `No significant changes detected for page ${pageId}, skipping update`
+            )
+            return currentPage
+          }
+        }
+
+        logger.debug(CONTEXT, `Updating page ${pageId} with data:`, data)
+
+        // Panggil updatePageOperation jika ada perubahan
         updatePageOperation({
           pageId,
           data: data as UpdateModulePageInput,
@@ -625,7 +764,7 @@ export function ModulePageCRUDProvider({
         throw error
       }
     },
-    [updatePageOperation, refetch, getPage]
+    [updatePageOperation, refetch, getPage, pages]
   )
 
   // Memoize context value untuk mencegah re-render yang tidak perlu

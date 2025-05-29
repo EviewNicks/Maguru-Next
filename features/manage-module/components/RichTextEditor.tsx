@@ -154,12 +154,12 @@ export function RichTextEditor({
         onChange(editorContent)
       }
 
-      // Gunakan handleEditorChange dari context untuk autosave
-      if (pageId) {
+      // Gunakan handleEditorChange dari context untuk autosave HANYA jika autosave=true
+      if (pageId && autosave) {
         handleEditorChange(typedContent, pageId)
       }
     },
-    [onChange, handleEditorChange, pageId]
+    [onChange, handleEditorChange, pageId, autosave]
   )
 
   // Initialize editor when component mounts

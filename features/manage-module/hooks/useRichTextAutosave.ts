@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Editor } from '@tiptap/react'
-import { ContentBlockType } from '../types'
+import { StandardEditorContent } from '../types'
 import { formatDistanceToNow } from 'date-fns'
 import { id } from 'date-fns/locale'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
@@ -105,14 +105,6 @@ export function useRichTextAutosave({
       // Update terakhir kali disimpan
       lastSaveTimeRef.current = now
 
-      // Siapkan data untuk API
-      const blocks = [
-        {
-          type: ContentBlockType.TEXT,
-          content: contentString,
-        },
-      ]
-
       // Optimistic update untuk status
       setSaveStatus('saving')
 
@@ -121,7 +113,7 @@ export function useRichTextAutosave({
       // Gunakan savePage dari context alih-alih panggilan axios langsung
       await savePage({
         pageId,
-        blocks,
+        content: editor.getJSON() as StandardEditorContent,
       })
 
       // Simpan konten terakhir yang disimpan untuk perbandingan
@@ -158,12 +150,12 @@ export function useRichTextAutosave({
         clearTimeout(timeoutRef.current)
       }
 
-      // Buat timeout baru untuk autosave dengan debounce yang lebih lama (2 detik)
+      // Buat timeout baru untuk autosave dengan debounce yang lebih lama (5 detik)
       timeoutRef.current = setTimeout(() => {
         if (contentChangedRef.current) {
           saveContent()
         }
-      }, 2000) // Ditingkatkan dari 2 detik ke 3 detik
+      }, 5000) // Ditingkatkan dari 2 detik ke 5 detik untuk mengurangi API calls
     }
 
     // Register update handler
@@ -178,8 +170,8 @@ export function useRichTextAutosave({
         clearTimeout(timeoutRef.current)
       }
 
-      // Simpan perubahan yang belum tersimpan
-      if (contentChangedRef.current) {
+      // Simpan perubahan yang belum tersimpan hanya jika enabled=true
+      if (contentChangedRef.current && enabled) {
         saveContent()
       }
     }
