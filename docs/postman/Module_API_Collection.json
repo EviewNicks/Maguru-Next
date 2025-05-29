@@ -151,7 +151,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages?page=1&limit=10&includeContent=false",
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages?page=1&limit=10&includeContent=true",
               "host": ["{{baseUrl}}"],
               "path": ["api", "module", "{{moduleId}}", "pages"],
               "query": [
@@ -165,11 +165,11 @@
                 },
                 {
                   "key": "includeContent",
-                  "value": "false"
+                  "value": "true"
                 }
               ]
             },
-            "description": "Mendapatkan daftar halaman untuk modul tertentu."
+            "description": "Mendapatkan daftar halaman untuk modul tertentu dengan format JSONB content."
           },
           "response": []
         },
@@ -185,14 +185,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Halaman Test 1\",\n  \"type\": \"content\",\n  \"order\": 1,\n  \"blocks\": [\n    {\n      \"type\": \"text\",\n      \"content\": {\n        \"type\": \"doc\",\n        \"content\": [\n          {\n            \"type\": \"heading\",\n            \"attrs\": { \"level\": 1 },\n            \"content\": [\n              {\n                \"type\": \"text\",\n                \"text\": \"Halaman Test 1\"\n              }\n            ]\n          },\n          {\n            \"type\": \"paragraph\",\n            \"content\": [\n              {\n                \"type\": \"text\",\n                \"text\": \"Ini adalah konten halaman test pertama.\"\n              }\n            ]\n          },\n          {\n            \"type\": \"code_block\",\n            \"attrs\": { \"language\": \"javascript\" },\n            \"content\": [\n              {\n                \"type\": \"text\",\n                \"text\": \"console.log('Hello World');\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  ]\n}"
+              "raw": "{\n  \"title\": \"Halaman Test Format JSONB\",\n  \"type\": \"content\",\n  \"order\": 1,\n  \"content\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"heading\",\n        \"attrs\": { \"level\": 1 },\n        \"content\": [\n          {\n            \"type\": \"text\",\n            \"text\": \"Halaman Format JSONB\"\n          }\n        ]\n      },\n      {\n        \"type\": \"paragraph\",\n        \"content\": [\n          {\n            \"type\": \"text\",\n            \"text\": \"Ini adalah contoh konten dengan format JSONB langsung menggunakan struktur Tiptap.\"\n          }\n        ]\n      },\n      {\n        \"type\": \"code_block\",\n        \"attrs\": { \"language\": \"javascript\" },\n        \"content\": [\n          {\n            \"type\": \"text\",\n            \"text\": \"console.log('Direct JSONB Format');\"\n          }\n        ]\n      }\n    ]\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages",
               "host": ["{{baseUrl}}"],
               "path": ["api", "module", "{{moduleId}}", "pages"]
             },
-            "description": "Membuat halaman baru dalam modul tertentu. Format blocks menggunakan struktur Tiptap JSON untuk editor."
+            "description": "Membuat halaman baru menggunakan format JSONB (format Tiptap). Sekarang HANYA format ini yang didukung oleh API."
           },
           "response": []
         },
@@ -229,7 +229,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "module", "{{moduleId}}", "pages", "{{pageId}}"]
             },
-            "description": "Mendapatkan detail halaman modul berdasarkan ID halaman."
+            "description": "Mendapatkan detail halaman modul berdasarkan ID halaman dalam format JSONB."
           },
           "response": []
         },
@@ -245,14 +245,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Halaman Test 1 (Updated)\",\n  \"blocks\": [\n    {\n      \"type\": \"text\",\n      \"content\": {\n        \"type\": \"doc\",\n        \"content\": [\n          {\n            \"type\": \"paragraph\",\n            \"content\": [\n              {\n                \"type\": \"text\",\n                \"text\": \"Ini adalah konten halaman test pertama yang telah diperbarui dengan baik.\"\n              }\n            ]\n          }\n        ]\n      }\n    }\n  ]\n}"
+              "raw": "{\n  \"title\": \"Halaman Test JSONB (Updated)\",\n  \"type\": \"content\",\n  \"content\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"heading\",\n        \"attrs\": { \"level\": 2 },\n        \"content\": [\n          {\n            \"type\": \"text\",\n            \"text\": \"Heading yang Diperbarui\"\n          }\n        ]\n      },\n      {\n        \"type\": \"paragraph\",\n        \"content\": [\n          {\n            \"type\": \"text\",\n            \"text\": \"Ini adalah contoh konten yang diperbarui menggunakan format JSONB langsung.\"\n          }\n        ]\n      },\n      {\n        \"type\": \"paragraph\",\n        \"content\": [\n          {\n            \"type\": \"text\",\n            \"text\": \"Format ini lebih efisien untuk PostgreSQL dan mengurangi overhead parsing.\"\n          }\n        ]\n      }\n    ]\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages/{{pageId}}",
               "host": ["{{baseUrl}}"],
               "path": ["api", "module", "{{moduleId}}", "pages", "{{pageId}}"]
             },
-            "description": "Memperbarui halaman modul berdasarkan ID halaman. Format blocks menggunakan struktur Tiptap JSON untuk editor."
+            "description": "Memperbarui halaman modul menggunakan format JSONB (format Tiptap). Sekarang HANYA format ini yang didukung oleh API."
           },
           "response": []
         },
@@ -282,7 +282,7 @@
                 "status"
               ]
             },
-            "description": "Mengubah status halaman modul (DRAFT, PUBLISHED, ARCHIVED)."
+            "description": "Mengubah status halaman modul (DRAFT, PUBLISHED, ARCHIVED). Status sekarang disimpan langsung di database."
           },
           "response": []
         },

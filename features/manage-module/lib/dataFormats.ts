@@ -1,8 +1,7 @@
-import { ContentBlock, ContentBlockType } from '../types/modulePageSchema'
 import { z } from 'zod'
 import { logger } from '../services/logger'
+import { StandardEditorContent, TiptapNode } from '../types'
 import { defaultContentJSON } from './content'
-import { ModulePage, TiptapNode, StandardEditorContent } from '../types'
 
 // Konstanta untuk context logging
 const CONTEXT = 'DataFormats'
@@ -11,12 +10,17 @@ const CONTEXT = 'DataFormats'
  * Standardisasi Format Data untuk Konten Editor
  *
  * File ini menentukan format standar untuk pertukaran data antara komponen-komponen
- * terkait konten editor. Penggunaan format standar akan mengurangi kebutuhan parsing
- * berulang dan memperbaiki konsistensi data.
+ * terkait konten editor dalam format JSONB (Tiptap). Semua implementasi blocks lama
+ * telah dihapus karena sudah tidak digunakan lagi.
+ *
+ * Alur penggunaan:
+ * 1. Konten dari database/API -> ensureValidEditorContent -> StandardEditorContent untuk editor
+ * 2. Konten dari editor -> ensureValidEditorContent -> Simpan ke database
  */
 
 /**
- * Schema validasi untuk format standar editor
+ * Schema validasi untuk format standar editor (Tiptap JSONB)
+ * Digunakan untuk memvalidasi struktur konten editor
  */
 export const EditorContentSchema = z.object({
   type: z.literal('doc'),
@@ -80,274 +84,107 @@ export function isValidTiptapJSON(
 }
 
 /**
- * Parse blok pertama dari data halaman untuk mendapatkan konten Tiptap
- * @param blocks - Array ContentBlock dari halaman
- * @returns Object Tiptap jika valid, null jika tidak
+ * Memastikan konten editor valid dan dalam format StandardEditorContent
+ * Fungsi ini adalah fungsi utama yang harus digunakan di semua layer
+ * untuk memastikan konsistensi format data
+ *
+ * @param content - Konten yang akan divalidasi (bisa berupa object, string, atau null)
+ * @returns Konten yang sudah divalidasi dalam format StandardEditorContent
  */
-export function parseFirstBlock(
-  blocks?: ContentBlock[]
-): StandardEditorContent | null {
-  if (!blocks || blocks.length === 0) return null
+export function ensureValidEditorContent(
+  content: unknown
+): StandardEditorContent {
+  // Jika content kosong, kembalikan default
+  if (!content) {
+    logger.debug(CONTEXT, 'No content provided, returning default content')
+    return defaultContentJSON
+  }
 
-  const firstBlock = blocks[0]
-
-  // Case 1: Blok langsung berformat Tiptap (type: "doc")
-  if (firstBlock.type === 'doc' && Array.isArray(firstBlock.content)) {
-    logger.debug(CONTEXT, 'Found direct Tiptap JSON structure')
-    const content = {
-      type: 'doc' as const,
-      content: Array.isArray(firstBlock.content)
-        ? firstBlock.content.map((item) => item as unknown as TiptapNode)
-        : [],
-    }
-
+  // Validasi content jika berbentuk objek
+  if (
+    typeof content === 'object' &&
+    content !== null &&
+    'type' in content &&
+    content.type === 'doc' &&
+    'content' in content &&
+    Array.isArray((content as Record<string, unknown>).content)
+  ) {
     if (validateEditorContent(content)) {
-      return content
+      return content as StandardEditorContent
     }
   }
 
-  // Case 2: Blok TEXT dengan content berupa objek Tiptap
-  if (
-    firstBlock.type === ContentBlockType.TEXT &&
-    typeof firstBlock.content === 'object' &&
-    firstBlock.content !== null &&
-    'type' in firstBlock.content &&
-    firstBlock.content.type === 'doc'
-  ) {
-    logger.debug(CONTEXT, 'Found Tiptap JSON object in block content')
-    if (validateEditorContent(firstBlock.content)) {
-      return firstBlock.content as unknown as StandardEditorContent
+  // Jika string, coba parse sebagai JSON
+  if (typeof content === 'string') {
+    const parsedContent = isValidTiptapJSON(content)
+    if (parsedContent) {
+      return parsedContent
     }
   }
 
-  // Case 3: Blok TEXT dengan content berupa string JSON Tiptap
-  if (
-    firstBlock.type === ContentBlockType.TEXT &&
-    typeof firstBlock.content === 'string' &&
-    firstBlock.content.startsWith('{') &&
-    firstBlock.content.includes('"type":"doc"')
-  ) {
-    try {
-      const parsedContent = JSON.parse(firstBlock.content)
-      if (validateEditorContent(parsedContent)) {
-        logger.debug(CONTEXT, 'Successfully parsed Tiptap JSON from block')
-        return parsedContent as StandardEditorContent
-      }
-    } catch (error) {
-      logger.error(CONTEXT, 'Failed to parse Tiptap JSON from block', error)
-    }
-  }
-
-  return null
+  // Fallback ke default
+  logger.warn(CONTEXT, 'Invalid content format, returning default content')
+  return defaultContentJSON
 }
 
 /**
- * Konversi blocks ke format Tiptap
- * @param blocks - Array ContentBlock yang akan dikonversi
- * @returns Object dengan format Tiptap doc
+ * Membuat dokumen kosong dengan format Tiptap
+ * @returns Format standar dokumen kosong Tiptap
  */
-export function convertBlocksToTiptap(
-  blocks: ContentBlock[]
-): StandardEditorContent {
-  logger.debug(CONTEXT, 'Converting blocks to Tiptap format', {
-    blockCount: blocks.length,
-  })
-
-  const content: StandardEditorContent = {
+export function createEmptyDocument(): StandardEditorContent {
+  return {
     type: 'doc',
-    content: blocks.flatMap((block) => {
-      // Case 1: Blok dengan type 'doc' dan content array
-      if (block.type === 'doc' && Array.isArray(block.content)) {
-        return (block.content as unknown[]).map(
-          (item) => item as unknown as TiptapNode
-        )
-      }
-
-      // Case 2: Blok dengan content berupa objek Tiptap
-      if (
-        typeof block.content === 'object' &&
-        block.content !== null &&
-        'type' in block.content &&
-        block.content.type === 'doc' &&
-        Array.isArray(block.content.content)
-      ) {
-        return (block.content.content as unknown[]).map(
-          (item) => item as unknown as TiptapNode
-        )
-      }
-
-      // Case 3: Blok TEXT dengan content string
-      if (
-        block.type === ContentBlockType.TEXT &&
-        typeof block.content === 'string'
-      ) {
-        try {
-          // Coba parse sebagai JSON
-          const parsed = JSON.parse(block.content)
-          if (parsed.type === 'doc' && Array.isArray(parsed.content)) {
-            return (parsed.content as unknown[]).map(
-              (item) => item as unknown as TiptapNode
-            )
-          }
-        } catch (e) {
-          // Jika bukan JSON, buat paragraf baru dengan teks
-          return [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: block.content }],
-            } as TiptapNode,
-          ]
-        }
-      }
-
-      // Default fallback
-      return [
-        {
-          type: 'paragraph',
-          content: [{ type: 'text', text: 'Konten tidak valid' }],
-        } as TiptapNode,
-      ]
-    }),
-  }
-
-  // Validasi format sebelum mengembalikan
-  if (validateEditorContent(content)) {
-    return content
-  }
-
-  // Jika tidak valid, kembalikan dokumen kosong
-  logger.warn(
-    CONTEXT,
-    'Generated content failed validation, returning default content'
-  )
-  return defaultContentJSON as StandardEditorContent
-}
-
-/**
- * Konversi blocks dari ModulePage ke format standar untuk editor
- * @param blocks - Blocks dari ModulePage
- * @returns Format standar untuk editor
- */
-export function blocksToStandardContent(
-  blocks?: ContentBlock[]
-): StandardEditorContent {
-  if (!blocks || blocks.length === 0) {
-    logger.debug(CONTEXT, 'No blocks provided, returning empty document')
-    return {
-      type: 'doc',
-      content: [
-        {
-          type: 'paragraph',
-          content: [{ type: 'text', text: '' }],
-        },
-      ],
-    }
-  }
-
-  logger.debug(
-    CONTEXT,
-    `Converting ${blocks.length} blocks to standard content`
-  )
-
-  // Coba parse dari block pertama dulu
-  const parsedBlock = parseFirstBlock(blocks)
-  if (parsedBlock) {
-    return parsedBlock
-  }
-
-  // Jika tidak berhasil, konversi semua block
-  return convertBlocksToTiptap(blocks)
-}
-
-/**
- * Konversi format standar editor ke blocks untuk disimpan di database
- * @param content - Konten editor dalam format standar
- * @returns Blocks untuk disimpan di database
- */
-export function standardContentToBlocks(
-  content: StandardEditorContent
-): ContentBlock[] {
-  logger.debug(CONTEXT, 'Converting standard content to blocks')
-
-  // Validasi content
-  if (!validateEditorContent(content)) {
-    logger.warn(CONTEXT, 'Content validation failed, using fallback content')
-    return [
+    content: [
       {
-        type: ContentBlockType.TEXT,
-        content: JSON.stringify({
-          type: 'doc',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: 'Invalid content format' }],
-            },
-          ],
-        }),
-      },
-    ]
+        type: 'paragraph',
+        content: [{ type: 'text', text: '' }],
+      } as TiptapNode,
+    ],
   }
-
-  return [
-    {
-      type: ContentBlockType.TEXT,
-      content: JSON.stringify(content),
-    },
-  ]
 }
 
 /**
- * Fungsi utama untuk parsing konten
- * @param content - String JSON konten
- * @param pageData - Data halaman (opsional)
- * @param returnRawJSON - Flag untuk mengembalikan JSON mentah
- * @returns Hasil parsing sebagai StandardEditorContent atau ContentBlock[]
+ * Mengekstrak teks dari konten Tiptap untuk preview atau pencarian
+ * @param content - Konten editor dalam format StandardEditorContent
+ * @param maxLength - Panjang maksimal teks yang diambil (default: 100)
+ * @returns Teks yang diekstrak dari konten
  */
-export function parseContent(
-  content?: string,
-  pageData?: ModulePage,
-  returnRawJSON: boolean = false
-): StandardEditorContent | ContentBlock[] {
-  logger.debug(CONTEXT, 'Parsing content', {
-    contentLength: content ? content.length : 0,
-    hasPageData: !!pageData,
-    returnRawJSON,
-  })
-
-  try {
-    // Step 1: Cek jika content adalah JSON Tiptap valid
-    let tiptapContent = isValidTiptapJSON(content)
-
-    // Step 2: Jika tidak valid, coba parse dari pageData blocks
-    if (!tiptapContent && pageData?.blocks) {
-      tiptapContent = parseFirstBlock(pageData.blocks)
-
-      // Step 3: Jika masih tidak valid, konversi blocks ke format Tiptap
-      if (!tiptapContent) {
-        tiptapContent = convertBlocksToTiptap(pageData.blocks)
-      }
-    }
-
-    // Step 4: Fallback ke default jika masih tidak ada konten
-    if (!tiptapContent) {
-      logger.debug(CONTEXT, 'Using default content JSON')
-      tiptapContent = defaultContentJSON as StandardEditorContent
-    }
-
-    // Step 5: Return sesuai format yang diminta
-    if (returnRawJSON) {
-      return tiptapContent
-    }
-
-    return standardContentToBlocks(tiptapContent)
-  } catch (error) {
-    logger.error(CONTEXT, 'Error in parseContent', error)
-
-    // Default fallback
-    if (returnRawJSON) {
-      return defaultContentJSON as StandardEditorContent
-    }
-
-    return standardContentToBlocks(defaultContentJSON as StandardEditorContent)
+export function extractTextFromContent(
+  content: StandardEditorContent | null,
+  maxLength: number = 100
+): string {
+  if (!content || !content.content || !Array.isArray(content.content)) {
+    return ''
   }
+
+  const extractFromNode = (node: TiptapNode): string => {
+    if (node.text) {
+      return node.text
+    }
+
+    if (node.content && Array.isArray(node.content)) {
+      return node.content.map(extractFromNode).join(' ')
+    }
+
+    return ''
+  }
+
+  const fullText = content.content.map(extractFromNode).join(' ')
+  return fullText.length > maxLength
+    ? `${fullText.substring(0, maxLength)}...`
+    : fullText
+}
+
+/**
+ * Konversi konten dari format apapun ke StandardEditorContent
+ * Fungsi ini digunakan sebagai alias untuk ensureValidEditorContent
+ * untuk memperjelas tujuan penggunaannya
+ *
+ * @param content - Konten yang akan dikonversi
+ * @returns Konten dalam format StandardEditorContent
+ */
+export function convertToStandardFormat(
+  content: unknown
+): StandardEditorContent {
+  return ensureValidEditorContent(content)
 }

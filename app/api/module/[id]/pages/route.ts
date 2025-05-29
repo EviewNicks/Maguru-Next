@@ -98,8 +98,36 @@ async function createModulePageHandler(
     const data = { ...body, moduleId }
     console.log('[API] Processed data:', JSON.stringify(data))
 
-    // Validasi menggunakan schema Zod (untuk memastikan test konsisten)
-    // Lakukan validasi kecuali dalam mode test (untuk memudahkan pengujian skenario error)
+    // Validasi format JSONB
+    if (!data.content) {
+      console.log('[API] Content is required for module page')
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Content wajib diisi dalam format JSONB (Tiptap)',
+        },
+        { status: 400 }
+      )
+    }
+
+    // Validasi struktur content (harus sesuai format Tiptap)
+    if (
+      typeof data.content !== 'object' ||
+      data.content.type !== 'doc' ||
+      !Array.isArray(data.content.content)
+    ) {
+      console.error('[API] Invalid content format:', data.content)
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Format content tidak valid. Content harus berformat Tiptap JSON dengan type="doc"',
+        },
+        { status: 400 }
+      )
+    }
+
+    // Validasi menggunakan schema Zod
     const isTest = process.env.NODE_ENV === 'test'
     if (!isTest) {
       const validationResult = CreateModulePageSchema.safeParse(data)

@@ -4,13 +4,14 @@ import { ReactNode } from 'react'
 import { FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { StatusBadge } from '@/features/manage-module/components/StatusBadge'
+import { ModulePageStatus } from '@/features/manage-module/types'
 
 interface SidebarNestedItemProps {
   label: ReactNode | string
   onClick?: () => void
   className?: string
   icon?: ReactNode
-  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+  status?: ModulePageStatus
   isActive?: boolean
   isArchived?: boolean
 }

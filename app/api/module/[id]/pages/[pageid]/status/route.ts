@@ -6,13 +6,14 @@ import {
   composeMiddlewares,
 } from '../../../../middleware'
 import { z } from 'zod'
+import { ModulePageStatus } from '@/features/manage-module/types'
 
 // Tipe untuk params dari route dynamic
 type RouteParams = { params: { id: string } }
 
 // Schema untuk validasi input
 const UpdatePageStatusSchema = z.object({
-  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
+  status: z.nativeEnum(ModulePageStatus),
 })
 
 /**
@@ -81,6 +82,7 @@ async function updateModulePageStatusHandler(
         success: true,
         data: updatedPage.data,
         message: `Status halaman berhasil diubah menjadi ${status}`,
+        meta: {},
       },
       { status: 200 }
     )

@@ -12,15 +12,15 @@ import {
   CreateModulePageInput,
   UpdateModulePageInput,
   ContentBlock,
-} from '../types/modulePageSchema'
+  StandardEditorContent,
+  ModulePageStatus,
+} from '../types'
 import { useModulePageData } from '../hooks/useModulePageData'
 import { showErrorNotification } from '../components/ErrorNotifier'
 import { logger } from '../services/logger'
 import { useRouter } from 'next/navigation'
 import debounce from 'lodash/debounce'
 import { debugDataFlow } from '../utils/debugUtils'
-import { toast } from 'sonner'
-import { StandardEditorContent } from '../lib/dataFormats'
 
 // Konstanta untuk context name (logging)
 const CONTEXT = 'ModulePageCRUDContext'
@@ -46,10 +46,10 @@ interface ModulePageCRUDContextProps {
   deletePage: (pageId: string) => AnyPromise
   reorderPages: (pageIds: string[]) => AnyPromise
 
-  // Tambahkan fungsi updatePageStatus
+  // Perbarui tipe parameter status menggunakan enum ModulePageStatus
   updatePageStatus: (params: {
     pageId: string
-    status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+    status: ModulePageStatus
   }) => AnyPromise
 
   // State management
@@ -70,10 +70,13 @@ interface ModulePageCRUDContextProps {
   // Helpers
   getPageById: (pageId: string) => Promise<ModulePage | null>
 
+  // Tambahkan fungsi getParsedEditorContent
+  getParsedEditorContent: (page: ModulePage | null) => StandardEditorContent
+
   savePage: (params: {
     pageId: string
     title?: string
-    blocks?: ContentBlock[]
+    content?: StandardEditorContent
   }) => AnyPromise
 
   // Tambahkan savePageWrapper ke interface
@@ -88,6 +91,13 @@ interface ModulePageCRUDContextProps {
   handleEditorChange: (content: StandardEditorContent, pageId: string) => void
   handleNavigateToPrevPage: () => void
   handleNavigateToNextPage: () => void
+  handleCreateNewPage: () => Promise<ModulePage | null>
+
+  // UI state dari ModulePagesContext
+  expandedItems: Record<string, boolean>
+  isSidebarOpen: boolean
+  toggleExpand: (item: string) => void
+  toggleSidebar: () => void
 }
 
 const ModulePageCRUDContext = createContext<ModulePageCRUDContextProps | null>(
@@ -135,19 +145,81 @@ export function ModulePageCRUDProvider({
     Record<string, string>
   >({})
 
+  // UI state dari ModulePagesContext
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
+    ModuleContent: true,
+  })
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true)
+
+  // Initialize sidebar state from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Restore sidebar open state
+      const savedSidebarState = localStorage.getItem('moduleSidebarOpen')
+      if (savedSidebarState) {
+        setIsSidebarOpen(savedSidebarState === 'true')
+      }
+
+      // Restore expanded items state
+      const savedExpandedItems = localStorage.getItem('moduleExpandedItems')
+      if (savedExpandedItems) {
+        try {
+          const parsedItems = JSON.parse(savedExpandedItems)
+          setExpandedItems(parsedItems)
+        } catch (error) {
+          console.error('Failed to parse saved expanded items:', error)
+        }
+      }
+    }
+  }, [])
+
+  // Toggle expand state for sidebar items
+  const toggleExpand = useCallback((item: string) => {
+    setExpandedItems((prev) => {
+      const newState = {
+        ...prev,
+        [item]: !prev[item],
+      }
+
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('moduleExpandedItems', JSON.stringify(newState))
+      }
+
+      return newState
+    })
+  }, [])
+
+  // Toggle sidebar open/close
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((prev) => {
+      const newState = !prev
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('moduleSidebarOpen', newState.toString())
+      }
+      return newState
+    })
+  }, [])
+
   // Gunakan useModulePageData untuk akses data
   const {
-    pages,
-    isPagesLoading: isLoading,
-    pagesError: error,
-    refetchPages: refetch,
+    pagesQuery,
+    getPage,
+    getParsedEditorContent: getParsedEditorContentOperation,
     createPage: createPageOperation,
     updatePage: updatePageOperation,
     deletePage: deletePageOperation,
     reorderPages: reorderPagesOperation,
     saveEditorContent: saveEditorContentMutation,
-    getPage,
+    updatePageStatus: updatePageStatusOperation,
   } = useModulePageData(moduleId)
+
+  // Ekstrak data dari pagesQuery
+  const pages = pagesQuery.data || []
+  const isLoading = pagesQuery.isLoading
+  const error = pagesQuery.error
+  const refetch = pagesQuery.refetch
 
   // Debug data flow ketika pages berubah
   useEffect(() => {
@@ -200,7 +272,7 @@ export function ModulePageCRUDProvider({
   const updatePage = useCallback(
     async (pageId: string, data: UpdateModulePageInput) => {
       try {
-        const result = await updatePageOperation(pageId, data)
+        const result = await updatePageOperation({ pageId, data })
         return result
       } catch (error) {
         logger.error(CONTEXT, 'Error updating page', error)
@@ -245,32 +317,14 @@ export function ModulePageCRUDProvider({
     [reorderPagesOperation]
   )
 
-  // Tambahkan implementasi updatePageStatus
+  // Perbarui implementasi updatePageStatus untuk menggunakan enum ModulePageStatus
   const updatePageStatus = useCallback(
-    async (params: {
-      pageId: string
-      status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
-    }) => {
+    async (params: { pageId: string; status: ModulePageStatus }) => {
       try {
         const { pageId, status } = params
 
-        // Gunakan updatePage yang sudah ada untuk mengubah status
-        const result = await updatePage(pageId, {
-          status,
-        } as UpdateModulePageInput)
-
-        // Jika berhasil, tampilkan notifikasi sukses berdasarkan status
-        if (result) {
-          const statusMessages = {
-            DRAFT: 'Halaman berhasil dikembalikan ke draft',
-            PUBLISHED: 'Halaman berhasil dipublikasikan',
-            ARCHIVED: 'Halaman berhasil diarsipkan',
-          }
-
-          toast.success(
-            statusMessages[status] || 'Status halaman berhasil diperbarui'
-          )
-        }
+        // Gunakan hook updatePageStatus
+        const result = await updatePageStatusOperation({ pageId, status })
 
         return result
       } catch (error) {
@@ -279,7 +333,7 @@ export function ModulePageCRUDProvider({
         throw error
       }
     },
-    [updatePage]
+    [updatePageStatusOperation]
   )
 
   // Navigation helpers
@@ -400,17 +454,16 @@ export function ModulePageCRUDProvider({
       logger.debug(CONTEXT, 'Saving page content...')
 
       // Gunakan hook untuk menyimpan konten editor
-      saveEditorContentMutation(pageId, content)
-        .then(() => {
-          setSaveStatus('saved')
-          // Simpan referensi ke konten yang baru disimpan
-          setLastSavedContent((prev) => ({ ...prev, [pageId]: contentString }))
-          logger.debug(CONTEXT, 'Content saved successfully')
-        })
-        .catch((error: Error) => {
-          logger.error(CONTEXT, 'Error saving content', error)
-          setSaveStatus('error')
-        })
+      try {
+        saveEditorContentMutation({ pageId, content })
+        // Simpan referensi ke konten yang baru disimpan
+        setLastSavedContent((prev) => ({ ...prev, [pageId]: contentString }))
+        setSaveStatus('saved')
+        logger.debug(CONTEXT, 'Content saved successfully')
+      } catch (error) {
+        logger.error(CONTEXT, 'Error saving content', error)
+        setSaveStatus('error')
+      }
     },
     [isNavigating, lastSavedContent, setSaveStatus, saveEditorContentMutation]
   )
@@ -444,16 +497,106 @@ export function ModulePageCRUDProvider({
     }
   }, [activePage, getNextPage, handleSelectPage, isNavigating])
 
+  // Handle membuat halaman baru dengan format konten yang benar
+  const handleCreateNewPage = useCallback(async () => {
+    try {
+      if (!moduleId) {
+        throw new Error('ID Modul tidak ditemukan')
+      }
+
+      // Generate default page number
+      const pageNumber = pages.length + 1
+
+      // Generate default title
+      const defaultTitle = `Halaman Baru ${pageNumber}`
+
+      // Determine order untuk halaman baru (di akhir)
+      const newOrder =
+        pages.length > 0
+          ? Math.max(...pages.map((page: ModulePage) => page.order || 0)) + 1
+          : 1
+
+      // Prepare new page data dengan format content yang benar
+      const newPageData = {
+        title: defaultTitle,
+        moduleId,
+        type: 'content',
+        order: newOrder,
+        content: {
+          type: 'doc' as const,
+          content: [
+            {
+              type: 'heading',
+              attrs: { level: 1 },
+              content: [
+                {
+                  type: 'text',
+                  text: defaultTitle,
+                },
+              ],
+            },
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Halaman baru Anda telah dibuat. Mulai edit konten disini.',
+                },
+              ],
+            },
+          ],
+        },
+      }
+
+      // Create new page via API
+      createPageOperation(newPageData)
+
+      // Tunggu hingga query diperbarui
+      await refetch()
+
+      // Cari halaman baru yang dibuat (biasanya yang terakhir)
+      const newPages = pagesQuery.data || []
+      const newPage =
+        newPages.find((p) => p.title === defaultTitle) ||
+        newPages[newPages.length - 1]
+
+      // Set halaman baru sebagai active page jika ditemukan
+      if (newPage) {
+        // Perlakukan hasil createPage sebagai ModulePage langsung
+        setActivePage(newPage)
+
+        // Navigasi ke halaman baru
+        router.push(`/manage-module/pages/${moduleId}?pageId=${newPage.id}`)
+
+        return newPage
+      }
+
+      return null
+    } catch (error) {
+      logger.error(CONTEXT, 'Error creating new page', error)
+      showErrorNotification(error)
+      throw error
+    }
+  }, [
+    moduleId,
+    pages,
+    createPageOperation,
+    pagesQuery.data,
+    refetch,
+    setActivePage,
+    router,
+  ])
+
   // Wrapper untuk savePage agar sesuai dengan tipe yang diharapkan di interface
   const savePage = useCallback(
     (params: {
       pageId: string
       title?: string
-      blocks?: ContentBlock[]
+      content?: StandardEditorContent
     }): AnyPromise => {
       return updatePage(params.pageId, {
         title: params.title,
-        blocks: params.blocks,
+        content: params.content as UpdateModulePageInput['content'],
       })
     },
     [updatePage]
@@ -466,13 +609,23 @@ export function ModulePageCRUDProvider({
       data: { title?: string; blocks?: ContentBlock[] }
     ): Promise<ModulePage | null> => {
       try {
-        return await updatePageOperation(pageId, data as UpdateModulePageInput)
+        updatePageOperation({
+          pageId,
+          data: data as UpdateModulePageInput,
+        })
+
+        // Tunggu hingga query diperbarui
+        await refetch()
+
+        // Ambil halaman yang diperbarui
+        const updatedPage = await getPage(pageId)
+        return updatedPage
       } catch (error) {
         logger.error(CONTEXT, 'Error in savePageWrapper', error)
         throw error
       }
     },
-    [updatePageOperation]
+    [updatePageOperation, refetch, getPage]
   )
 
   // Memoize context value untuk mencegah re-render yang tidak perlu
@@ -511,6 +664,23 @@ export function ModulePageCRUDProvider({
         mockValues.handleNavigateToPrevPage || handleNavigateToPrevPage,
       handleNavigateToNextPage:
         mockValues.handleNavigateToNextPage || handleNavigateToNextPage,
+      handleCreateNewPage:
+        mockValues.handleCreateNewPage || handleCreateNewPage,
+      // Tambahkan fungsi getParsedEditorContent
+      getParsedEditorContent:
+        mockValues.getParsedEditorContent ||
+        ((page: ModulePage | null) => {
+          logger.debug(
+            CONTEXT,
+            `Getting parsed editor content for page ${page?.id || 'null'}`
+          )
+          return getParsedEditorContentOperation(page)
+        }),
+      // UI state dari ModulePagesContext
+      expandedItems,
+      isSidebarOpen,
+      toggleExpand,
+      toggleSidebar,
     }),
     [
       moduleId,
@@ -540,7 +710,13 @@ export function ModulePageCRUDProvider({
       handleEditorChange,
       handleNavigateToPrevPage,
       handleNavigateToNextPage,
-      mockValues, // Tambahkan mockValues ke dependencies array
+      handleCreateNewPage,
+      mockValues,
+      getParsedEditorContentOperation,
+      expandedItems,
+      isSidebarOpen,
+      toggleExpand,
+      toggleSidebar,
     ]
   )
 

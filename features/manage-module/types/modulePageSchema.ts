@@ -54,10 +54,19 @@ export const CreateModulePageSchema = z.object({
   moduleId: z.string().uuid(),
   order: z.number().int().min(0),
   type: z.string().default('content'),
-  language: z.string().optional(),
-  blocks: z
-    .array(ContentBlockSchema)
-    .min(1, 'Halaman harus memiliki minimal 1 blok konten'),
+  // Hanya mendukung content dalam format JSONB
+  content: z
+    .lazy(() => StandardEditorContentSchema)
+    .optional()
+    .default(() => ({
+      type: 'doc' as const,
+      content: [
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: '' }],
+        },
+      ],
+    })),
 })
 
 /**
@@ -71,11 +80,11 @@ export type CreateModulePageInput = z.infer<typeof CreateModulePageSchema>
 export const UpdateModulePageSchema = z.object({
   title: z.string().min(5, 'Judul harus minimal 5 karakter').optional(),
   order: z.number().int().min(0).optional(),
-  blocks: z
-    .array(ContentBlockSchema)
-    .min(1, 'Halaman harus memiliki minimal 1 blok konten')
-    .optional(),
-  content: z.string().optional(), // Untuk update konten editor langsung
+  type: z.string().optional(),
+  // Hanya mendukung content dalam format JSONB
+  content: z.lazy(() => StandardEditorContentSchema).optional(),
+  // Tambahkan status
+  status: z.nativeEnum(ModulePageStatus).optional(),
 })
 
 /**
@@ -90,6 +99,14 @@ export type CreateModulePageDto = CreateModulePageInput
 export type UpdateModulePageDto = UpdateModulePageInput
 
 /**
+ * Schema untuk StandardEditorContent (format Tiptap)
+ */
+export const StandardEditorContentSchema = z.object({
+  type: z.literal('doc'),
+  content: z.array(z.object({}).passthrough()),
+})
+
+/**
  * Schema untuk ModulePage (seperti yang ada di database)
  */
 export const ModulePageSchema = z.object({
@@ -97,27 +114,13 @@ export const ModulePageSchema = z.object({
   title: z.string(),
   moduleId: z.string().uuid(),
   order: z.number().int(),
-  content: z.string().optional(), // Untuk editor sederhana
-  blocks: z.array(ContentBlockSchema).optional(), // Untuk editor multi-block (future)
+  type: z.string(),
+  content: StandardEditorContentSchema,
+  version: z.number().int().default(1),
   status: z.nativeEnum(ModulePageStatus).default(ModulePageStatus.DRAFT),
   createdAt: z.date(),
   updatedAt: z.date(),
 })
-
-/**
- * Type untuk ModulePage
- */
-export type ModulePage = {
-  id: string
-  title: string
-  moduleId: string
-  order: number
-  content?: string
-  blocks?: ContentBlock[]
-  status: ModulePageStatus
-  createdAt: Date
-  updatedAt: Date
-}
 
 /**
  * Schema untuk response API list

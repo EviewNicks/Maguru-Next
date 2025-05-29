@@ -1,11 +1,9 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import DocumentHeader from './ModulePageEditor/document/DocumentHeader'
 import ModulePageFooterNav from './ModulePageFooterNav'
 import { RichTextEditor } from './RichTextEditor'
-import { useDebounce } from '../hooks/useDebounce'
-import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 import useKeyboardShortcuts from '../hooks/useKeyboardShortcuts'
 import { NAVIGATION_SHORTCUTS, SYSTEM_SHORTCUTS } from '../constants/shortcuts'
 import ShortcutHelp from './ShortcutHelp'
@@ -16,8 +14,7 @@ import useFocusManagement from '../hooks/useFocusManagement'
 import { ErrorBoundary } from './ErrorBoundary'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { modulePageAdapter } from '../adapters/modulePageAdapter'
-import { defaultContentJSON } from '../lib/content'
+import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 
 interface ModulePageEditorProps {
   isLoading?: boolean
@@ -29,6 +26,19 @@ export default function ModulePageEditor({
   // State for shortcut help dialog
   const [isShortcutHelpOpen, setIsShortcutHelpOpen] = useState(false)
 
+  // Buat koneksi ke context hanya untuk mendapatkan saveStatus untuk A11yAnnouncer
+  const { saveStatus } = useModulePageCRUDContext()
+
+  // State untuk status announcement untuk screen readers
+  const [statusAnnouncement, setStatusAnnouncement] = useState('')
+
+  // Update announcement saat saveStatus berubah - gunakan useEffect
+  useEffect(() => {
+    if (saveStatus) {
+      setStatusAnnouncement(getStatusAnnouncement(saveStatus))
+    }
+  }, [saveStatus])
+
   // Ref for editor container to manage focus
   const editorContainerRef = useRef<HTMLDivElement>(null)
 
@@ -38,105 +48,8 @@ export default function ModulePageEditor({
     focusDelay: 100,
   })
 
-  // State untuk status announcement untuk screen readers
-  const [statusAnnouncement, setStatusAnnouncement] = useState('')
-
-  // Get CRUD context
-  const {
-    pages,
-    activePage,
-    isLoading: crudLoading,
-    getNextPage,
-    getPreviousPage,
-    handlePageChange,
-    handleEditorChange,
-    saveStatus,
-    isNavigating,
-    savePage,
-  } = useModulePageCRUDContext()
-
-  // Gunakan pages dari context
-  const firstPage = pages && pages.length > 0 ? pages[0] : null
-  const activePageIdToUse = activePage?.id || firstPage?.id
-
-  // Gunakan title dari activePage dan buat handler untuk title change
-  const title = activePage?.title || ''
-  const handleTitleChange = useCallback(
-    (newTitle: string) => {
-      if (!activePage?.id) return
-
-      savePage({
-        pageId: activePage.id,
-        title: newTitle,
-      })
-    },
-    [activePage, savePage]
-  )
-
-  // Use savePage from CRUD context for enhanced saving with optimistic updates
-  const handleSave = useCallback(async () => {
-    if (!activePage?.id) return
-
-    try {
-      setStatusAnnouncement('Menyimpan halaman...')
-      await savePage({
-        pageId: activePage.id,
-        title: title,
-        blocks: activePage.blocks,
-      })
-      setStatusAnnouncement('Halaman berhasil disimpan')
-    } catch (error) {
-      console.error('Error saving page:', error)
-      setStatusAnnouncement('Gagal menyimpan halaman. Silakan coba lagi.')
-    }
-  }, [activePage, title, savePage])
-
-  // Gabungkan status loading dari props dan context
-  const isLoading = propIsLoading || crudLoading
-
-  // Update handleNavigation untuk menggunakan helper functions dari context
-  const handleNavigation = useCallback(
-    (direction: 'prev' | 'next' | 'first' | 'last') => {
-      if (!pages || !activePageIdToUse || isNavigating) return
-
-      let nextPage = null
-
-      if (direction === 'first') {
-        nextPage = pages[0]
-      } else if (direction === 'last') {
-        nextPage = pages[pages.length - 1]
-      } else if (direction === 'prev') {
-        nextPage = getPreviousPage(activePageIdToUse)
-      } else if (direction === 'next') {
-        nextPage = getNextPage(activePageIdToUse)
-      }
-
-      if (nextPage?.id) {
-        handlePageChange(nextPage.id)
-      }
-    },
-    [
-      activePageIdToUse,
-      pages,
-      isNavigating,
-      getPreviousPage,
-      getNextPage,
-      handlePageChange,
-    ]
-  )
-
-  // Update announcement saat saveStatus berubah
-  useEffect(() => {
-    if (saveStatus) {
-      setStatusAnnouncement(getStatusAnnouncement(saveStatus))
-    }
-  }, [saveStatus])
-
-  // Debounce title untuk mengurangi request update
-  useDebounce(title, 500)
-
   // Toggle sidebar - We don't actually have this in context, so we'll create a dummy function
-  const toggleSidebar = useCallback(() => {
+  const toggleSidebar = () => {
     // Get sidebar state from DOM or localStorage
     const sidebarElement = document.querySelector('[data-sidebar]')
     if (sidebarElement) {
@@ -146,17 +59,17 @@ export default function ModulePageEditor({
         toggleButton.click()
       }
     }
-  }, [])
+  }
 
   // Setup keyboard shortcuts
   const shortcutHandlers = {
-    'navigate-prev': () => handleNavigation('prev'),
-    'navigate-next': () => handleNavigation('next'),
-    'navigate-first': () => handleNavigation('first'),
-    'navigate-last': () => handleNavigation('last'),
+    'navigate-prev': () => null, // Akan ditangani oleh context
+    'navigate-next': () => null, // Akan ditangani oleh context
+    'navigate-first': () => null, // Akan ditangani oleh context
+    'navigate-last': () => null, // Akan ditangani oleh context
     'toggle-sidebar': toggleSidebar,
     'show-shortcut-help': () => setIsShortcutHelpOpen(true),
-    'save-page': () => handleSave(),
+    'save-page': () => null, // Akan ditangani oleh context
   }
 
   // Register keyboard shortcuts
@@ -166,26 +79,8 @@ export default function ModulePageEditor({
     { scope: 'global' }
   )
 
-  // Debug log untuk melihat struktur data blocks
-  if (activePage?.blocks && activePage.blocks.length > 0) {
-    console.log(
-      '[ModulePageEditor] activePage blocks:',
-      `Found ${activePage.blocks.length} blocks`
-    )
-  } else {
-    console.log('[ModulePageEditor] activePage blocks: Found 0 blocks')
-  }
-
-  // Dapatkan konten yang sudah diparse sekali saja di level komponen induk menggunakan adapter
-  const parsedContent = activePage
-    ? modulePageAdapter.getParsedEditorContent(activePage)
-    : defaultContentJSON
-
-  // Gunakan JSON string untuk diteruskan ke komponen RichTextEditor
-  const initialContent = JSON.stringify(parsedContent)
-
   // Status loading
-  if (isLoading) {
+  if (propIsLoading) {
     return <div className="p-4">Memuat halaman...</div>
   }
 
@@ -199,13 +94,8 @@ export default function ModulePageEditor({
         ref={editorContainerRef}
         className="h-full flex flex-col bg-[#121212] text-white"
       >
-        {/* Header */}
-        <DocumentHeader
-          title={activePage?.title || 'Untitled Page'}
-          saveStatus={saveStatus}
-          onTitleChange={handleTitleChange}
-          isLoading={isLoading}
-        />
+        {/* Header - sekarang menggunakan context langsung */}
+        <DocumentHeader isLoading={propIsLoading} />
 
         {/* Editor Area */}
         <div
@@ -214,7 +104,7 @@ export default function ModulePageEditor({
           ref={editorFocusRef as React.RefObject<HTMLDivElement>}
           tabIndex={-1}
         >
-          {/* Main editor */}
+          {/* Main editor - sekarang menggunakan context langsung */}
           <div className="flex-1 h-full">
             <ErrorBoundary
               fallback={
@@ -238,21 +128,13 @@ export default function ModulePageEditor({
                 </div>
               }
             >
-              <RichTextEditor
-                className="h-full"
-                onChange={(content) =>
-                  handleEditorChange(content, activePageIdToUse || '')
-                }
-                initialContent={initialContent}
-                pageId={activePageIdToUse}
-                autosave={true}
-              />
+              <RichTextEditor className="h-full" autosave={false} />
             </ErrorBoundary>
           </div>
         </div>
 
-        {/* Footer Navigation */}
-        {activePage && <ModulePageFooterNav />}
+        {/* Footer Navigation - sekarang menggunakan context langsung */}
+        <ModulePageFooterNav />
 
         {/* Shortcut Help */}
         <ShortcutHelp

@@ -1,16 +1,16 @@
-import { modulePageService } from '../services/modulePageService'
+'use client'
+
 import {
   ModulePage,
   CreateModulePageInput,
   UpdateModulePageInput,
   IModulePageAdapter,
   StandardEditorContent,
+  ApiEntityResponse,
+  ApiListResponse,
+  ModulePageStatus,
 } from '../types'
-import {
-  blocksToStandardContent,
-  standardContentToBlocks,
-  parseContent,
-} from '../lib/dataFormats'
+import { ensureValidEditorContent } from '../lib/dataFormats'
 import { logger } from '../services/logger'
 
 // Konstanta untuk adapter name (context)
@@ -36,7 +36,7 @@ interface Cache {
 const CACHE_EXPIRATION = 5 * 60 * 1000
 
 /**
- * ModulePageAdapter - Layer untuk menjembatani antara service dan context
+ * ModulePageAdapter - Layer untuk menjembatani antara API dan context
  * Adapter ini menyediakan abstraksi untuk operasi yang berhubungan dengan module page
  * dan menangani transformasi format data secara konsisten
  */
@@ -125,7 +125,7 @@ export const modulePageAdapter: IModulePageAdapter = {
   },
 
   /**
-   * Mendapatkan daftar halaman untuk modul tertentu
+   * Mendapatkan daftar halaman untuk modul tertentu melalui API
    * @param moduleId - ID modul
    * @param skipCache - Flag untuk melewati cache
    * @returns Promise dengan array ModulePage
@@ -149,18 +149,29 @@ export const modulePageAdapter: IModulePageAdapter = {
         return modulePageAdapter._cache.pages[moduleId].data
       }
 
-      logger.info(ADAPTER, `Fetching pages for module ${moduleId}`)
-      const response = await modulePageService.getModulePages(moduleId, {
-        includeContent: true,
-      })
+      logger.info(ADAPTER, `Fetching pages for module ${moduleId} via API`)
+
+      // Panggil API endpoint dengan parameter untuk menyertakan konten
+      const response = await fetch(
+        `/api/module/${moduleId}/pages?includeContent=true`
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          errorData.error || `Failed to fetch pages for module ${moduleId}`
+        )
+      }
+
+      const result = (await response.json()) as ApiListResponse<ModulePage>
 
       // Simpan ke cache
       modulePageAdapter._cache.pages[moduleId] = {
-        data: response.data,
+        data: result.data,
         timestamp: Date.now(),
       }
 
-      return response.data
+      return result.data
     } catch (error) {
       logger.error(
         ADAPTER,
@@ -172,7 +183,7 @@ export const modulePageAdapter: IModulePageAdapter = {
   },
 
   /**
-   * Mendapatkan detail halaman berdasarkan ID
+   * Mendapatkan detail halaman berdasarkan ID melalui API
    * @param pageId - ID halaman
    * @param skipCache - Flag untuk melewati cache
    * @returns Promise dengan detail ModulePage atau null
@@ -196,16 +207,79 @@ export const modulePageAdapter: IModulePageAdapter = {
         return modulePageAdapter._cache.page[pageId].data
       }
 
-      logger.info(ADAPTER, `Fetching page ${pageId}`)
-      const response = await modulePageService.getModulePage(pageId)
+      logger.info(ADAPTER, `Fetching page ${pageId} via API`)
 
-      if (response?.data) {
+      // Coba dapatkan moduleId dari cache atau dari pages cache
+      let moduleId: string | undefined
+
+      // Cek di cache halaman terlebih dahulu
+      if (modulePageAdapter._cache.page[pageId]?.data?.moduleId) {
+        moduleId = modulePageAdapter._cache.page[pageId].data.moduleId
+      }
+
+      // Jika tidak ada di cache halaman, cari di semua modul yang ada di cache
+      if (!moduleId) {
+        for (const cachedModuleId in modulePageAdapter._cache.pages) {
+          const pages = modulePageAdapter._cache.pages[cachedModuleId].data
+          const foundPage = pages.find((page) => page.id === pageId)
+          if (foundPage) {
+            moduleId = cachedModuleId
+            break
+          }
+        }
+      }
+
+      // Jika moduleId tidak ditemukan, kita perlu mencari di semua modul
+      // Ini adalah solusi sementara karena endpoint /api/module/pages/${pageId} sudah dihapus
+      if (!moduleId) {
+        // Kita perlu mendapatkan daftar semua modul terlebih dahulu
+        // Ini bisa diimplementasikan dengan memanggil API untuk mendapatkan daftar modul
+        // Untuk sementara, kita bisa menggunakan pendekatan alternatif
+
+        logger.warn(
+          ADAPTER,
+          `ModuleId not found for page ${pageId}, cannot fetch page data`
+        )
+        return null
+      }
+
+      // Gunakan endpoint yang benar dengan moduleId yang sudah ditemukan
+      const apiPath = `/api/module/${moduleId}/pages/${pageId}`
+
+      const response = await fetch(apiPath, {
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      })
+
+      if (response.status === 404) {
+        return null
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `Failed to fetch page ${pageId}`)
+      }
+
+      const result = (await response.json()) as ApiEntityResponse<ModulePage>
+
+      if (result.success && result.data) {
         // Simpan ke cache
         modulePageAdapter._cache.page[pageId] = {
-          data: response.data,
+          data: result.data,
           timestamp: Date.now(),
         }
-        return response.data
+
+        // Juga update cache modul jika belum ada
+        if (
+          result.data.moduleId &&
+          !modulePageAdapter._cache.pages[result.data.moduleId]
+        ) {
+          // Ambil semua halaman modul untuk memastikan cache konsisten
+          await modulePageAdapter.getPages(result.data.moduleId, true)
+        }
+
+        return result.data
       }
 
       return null
@@ -216,7 +290,7 @@ export const modulePageAdapter: IModulePageAdapter = {
   },
 
   /**
-   * Membuat halaman baru
+   * Membuat halaman baru melalui API
    * @param data - Data halaman yang akan dibuat
    * @returns Promise dengan ModulePage yang baru dibuat
    */
@@ -225,13 +299,43 @@ export const modulePageAdapter: IModulePageAdapter = {
       // Validasi input
       modulePageAdapter.validateModuleId(data.moduleId)
 
-      logger.info(ADAPTER, `Creating new page for module ${data.moduleId}`)
-      const response = await modulePageService.createModulePage(data)
+      logger.info(
+        ADAPTER,
+        `Creating new page for module ${data.moduleId} via API`
+      )
+
+      // Pastikan content valid dengan format yang diharapkan
+      if (data.content) {
+        // Buat salinan data untuk mencegah mutasi
+        const newData = { ...data }
+        // Gunakan ensureValidEditorContent untuk validasi dan konversi
+        // Gunakan type assertion untuk mengatasi ketidakcocokan tipe
+        newData.content = ensureValidEditorContent(
+          data.content
+        ) as unknown as CreateModulePageInput['content']
+        data = newData
+      }
+
+      // Panggil API endpoint
+      const response = await fetch(`/api/module/${data.moduleId}/pages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create page')
+      }
+
+      const result = (await response.json()) as ApiEntityResponse<ModulePage>
 
       // Invalidate module cache
       modulePageAdapter.invalidateModuleCache(data.moduleId)
 
-      return response.data
+      return result.data
     } catch (error) {
       logger.error(ADAPTER, 'Error creating page', error)
       throw error
@@ -239,7 +343,7 @@ export const modulePageAdapter: IModulePageAdapter = {
   },
 
   /**
-   * Memperbarui halaman berdasarkan ID
+   * Memperbarui halaman berdasarkan ID melalui API
    * @param pageId - ID halaman
    * @param data - Data yang akan diperbarui
    * @returns Promise dengan ModulePage yang telah diperbarui atau null
@@ -252,15 +356,64 @@ export const modulePageAdapter: IModulePageAdapter = {
       // Validasi input
       modulePageAdapter.validatePageId(pageId)
 
-      logger.info(ADAPTER, `Updating page ${pageId}`)
-      const response = await modulePageService.updateModulePage(pageId, data)
+      logger.info(ADAPTER, `Updating page ${pageId} via API`)
 
-      if (response?.data) {
+      // Pastikan content valid jika disediakan
+      if (data.content) {
+        // Buat salinan data untuk mencegah mutasi
+        const newData = { ...data }
+        // Gunakan ensureValidEditorContent untuk validasi dan konversi
+        // Gunakan type assertion untuk mengatasi ketidakcocokan tipe
+        newData.content = ensureValidEditorContent(
+          data.content
+        ) as unknown as UpdateModulePageInput['content']
+        data = newData
+      }
+
+      // Dapatkan modul ID dari cache atau dari request GET
+      let moduleId: string | undefined
+      const pageData = modulePageAdapter._cache.page[pageId]?.data
+      if (pageData) {
+        moduleId = pageData.moduleId
+      }
+
+      // Jika tidak ada di cache, coba dapatkan dari API
+      if (!moduleId) {
+        const page = await modulePageAdapter.getPage(pageId)
+        moduleId = page?.moduleId
+      }
+
+      if (!moduleId) {
+        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
+        return null
+      }
+
+      // Panggil API endpoint
+      const response = await fetch(`/api/module/${moduleId}/pages/${pageId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (response.status === 404) {
+        return null
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `Failed to update page ${pageId}`)
+      }
+
+      const result = (await response.json()) as ApiEntityResponse<ModulePage>
+
+      if (result.success && result.data) {
         // Invalidate cache
         modulePageAdapter.invalidatePageCache(pageId)
-        modulePageAdapter.invalidateModuleCache(response.data.moduleId)
+        modulePageAdapter.invalidateModuleCache(result.data.moduleId)
 
-        return response.data
+        return result.data
       }
 
       return null
@@ -271,7 +424,84 @@ export const modulePageAdapter: IModulePageAdapter = {
   },
 
   /**
-   * Menghapus halaman berdasarkan ID
+   * Memperbarui status halaman menggunakan endpoint khusus status
+   * @param pageId - ID halaman
+   * @param status - Status baru (DRAFT, PUBLISHED, ARCHIVED)
+   * @returns Promise dengan ModulePage yang telah diperbarui atau null
+   */
+  updatePageStatus: async (
+    pageId: string,
+    status: ModulePageStatus
+  ): Promise<ModulePage | null> => {
+    try {
+      // Validasi input
+      modulePageAdapter.validatePageId(pageId)
+
+      logger.info(
+        ADAPTER,
+        `Updating page status ${pageId} to ${status} via API`
+      )
+
+      // Dapatkan modul ID dari cache atau dari request GET
+      let moduleId: string | undefined
+      const pageData = modulePageAdapter._cache.page[pageId]?.data
+      if (pageData) {
+        moduleId = pageData.moduleId
+      }
+
+      // Jika tidak ada di cache, coba dapatkan dari API
+      if (!moduleId) {
+        const page = await modulePageAdapter.getPage(pageId)
+        moduleId = page?.moduleId
+      }
+
+      if (!moduleId) {
+        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
+        return null
+      }
+
+      // Panggil API endpoint status yang benar
+      const response = await fetch(
+        `/api/module/${moduleId}/pages/${pageId}/status`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status }),
+        }
+      )
+
+      if (response.status === 404) {
+        return null
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          errorData.error || `Failed to update page status ${pageId}`
+        )
+      }
+
+      const result = (await response.json()) as ApiEntityResponse<ModulePage>
+
+      if (result.success && result.data) {
+        // Invalidate cache
+        modulePageAdapter.invalidatePageCache(pageId)
+        modulePageAdapter.invalidateModuleCache(result.data.moduleId)
+
+        return result.data
+      }
+
+      return null
+    } catch (error) {
+      logger.error(ADAPTER, `Error updating page status ${pageId}`, error)
+      throw error
+    }
+  },
+
+  /**
+   * Menghapus halaman berdasarkan ID melalui API
    * @param pageId - ID halaman
    * @returns Promise dengan boolean yang menunjukkan keberhasilan
    */
@@ -284,8 +514,28 @@ export const modulePageAdapter: IModulePageAdapter = {
       const page = await modulePageAdapter.getPage(pageId)
       const moduleId = page?.moduleId
 
-      logger.info(ADAPTER, `Deleting page ${pageId}`)
-      const result = await modulePageService.deleteModulePage(pageId)
+      if (!moduleId) {
+        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
+        return false
+      }
+
+      logger.info(ADAPTER, `Deleting page ${pageId} via API`)
+
+      // Panggil API endpoint
+      const response = await fetch(`/api/module/${moduleId}/pages/${pageId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.status === 404) {
+        return false
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `Failed to delete page ${pageId}`)
+      }
+
+      const result = await response.json()
 
       if (result && moduleId) {
         // Invalidate cache
@@ -293,7 +543,7 @@ export const modulePageAdapter: IModulePageAdapter = {
         modulePageAdapter.invalidateModuleCache(moduleId)
       }
 
-      return result
+      return result.success || false
     } catch (error) {
       logger.error(ADAPTER, `Error deleting page ${pageId}`, error)
       throw error
@@ -301,7 +551,7 @@ export const modulePageAdapter: IModulePageAdapter = {
   },
 
   /**
-   * Mengubah urutan halaman
+   * Mengubah urutan halaman melalui API
    * @param moduleId - ID modul
    * @param pageIds - Array of page IDs in the desired order
    * @returns Promise dengan boolean yang menunjukkan keberhasilan
@@ -319,13 +569,27 @@ export const modulePageAdapter: IModulePageAdapter = {
         throw new Error('PageIds harus berupa array yang tidak kosong')
       }
 
-      logger.info(ADAPTER, `Reordering pages for module ${moduleId}`)
-      const result = await modulePageService.reorderModulePages(
-        moduleId,
-        pageIds
-      )
+      logger.info(ADAPTER, `Reordering pages for module ${moduleId} via API`)
 
-      if (result) {
+      // Panggil API endpoint
+      const response = await fetch(`/api/module/${moduleId}/pages/reorder`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ pageIds }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          errorData.error || `Failed to reorder pages for module ${moduleId}`
+        )
+      }
+
+      const result = await response.json()
+
+      if (result.success) {
         // Invalidate module cache
         modulePageAdapter.invalidateModuleCache(moduleId)
 
@@ -335,7 +599,7 @@ export const modulePageAdapter: IModulePageAdapter = {
         )
       }
 
-      return result
+      return result.success || false
     } catch (error) {
       logger.error(
         ADAPTER,
@@ -347,14 +611,14 @@ export const modulePageAdapter: IModulePageAdapter = {
   },
 
   /**
-   * Menyimpan konten editor
+   * Menyimpan konten editor melalui API
    * @param pageId - ID halaman
    * @param editorContent - Konten dari editor dalam format JSON
    * @returns Promise dengan ModulePage yang telah diperbarui atau null
    */
   saveEditorContent: async (
     pageId: string,
-    editorContent: unknown
+    editorContent: StandardEditorContent
   ): Promise<ModulePage | null> => {
     try {
       // Validasi input
@@ -374,25 +638,62 @@ export const modulePageAdapter: IModulePageAdapter = {
         throw new Error('Format konten editor tidak valid')
       }
 
-      logger.info(ADAPTER, `Saving editor content for page ${pageId}`)
+      logger.info(ADAPTER, `Saving editor content for page ${pageId} via API`)
 
-      // Gunakan format blocks yang konsisten dengan standardContentToBlocks
-      const blocks = standardContentToBlocks(
-        editorContent as StandardEditorContent
-      )
+      // Gunakan ensureValidEditorContent untuk validasi dan konversi
+      const validContent = ensureValidEditorContent(editorContent)
 
-      // Update halaman dengan blocks yang konsisten
-      const response = await modulePageService.updateModulePage(pageId, {
-        blocks,
-      })
-
-      if (response?.data) {
-        // Invalidate cache
-        modulePageAdapter.invalidatePageCache(pageId)
-        modulePageAdapter.invalidateModuleCache(response.data.moduleId)
+      // Dapatkan modul ID dari cache atau dari request GET
+      let moduleId: string | undefined
+      const pageData = modulePageAdapter._cache.page[pageId]?.data
+      if (pageData) {
+        moduleId = pageData.moduleId
       }
 
-      return response?.data || null
+      // Jika tidak ada di cache, coba dapatkan dari API
+      if (!moduleId) {
+        const page = await modulePageAdapter.getPage(pageId)
+        moduleId = page?.moduleId
+      }
+
+      if (!moduleId) {
+        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
+        return null
+      }
+
+      // Panggil API endpoint
+      const response = await fetch(`/api/module/${moduleId}/pages/${pageId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: validContent,
+        }),
+      })
+
+      if (response.status === 404) {
+        return null
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          errorData.error || `Failed to save content for page ${pageId}`
+        )
+      }
+
+      const result = (await response.json()) as ApiEntityResponse<ModulePage>
+
+      if (result.success && result.data) {
+        // Invalidate cache
+        modulePageAdapter.invalidatePageCache(pageId)
+        modulePageAdapter.invalidateModuleCache(result.data.moduleId)
+
+        return result.data
+      }
+
+      return null
     } catch (error) {
       logger.error(
         ADAPTER,
@@ -424,7 +725,22 @@ export const modulePageAdapter: IModulePageAdapter = {
 
     logger.debug(ADAPTER, `Parsing editor content for page ${page.id}`)
 
-    // Gunakan parseContent dari dataFormats dengan returnRawJSON=true
-    return parseContent(undefined, page, true) as StandardEditorContent
+    // Ambil content langsung dari page.content jika tersedia
+    if (page.content) {
+      // Gunakan ensureValidEditorContent untuk validasi dan konversi
+      return ensureValidEditorContent(page.content)
+    }
+
+    // Fallback ke default content jika content tidak valid
+    logger.warn(ADAPTER, `Invalid content format for page ${page.id}`)
+    return {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: '' }],
+        },
+      ],
+    }
   },
 }

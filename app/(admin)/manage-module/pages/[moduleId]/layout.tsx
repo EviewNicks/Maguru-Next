@@ -3,7 +3,6 @@
 import React from 'react'
 import { Toaster } from 'sonner'
 import ModulePageSidebar from '@/features/manage-module/components/ModulePageSidebar'
-import { ModulePagesProvider } from '@/features/manage-module/context/ModulePagesContext'
 import { ModulePageCRUDProvider } from '@/features/manage-module/context/ModulePageCRUDContext'
 import { useParams } from 'next/navigation'
 
@@ -33,10 +32,8 @@ export default function ModulePageLayout({ children }: ModulePageLayoutProps) {
   const moduleId = params.moduleId as string
 
   return (
-    <ModulePagesProvider>
-      <ModulePageCRUDProvider moduleId={moduleId}>
-        <ModulePageLayoutContent>{children}</ModulePageLayoutContent>
-      </ModulePageCRUDProvider>
-    </ModulePagesProvider>
+    <ModulePageCRUDProvider moduleId={moduleId}>
+      <ModulePageLayoutContent>{children}</ModulePageLayoutContent>
+    </ModulePageCRUDProvider>
   )
 }

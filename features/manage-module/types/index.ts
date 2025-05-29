@@ -3,7 +3,6 @@ import {
   ContentBlockType,
   CreateModulePageInput,
   UpdateModulePageInput,
-  ModulePage,
 } from './modulePageSchema'
 
 export enum ModuleStatus {
@@ -72,12 +71,7 @@ export interface ErrorResponse {
 
 // Re-export types dari modulePageSchema
 export { ContentBlockType }
-export type {
-  ContentBlock,
-  CreateModulePageInput,
-  UpdateModulePageInput,
-  ModulePage,
-}
+export type { ContentBlock, CreateModulePageInput, UpdateModulePageInput }
 
 // Tipe untuk metainfo pagination
 export interface PaginationMeta {
@@ -85,17 +79,6 @@ export interface PaginationMeta {
   totalPages: number
   pageSize: number
   totalItems: number
-}
-
-// Tipe untuk response terhadapi API list
-export interface ApiListResponse<T> {
-  data: T[]
-  meta: PaginationMeta
-}
-
-// Tipe untuk single entity response
-export interface ApiEntityResponse<T> {
-  data: T
 }
 
 // API Response Types
@@ -114,34 +97,59 @@ export interface ApiListResponse<T> extends ApiResponse {
   meta: PaginationMeta
 }
 
-// Interface untuk ModulePageService
-export interface IModulePageService {
-  getModuleIdFromStorage(moduleId?: string): string | null;
-  createModulePage(data: CreateModulePageInput & { language?: string }): Promise<ApiEntityResponse<ModulePage>>;
-  getModulePages(moduleId: string, options?: { page?: number; limit?: number; includeContent?: boolean }): Promise<ApiListResponse<ModulePage>>;
-  getModulePage(pageId: string): Promise<ApiEntityResponse<ModulePage> | null>;
-  updateModulePage(pageId: string, data: UpdateModulePageInput): Promise<ApiEntityResponse<ModulePage> | null>;
-  deleteModulePage(pageId: string): Promise<boolean>;
-  reorderModulePages(moduleId: string, pageIds: string[]): Promise<boolean>;
-  parseContent(content: string | undefined, pageData?: ModulePage, returnRawJSON?: boolean): any;
-}
-
 // Interface untuk StandardEditorContent
 // Interface ini seharusnya selaras dengan yang ada di dataFormats.ts
 export interface TiptapNode {
-  type: string;
-  attrs?: Record<string, unknown>;
-  content?: TiptapNode[];
-  text?: string;
+  type: string
+  attrs?: Record<string, unknown>
+  content?: TiptapNode[]
+  text?: string
   marks?: Array<{
-    type: string;
-    attrs?: Record<string, unknown>;
-  }>;
+    type: string
+    attrs?: Record<string, unknown>
+  }>
 }
 
+/**
+ * Tipe untuk format standar konten editor
+ */
 export interface StandardEditorContent {
-  type: 'doc';
-  content: TiptapNode[];
+  type: 'doc'
+  content: TiptapNode[]
+}
+
+// Definisi ulang ModulePage agar selaras dengan schema Prisma
+export interface ModulePage {
+  id: string
+  title: string
+  moduleId: string
+  order: number
+  type: string
+  content: StandardEditorContent
+  version: number
+  status: ModulePageStatus
+  createdAt: Date
+  updatedAt: Date
+}
+
+// Interface untuk ModulePageService
+export interface IModulePageService {
+  getModuleIdFromStorage(moduleId?: string): string | null
+  createModulePage(
+    data: CreateModulePageInput & { language?: string }
+  ): Promise<ApiEntityResponse<ModulePage>>
+  getModulePages(
+    moduleId: string,
+    options?: { page?: number; limit?: number; includeContent?: boolean }
+  ): Promise<ApiListResponse<ModulePage>>
+  getModulePage(pageId: string): Promise<ApiEntityResponse<ModulePage> | null>
+  updateModulePage(
+    pageId: string,
+    data: UpdateModulePageInput
+  ): Promise<ApiEntityResponse<ModulePage> | null>
+  deleteModulePage(pageId: string): Promise<boolean>
+  reorderModulePages(moduleId: string, pageIds: string[]): Promise<boolean>
+  parseContent(content: unknown, returnRawJSON?: boolean): StandardEditorContent
 }
 
 // Interface untuk ModulePageAdapter
@@ -159,17 +167,29 @@ export interface IModulePageAdapter {
         timestamp: number
       }
     }
-  };
-  invalidateModuleCache(moduleId: string): void;
-  invalidatePageCache(pageId: string): void;
-  validateModuleId(moduleId: string | null | undefined): asserts moduleId is string;
-  validatePageId(pageId: string | null | undefined): asserts pageId is string;
-  getPages(moduleId: string, skipCache?: boolean): Promise<ModulePage[]>;
-  getPage(pageId: string, skipCache?: boolean): Promise<ModulePage | null>;
-  createPage(data: CreateModulePageInput): Promise<ModulePage>;
-  updatePage(pageId: string, data: UpdateModulePageInput): Promise<ModulePage | null>;
-  deletePage(pageId: string): Promise<boolean>;
-  reorderPages(moduleId: string, pageIds: string[]): Promise<boolean>;
-  saveEditorContent(pageId: string, editorContent: unknown): Promise<ModulePage | null>;
-  getParsedEditorContent(page: ModulePage | null): StandardEditorContent;
+  }
+  invalidateModuleCache(moduleId: string): void
+  invalidatePageCache(pageId: string): void
+  validateModuleId(
+    moduleId: string | null | undefined
+  ): asserts moduleId is string
+  validatePageId(pageId: string | null | undefined): asserts pageId is string
+  getPages(moduleId: string, skipCache?: boolean): Promise<ModulePage[]>
+  getPage(pageId: string, skipCache?: boolean): Promise<ModulePage | null>
+  createPage(data: CreateModulePageInput): Promise<ModulePage>
+  updatePage(
+    pageId: string,
+    data: UpdateModulePageInput
+  ): Promise<ModulePage | null>
+  deletePage(pageId: string): Promise<boolean>
+  reorderPages(moduleId: string, pageIds: string[]): Promise<boolean>
+  saveEditorContent(
+    pageId: string,
+    editorContent: unknown
+  ): Promise<ModulePage | null>
+  getParsedEditorContent(page: ModulePage | null): StandardEditorContent
+  updatePageStatus(
+    pageId: string,
+    status: ModulePageStatus
+  ): Promise<ModulePage | null>
 }

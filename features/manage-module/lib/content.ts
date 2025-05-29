@@ -1,5 +1,7 @@
+import { StandardEditorContent } from '../types'
+
 // Format JSON Tiptap untuk digunakan dengan editor
-export const defaultContentJSON = {
+export const defaultContentJSON: StandardEditorContent = {
   type: 'doc',
   content: [
     {

@@ -26,12 +26,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useModulePageCRUDContext } from '@/features/manage-module/context/ModulePageCRUDContext'
-import {
-  ModulePage,
-  ContentBlockType,
-} from '@/features/manage-module/types/modulePageSchema'
+import { ModulePage, ModulePageStatus } from '@/features/manage-module/types'
 import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   debugDataFlow,
@@ -59,16 +55,13 @@ export default function SidebarContent({
   } | null>(null)
 
   const {
-    moduleId,
-    createPage,
-    setActivePage,
     handleSelectPage: contextHandleSelectPage,
     pages,
     activePage,
     error,
     updatePageStatus,
+    handleCreateNewPage,
   } = useModulePageCRUDContext()
-  const router = useRouter()
 
   // Set debug level to INFO in development
   useEffect(() => {
@@ -131,7 +124,7 @@ export default function SidebarContent({
   // Handle status change
   const handleStatusChange = (
     page: ModulePage,
-    newStatus: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+    newStatus: ModulePageStatus
   ) => {
     if (page.status === newStatus) return
 
@@ -141,109 +134,28 @@ export default function SidebarContent({
     })
   }
 
-  // Handle creating a new page
+  // Handle creating a new page - versi yang disederhanakan
   const handleCreatePage = async () => {
-    if (!moduleId) {
-      toast.error('ID Modul tidak ditemukan')
-      return
-    }
-
     try {
       setIsCreating(true)
 
-      // Generate default page number
-      const pageNumber = pages.length + 1
+      // Gunakan fungsi dari context untuk membuat halaman baru
+      const newPage = await handleCreateNewPage()
 
-      // Generate default title
-      const defaultTitle = `Halaman Baru ${pageNumber}`
-
-      // Determine order for the new page (at the end)
-      // Gunakan Math.max dengan fallback ke 0 untuk menghindari error jika pages kosong
-      const newOrder =
-        pages.length > 0
-          ? Math.max(...pages.map((page) => page.order || 0)) + 1
-          : 1
-
-      // Prepare new page data dengan format Tiptap JSON yang benar
-      const newPageData = {
-        title: defaultTitle,
-        moduleId,
-        type: 'content',
-        order: newOrder,
-        blocks: [
-          {
-            type: 'doc',
-            content: [
-              {
-                type: 'heading',
-                attrs: { level: 1 },
-                content: [
-                  {
-                    type: 'text',
-                    text: defaultTitle,
-                  },
-                ],
-              },
-              {
-                type: 'paragraph',
-                content: [
-                  {
-                    type: 'text',
-                    text: 'Halaman baru Anda telah dibuat. Mulai edit konten disini.',
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      }
-
-      // Create new page with API
-      const result = await createPage(newPageData)
-
-      if (result?.data) {
-        // Set the new page as active
-        setActivePage(result.data)
-
-        // Mark this item as new for highlighting
-        setNewItemId(result.data.id)
-
-        // Add a small delay before navigation for better UX
-        setTimeout(() => {
-          // Navigate to the new page
-          router.push(
-            `/manage-module/pages/${moduleId}?pageId=${result.data.id}`
-          )
-        }, 300)
+      if (newPage) {
+        // Tandai halaman baru untuk highlighting
+        setNewItemId(newPage.id)
 
         toast.success('Halaman baru berhasil dibuat')
       }
     } catch (error) {
-      console.error('Error creating page:', error)
+      console.error('Error creating new page:', error)
 
       // Detail error handling
       let errorMessage = 'Gagal membuat halaman. Silakan coba lagi.'
 
       if (error instanceof Error) {
-        if (error.message.includes('ModuleId tidak ditemukan')) {
-          errorMessage =
-            'ID Modul tidak ditemukan. Silakan refresh halaman dan coba lagi.'
-        } else if (error.message.includes('TypeError')) {
-          errorMessage =
-            'Terjadi kesalahan teknis. Halaman mungkin perlu di-refresh.'
-        } else if (error.message.includes('constraint failed')) {
-          errorMessage =
-            'Terjadi konflik data. Sistem akan mencoba lagi secara otomatis.'
-
-          // Jika error adalah constraint, coba lagi dengan order yang berbeda
-          setTimeout(() => {
-            handleCreatePage()
-          }, 500)
-          return
-        } else {
-          // Gunakan pesan error asli jika tersedia
-          errorMessage = error.message || errorMessage
-        }
+        errorMessage = error.message || errorMessage
       }
 
       toast.error(errorMessage, {
@@ -318,63 +230,71 @@ export default function SidebarContent({
                       'animate-pulse bg-[#1c2b42]/30 rounded'
                   )}
                 >
-                      <SidebarNestedItem
-                        label={page.title || 'Untitled Page'}
-                        onClick={() => contextHandleSelectPage(page)}
+                  <SidebarNestedItem
+                    label={page.title || 'Untitled Page'}
+                    onClick={() => contextHandleSelectPage(page)}
                     isActive={activePage?.id === page.id}
-                    isArchived={page.status === 'ARCHIVED'}
+                    isArchived={page.status === ModulePageStatus.ARCHIVED}
                     status={page.status}
                     icon={<FileText className="h-3.5 w-3.5 mr-1.5" />}
-                      />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity absolute right-1 top-1"
-                          aria-label="Opsi halaman"
-                        >
-                          <MoreVertical className="h-3 w-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="end"
-                        className="bg-[#1f1f21] border-[#3b3b3b] text-[#e3e4f2]"
+                  />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity absolute right-1 top-1"
+                        aria-label="Opsi halaman"
                       >
-                      {page.status === 'DRAFT' && (
+                        <MoreVertical className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="bg-[#1f1f21] border-[#3b3b3b] text-[#e3e4f2]"
+                    >
+                      {page.status === ModulePageStatus.DRAFT && (
                         <DropdownMenuItem
                           className="flex items-center cursor-pointer hover:bg-[#242528]"
-                          onClick={() => handleStatusChange(page, 'PUBLISHED')}
+                          onClick={() =>
+                            handleStatusChange(page, ModulePageStatus.PUBLISHED)
+                          }
                         >
                           <Eye className="h-4 w-4 mr-2 text-green-400" />
                           <span>Publikasikan</span>
                         </DropdownMenuItem>
                       )}
 
-                      {page.status === 'PUBLISHED' && (
+                      {page.status === ModulePageStatus.PUBLISHED && (
                         <DropdownMenuItem
                           className="flex items-center cursor-pointer hover:bg-[#242528]"
-                          onClick={() => handleStatusChange(page, 'DRAFT')}
+                          onClick={() =>
+                            handleStatusChange(page, ModulePageStatus.DRAFT)
+                          }
                         >
                           <EyeOff className="h-4 w-4 mr-2 text-yellow-400" />
                           <span>Kembalikan ke Draft</span>
                         </DropdownMenuItem>
                       )}
 
-                      {page.status !== 'ARCHIVED' && (
+                      {page.status !== ModulePageStatus.ARCHIVED && (
                         <DropdownMenuItem
                           className="flex items-center cursor-pointer hover:bg-[#242528]"
-                          onClick={() => handleStatusChange(page, 'ARCHIVED')}
+                          onClick={() =>
+                            handleStatusChange(page, ModulePageStatus.ARCHIVED)
+                          }
                         >
                           <Archive className="h-4 w-4 mr-2 text-gray-400" />
                           <span>Arsipkan</span>
                         </DropdownMenuItem>
                       )}
 
-                      {page.status === 'ARCHIVED' && (
+                      {page.status === ModulePageStatus.ARCHIVED && (
                         <DropdownMenuItem
                           className="flex items-center cursor-pointer hover:bg-[#242528]"
-                          onClick={() => handleStatusChange(page, 'DRAFT')}
+                          onClick={() =>
+                            handleStatusChange(page, ModulePageStatus.DRAFT)
+                          }
                         >
                           <FileText className="h-4 w-4 mr-2 text-yellow-400" />
                           <span>Pulihkan ke Draft</span>
@@ -383,13 +303,13 @@ export default function SidebarContent({
 
                       <DropdownMenuItem
                         className="flex items-center cursor-pointer hover:bg-[#242528]"
-                          onClick={() => handleOpenDeleteDialog(page)}
-                        >
-                          <Trash className="h-4 w-4 mr-2 text-red-400" />
-                          <span>Hapus Halaman</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        onClick={() => handleOpenDeleteDialog(page)}
+                      >
+                        <Trash className="h-4 w-4 mr-2 text-red-400" />
+                        <span>Hapus Halaman</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ))
             ) : (

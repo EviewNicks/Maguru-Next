@@ -42,17 +42,17 @@ model Module {
 }
 
 model ModulePage {
-  id        String   @id @default(uuid())
-  moduleId  String   @map("module_id")
+  id        String       @id @default(uuid())
+  moduleId  String       @map("module_id")
   order     Int
   type      String
-  content   String
-  language  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  version   Int      @default(1)
+  content   Json
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  version   Int          @default(1)
   title     String
-  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  status    ModuleStatus @default(DRAFT)
+  module    Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   @@unique([moduleId, order])
   @@index([moduleId, order])

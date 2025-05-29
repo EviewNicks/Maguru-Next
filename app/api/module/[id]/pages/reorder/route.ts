@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import { z } from 'zod'
+import { modulePageService } from '@/features/manage-module/services/modulePageService'
 import {
   withAdminAuth,
   withAuditTrail,
   composeMiddlewares,
 } from '../../../middleware'
 
-// Tipe untuk params dari route dynamic
+// Tipe untuk params dari route
 type RouteParams = { params: { id: string } }
+
+// Schema validasi untuk body request
+const ReorderPagesSchema = z.object({
+  pageIds: z.array(z.string()).min(1, {
+    message: 'Setidaknya satu pageId harus disediakan',
+  }),
+})
 
 /**
  * Handler untuk PUT request
- * Mengubah urutan halaman dalam modul
+ * Mengubah urutan halaman modul
  */
 async function reorderModulePagesHandler(
   request: NextRequest,
@@ -19,73 +27,66 @@ async function reorderModulePagesHandler(
 ) {
   try {
     const moduleId = context.params.id
-    const body = await request.json()
-    const { pageIds } = body
 
-    if (!pageIds || !Array.isArray(pageIds)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Data tidak valid. pageIds harus berupa array.',
-        },
-        { status: 400 }
-      )
-    }
-
-    // Ensure the module exists
-    const moduleExists = await prisma.module.findUnique({
-      where: { id: moduleId },
-    })
-
-    if (!moduleExists) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Modul tidak ditemukan',
-        },
-        { status: 404 }
-      )
-    }
-
-    // Ensure all pages exist and belong to the module
-    const existingPages = await prisma.modulePage.findMany({
-      where: { moduleId },
-      select: { id: true },
-    })
-
-    const existingPageIds = existingPages.map((page) => page.id)
-    const allPagesExist = pageIds.every((id) => existingPageIds.includes(id))
-
-    if (!allPagesExist) {
+    // Parse dan validasi body request
+    let body
+    try {
+      body = await request.json()
+    } catch (error) {
+      console.error('Error parsing JSON in reorderModulePagesHandler:', error)
       return NextResponse.json(
         {
           success: false,
           error:
-            'Beberapa halaman tidak ditemukan atau tidak dimiliki oleh modul ini',
+            'Format JSON tidak valid. Pastikan body request dalam format JSON yang benar.',
         },
         { status: 400 }
       )
     }
 
-    // Update the order of pages in a transaction
-    await prisma.$transaction(
-      pageIds.map((pageId, index) =>
-        prisma.modulePage.update({
-          where: { id: pageId },
-          data: { order: index + 1 },
-        })
+    // Validasi dengan Zod
+    const validationResult = ReorderPagesSchema.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Data tidak valid',
+          details: validationResult.error.format(),
+        },
+        { status: 400 }
       )
+    }
+
+    const { pageIds } = validationResult.data
+
+    // Gunakan service untuk mengubah urutan halaman
+    const success = await modulePageService.reorderModulePages(
+      moduleId,
+      pageIds
     )
+
+    if (!success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Gagal mengubah urutan halaman',
+        },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json(
       {
         success: true,
         message: 'Urutan halaman berhasil diperbarui',
+        data: [],
+        meta: {},
       },
       { status: 200 }
     )
   } catch (error) {
     console.error('Error reordering module pages:', error)
+
     return NextResponse.json(
       {
         success: false,
@@ -96,7 +97,7 @@ async function reorderModulePagesHandler(
   }
 }
 
-// Wrapper untuk menangani params dari dynamic route
+// Wrapper untuk menangani dynamic route parameters
 function createRouteHandler(
   handler: (req: NextRequest, context: RouteParams) => Promise<NextResponse>
 ) {
@@ -104,18 +105,27 @@ function createRouteHandler(
     // Ekstrak ID dari URL
     const url = new URL(req.url)
     const pathParts = url.pathname.split('/')
-    // Ambil ID modul (posisi setelah /api/module/)
-    const id = pathParts[3]
+
+    // Format URL yang diharapkan: /api/module/{moduleId}/pages/reorder
+    const moduleIndex = pathParts.indexOf('module')
+
+    // Ambil moduleId (setelah 'module')
+    const moduleId =
+      moduleIndex !== -1 && moduleIndex + 1 < pathParts.length
+        ? pathParts[moduleIndex + 1]
+        : ''
 
     // Buat context dengan params
-    const context: RouteParams = { params: { id } }
+    const context: RouteParams = {
+      params: { id: moduleId },
+    }
 
     // Panggil handler dengan context
     return handler(req, context)
   }
 }
 
-// Gunakan middleware untuk PUT request
+// Export PUT handler with middleware
 export const PUT = composeMiddlewares(
   [withAdminAuth, withAuditTrail],
   createRouteHandler(reorderModulePagesHandler)

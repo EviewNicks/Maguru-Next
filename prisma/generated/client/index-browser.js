@@ -145,16 +145,20 @@ exports.Prisma.ModulePageScalarFieldEnum = {
   order: 'order',
   type: 'type',
   content: 'content',
-  language: 'language',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   version: 'version',
-  title: 'title'
+  title: 'title',
+  status: 'status'
 };
 
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -165,6 +169,12 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 exports.UserRole = exports.$Enums.UserRole = {
   mahasiswa: 'mahasiswa',

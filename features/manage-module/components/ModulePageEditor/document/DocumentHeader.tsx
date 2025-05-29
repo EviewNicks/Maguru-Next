@@ -33,32 +33,13 @@ import {
 } from '@/components/ui/alert-dialog'
 
 interface DocumentHeaderProps {
-  title?: string
-  onTitleChange?: (title: string) => void
-  saveStatus?: SaveStatus
-  pageId?: string
   isLoading?: boolean
 }
 
 export default function DocumentHeader({
-  title = '',
-  onTitleChange,
-  saveStatus: propsSaveStatus = 'saved',
-  pageId,
   isLoading = false,
 }: DocumentHeaderProps) {
-  // State local
-  const [localTitle, setLocalTitle] = useState<string>(title)
-  const [titleSaveStatus, setTitleSaveStatus] =
-    useState<SaveStatus>(propsSaveStatus)
-  const [isCreating, setIsCreating] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-
-  // Hook debounce untuk judul
-  const debouncedTitle = useDebounce<string>(localTitle, 1000)
-
-  // Mengambil fungsi dan data dari context
+  // Mengambil data dan fungsi dari context
   const {
     moduleId,
     pages,
@@ -67,10 +48,40 @@ export default function DocumentHeader({
     createPage,
     deletePage,
     savePage,
+    saveStatus: contextSaveStatus,
   } = useModulePageCRUDContext()
 
-  // Gunakan pageId dari props atau dari activePage
-  const effectivePageId = pageId || (activePage ? activePage.id : undefined)
+  // Gunakan data dari context langsung
+  const title = activePage?.title || 'Untitled Page'
+
+  // State local
+  const [localTitle, setLocalTitle] = useState<string>(title)
+  const [titleSaveStatus, setTitleSaveStatus] = useState<SaveStatus>(
+    contextSaveStatus || 'saved'
+  )
+  const [isCreating, setIsCreating] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  // Hook debounce untuk judul
+  const debouncedTitle = useDebounce<string>(localTitle, 1000)
+
+  // Gunakan pageId dari activePage context
+  const effectivePageId = activePage ? activePage.id : undefined
+
+  // Sync title dari context saat activePage berubah
+  useEffect(() => {
+    if (activePage && activePage.title !== localTitle) {
+      setLocalTitle(activePage.title || '')
+    }
+  }, [activePage, localTitle])
+
+  // Sync save status dari context
+  useEffect(() => {
+    if (contextSaveStatus && contextSaveStatus !== titleSaveStatus) {
+      setTitleSaveStatus(contextSaveStatus)
+    }
+  }, [contextSaveStatus, titleSaveStatus])
 
   // Handler untuk pembuatan halaman baru
   const handleCreate = async () => {
@@ -84,7 +95,16 @@ export default function DocumentHeader({
         title: 'Halaman Baru',
         type: 'content',
         order: pages.length,
-        blocks: [],
+        // Gunakan format content yang benar
+        content: {
+          type: 'doc' as const,
+          content: [
+            {
+              type: 'paragraph',
+              content: [{ type: 'text', text: 'Konten halaman baru' }],
+            },
+          ],
+        },
       })
 
       // Setelah berhasil, set halaman baru sebagai halaman aktif
@@ -137,12 +157,8 @@ export default function DocumentHeader({
 
       // Set status langsung ke unsaved untuk feedback instan
       setTitleSaveStatus('unsaved')
-
-      if (onTitleChange) {
-        onTitleChange(newTitle)
-      }
     },
-    [onTitleChange]
+    []
   )
 
   // Auto-save title when it changes (debounced) dengan validasi dan error handling yang lebih baik
@@ -207,13 +223,6 @@ export default function DocumentHeader({
     // Jalankan fungsi save
     saveTitle()
   }, [debouncedTitle, title, effectivePageId, savePage, titleSaveStatus])
-
-  // Sync with props - tambahkan pengecekan untuk menghindari loop
-  useEffect(() => {
-    if (title !== localTitle) {
-      setLocalTitle(title)
-    }
-  }, [title])
 
   // Render status save yang lebih informatif
   const renderSaveStatus = () => {

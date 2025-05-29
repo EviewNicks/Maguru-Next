@@ -39,6 +39,7 @@ async function getModulePageHandler(
       {
         success: true,
         data: page.data,
+        meta: {}, // Tambahkan meta kosong untuk konsistensi format
       },
       { status: 200 }
     )
@@ -69,6 +70,7 @@ async function updateModulePageHandler(
     let body
     try {
       body = await request.json()
+      console.log('[API] Update request body:', JSON.stringify(body))
     } catch (jsonError) {
       console.error('Error parsing JSON in updateModulePageHandler:', jsonError)
       return NextResponse.json(
@@ -79,6 +81,34 @@ async function updateModulePageHandler(
         },
         { status: 400 }
       )
+    }
+
+    // Validasi content jika ada
+    if (body.content) {
+      // Validasi struktur content (harus sesuai format Tiptap)
+      if (
+        typeof body.content !== 'object' ||
+        body.content.type !== 'doc' ||
+        !Array.isArray(body.content.content)
+      ) {
+        console.error('[API] Invalid content format:', body.content)
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'Format content tidak valid. Content harus berformat Tiptap JSON dengan type="doc"',
+          },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Hapus blocks jika ada (backward compatibility)
+    if (body.blocks) {
+      console.log(
+        '[API] Warning: Blocks format is deprecated, removing blocks property'
+      )
+      delete body.blocks
     }
 
     // Perbarui halaman
@@ -99,6 +129,7 @@ async function updateModulePageHandler(
       {
         success: true,
         data: updatedPage.data,
+        meta: {}, // Tambahkan meta kosong untuk konsistensi format
       },
       { status: 200 }
     )

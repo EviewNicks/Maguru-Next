@@ -1,19 +1,15 @@
-import {
-  ContentBlock,
-  CreateModulePageInput,
-  UpdateModulePageInput,
-} from '../types/modulePageSchema'
+import { CreateModulePageInput, UpdateModulePageInput } from '../types'
 import {
   ModulePage,
   ApiListResponse,
   ApiEntityResponse,
   ModulePageStatus,
   IModulePageService,
+  StandardEditorContent,
 } from '../types'
 import prisma from '@/lib/prisma'
-import { defaultContentJSON } from '../lib/content'
 import { logger } from './logger'
-import { parseContent } from '../lib/dataFormats'
+import { ensureValidEditorContent } from '../lib/dataFormats'
 
 // Konstanta untuk service name (context)
 const SERVICE = 'ModulePageService'
@@ -62,7 +58,7 @@ export const modulePageService: IModulePageService = {
         title: data.title,
         type: data.type,
         order: data.order,
-        hasBlocks: !!data.blocks && Array.isArray(data.blocks),
+        hasContent: !!data.content,
       })
 
       // Validasi keberadaan modul
@@ -89,15 +85,8 @@ export const modulePageService: IModulePageService = {
         console.log('[Service] Using calculated order:', orderToUse)
       }
 
-      // Pastikan blocks valid dan dapat dikonversi ke JSON
-      let contentJson
-      try {
-        contentJson = JSON.stringify(data.blocks || [])
-        console.log('[Service] Content JSON successfully created')
-      } catch (jsonError) {
-        console.error('[Service] Error stringifying blocks:', jsonError)
-        throw new Error('Format blok konten tidak valid')
-      }
+      // Pastikan content valid dan dalam format yang benar
+      const contentJson = ensureValidEditorContent(data.content)
 
       let createdPage
       let retryCount = 0
@@ -105,23 +94,23 @@ export const modulePageService: IModulePageService = {
 
       while (retryCount < maxRetries) {
         try {
-          // Simpan blocks sebagai JSON di kolom content
+          // Simpan dengan konten sebagai JSONB
           createdPage = await prisma.modulePage.create({
             data: {
               moduleId: data.moduleId,
               title: data.title || 'Halaman Baru',
               order: orderToUse,
-              content: contentJson,
+              // Menggunakan type assertion untuk mengatasi masalah tipe
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              content: contentJson as any,
               type: data.type || 'content',
-              // Tambahkan default language untuk memenuhi schema
-              language: data.language || 'id',
             },
           })
 
           // Berhasil dibuat, keluar dari loop
           break
         } catch (error: unknown) {
-          // Jika error adalah constraint unik, coba dengan order yang lebih besar
+          // Logic untuk retry jika terjadi konflik order
           const prismaError = error as {
             code?: string
             meta?: { target?: string[] }
@@ -167,19 +156,25 @@ export const modulePageService: IModulePageService = {
         createdPage.id
       )
 
-      // Transform hasil untuk response API
+      // Transform hasil untuk response API - selalu kembalikan content dalam format JSONB
+      const responseData: ModulePage = {
+        id: createdPage.id,
+        moduleId: createdPage.moduleId,
+        title: createdPage.title,
+        order: createdPage.order,
+        type: createdPage.type,
+        content: createdPage.content as unknown as StandardEditorContent,
+        version: createdPage.version,
+        // Cast status karena TypeScript belum mengenali pembaruan prisma schema
+        status:
+          (createdPage.status as ModulePageStatus) || ModulePageStatus.DRAFT,
+        createdAt: createdPage.createdAt,
+        updatedAt: createdPage.updatedAt,
+      }
+
       return {
         success: true,
-        data: {
-          id: createdPage.id,
-          moduleId: createdPage.moduleId,
-          title: createdPage.title,
-          order: createdPage.order,
-          blocks: data.blocks || [], // Gunakan data asli blocks, bukan string JSON
-          status: ModulePageStatus.DRAFT, // Gunakan enum
-          createdAt: createdPage.createdAt,
-          updatedAt: createdPage.updatedAt,
-        },
+        data: responseData,
       }
     } catch (error) {
       console.error('[Service] Error in createModulePage:', error)
@@ -200,7 +195,6 @@ export const modulePageService: IModulePageService = {
     const page = options.page || 1
     const limit = options.limit || 10
     const skip = (page - 1) * limit
-    const includeContent = options.includeContent ?? false
 
     // Ambil daftar halaman
     const pages = await prisma.modulePage.findMany({
@@ -217,26 +211,22 @@ export const modulePageService: IModulePageService = {
 
     // Transform hasil untuk response API
     const transformedPages = pages.map((page) => {
-      // Base page data tanpa blocks
-      const pageData: Partial<ModulePage> = {
+      // Base page data
+      const pageData: ModulePage = {
         id: page.id,
         moduleId: page.moduleId,
         title: page.title,
         order: page.order,
-        status: ModulePageStatus.DRAFT,
+        type: page.type,
+        content: page.content as unknown as StandardEditorContent,
+        version: page.version,
+        // Cast status karena TypeScript belum mengenali pembaruan prisma schema
+        status: (page.status as ModulePageStatus) || ModulePageStatus.DRAFT,
         createdAt: page.createdAt,
         updatedAt: page.updatedAt,
       }
 
-      // Hanya tambahkan blocks jika includeContent=true
-      if (includeContent) {
-        pageData.blocks = this.parseContent(page.content as string)
-      } else {
-        // Tambahkan blocks kosong jika client mengharapkan property ini
-        pageData.blocks = []
-      }
-
-      return pageData as ModulePage
+      return pageData
     })
 
     return {
@@ -275,8 +265,11 @@ export const modulePageService: IModulePageService = {
         moduleId: page.moduleId,
         title: page.title,
         order: page.order,
-        blocks: this.parseContent(page.content as string),
-        status: ModulePageStatus.DRAFT,
+        type: page.type,
+        content: page.content as unknown as StandardEditorContent,
+        version: page.version,
+        // Cast status karena TypeScript belum mengenali pembaruan prisma schema
+        status: (page.status as ModulePageStatus) || ModulePageStatus.DRAFT,
         createdAt: page.createdAt,
         updatedAt: page.updatedAt,
       },
@@ -302,57 +295,46 @@ export const modulePageService: IModulePageService = {
       return null
     }
 
-    // Persiapkan data update
-    const updateData: {
-      title?: string
-      order?: number
-      content?: string
-      version: { increment: 1 }
-    } = {
+    // Persiapkan data update yang akan di-spread
+    const baseUpdateData = {
       version: { increment: 1 }, // Optimistic locking
     }
 
+    // Penggunaan Record<string, unknown> untuk tipe yang lebih aman
+    const updateFields: Record<string, unknown> = { ...baseUpdateData }
+
     if (data.title) {
-      updateData.title = data.title
+      updateFields.title = data.title
     }
 
     if (data.order) {
-      updateData.order = data.order
+      updateFields.order = data.order
     }
 
-    if (data.blocks) {
-      // Periksa jika blocks sudah dalam format JSON Tiptap
-      if (
-        data.blocks.length === 1 &&
-        data.blocks[0].type === 'text' &&
-        typeof data.blocks[0].content === 'string' &&
-        data.blocks[0].content.startsWith('{') &&
-        data.blocks[0].content.includes('"type":"doc"')
-      ) {
-        // Simpan content dari block tersebut langsung sebagai content halaman
-        // karena ini adalah format JSON Tiptap
-        updateData.content = data.blocks[0].content
-        console.log(
-          'Saving Tiptap JSON format directly:',
-          updateData.content.substring(0, 50) + '...'
-        )
-      } else {
-        // Format lama - simpan sebagai array blocks
-        updateData.content = JSON.stringify(data.blocks)
-        console.log('Saving in legacy blocks format')
-      }
+    if (data.type) {
+      updateFields.type = data.type
+    }
+
+    // Jika status diupdate
+    if (data.status) {
+      updateFields.status = data.status
+      console.log(`[Service] Updating page status to: ${data.status}`)
+    }
+
+    // Pastikan content valid jika diberikan
+    if (data.content) {
+      // Konversi tipe yang aman dengan ensureValidEditorContent
+      const contentValue = ensureValidEditorContent(data.content)
+      // Gunakan type assertion untuk mengatasi masalah tipe
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      updateFields.content = contentValue as any
     }
 
     // Update halaman
     const updatedPage = await prisma.modulePage.update({
       where: { id: pageId },
-      data: updateData,
+      data: updateFields,
     })
-
-    // Parse konten dari JSON
-    const blocks =
-      data.blocks ||
-      (JSON.parse(updatedPage.content as string) as ContentBlock[])
 
     // Transform hasil untuk response API
     return {
@@ -362,8 +344,12 @@ export const modulePageService: IModulePageService = {
         moduleId: updatedPage.moduleId,
         title: updatedPage.title,
         order: updatedPage.order,
-        blocks,
-        status: ModulePageStatus.DRAFT,
+        type: updatedPage.type,
+        content: updatedPage.content as unknown as StandardEditorContent,
+        version: updatedPage.version,
+        // Cast status karena TypeScript belum mengenali pembaruan prisma schema
+        status:
+          (updatedPage.status as ModulePageStatus) || ModulePageStatus.DRAFT,
         createdAt: updatedPage.createdAt,
         updatedAt: updatedPage.updatedAt,
       },
@@ -446,18 +432,11 @@ export const modulePageService: IModulePageService = {
   },
 
   /**
-   * Parse konten dari string JSON atau data halaman
-   * Menggunakan fungsi dari dataFormats.ts
-   * @param content - String JSON konten
-   * @param pageData - Data halaman (opsional)
-   * @param returnRawJSON - Flag untuk mengembalikan JSON mentah
-   * @returns Hasil parsing (ContentBlock[] atau StandardEditorContent)
+   * Parse konten ke format StandardEditorContent
+   * @param content - Konten yang akan diparse (objek JSONB atau lainnya)
+   * @returns Hasil parsing sebagai StandardEditorContent
    */
-  parseContent(
-    content: string | undefined,
-    pageData?: ModulePage,
-    returnRawJSON: boolean = false
-  ): any {
-    return parseContent(content, pageData, returnRawJSON)
+  parseContent(content: unknown): StandardEditorContent {
+    return ensureValidEditorContent(content)
   },
 }

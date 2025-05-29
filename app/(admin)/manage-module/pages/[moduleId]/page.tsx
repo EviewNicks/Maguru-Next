@@ -4,12 +4,11 @@ import { Suspense, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import ModulePageEditor from '@/features/manage-module/components/ModulePageEditor'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useModulePageData } from '@/features/manage-module/hooks/useModulePageData'
 import { ErrorBoundary } from '@/features/manage-module/components/ErrorBoundary'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useQuery } from '@tanstack/react-query'
-import { modulePageService } from '@/features/manage-module/services/modulePageService'
+import { useModulePageCRUDContext } from '@/features/manage-module/context/ModulePageCRUDContext'
 
 export default function ModulePageEditorPage() {
   const params = useParams()
@@ -22,16 +21,15 @@ export default function ModulePageEditorPage() {
   // Mendapatkan pageId dari query parameters (jika ada)
   const pageId = searchParams.get('pageId') || undefined
 
-  // Gunakan hook untuk mendapatkan daftar semua halaman
-  const { getAllPages } = useModulePageData(moduleId)
-  const { data: pagesData, isLoading: pagesLoading } = getAllPages
+  // Gunakan context untuk mendapatkan data dan fungsi
+  const { pages, getPageById } = useModulePageCRUDContext()
 
-  // Fetch data halaman aktif
+  // Fetch data halaman aktif menggunakan context
   const { isLoading: activePageLoading } = useQuery({
     queryKey: ['modulePage', moduleId, pageId],
     queryFn: async () => {
       if (!pageId) return { data: null, success: true }
-      return modulePageService.getModulePage(pageId)
+      return getPageById(pageId)
     },
     enabled: !!pageId, // Hanya jalankan query jika pageId ada
     staleTime: 15 * 60 * 1000, // 15 menit (ditingkatkan dari 5 menit)
@@ -49,16 +47,11 @@ export default function ModulePageEditorPage() {
 
   // Jika tidak ada pageId di URL tapi ada halaman, redirect ke halaman pertama
   useEffect(() => {
-    if (
-      !pagesLoading &&
-      !pageId &&
-      pagesData?.data &&
-      pagesData.data.length > 0
-    ) {
-      const firstPageId = pagesData.data[0].id
+    if (!pageId && pages.length > 0) {
+      const firstPageId = pages[0].id
       router.push(`/manage-module/pages/${moduleId}?pageId=${firstPageId}`)
     }
-  }, [pagesLoading, moduleId, pageId, pagesData, router])
+  }, [moduleId, pageId, pages, router])
 
   // Custom fallback untuk error boundary dalam konteks editor
   const editorErrorFallback = (
@@ -90,7 +83,7 @@ export default function ModulePageEditorPage() {
   )
 
   // Gabungkan status loading
-  const isLoading = pagesLoading || (pageId && activePageLoading)
+  const isLoading = pageId && activePageLoading
 
   return (
     <ErrorBoundary fallback={editorErrorFallback}>

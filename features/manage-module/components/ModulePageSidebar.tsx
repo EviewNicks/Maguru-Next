@@ -5,12 +5,12 @@ import SidebarContent from './ModulePageEditor/sidebar/SidebarContent'
 import SidebarHeader from './ModulePageEditor/sidebar/SidebarHeader'
 import SidebarShortcuts from './ModulePageEditor/sidebar/SidebarShortcuts'
 import SidebarBlogs from './ModulePageEditor/sidebar/SidebarBlogs'
-import { useModulePagesContext } from '../context/ModulePagesContext'
+import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 
 export default function ModulePageSidebar() {
-  // UI state dari ModulePagesContext
+  // UI state dari ModulePageCRUDContext
   const { isSidebarOpen, toggleSidebar, expandedItems, toggleExpand } =
-    useModulePagesContext()
+    useModulePageCRUDContext()
 
   return (
     <div

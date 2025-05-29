@@ -1,5 +1,9 @@
 'use client'
 import '@/styles/tiptap.css'
+import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
+import { StandardEditorContent } from '../types'
+
+//components implementasion
 import { cn } from '@/lib/utils'
 import { ImageExtension } from '@/features/manage-module/components/ModulePageEditor/extension/Image'
 import { ImagePlaceholder } from '@/features/manage-module/components/ModulePageEditor/extension/ImagePlaceholder'
@@ -31,7 +35,6 @@ import {
 } from '@/components/ui/tooltip'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Button } from '@/components/ui/button'
-import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
 
 // Import RichTextEditorWithAutosave dari file terpisah
 import { RichTextEditorWithAutosave } from './RichTextEditorWithAutosave'
@@ -89,8 +92,8 @@ const extensions = [
 
 export interface RichTextEditorProps {
   className?: string
-  onChange?: (content: object, pageId?: string) => void
   initialContent?: string
+  onChange?: (content: object) => void
   pageId?: string
   autosave?: boolean
   onEditorReady?: (editor: Editor | null) => void
@@ -99,47 +102,65 @@ export interface RichTextEditorProps {
 // Komponen utama RichTextEditor
 export function RichTextEditor({
   className,
-  onChange,
   initialContent,
+  onChange,
+  pageId: propPageId,
   autosave = false,
-  pageId,
   onEditorReady,
 }: RichTextEditorProps) {
-  // Gunakan context untuk mengakses handler
-  const { handleEditorChange } = useModulePageCRUDContext()
+  // Gunakan context untuk mengakses data dan handler
+  const { activePage, handleEditorChange, getParsedEditorContent } =
+    useModulePageCRUDContext()
+
+  // Dapatkan pageId dari activePage atau dari props
+  const pageId = propPageId || activePage?.id
 
   // State untuk menyimpan instance editor
   const [editor, setEditor] = useState<Editor | null>(null)
 
+  // Dapatkan konten yang sudah diparse dari context atau props
+  const parsedContent = initialContent
+    ? typeof initialContent === 'string'
+      ? JSON.parse(initialContent)
+      : initialContent
+    : activePage
+      ? getParsedEditorContent(activePage)
+      : defaultContentJSON
+
   // Gunakan JSON.parse untuk mendapatkan konten yang sudah diparse oleh komponen parent
   const getParsedContent = useCallback(() => {
     try {
-      // Jika initialContent tidak ada, gunakan defaultContentJSON
-      if (!initialContent) {
-        console.log(
-          'RichTextEditor: initialContent kosong, menggunakan defaultContentJSON'
-        )
-        return defaultContentJSON
+      if (typeof parsedContent === 'string') {
+        return JSON.parse(parsedContent)
       }
-
-      // Gunakan JSON.parse untuk string, atau gunakan langsung jika object
-      try {
-        if (typeof initialContent === 'string') {
-          console.log('RichTextEditor: parsing JSON string dari parent')
-          return JSON.parse(initialContent)
-        }
-
-        console.log('RichTextEditor: menggunakan object langsung dari parent')
-        return initialContent
-      } catch (error) {
-        console.error('RichTextEditor: error parsing JSON:', error)
-        return defaultContentJSON
-      }
+      return parsedContent
     } catch (error) {
       console.error('RichTextEditor: error in getParsedContent:', error)
       return defaultContentJSON
     }
-  }, [initialContent])
+  }, [parsedContent])
+
+  // Handle onChange events dari editor - wrapped in useCallback
+  const handleChange = useCallback(
+    (editorContent: object) => {
+      // Pastikan konten sesuai format StandardEditorContent dengan type assertion
+      const typedContent = {
+        type: 'doc',
+        content: (editorContent as Record<string, unknown>)?.content || [],
+      } as StandardEditorContent
+
+      // Panggil onChange prop jika disediakan
+      if (onChange) {
+        onChange(editorContent)
+      }
+
+      // Gunakan handleEditorChange dari context untuk autosave
+      if (pageId) {
+        handleEditorChange(typedContent, pageId)
+      }
+    },
+    [onChange, handleEditorChange, pageId]
+  )
 
   // Initialize editor when component mounts
   useEffect(() => {
@@ -154,13 +175,11 @@ export function RichTextEditor({
 
   // Perbarui editor content saat initialContent berubah
   useEffect(() => {
-    console.log('RichTextEditor: initialContent berubah')
-    if (editor && initialContent) {
+    if (editor && parsedContent) {
       try {
-        const parsedContent = getParsedContent()
-        if (parsedContent) {
-          console.log('RichTextEditor: memperbaharui content editor')
-          editor.commands.setContent(parsedContent)
+        const content = getParsedContent()
+        if (content) {
+          editor.commands.setContent(content)
         }
       } catch (error) {
         console.error(
@@ -169,19 +188,7 @@ export function RichTextEditor({
         )
       }
     }
-  }, [editor, initialContent, getParsedContent])
-
-  // Callback untuk change events
-  const handleUpdate = useCallback(() => {
-    if (editor && onChange) {
-      try {
-        const json = editor.getJSON()
-        onChange(json, pageId)
-      } catch (error) {
-        console.error('RichTextEditor: error di handleUpdate:', error)
-      }
-    }
-  }, [editor, onChange, pageId])
+  }, [editor, parsedContent, getParsedContent])
 
   // Buat editor instance
   const createEditor = useCallback(() => {
@@ -192,13 +199,16 @@ export function RichTextEditor({
       const parsedContent = getParsedContent()
       console.log('RichTextEditor: parsedContent for editor:', parsedContent)
 
-      // @ts-expect-error - Ada masalah tipe dengan extensions, tapi ini masih berfungsi
+      // Gunakan type assertion untuk mengatasi masalah tipe dengan extensions
       const newEditor = new Editor({
+        // @ts-expect-error - Masalah tipe antara library yang berbeda versi
         extensions,
         content: parsedContent,
         autofocus: false,
         editable: true,
-        onUpdate: handleUpdate,
+        onUpdate: ({ editor }) => {
+          handleChange(editor.getJSON())
+        },
       })
 
       // Set editor instance ke state
@@ -211,7 +221,7 @@ export function RichTextEditor({
     } catch (error) {
       console.error('RichTextEditor: error creating editor:', error)
     }
-  }, [editor, getParsedContent, handleUpdate, onEditorReady])
+  }, [editor, getParsedContent, handleChange, onEditorReady])
 
   // Create editor on mount
   useEffect(() => {
@@ -229,14 +239,14 @@ export function RichTextEditor({
   if (pageId && autosave) {
     return (
       <RichTextEditorWithAutosave
-        pageId={pageId}
         className={className}
-        initialContent={initialContent}
-        onChange={(content) => {
-          // Gunakan handler dari context untuk mengelola perubahan konten
-          if (onChange) onChange(content, pageId)
-          if (pageId) handleEditorChange(content, pageId)
-        }}
+        initialContent={
+          typeof parsedContent === 'string'
+            ? parsedContent
+            : JSON.stringify(parsedContent)
+        }
+        onChange={onChange}
+        pageId={pageId}
       />
     )
   }

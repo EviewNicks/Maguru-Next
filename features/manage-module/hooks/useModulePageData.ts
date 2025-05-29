@@ -5,10 +5,11 @@ import {
   UpdateModulePageInput,
   ModulePage,
   StandardEditorContent,
-  IModulePageAdapter,
+  ModulePageStatus,
 } from '../types'
 import { logger } from '../services/logger'
 import { toast } from 'sonner'
+import { ensureValidEditorContent } from '../lib/dataFormats'
 
 // Konstanta untuk hook name (logging)
 const HOOK = 'useModulePageData'
@@ -17,7 +18,7 @@ const HOOK = 'useModulePageData'
  * Custom hook untuk mengelola data module page dengan React Query
  * Hook ini menyediakan fungsi-fungsi untuk query dan mutasi data sebagai satu-satunya
  * entry point ke modulePageAdapter
- * 
+ *
  * @param moduleId - ID modul yang akan diakses datanya
  * @returns Object dengan queries dan mutations untuk mengelola data halaman modul
  */
@@ -35,16 +36,17 @@ export const useModulePageData = (moduleId: string) => {
   // Query untuk mendapatkan semua halaman dalam modul (kompatibel dengan useModulePageQuery)
   const getAllPages = useQuery({
     queryKey,
-    queryFn: () => modulePageAdapter.getPages(moduleId).then(pages => ({
-      success: true,
-      data: pages,
-      meta: {
-        currentPage: 1,
-        pageSize: pages.length,
-        totalItems: pages.length,
-        totalPages: 1,
-      }
-    })),
+    queryFn: () =>
+      modulePageAdapter.getPages(moduleId).then((pages) => ({
+        success: true,
+        data: pages,
+        meta: {
+          currentPage: 1,
+          pageSize: pages.length,
+          totalItems: pages.length,
+          totalPages: 1,
+        },
+      })),
     staleTime: 5 * 60 * 1000, // 5 menit
     gcTime: 10 * 60 * 1000, // 10 menit
     refetchOnWindowFocus: false,
@@ -60,6 +62,28 @@ export const useModulePageData = (moduleId: string) => {
     } catch (error) {
       logger.error(HOOK, `Error fetching page: ${pageId}`, error)
       return null
+    }
+  }
+
+  /**
+   * Mendapatkan konten yang telah diparse untuk editor
+   * @param page - Halaman yang berisi konten
+   * @returns Konten yang telah diparse dalam format JSON
+   */
+  const getParsedEditorContent = (
+    page: ModulePage | null
+  ): StandardEditorContent => {
+    try {
+      logger.debug(
+        HOOK,
+        `Parsing editor content for page ${page?.id || 'null'}`
+      )
+      // Gunakan modulePageAdapter yang sudah menggunakan ensureValidEditorContent
+      return modulePageAdapter.getParsedEditorContent(page)
+    } catch (error) {
+      logger.error(HOOK, 'Error parsing editor content', error)
+      // Kembalikan konten default jika terjadi error
+      return ensureValidEditorContent(null)
     }
   }
 
@@ -90,8 +114,18 @@ export const useModulePageData = (moduleId: string) => {
 
   // Mutation untuk membuat halaman baru
   const createPageMutation = useMutation({
-    mutationFn: (data: CreateModulePageInput) =>
-      modulePageAdapter.createPage(data),
+    mutationFn: (data: CreateModulePageInput) => {
+      // Pastikan content valid sebelum dikirim ke adapter
+      if (data.content) {
+        const validContent = ensureValidEditorContent(data.content)
+        // Gunakan type assertion untuk mengatasi ketidakcocokan tipe
+        return modulePageAdapter.createPage({
+          ...data,
+          content: validContent as unknown as CreateModulePageInput['content'],
+        })
+      }
+      return modulePageAdapter.createPage(data)
+    },
     onSuccess: () => {
       // Invalidate query untuk memperbarui daftar halaman
       queryClient.invalidateQueries({ queryKey })
@@ -111,11 +145,25 @@ export const useModulePageData = (moduleId: string) => {
     }: {
       pageId: string
       data: UpdateModulePageInput
-    }) => modulePageAdapter.updatePage(pageId, data),
+    }) => {
+      // Pastikan content valid sebelum dikirim ke adapter
+      if (data.content) {
+        const validContent = ensureValidEditorContent(data.content)
+        // Gunakan type assertion untuk mengatasi ketidakcocokan tipe
+        return modulePageAdapter.updatePage(pageId, {
+          ...data,
+          content: validContent as unknown as UpdateModulePageInput['content'],
+        })
+      }
+      return modulePageAdapter.updatePage(pageId, data)
+    },
     onSuccess: (data, variables) => {
       if (data) {
         // Update data di cache
-        queryClient.setQueryData(['modulePage', variables.pageId], data)
+        queryClient.setQueryData(['modulePage', variables.pageId], {
+          success: true,
+          data,
+        })
 
         // Invalidate query untuk memperbarui daftar halaman
         queryClient.invalidateQueries({ queryKey })
@@ -136,11 +184,18 @@ export const useModulePageData = (moduleId: string) => {
     }: {
       pageId: string
       content: StandardEditorContent
-    }) => modulePageAdapter.saveEditorContent(pageId, content),
+    }) => {
+      // Pastikan content valid sebelum dikirim ke adapter
+      const validContent = ensureValidEditorContent(content)
+      return modulePageAdapter.saveEditorContent(pageId, validContent)
+    },
     onSuccess: (data, variables) => {
       if (data) {
         // Update data di cache
-        queryClient.setQueryData(['modulePage', variables.pageId], data)
+        queryClient.setQueryData(['modulePage', variables.pageId], {
+          success: true,
+          data,
+        })
 
         // Invalidate query untuk memperbarui daftar halaman
         queryClient.invalidateQueries({ queryKey })
@@ -181,33 +236,66 @@ export const useModulePageData = (moduleId: string) => {
     },
   })
 
+  // Mutation untuk mengubah status halaman
+  const updatePageStatusMutation = useMutation({
+    mutationFn: ({
+      pageId,
+      status,
+    }: {
+      pageId: string
+      status: ModulePageStatus
+    }) => modulePageAdapter.updatePageStatus(pageId, status),
+    onSuccess: (data, variables) => {
+      if (data) {
+        // Update data di cache
+        queryClient.setQueryData(['modulePage', variables.pageId], {
+          success: true,
+          data,
+        })
+
+        // Invalidate query untuk memperbarui daftar halaman
+        queryClient.invalidateQueries({ queryKey })
+
+        // Tampilkan toast dengan pesan berbeda berdasarkan status
+        const statusMessages = {
+          [ModulePageStatus.DRAFT]: 'Halaman dikembalikan ke draft',
+          [ModulePageStatus.PUBLISHED]: 'Halaman berhasil dipublikasikan',
+          [ModulePageStatus.ARCHIVED]: 'Halaman berhasil diarsipkan',
+        }
+        toast.success(
+          statusMessages[variables.status] ||
+            'Status halaman berhasil diperbarui'
+        )
+      }
+    },
+    onError: (error) => {
+      logger.error(HOOK, 'Error updating page status', error)
+      toast.error('Gagal mengubah status halaman. Silakan coba lagi.')
+    },
+  })
+
   return {
     // Queries
-    pages: pagesQuery.data || [],
-    isPagesLoading: pagesQuery.isLoading,
-    isPagesError: pagesQuery.isError,
-    pagesError: pagesQuery.error,
-    refetchPages: pagesQuery.refetch,
-    getPage,
+    pagesQuery,
     getAllPages,
+    getPage,
+    getParsedEditorContent,
     getAdjacentPages,
 
     // Mutations
-    createPage: createPageMutation.mutateAsync,
-    updatePage: (pageId: string, data: UpdateModulePageInput) =>
-      updatePageMutation.mutateAsync({ pageId, data }),
-    savePage: (pageId: string, data: UpdateModulePageInput) =>
-      updatePageMutation.mutateAsync({ pageId, data }),
-    saveEditorContent: (pageId: string, content: StandardEditorContent) =>
-      saveEditorContentMutation.mutateAsync({ pageId, content }),
-    deletePage: deletePageMutation.mutateAsync,
-    reorderPages: reorderPagesMutation.mutateAsync,
+    createPage: createPageMutation.mutate,
+    updatePage: updatePageMutation.mutate,
+    saveEditorContent: saveEditorContentMutation.mutate,
+    deletePage: deletePageMutation.mutate,
+    reorderPages: reorderPagesMutation.mutate,
+    updatePageStatus: updatePageStatusMutation.mutate,
 
-    // Mutation states
-    isCreatePageLoading: createPageMutation.isPending,
-    isUpdatePageLoading: updatePageMutation.isPending,
-    isSaveEditorContentLoading: saveEditorContentMutation.isPending,
-    isDeletePageLoading: deletePageMutation.isPending,
-    isReorderPagesLoading: reorderPagesMutation.isPending,
+    // Loading states
+    isCreating: createPageMutation.isPending,
+    isUpdating: updatePageMutation.isPending,
+    isSaving: saveEditorContentMutation.isPending,
+    isDeleting: deletePageMutation.isPending,
+    isReordering: reorderPagesMutation.isPending,
+    isUpdatingStatus: updatePageStatusMutation.isPending,
   }
 }

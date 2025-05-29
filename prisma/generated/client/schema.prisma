@@ -10,37 +10,19 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum UserRole {
-  mahasiswa
-  admin
-}
-
-enum UserStatus {
-  active
-  inactive
-  pending
-}
-
 model User {
   id          String     @id @default(cuid())
   clerkUserId String     @unique
   email       String     @unique
   name        String?
-  role        UserRole   @default(mahasiswa)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+  role        UserRole   @default(mahasiswa)
   status      UserStatus @default(active)
 
-  // Tambahkan indeks untuk kolom yang sering digunakan dalam filter
-  @@index([role, status]) // Indeks komposit untuk query yang sering memfilter berdasarkan role dan status
-  @@index([createdAt]) // Indeks untuk sorting dan filter berdasarkan tanggal
+  @@index([role, status])
+  @@index([createdAt])
   @@map("users")
-}
-
-enum ModuleStatus {
-  DRAFT
-  ACTIVE
-  ARCHIVED
 }
 
 model Module {
@@ -52,8 +34,7 @@ model Module {
   updatedAt   DateTime     @updatedAt
   createdBy   String
   updatedBy   String
-
-  pages ModulePage[] // Relasi balik ke ModulePage
+  pages       ModulePage[]
 
   @@index([status])
   @@index([title])
@@ -64,16 +45,34 @@ model ModulePage {
   id        String   @id @default(uuid())
   moduleId  String   @map("module_id")
   order     Int
-  type      String // "teori" atau "kode"
-  content   String // HTML untuk teori, snippet kode untuk kode
-  language  String? // Hanya diisi jika type = "kode" (contoh: "python", "javascript")
+  type      String
+  content   Json
+  language  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  version   Int      @default(1) // Untuk optimistic locking
-
-  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  version   Int      @default(1)
+  title     String
+  module    Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   @@unique([moduleId, order])
   @@index([moduleId, order])
+  @@index([moduleId, type])
   @@map("module_pages")
+}
+
+enum UserRole {
+  mahasiswa
+  admin
+}
+
+enum UserStatus {
+  active
+  inactive
+  pending
+}
+
+enum ModuleStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
 }
