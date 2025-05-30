@@ -21,6 +21,8 @@ import { logger } from '../services/logger'
 import { useRouter } from 'next/navigation'
 import debounce from 'lodash/debounce'
 import { debugDataFlow } from '../utils/debugUtils'
+import { useQueryClient } from '@tanstack/react-query'
+import { modulePageAdapter } from '../adapters/modulePageAdapter'
 
 // Konstanta untuk context name (logging)
 const CONTEXT = 'ModulePageCRUDContext'
@@ -126,6 +128,7 @@ export function ModulePageCRUDProvider({
   mockValues = {}, // Default ke object kosong
 }: ModulePageCRUDProviderProps) {
   const router = useRouter()
+  const queryClient = useQueryClient()
 
   // State untuk halaman aktif
   const [activePage, setActivePage] = useState<ModulePage | null>(
@@ -216,10 +219,20 @@ export function ModulePageCRUDProvider({
   } = useModulePageData(moduleId)
 
   // Ekstrak data dari pagesQuery
-  const pages = pagesQuery.data || []
+  const pages = Array.isArray(pagesQuery.data) ? pagesQuery.data : []
   const isLoading = pagesQuery.isLoading
   const error = pagesQuery.error
   const refetch = pagesQuery.refetch
+
+  // Debug data flow ketika pagesQuery berubah
+  useEffect(() => {
+    if (pagesQuery.data !== undefined) {
+      logger.debug(
+        CONTEXT,
+        `pagesQuery.data is type: ${typeof pagesQuery.data}, isArray: ${Array.isArray(pagesQuery.data)}`
+      )
+    }
+  }, [pagesQuery.data])
 
   // Debug data flow ketika pages berubah
   useEffect(() => {
@@ -614,45 +627,67 @@ export function ModulePageCRUDProvider({
         },
       }
 
-      // Create new page via API
-      const result = await createPageOperation(newPageData)
+      logger.info(CONTEXT, `Creating new page for moduleId: ${moduleId}`)
 
-      // Tunggu hingga query diperbarui
-      await refetch()
+      // Create the page manually with the adapter to bypass the void type issue
+      let createdPage: ModulePage | null = null
 
-      // Cari halaman baru yang dibuat (biasanya yang terakhir)
-      const newPages = pagesQuery.data || []
-      const newPage =
-        newPages.find((p) => p.title === defaultTitle) ||
-        newPages[newPages.length - 1] ||
-        result
-
-      // Set halaman baru sebagai active page jika ditemukan
-      if (newPage) {
-        // Perlakukan hasil createPage sebagai ModulePage langsung
-        setActivePage(newPage)
-
-        // Navigasi ke halaman baru
-        router.push(`/manage-module/${moduleId}?pageId=${newPage.id}`)
-
-        return newPage
+      try {
+        // Call modulePageAdapter.createPage directly to get properly typed result
+        createdPage = await modulePageAdapter.createPage(newPageData)
+        logger.info(
+          CONTEXT,
+          `Successfully created page with id: ${createdPage.id}`
+        )
+      } catch (error) {
+        logger.error(CONTEXT, `Error creating page: ${error}`)
+        throw error
       }
 
-      return null
+      // Ensure the query cache is updated
+      if (queryClient) {
+        // Invalidate the query to trigger a refetch
+        await queryClient.invalidateQueries({
+          queryKey: ['modulePages', moduleId],
+        })
+      }
+
+      // Wait for refetch to complete
+      await refetch()
+
+      // If somehow we didn't get a valid page, try to find it in the cache
+      if (!createdPage) {
+        const latestPagesData =
+          queryClient.getQueryData<ModulePage[]>(['modulePages', moduleId]) ||
+          []
+
+        // Find the newly created page (should be the last one or match the title)
+        createdPage =
+          latestPagesData.find((p) => p.title === defaultTitle) ||
+          latestPagesData[latestPagesData.length - 1] ||
+          null
+
+        if (!createdPage) {
+          logger.error(CONTEXT, 'Failed to find newly created page in cache')
+          throw new Error('Halaman baru tidak ditemukan setelah dibuat')
+        }
+
+        logger.info(CONTEXT, `Found page in cache with id: ${createdPage.id}`)
+      }
+
+      // Set the newly created page as active
+      setActivePage(createdPage)
+
+      // Navigate to the new page
+      router.push(`/manage-module/${moduleId}?pageId=${createdPage.id}`)
+
+      return createdPage
     } catch (error) {
       logger.error(CONTEXT, 'Error creating new page', error)
       showErrorNotification(error)
       throw error
     }
-  }, [
-    moduleId,
-    pages,
-    createPageOperation,
-    pagesQuery.data,
-    refetch,
-    setActivePage,
-    router,
-  ])
+  }, [moduleId, pages, refetch, setActivePage, router, queryClient])
 
   // Wrapper untuk savePage agar sesuai dengan tipe yang diharapkan di interface
   const savePage = useCallback(

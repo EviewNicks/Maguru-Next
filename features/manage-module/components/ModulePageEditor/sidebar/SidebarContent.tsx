@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import SidebarItem from './SidebarItem'
 import SidebarNestedItem from './SIdebarNestedItem'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { DeletePageConfirmation } from '../dialogs/DeletePageConfirmation'
 import {
   DropdownMenu,
@@ -53,6 +53,10 @@ export default function SidebarContent({
     id: string
     title: string
   } | null>(null)
+  const [forceUpdateCounter, setForceUpdateCounter] = useState(0)
+  const [newlyCreatedPage, setNewlyCreatedPage] = useState<ModulePage | null>(
+    null
+  )
 
   const {
     handleSelectPage: contextHandleSelectPage,
@@ -70,10 +74,42 @@ export default function SidebarContent({
     }
   }, [])
 
-  // Filter pages based on search term
-  const filteredPages = pages.filter((page) =>
-    page.title.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Filter pages based on search term using useMemo with forceUpdateCounter dependency
+  const filteredPages = useMemo(() => {
+    console.log(
+      `[SidebarContent] Recalculating filteredPages, pages count: ${Array.isArray(pages) ? pages.length : 'undefined'}, force update: ${forceUpdateCounter}`
+    )
+
+    // Pastikan array halaman valid
+    const pagesArray = Array.isArray(pages) ? [...pages] : []
+
+    if (pagesArray.length === 0) {
+      console.log(
+        '[SidebarContent] Warning: No pages available or pages is not an array'
+      )
+    }
+
+    // Tambahkan halaman baru jika ada dan belum ada dalam array
+    if (newlyCreatedPage) {
+      const pageExists = pagesArray.some(
+        (page) => page.id === newlyCreatedPage.id
+      )
+      if (!pageExists) {
+        console.log(
+          `[SidebarContent] Adding newly created page to list: ${newlyCreatedPage.title}`
+        )
+        pagesArray.push(newlyCreatedPage)
+      }
+    }
+
+    // Filter berdasarkan search term
+    return pagesArray.filter(
+      (page) =>
+        page &&
+        page.title &&
+        page.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [pages, searchTerm, forceUpdateCounter, newlyCreatedPage])
 
   // Debug data flow when pages change
   useEffect(() => {
@@ -97,6 +133,28 @@ export default function SidebarContent({
     }
   }, [pages, error])
 
+  // Tambahkan debugging untuk memahami data yang ada
+  useEffect(() => {
+    if (Array.isArray(pages)) {
+      console.log(`[SidebarContent] Data loaded - Pages count: ${pages.length}`)
+      if (pages.length > 0 && pages[0]) {
+        console.log(
+          `[SidebarContent] First page title: ${pages[0].title || 'Untitled'}`
+        )
+        console.log(
+          `[SidebarContent] First page status: ${pages[0].status || 'Unknown'}`
+        )
+      }
+    } else {
+      console.log(
+        `[SidebarContent] Data loaded - Pages is not an array: ${typeof pages}`
+      )
+    }
+    if (error) {
+      console.error(`[SidebarContent] Error loading pages:`, error)
+    }
+  }, [pages, error])
+
   // Highlight new item for 2 seconds
   useEffect(() => {
     if (newItemId) {
@@ -111,6 +169,39 @@ export default function SidebarContent({
   useEffect(() => {
     console.log(`[SidebarContent] Received ${pages.length} pages`)
   }, [pages])
+
+  // Add effect to log pages when they change
+  useEffect(() => {
+    if (Array.isArray(pages)) {
+      console.log(`[SidebarContent] Received ${pages.length} pages`)
+    } else {
+      console.log(
+        `[SidebarContent] Received pages but it's not an array: ${typeof pages}`
+      )
+    }
+  }, [pages])
+
+  // Add effect to log pages when forceUpdateCounter changes
+  useEffect(() => {
+    if (forceUpdateCounter > 0) {
+      console.log(
+        `[SidebarContent] Force update triggered (${forceUpdateCounter}), pages count: ${pages.length}`
+      )
+    }
+  }, [forceUpdateCounter, pages.length])
+
+  // Clear newlyCreatedPage when it's found in the pages array
+  useEffect(() => {
+    if (newlyCreatedPage && Array.isArray(pages)) {
+      const pageExists = pages.some((page) => page.id === newlyCreatedPage.id)
+      if (pageExists) {
+        console.log(
+          `[SidebarContent] Newly created page found in pages array, clearing local state`
+        )
+        setNewlyCreatedPage(null)
+      }
+    }
+  }, [pages, newlyCreatedPage])
 
   // Handle opening delete dialog
   const handleOpenDeleteDialog = (page: ModulePage) => {
@@ -146,7 +237,34 @@ export default function SidebarContent({
         // Tandai halaman baru untuk highlighting
         setNewItemId(newPage.id)
 
+        // Store the newly created page locally
+        setNewlyCreatedPage(newPage)
+
+        // Pastikan memiliki moduleId yang valid
+        if (newPage.moduleId) {
+          // Log untuk debug
+          console.log(
+            `[SidebarContent] Created page with moduleId: ${newPage.moduleId}, id: ${newPage.id}`
+          )
+
+          // Pastikan "Module Content" terbuka agar halaman baru terlihat
+          if (!expandedItems['ModuleContent']) {
+            toggleExpand('ModuleContent')
+          }
+        }
+
+        // Force component to re-render after refetch
+        setForceUpdateCounter((prev) => prev + 1)
+
+        // Debug to verify pages are updated
+        console.log(
+          `[SidebarContent] After refetch - Pages count: ${pages.length}`
+        )
+
         toast.success('Halaman baru berhasil dibuat')
+
+        // Secara otomatis pilih halaman baru
+        contextHandleSelectPage(newPage)
       }
     } catch (error) {
       console.error('Error creating new page:', error)
@@ -158,19 +276,9 @@ export default function SidebarContent({
         errorMessage = error.message || errorMessage
       }
 
-      toast.error(errorMessage, {
-        action: {
-          label: 'Coba Lagi',
-          onClick: () => handleCreatePage(),
-        },
-        position: 'top-center',
-        duration: 5000,
-      })
+      toast.error(errorMessage)
     } finally {
-      // Add small delay before turning off loading state for better UX
-      setTimeout(() => {
-        setIsCreating(false)
-      }, 300)
+      setIsCreating(false)
     }
   }
 

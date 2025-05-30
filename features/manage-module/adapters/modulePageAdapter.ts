@@ -135,6 +135,15 @@ export const modulePageAdapter: IModulePageAdapter = {
     skipCache: boolean = false
   ): Promise<ModulePage[]> => {
     try {
+      // Tambahkan validasi untuk moduleId undefined atau kosong
+      if (!moduleId || moduleId === 'undefined') {
+        logger.error(
+          ADAPTER,
+          `Invalid moduleId: ${moduleId} - skipping API call`
+        )
+        return [] // Return array kosong daripada melakukan panggilan API yang tidak valid
+      }
+
       // Validasi input
       modulePageAdapter.validateModuleId(moduleId)
 
@@ -165,6 +174,15 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       const result = (await response.json()) as ApiListResponse<ModulePage>
 
+      // Ensure data is an array
+      if (!Array.isArray(result.data)) {
+        logger.error(
+          ADAPTER,
+          `API returned non-array data for module ${moduleId}: ${typeof result.data}`
+        )
+        return [] // Return empty array for consistency
+      }
+
       // Simpan ke cache
       modulePageAdapter._cache.pages[moduleId] = {
         data: result.data,
@@ -178,7 +196,8 @@ export const modulePageAdapter: IModulePageAdapter = {
         `Error fetching pages for module ${moduleId}`,
         error
       )
-      throw error
+      // Return empty array on error to ensure consistent return type
+      return []
     }
   },
 

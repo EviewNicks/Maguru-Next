@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
+import { useEffect } from 'react'
 
 export default function ModulePageFooterNav() {
   // Gunakan context untuk mengakses state dan handlers
@@ -14,11 +15,21 @@ export default function ModulePageFooterNav() {
     isNavigating,
   } = useModulePageCRUDContext()
 
+  // Debugging effect
+  useEffect(() => {
+    if (!Array.isArray(pages)) {
+      console.warn('[ModulePageFooterNav] pages is not an array:', typeof pages)
+    }
+  }, [pages])
+
+  // Ensure pages is an array
+  const pagesArray = Array.isArray(pages) ? pages : []
+
   // Hitung currentPage dan totalPages
   const currentPage = activePage
-    ? pages.findIndex((p) => p.id === activePage.id) + 1
+    ? pagesArray.findIndex((p) => p.id === activePage.id) + 1
     : 0
-  const totalPages = pages.length
+  const totalPages = pagesArray.length
 
   return (
     <div

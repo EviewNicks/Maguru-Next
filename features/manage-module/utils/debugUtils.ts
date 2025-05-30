@@ -100,6 +100,11 @@ export function analyzePages(pages: ModulePage[]): {
  * @param pages Data halaman
  */
 export function debugDataFlow(source: string, pages: ModulePage[]): void {
+  if (!Array.isArray(pages)) {
+    console.log(`[${source}] Data is not an array: ${typeof pages}`)
+    return
+  }
+
   const analysis = analyzePages(pages)
 
   debugLog(

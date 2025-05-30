@@ -29,7 +29,23 @@ export const useModulePageData = (moduleId: string) => {
   // Query untuk mendapatkan semua halaman dari modul
   const pagesQuery = useQuery({
     queryKey,
-    queryFn: () => modulePageAdapter.getPages(moduleId),
+    queryFn: async () => {
+      try {
+        const pages = await modulePageAdapter.getPages(moduleId)
+        // Ensure we return an array
+        if (!Array.isArray(pages)) {
+          logger.error(
+            HOOK,
+            `getPages returned non-array data: ${typeof pages}`
+          )
+          return []
+        }
+        return pages
+      } catch (error) {
+        logger.error(HOOK, `Error fetching pages: ${error}`)
+        return []
+      }
+    },
     staleTime: 60 * 1000, // 1 menit
   })
 

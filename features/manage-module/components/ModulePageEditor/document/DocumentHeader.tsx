@@ -47,7 +47,8 @@ export default function DocumentHeader({
     setActivePage,
     createPage,
     deletePage,
-    savePage,
+
+    savePage, // Digunakan di handleCreate dan handleDeleteConfirm tapi tidak di useEffect
     saveStatus: contextSaveStatus,
   } = useModulePageCRUDContext()
 
@@ -175,6 +176,9 @@ export default function DocumentHeader({
       return
     }
 
+    // NONAKTIFKAN AUTO-SAVE UNTUK MENCEGAH LOOP API
+    // Komentar kode di bawah ini untuk menonaktifkan auto-save judul
+    /*
     // Fungsi untuk menyimpan judul
     const saveTitle = async () => {
       // Jika sedang dalam proses saving, jangan kirim request baru
@@ -222,7 +226,14 @@ export default function DocumentHeader({
 
     // Jalankan fungsi save
     saveTitle()
-  }, [debouncedTitle, title, effectivePageId, savePage, titleSaveStatus])
+    */
+
+    // Hanya ubah status untuk UI tanpa melakukan API call
+    setTitleSaveStatus('unsaved')
+    console.log(
+      '[DocumentHeader] Auto-save dinonaktifkan untuk mencegah loop API'
+    )
+  }, [debouncedTitle, title, effectivePageId])
 
   // Render status save yang lebih informatif
   const renderSaveStatus = () => {

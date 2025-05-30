@@ -15,7 +15,7 @@ export default function ModulePageEditorPage() {
   const router = useRouter()
 
   // Mendapatkan moduleId dari URL parameters
-  const moduleId = params.moduleid as string
+  const moduleId = params.moduleId as string
 
   // Mendapatkan pageId dari parameters
   const pageId = (params.pageid as string) || undefined
@@ -48,7 +48,7 @@ export default function ModulePageEditorPage() {
   useEffect(() => {
     if (!pageId && pages.length > 0) {
       const firstPageId = pages[0].id
-      router.push(`/manage-module/${moduleId}/${firstPageId}`)
+      router.push(`/manage-module/${moduleId}?pageId=${firstPageId}`)
     }
   }, [moduleId, pageId, pages, router])
 
