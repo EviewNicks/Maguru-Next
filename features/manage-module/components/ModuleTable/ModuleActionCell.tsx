@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Module } from '@/features/manage-module/types'
-import { Edit, Trash2, FileText, BookOpen } from 'lucide-react'
+import { Edit, Trash2, BookOpen } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import ModuleFormModal from './ModuleFormModal'
 import {
@@ -50,8 +50,9 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
     try {
       await deleteModule(module.id)
       setIsDeleteModalOpen(false)
-    } catch (error) {
+    } catch (err) {
       // Error akan ditangani oleh context
+      console.error('Error saat menghapus modul:', err)
     } finally {
       setIsDeleting(false)
     }
@@ -59,7 +60,8 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
 
   // Navigasi ke halaman editor konten modul
   const handleManagePages = () => {
-    router.push(`/manage-module/pages/${module.id}`)
+    // Menggunakan format URL baru yang mengikuti pola path parameter
+    router.push(`/manage-module/${module.id}`)
   }
 
   return (

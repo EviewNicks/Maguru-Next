@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import ModulePageEditorPage from './page'
+import ModulePageEditorPage from './pages/page'
 import { useModulePageData } from '@/features/manage-module/hooks/useModulePageData'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 

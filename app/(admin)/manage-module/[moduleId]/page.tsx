@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useEffect } from 'react'
-import { useParams, useSearchParams, useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import ModulePageEditor from '@/features/manage-module/components/ModulePageEditor'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorBoundary } from '@/features/manage-module/components/ErrorBoundary'
@@ -12,14 +12,13 @@ import { useModulePageCRUDContext } from '@/features/manage-module/context/Modul
 
 export default function ModulePageEditorPage() {
   const params = useParams()
-  const searchParams = useSearchParams()
   const router = useRouter()
 
   // Mendapatkan moduleId dari URL parameters
-  const moduleId = params.moduleId as string
+  const moduleId = params.moduleid as string
 
-  // Mendapatkan pageId dari query parameters (jika ada)
-  const pageId = searchParams.get('pageId') || undefined
+  // Mendapatkan pageId dari parameters
+  const pageId = (params.pageid as string) || undefined
 
   // Gunakan context untuk mendapatkan data dan fungsi
   const { pages, getPageById } = useModulePageCRUDContext()
@@ -49,7 +48,7 @@ export default function ModulePageEditorPage() {
   useEffect(() => {
     if (!pageId && pages.length > 0) {
       const firstPageId = pages[0].id
-      router.push(`/manage-module/pages/${moduleId}?pageId=${firstPageId}`)
+      router.push(`/manage-module/${moduleId}/${firstPageId}`)
     }
   }, [moduleId, pageId, pages, router])
 

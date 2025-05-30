@@ -262,12 +262,12 @@ export function ModulePageCRUDProvider({
       // Update URL tanpa memanggil handleSelectPage yang mungkin memicu API calls
       if (
         typeof window !== 'undefined' &&
-        !window.location.href.includes(`pageId=${firstPage.id}`)
+        !window.location.href.includes(`/${firstPage.id}`)
       ) {
-        router.replace(
-          `/manage-module/pages/${moduleId}?pageId=${firstPage.id}`,
-          { scroll: false }
-        )
+        router.replace(`/manage-module/${moduleId}?pageId=${firstPage.id}`, {
+          scroll: false,
+        })
+        // /manage-module/pages/${moduleId}?pageId=${firstPage.id}`
       }
     }
   }, [activePage, pages, isLoading, moduleId, router, setActivePage])
@@ -415,8 +415,8 @@ export function ModulePageCRUDProvider({
       setIsNavigating(true)
       window.sessionStorage.setItem('isNavigating', 'true')
 
-      // Navigasi ke halaman baru
-      router.push(`/manage-module/pages/${moduleId}?pageId=${newPageId}`)
+      // Navigasi ke halaman baru dengan format path parameter sesuai App Router
+      router.push(`/manage-module/${moduleId}?pageId=${newPageId}`)
 
       // Hapus flag navigasi setelah navigasi selesai
       setTimeout(() => {
@@ -615,7 +615,7 @@ export function ModulePageCRUDProvider({
       }
 
       // Create new page via API
-      createPageOperation(newPageData)
+      const result = await createPageOperation(newPageData)
 
       // Tunggu hingga query diperbarui
       await refetch()
@@ -624,7 +624,8 @@ export function ModulePageCRUDProvider({
       const newPages = pagesQuery.data || []
       const newPage =
         newPages.find((p) => p.title === defaultTitle) ||
-        newPages[newPages.length - 1]
+        newPages[newPages.length - 1] ||
+        result
 
       // Set halaman baru sebagai active page jika ditemukan
       if (newPage) {
@@ -632,7 +633,7 @@ export function ModulePageCRUDProvider({
         setActivePage(newPage)
 
         // Navigasi ke halaman baru
-        router.push(`/manage-module/pages/${moduleId}?pageId=${newPage.id}`)
+        router.push(`/manage-module/${moduleId}?pageId=${newPage.id}`)
 
         return newPage
       }
