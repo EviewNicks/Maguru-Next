@@ -65,6 +65,8 @@ export default function SidebarContent({
     error,
     updatePageStatus,
     handleCreateNewPage,
+    refetch,
+    isLoading,
   } = useModulePageCRUDContext()
 
   // Set debug level to INFO in development
@@ -87,29 +89,60 @@ export default function SidebarContent({
       console.log(
         '[SidebarContent] Warning: No pages available or pages is not an array'
       )
+
+      // Jika pages kosong dan bukan karena loading, coba muat ulang data
+      if (!error && !isLoading && forceUpdateCounter > 0) {
+        console.log(
+          '[SidebarContent] Pages array is empty but not in loading state, triggering refetch'
+        )
+        setTimeout(() => {
+          refetch().then(() => {
+            console.log(
+              '[SidebarContent] Refetch completed after empty pages array'
+            )
+            setForceUpdateCounter((prev) => prev + 1)
+          })
+        }, 500)
+      }
     }
 
     // Tambahkan halaman baru jika ada dan belum ada dalam array
     if (newlyCreatedPage) {
-      const pageExists = pagesArray.some(
-        (page) => page.id === newlyCreatedPage.id
-      )
-      if (!pageExists) {
-        console.log(
-          `[SidebarContent] Adding newly created page to list: ${newlyCreatedPage.title}`
+      // Double check that newlyCreatedPage is valid
+      if (newlyCreatedPage && newlyCreatedPage.id) {
+        const pageExists = pagesArray.some(
+          (page) => page.id === newlyCreatedPage.id
         )
-        pagesArray.push(newlyCreatedPage)
+        if (!pageExists) {
+          console.log(
+            `[SidebarContent] Adding newly created page to list: ${newlyCreatedPage.title || 'Untitled'}`
+          )
+          pagesArray.push(newlyCreatedPage)
+        }
       }
     }
 
-    // Filter berdasarkan search term
-    return pagesArray.filter(
-      (page) =>
-        page &&
-        page.title &&
-        page.title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [pages, searchTerm, forceUpdateCounter, newlyCreatedPage])
+    try {
+      // Filter berdasarkan search term with error handling
+      return pagesArray.filter(
+        (page) =>
+          page &&
+          page.title &&
+          page.title.toLowerCase().includes((searchTerm || '').toLowerCase())
+      )
+    } catch (error) {
+      console.error('[SidebarContent] Error filtering pages:', error)
+      return pagesArray // Return unfiltered array on error
+    }
+  }, [
+    pages,
+    searchTerm,
+    forceUpdateCounter,
+    newlyCreatedPage,
+    error,
+    isLoading,
+    refetch,
+  ])
 
   // Debug data flow when pages change
   useEffect(() => {
@@ -167,13 +200,15 @@ export default function SidebarContent({
 
   // Add effect to log pages when they change
   useEffect(() => {
-    console.log(`[SidebarContent] Received ${pages.length} pages`)
-  }, [pages])
-
-  // Add effect to log pages when they change
-  useEffect(() => {
     if (Array.isArray(pages)) {
       console.log(`[SidebarContent] Received ${pages.length} pages`)
+
+      // Log pages IDs untuk debugging
+      if (pages.length > 0) {
+        console.log(
+          `[SidebarContent] Page IDs: ${pages.map((p) => p.id).join(', ')}`
+        )
+      }
     } else {
       console.log(
         `[SidebarContent] Received pages but it's not an array: ${typeof pages}`
@@ -203,6 +238,18 @@ export default function SidebarContent({
     }
   }, [pages, newlyCreatedPage])
 
+  // Add effect to auto-refetch if pages array is empty but not in loading state
+  useEffect(() => {
+    if (Array.isArray(pages) && pages.length === 0 && !isLoading && !error) {
+      console.log(
+        '[SidebarContent] Empty pages array detected, triggering refetch'
+      )
+      refetch().catch((err) =>
+        console.error('[SidebarContent] Refetch error:', err)
+      )
+    }
+  }, [pages, isLoading, error, refetch])
+
   // Handle opening delete dialog
   const handleOpenDeleteDialog = (page: ModulePage) => {
     setPageToDelete({
@@ -210,6 +257,24 @@ export default function SidebarContent({
       title: page.title || 'Untitled Page',
     })
     setDeleteDialogOpen(true)
+  }
+
+  // Force update helper function to pass to DeletePageConfirmation
+  const handleForceUpdate = () => {
+    console.log('[SidebarContent] Force updating after page deletion')
+
+    // Increment counter to trigger re-render
+    setForceUpdateCounter((prev) => prev + 1)
+
+    // Force a refetch to ensure we have latest data
+    refetch().catch((err) =>
+      console.error('[SidebarContent] Error during force refetch:', err)
+    )
+
+    // Ensure "ModuleContent" is expanded
+    if (!expandedItems['ModuleContent']) {
+      toggleExpand('ModuleContent')
+    }
   }
 
   // Handle status change
@@ -458,6 +523,7 @@ export default function SidebarContent({
           onOpenChange={setDeleteDialogOpen}
           pageId={pageToDelete.id}
           pageTitle={pageToDelete.title}
+          onForceUpdate={handleForceUpdate}
         />
       )}
     </div>

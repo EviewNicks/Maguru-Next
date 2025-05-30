@@ -317,21 +317,110 @@ export function ModulePageCRUDProvider({
   const deletePage = useCallback(
     async (pageId: string) => {
       try {
-        const result = await deletePageOperation(pageId)
+        // Store moduleId before deletion (needed for cache invalidation)
+        let pageModuleId = moduleId
+        const pageToDelete = pages.find((p) => p.id === pageId)
 
-        // Jika halaman yang dihapus adalah active page, reset ke null
-        if (activePage && activePage.id === pageId) {
-          setActivePage(null)
+        if (pageToDelete) {
+          pageModuleId = pageToDelete.moduleId || moduleId
+          logger.info(
+            CONTEXT,
+            `Deleting page ${pageId} from module ${pageModuleId}`
+          )
+        } else {
+          logger.warn(
+            CONTEXT,
+            `Page ${pageId} not found in current pages array, using current moduleId ${moduleId}`
+          )
         }
 
-        return result
+        // Call the delete operation - wrapped in try-catch since it might not return a value
+        try {
+          await deletePageOperation(pageId)
+
+          // If we get here, the deletion was successful (no error thrown)
+          // Jika halaman yang dihapus adalah active page, reset ke null dan navigasi ke halaman pertama
+          if (activePage && activePage.id === pageId) {
+            logger.info(
+              CONTEXT,
+              `Deleted page was the active page, resetting activePage`
+            )
+            setActivePage(null)
+
+            // Find available pages for navigation
+            const availablePages = pages.filter((p) => p.id !== pageId)
+            if (availablePages.length > 0) {
+              const firstAvailablePage = availablePages[0]
+              logger.info(
+                CONTEXT,
+                `Navigating to alternative page: ${firstAvailablePage.id}`
+              )
+              // Use router directly instead of handlePageChange to avoid circular dependency
+              router.push(
+                `/manage-module/${moduleId}?pageId=${firstAvailablePage.id}`
+              )
+            }
+          }
+
+          // Ensure the query cache is updated
+          if (queryClient && pageModuleId) {
+            // Langkah 1: Hapus page dari cache terlebih dahulu
+            logger.debug(CONTEXT, `Removing page ${pageId} from cache`)
+            queryClient.removeQueries({ queryKey: ['modulePage', pageId] })
+
+            // Langkah 2: Invalidate query untuk modul
+            logger.debug(
+              CONTEXT,
+              `Invalidating and refetching cache for module ${pageModuleId}`
+            )
+
+            // Invalidate dengan refetchType 'all' untuk memastikan data diambil ulang
+            await queryClient.invalidateQueries({
+              queryKey: ['modulePages', pageModuleId],
+              refetchType: 'all',
+            })
+
+            // Langkah 3: Hapus cache modulePages secara eksplisit
+            queryClient.removeQueries({
+              queryKey: ['modulePages', pageModuleId],
+              exact: false,
+            })
+
+            // Langkah 4: Force refetch
+            await queryClient.refetchQueries({
+              queryKey: ['modulePages', pageModuleId],
+              exact: true,
+              type: 'all',
+            })
+
+            // Langkah 5: Refetch semua query terkait modul
+            await queryClient.refetchQueries({
+              queryKey: ['modulePages'],
+              type: 'all',
+            })
+          }
+
+          // Return true to indicate success
+          return true
+        } catch (deleteError) {
+          logger.error(CONTEXT, `Failed to delete page ${pageId}`, deleteError)
+          return false
+        }
       } catch (error) {
-        logger.error(CONTEXT, 'Error deleting page', error)
+        logger.error(CONTEXT, 'Error in deletePage function', error)
         showErrorNotification(error)
         throw error
       }
     },
-    [deletePageOperation, activePage]
+    [
+      deletePageOperation,
+      activePage,
+      moduleId,
+      pages,
+      queryClient,
+      router,
+      setActivePage,
+    ]
   )
 
   const reorderPages = useCallback(

@@ -148,21 +148,32 @@ export const modulePageAdapter: IModulePageAdapter = {
       modulePageAdapter.validateModuleId(moduleId)
 
       // Cek cache jika skipCache=false
-      if (
+      const useCache =
         !skipCache &&
         modulePageAdapter._cache.pages[moduleId] &&
         Date.now() - modulePageAdapter._cache.pages[moduleId].timestamp <
           CACHE_EXPIRATION
-      ) {
+
+      if (useCache) {
         logger.debug(ADAPTER, `Using cached data for module ${moduleId}`)
         return modulePageAdapter._cache.pages[moduleId].data
       }
 
       logger.info(ADAPTER, `Fetching pages for module ${moduleId} via API`)
 
-      // Panggil API endpoint dengan parameter untuk menyertakan konten
+      // Gunakan parameter waktu untuk mencegah hasil dari cache browser
+      const timestamp = new Date().getTime()
+
+      // Panggil API endpoint dengan parameter untuk menyertakan konten dan timestamp untuk menghindari cache
       const response = await fetch(
-        `/api/module/${moduleId}/pages?includeContent=true`
+        `/api/module/${moduleId}/pages?includeContent=true&_t=${timestamp}`,
+        {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
+          },
+        }
       )
 
       if (!response.ok) {
@@ -530,7 +541,7 @@ export const modulePageAdapter: IModulePageAdapter = {
       modulePageAdapter.validatePageId(pageId)
 
       // Dapatkan halaman untuk moduleId sebelum dihapus
-      const page = await modulePageAdapter.getPage(pageId)
+      const page = await modulePageAdapter.getPage(pageId, true) // Skip cache
       const moduleId = page?.moduleId
 
       if (!moduleId) {
@@ -540,10 +551,23 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       logger.info(ADAPTER, `Deleting page ${pageId} via API`)
 
-      // Panggil API endpoint
-      const response = await fetch(`/api/module/${moduleId}/pages/${pageId}`, {
-        method: 'DELETE',
-      })
+      // Invalidate all caches first (pre-emptively)
+      modulePageAdapter.invalidatePageCache(pageId)
+      modulePageAdapter.invalidateModuleCache(moduleId)
+
+      // Panggil API endpoint dengan no-cache headers
+      const timestamp = new Date().getTime()
+      const response = await fetch(
+        `/api/module/${moduleId}/pages/${pageId}?_t=${timestamp}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+            Expires: '0',
+          },
+        }
+      )
 
       if (response.status === 404) {
         return false
@@ -556,10 +580,25 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       const result = await response.json()
 
-      if (result && moduleId) {
-        // Invalidate cache
+      // Invalidate caches again after successful deletion
+      if (result && result.success) {
+        logger.debug(
+          ADAPTER,
+          `Successfully deleted page ${pageId}, invalidating caches`
+        )
+
+        // Invalidate cache again to be sure
         modulePageAdapter.invalidatePageCache(pageId)
         modulePageAdapter.invalidateModuleCache(moduleId)
+
+        // Explicitly clear cache entries
+        if (modulePageAdapter._cache.page[pageId]) {
+          delete modulePageAdapter._cache.page[pageId]
+        }
+
+        if (modulePageAdapter._cache.pages[moduleId]) {
+          delete modulePageAdapter._cache.pages[moduleId]
+        }
       }
 
       return result.success || false
