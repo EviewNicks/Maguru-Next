@@ -8,13 +8,11 @@ import {
   Share2,
   CheckCircle,
   Clock,
-  Plus,
   Loader2,
   AlertCircle,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { useState, useEffect, useCallback } from 'react'
-import { useDebounce } from '../../../hooks/useDebounce'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   useModulePageCRUDContext,
   SaveStatus,
@@ -41,16 +39,14 @@ export default function DocumentHeader({
 }: DocumentHeaderProps) {
   // Mengambil data dan fungsi dari context
   const {
-    moduleId,
-    pages,
     activePage,
-    setActivePage,
-    createPage,
     deletePage,
-
-    savePage, // Digunakan di handleCreate dan handleDeleteConfirm tapi tidak di useEffect
     saveStatus: contextSaveStatus,
+    savePage,
   } = useModulePageCRUDContext()
+
+  // Ref untuk mendeteksi apakah perubahan judul sedang dalam proses penyimpanan
+  const isSavingRef = useRef(false)
 
   // Gunakan data dari context langsung
   const title = activePage?.title || 'Untitled Page'
@@ -60,12 +56,9 @@ export default function DocumentHeader({
   const [titleSaveStatus, setTitleSaveStatus] = useState<SaveStatus>(
     contextSaveStatus || 'saved'
   )
-  const [isCreating, setIsCreating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-
-  // Hook debounce untuk judul
-  const debouncedTitle = useDebounce<string>(localTitle, 1000)
+  const [isEditing, setIsEditing] = useState(false)
 
   // Gunakan pageId dari activePage context
   const effectivePageId = activePage ? activePage.id : undefined
@@ -75,7 +68,7 @@ export default function DocumentHeader({
     if (activePage && activePage.title !== localTitle) {
       setLocalTitle(activePage.title || '')
     }
-  }, [activePage, localTitle])
+  }, [activePage])
 
   // Sync save status dari context
   useEffect(() => {
@@ -83,45 +76,6 @@ export default function DocumentHeader({
       setTitleSaveStatus(contextSaveStatus)
     }
   }, [contextSaveStatus, titleSaveStatus])
-
-  // Handler untuk pembuatan halaman baru
-  const handleCreate = async () => {
-    try {
-      // Set status ke loading
-      setIsCreating(true)
-
-      // Membuat halaman baru dengan createPage dari context
-      const newPage = await createPage({
-        moduleId,
-        title: 'Halaman Baru',
-        type: 'content',
-        order: pages.length,
-        // Gunakan format content yang benar
-        content: {
-          type: 'doc' as const,
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: 'Konten halaman baru' }],
-            },
-          ],
-        },
-      })
-
-      // Setelah berhasil, set halaman baru sebagai halaman aktif
-      if (newPage && newPage.data) {
-        setActivePage(newPage.data)
-      }
-
-      // Tampilkan toast sukses
-      toast.success('Halaman baru berhasil dibuat')
-    } catch (error) {
-      console.error('Error creating new page:', error)
-      showErrorNotification(error)
-    } finally {
-      setIsCreating(false)
-    }
-  }
 
   // Handler untuk membuka dialog konfirmasi hapus
   const handleCloseDraft = () => {
@@ -150,90 +104,77 @@ export default function DocumentHeader({
     }
   }
 
-  // Handle title input change dengan validasi
+  // Handle title input change - hanya mengubah state lokal tanpa trigger save
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newTitle = e.target.value
       setLocalTitle(newTitle)
+      setIsEditing(true)
 
-      // Set status langsung ke unsaved untuk feedback instan
+      // Set status ke unsaved untuk feedback visual
       setTitleSaveStatus('unsaved')
     },
     []
   )
 
-  // Auto-save title when it changes (debounced) dengan validasi dan error handling yang lebih baik
-  useEffect(() => {
-    // Jika tidak ada pageId atau title sama dengan yang sebelumnya, skip
-    if (!effectivePageId || debouncedTitle === title) {
-      return
-    }
+  // Fungsi untuk menyimpan judul
+  const handleTitleSave = useCallback(async () => {
+    // Jika tidak ada pageId, tidak sedang dalam mode editing, atau sedang dalam proses saving, skip
+    if (!effectivePageId || !isEditing || isSavingRef.current) return
 
-    // Jika judul terlalu pendek, tampilkan error tapi jangan simpan
-    if (debouncedTitle.trim().length < 5) {
-      setTitleSaveStatus('error')
+    // Validasi judul
+    if (localTitle.trim().length < 5) {
       toast.error('Judul harus terdiri dari minimal 5 karakter')
+      setTitleSaveStatus('error')
       return
     }
 
-    // NONAKTIFKAN AUTO-SAVE UNTUK MENCEGAH LOOP API
-    // Komentar kode di bawah ini untuk menonaktifkan auto-save judul
-    /*
-    // Fungsi untuk menyimpan judul
-    const saveTitle = async () => {
-      // Jika sedang dalam proses saving, jangan kirim request baru
-      if (titleSaveStatus === 'saving') return
+    try {
+      // Set flag dan status
+      isSavingRef.current = true
+      setTitleSaveStatus('saving')
 
-      try {
-        setTitleSaveStatus('saving')
+      // Panggil savePage dari context
+      await savePage({
+        pageId: effectivePageId,
+        title: localTitle,
+      })
 
-        // Tambahkan delay kecil untuk menghindari terlalu banyak request
-        await new Promise((resolve) => setTimeout(resolve, 300))
+      // Update status dan reset flag
+      setTitleSaveStatus('saved')
+      setIsEditing(false)
+      toast.success('Judul berhasil disimpan')
+    } catch (error) {
+      console.error('Error saving title:', error)
+      setTitleSaveStatus('error')
 
-        await savePage({
-          pageId: effectivePageId,
-          title: debouncedTitle,
-        })
-
-        setTitleSaveStatus('saved')
-      } catch (error) {
-        console.error('Error saving title:', error)
-        setTitleSaveStatus('error')
-
-        // Cek apakah error adalah network error
-        if (error instanceof Error && error.message.includes('Network')) {
-          toast.error(
-            'Koneksi ke server gagal. Perubahan akan disimpan saat koneksi pulih.',
-            {
-              duration: 5000,
-            }
-          )
-
-          // Coba lagi dalam 10 detik jika network error
-          setTimeout(() => {
-            if (titleSaveStatus === 'error') {
-              saveTitle()
-            }
-          }, 10000)
-        } else {
-          // Show error notification dengan opsi retry untuk error lainnya
-          showErrorNotification(error, {
-            retryFn: () => saveTitle(),
-          })
-        }
-      }
+      // Tampilkan error notification dengan opsi retry
+      showErrorNotification(error, {
+        retryFn: () => handleTitleSave(),
+      })
+    } finally {
+      isSavingRef.current = false
     }
+  }, [effectivePageId, isEditing, localTitle, savePage])
 
-    // Jalankan fungsi save
-    saveTitle()
-    */
+  // Handler untuk keydown event - trigger save saat Enter ditekan
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        e.currentTarget.blur() // Remove focus
+        handleTitleSave()
+      }
+    },
+    [handleTitleSave]
+  )
 
-    // Hanya ubah status untuk UI tanpa melakukan API call
-    setTitleSaveStatus('unsaved')
-    console.log(
-      '[DocumentHeader] Auto-save dinonaktifkan untuk mencegah loop API'
-    )
-  }, [debouncedTitle, title, effectivePageId])
+  // Handler untuk blur event - trigger save saat input kehilangan fokus
+  const handleBlur = useCallback(() => {
+    if (isEditing) {
+      handleTitleSave()
+    }
+  }, [isEditing, handleTitleSave])
 
   // Render status save yang lebih informatif
   const renderSaveStatus = () => {
@@ -306,10 +247,12 @@ export default function DocumentHeader({
         <Input
           value={localTitle}
           onChange={handleTitleChange}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
           placeholder="Untitled Page"
           className="border-0 bg-transparent h-8 px-2 focus-visible:ring-0 focus-visible:ring-offset-0 text-[#e3e4f2]"
           aria-label="Judul halaman"
-          disabled={isLoading}
+          disabled={isLoading || titleSaveStatus === 'saving'}
         />
       </div>
 
@@ -374,35 +317,6 @@ export default function DocumentHeader({
       <Button variant="ghost" size="icon">
         <MoreHorizontal className="h-4 w-4" />
       </Button>
-
-      <div className="flex items-center gap-2 mr-auto">
-        {/* Create button dengan loading state */}
-        <Button
-          className="bg-[#1868db] hover:bg-[#1868db]/90 text-white"
-          onClick={handleCreate}
-          disabled={isCreating || isLoading}
-        >
-          {isCreating ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4 mr-1" />
-              Create
-            </>
-          )}
-        </Button>
-
-        <Button
-          variant="outline"
-          className="border-[#669df1] text-[#669df1] bg-transparent hover:bg-[#1c2b42]"
-        >
-          <span className="text-[#bf63f3] mr-1">⭐</span>
-          Upgrade
-        </Button>
-      </div>
 
       {/* Alert Dialog untuk konfirmasi penghapusan halaman */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
