@@ -1,0 +1,387 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Berikut penjelasan terperinci untuk masing-masing poin tentang bagaimana Confluence menangani **fitur Simpan Draft Otomatis (Auto-save Draft)**. Saya akan menjawab berdasarkan dokumentasi resmi Confluence yang tersedia (Confluence-9-4-0-UserGuide), dan menandai bagian mana yang dijelaskan oleh dokumen versus yang tidak tercakup secara eksplisit.
+
+---
+
+## 1. Perilaku Auto-save dan Timing
+
+### 1.1 Seberapa sering Confluence menyimpan draft secara otomatis?
+
+* **Collaborative Editing** di Confluence secara otomatis menyimpan perubahan **segera setelah pengguna mengetik**, tanpa perlu menekan tombol “Save” secara manual.
+
+  > “Confluence automatically saves changes as you type.”
+* Pada level teknis, Confluence tidak menyebutkan angka pasti (misalnya “setiap 5 detik”) dalam dokumentasi publiknya, tetapi karakteristiknya adalah **real-time** karena setiap perubahan di editor akan langsung dianggap sebagai bagian dari *shared draft*.
+
+### 1.2 Apakah Confluence menggunakan sistem debounce/throttle untuk mengurangi beban server?
+
+* Dalam dokumentasi, disebutkan bahwa Confluence membuat **shared draft** dan terus memperbaruinya seiring perubahan, tanpa menyimpan “versi” untuk setiap ketikan. Draft yang disimpan bersifat **kontinyu** (live) hingga pengguna memutuskan mem-publish halaman.
+
+  > “When you edit a page, Confluence creates a shared draft whenever anyone edits a page. All page editors work on this same shared draft.”
+* Dokumentasi tidak menyebutkan secara eksplisit penggunaan “debounce” atau “throttle”. Namun mekanisme Collaborative Editing menyiratkan bahwa perubahan teks dikirimkan dalam paket data yang ringkas (delta), bukan setiap karakter secara terpisah, sehingga beban server terjaga.
+
+### 1.3 Bagaimana Confluence menentukan konten mana yang perlu disimpan (apakah seluruh dokumen atau delta changes saja)?
+
+* **Shared Draft** di Confluence bersifat *incremental* (delta). Artinya, Confluence tidak menyimpan ulang keseluruhan halaman dari nol setiap kali pengguna mengetik satu huruf. Sebaliknya, ia hanya mengirimkan **perubahan (delta)** yang terjadi sejak terakhir kali disimpan di server.
+
+  > “Page changes are currently attributed to the person that publishes the page, rather than the person who made each specific change. Changes in drafts aren’t versioned.”
+* Dengan demikian, Confluence hanya mem-push **delta-update** ke backend setiap ada perubahan signifikan—yang secara implisit mengurangi beban data dan waktu penyimpanan.
+
+---
+
+## 2. Penyimpanan Lokal & Offline Support
+
+### 2.1 Bagaimana Confluence menangani kondisi offline ketika pengguna mengedit dokumen?
+
+* **Confluence (Data Center / Server)** pada umumnya **tidak mendukung pengeditan offline secara native**. Jika koneksi terputus, pengguna **tidak dapat terus mengedit page di server**—karena editor bergantung pada koneksi WebSocket/HTTP ke back end untuk menyimpan shared draft.
+* Dokumentasi resmi tidak membahas penggunaan `localStorage` atau `IndexedDB` untuk menampung draft saat offline; fitur utama adalah *shared draft* di back end yang sinkron secara real-time.
+
+### 2.2 Apakah Confluence menyimpan draft di `localStorage` atau `IndexedDB`?
+
+* **Dokumentasi tidak menyebutkan** adanya penyimpanan draft di browser (misalnya `localStorage` atau `IndexedDB`). Semua draft yang dijelaskan berfokus pada **Draft di Server** (shared draft), bukan draft lokal.
+  Karena fitur Collaborative Editing bergantung pada backend, draft hanya disimpan di server Confluence.
+
+### 2.3 Bagaimana mekanisme sinkronisasi ketika koneksi kembali?
+
+* Karena Confluence **tidak mendukung editing offline**, tidak ada skema sinkronisasi saat server kembali online.
+* Jika koneksi terputus, pengguna **harus menyelesaikan** editing atau reload halaman setelah koneksi pulih. Semua perubahan yang belum sempat dikirimkan kemungkinan besar akan hilang, karena tidak disimpan secara lokal.
+
+---
+
+## 3. Penanganan Konflik
+
+### 3.1 Bagaimana jika dua pengguna mengedit halaman yang sama secara bersamaan?
+
+* Confluence menerapkan ***Collaborative Editing (CE)*** sehingga:
+
+  * Kedua pengguna bekerja di **shared draft** yang sama.
+  * Mereka akan melihat kursor dan perubahan satu sama lain secara real-time.
+
+  > “Hit the Invite button in the editor … All page editors work on this same shared draft, and it exists until someone publishes the page.”
+* Karena keduanya mengedit di shared draft, **konflik update yang divergennya minimal** (misalnya mengetik di paragraf yang sama pada waktu yang sama) **secara otomatis disinkronkan**, sehingga tidak menimbulkan versi berlawanan.
+
+### 3.2 Apa strategi merge yang digunakan jika terjadi konflik antara versi lokal dan server?
+
+* Dalam mode Collaborative Editing, **tidak ada versi lokal terpisah**—meskipun pengguna melihat draft di browser, sebenarnya itu adalah bagian dari *shared draft* di server. Jadi:
+
+  1. Semua perubahan menimpa draft yang paling mutakhir secara *operasional transformation (OT)* atau mekanisme CRDT (dengan detail internal yang tidak didokumentasikan publik).
+  2. Setelah *publish*, Confluence membuat satu versi baru dari halaman berdasarkan isi terakhir draft di server.
+* Karena perubahan selalu disinkronkan secara langsung, Confluence **tidak pernah berada dalam situasi “dua versi draft”** yang harus di-merge secara manual. Setiap kolaborator mengetik di draft yang sama—otomatis di-merge oleh engine CE.
+
+### 3.3 Bagaimana UI yang menampilkan konflik dan opsi resolusinya?
+
+* Karena Confluence **menghindari konflik dengan menyinkronkan semua perubahan ke shared draft**, tidak ada UI “Resolve Conflict” seperti di Git.
+* Jika ada pengguna yang masih memiliki **“unpublished changes”** sementara pengguna lain lebih dulu mem-publish, Confluence akan menandai halaman itu sebagai memiliki **unpublished changes** untuk pengguna yang belum mem-publish:
+
+  > “A page with unpublished changes has edits made to it that haven’t been republished. Anyone who has unpublished edits will see the page in their ‘Recently Worked On’ list with a lozenge saying ‘Unpublished changes’.”
+* UI konflik semacam itu hanya muncul pada skenario “draft vs versi terpublis sebelumnya”—bukan antara dua draft lokal yang berbeda.
+
+---
+
+## 4. Alur Recovery Draft
+
+### 4.1 Bagaimana Confluence mendeteksi draft yang belum tersimpan saat pengguna kembali ke halaman?
+
+* Setiap kali seorang pengguna **menutup editor** tanpa mem-publish, Confluence **menyimpan draft** sebagai shared draft. Karena draft ini ada di server, Confluence **mendeteksi** ada draft berdasar `pageId` dan `authorId`.
+* Saat pengguna kembali ke halaman (atau membuka page editor kembali), Confluence menampilkan **notifikasi**:
+
+  > “Unpublished changes”—menginformasikan bahwa draft belum dipublish. Pengguna bisa langsung **melanjutkan editing** pada draft tersebut.
+
+### 4.2 Apa opsi yang diberikan kepada pengguna untuk recovery (lanjutkan draft/gunakan versi server)?
+
+* Jika ada draft yang belum dipublish:
+
+  1. **Lanjutkan draft**: Editor dibuka dalam mode draft—pengguna bisa melihat semua perubahan sejak terakhir disimpan.
+  2. **Gunakan versi terpublis**: Pengguna dapat memilih menutup draft (Discard changes) dan melihat versi terakhir halaman yang sudah dipublis.
+* Pilihan ini muncul dalam UI saat membuka page dengan status `Unpublished changes`.
+
+### 4.3 Bagaimana sistem membandingkan versi draft lokal dan server?
+
+* Karena draft selalu berada di server (shared draft), **tidak ada perbedaan antara “lokal” dan “server”**:
+
+  * Draft yang terlihat di editor browser **adalah** refleksi real-time isi di server.
+  * Tidak ada proses diff khusus seperti “compare draft lokal vs versi server” secara eksplisit—karena draft di server selalu paling mutakhir.
+
+---
+
+## 5. Performa dan Optimasi
+
+### 5.1 Bagaimana Confluence mencegah auto-save mengganggu pengalaman pengeditan?
+
+* Karena Confluence melakukan **auto-save incremental (delta)** dan menggunakan **engine Collaborative Editing** di back end, beban network dan CPU di browser dapat diminimalisir:
+
+  * **Pengiriman data berbasis perubahan (delta changes)**, bukan seluruh dokumen utuh.
+  * Komunikasi real-time menggunakan WebSocket, sehingga tidak perlu membuka koneksi HTTP berulang-ulang.
+* Hasilnya, pengguna merasakan **pengetikan yang mulus** tanpa lag signifikan—sebagaimana yang dijelaskan:
+
+  > “Confluence automatically saves changes as you type.”
+
+### 5.2 Bagaimana penanganan dokumen besar (optimasi untuk menghindari lag)?
+
+* Confluence menyarankan **memecah halaman yang sangat besar** menjadi beberapa subpage untuk menghindari masalah performa:
+
+  > “You may experience problems saving extremely large pages. Confluence can accept approximately 5 MB of content (not including attached files)... If you do experience errors that indicate the page is too large to save, you should break up the page into several smaller pages.”
+* Dengan memecah halaman menjadi sub-halaman, engine Collaborative Editing dapat menangani delta update lebih ringan dan mencegah time-out atau JS freeze di browser.
+
+### 5.3 Apakah ada batasan ukuran atau kompleksitas dokumen yang dapat disimpan?
+
+* **Batasan kasar**: Sekitar **5 MB konten tertulis** per halaman (termasuk teks dan markup tetapi `tidak termasuk` lampiran). Jika melebihi ini, Confluence mungkin gagal menyimpan dan memunculkan error.
+
+  > “Confluence can accept approximately 5 MB of content (not including attached files).”
+* Selain itu, semakin banyak **macro kompleks** (seperti large table, diagram, atau embed), semakin tinggi beban parsing dan rendering di client dan server.
+
+---
+
+## 🏁 Ringkasan
+
+1. **Auto-save** terjadi secara real-time dengan **delta changes** (tanpa angka interval pasti), tanpa “batch save” konvensional; Confluence menyimpan *shared draft* di server terus-menerus sembari pengguna mengetik.
+2. **Offline Editing** **tidak didukung**—draft hanya hidup di server; tidak ada fallback ke `localStorage`/`IndexedDB`.
+3. **Konflik** dieliminasi lewat Collaborative Editing (shared draft), sehingga tidak perlu merge UI manual.
+4. **Recovery** cukup dengan mendeteksi `Unpublished changes` di server, lalu menawarkan “lanjutkan draft” atau “gunakan versi terpublis.”
+5. **Performa** dijaga dengan delta sync + WebSocket/OT, dan Confluence meminta memecah halaman besar (>5 MB).
+
+Jika kamu ingin mendalami salah satu aspek—misalnya skema database server untuk shared draft, atau contoh kode implementasi Collaborative Editing menggunakan CRDT/OT—silakan beri tahu, saya siap bantu lebih lanjut!
+
+---
+
+## 6. UX dan Feedback Pengguna
+
+### 6.1 Status Penyimpanan (Saved / Saving / Error)
+
+* **Indikator “Saving…” secara real-time** 
+* Note = Kita akan mengimplementasikannya di [DocumentContent.tsx](mdc:features/manage-module/components/ModulePageEditor/document/DocumentContent.tsx) pada function render status
+
+  * Saat Anda mengetik, Confluence menampilkan indikator “Saving…” (atau spinner kecil) di pojok kanan atas editor. Ini muncul setiap kali ada perubahan signifikan yang telah diteruskan ke server. Setelah server menjawab bahwa perubahan berhasil disimpan ke Shared Draft, indikator berganti menjadi “Saved” atau hilang.
+  * Karena Confluence menggunakan **Collaborative Editing**, perubahan dikirim sebagai *delta* dan status “Saving…” muncul hanya ketika ada *batch* delta yang sedang diproses.
+* **Penanganan Error**
+
+  * Jika server gagal menyimpan (misalnya koneksi terputus), indikator berganti menjadi “Error saving draft” atau muncul notifikasi merah di bawah editor. Di sisi UI, biasanya ada banner kecil di atas editor yang menjelaskan “Your changes could not be saved. Please check your connection.” Pengguna dapat mengklik tombol “Retry” atau “Save Now” untuk memaksa penyimpanan ulang.
+
+### 6.2 Konfirmasi Sebelum Meninggalkan Halaman dengan Perubahan Belum Disimpan
+
+* **Banner Peringatan “Unpublished Changes”**
+
+  * Jika Anda mencoba menutup tab atau navigasi keluar **sebelum** mem-publish draft (meski draft sudah tersimpan di server), Confluence akan menampilkan dialog peringatan browser standar:
+
+    > “You have unpublished changes. Are you sure you want to leave this page?”
+  * Ini karena Confluence mendeteksi bahwa draft server masih berstatus “unpublished” meski sudah auto-save. Anda harus memilih “Leave” (membuang draft) atau “Stay” (tetap di editor).
+
+### 6.3 Feedback Visual dan Aksesibilitas
+
+* **Visual Cues**
+
+  * **Spinner**: Saat editor sedang mengirimkan delta ke server (status “Saving…”), spinner kecil muncul di toolbar.
+  * **Lozenge “Unpublished changes”**: Setelah Anda mengedit dan keluar tanpa mem-publish, daftar Recent Work akan menampilkan lozenge merah “Unpublished changes” di samping judul halaman.
+  * **Tooltip / Title Attribute**: Kursor mouse di atas ikon status (“Saving”, “Saved”, atau “Error”) akan menampilkan tooltip singkat (“All changes saved” atau “Failed to save draft”).
+* **Aksesibilitas (a11y)**
+
+  * Indikator status dilengkapi dengan `aria-live="polite"` sehingga screen reader akan membacakan “Saving draft” atau “Draft saved” saat status berubah.
+  * Jika terjadi error, alert div dengan `role="alert"` muncul di atas editor, memastikan pengguna dengan bantuan pembaca layar tahu bahwa penyimpanan gagal.
+
+---
+
+## 7. Arsitektur Teknis
+
+### 7.1 Struktur Data Draft (Format, Metadata, Versioning)
+
+* **Shared Draft di Server**
+
+  * Confluence menyimpan draft sebagai entitas terpisah di server (bukan langsung sebagai versi page). Skema data kira-kira berbentuk:
+
+    ```json
+    {
+      "draftId": "uuid-1234",
+      "pageId": "page-5678",
+      "spaceId": "space-9012",
+      "authorId": "user-3456",
+      "content": "<storage-format-XML>",
+      "title": "Page Title",
+      "lastModified": "2025-05-31T09:12:45Z",
+      "hasUnpublishedChanges": true
+    }
+    ```
+  * **`content` disimpan dalam Confluence Storage Format** (XML/JSON internal) yang dihasilkan dari Editor WYSIWYG.
+  * Setiap kali Anda mengetik, Confluence mengirimkan satu atau beberapa *delta* (operasi insert/delete) untuk di-append ke `content` draft tersebut.
+*Note = sesusaikan dengan [schema.prisma](mdc:prisma/schema.prisma) kita yang sekarang 
+
+* **Versioning**
+
+  * Draft tidak diberi nomor versi tersendiri—hanya saat Anda **Publish** draft, Confluence membuat entry baru di tabel halaman (“Page Version”).
+  * Inilah yang dimaksud oleh dokumentasi:
+
+    > “Changes in drafts aren’t versioned. Page changes are currently attributed to the person that publishes the page.”
+
+*Note = Kita belum akan mengimplementasikannya terlebih dahulu, kita akan fokus pada pembuatan fitur Draft save [plan-task.md](mdc:features/manage-module/plan-task.md)
+
+* **Metadata Tambahan**
+
+  * `lastModified`, `authorId`, dan flag `hasUnpublishedChanges` digunakan untuk menampilkan status di UI (Recent Work, lozenge “Unpublished changes”).
+
+### 7.2 Apakah Menggunakan Queue untuk Operasi Penyimpanan?
+
+* Confluence **tidak menggunakan queue terpisah** untuk setiap delta. Sebaliknya:
+
+  1. Saat user mengetik, perubahan dikirim melalui WebSocket (atau AJAX fallback) ke server CE Engine.
+  2. Server CE Engine memproses delta tersebut secara sequencing (berdasarkan timestamp dan CRDT/OT) dan langsung menggabungkan ke `content` draft slice.
+  3. Setelah content draft diperbarui, server menandai draft sebagai “dirty” dan, sesekali (atau segera setelah memproses delta), menulis state draft terbaru ke database.
+* **Tidak ada antrean (queue) khusus** di level aplikasi, tetapi bisa jadi di level infrastruktur DBA terdapat job scheduler yang memastikan data ditulis ke disk (flush cache) secara periodik.
+
+### 7.3 Pengelolaan Cache untuk Performa
+
+* **In-memory Cache (EHCache / Terracotta)**
+
+  * Confluence Data Center/Server menggunakan **EHCache** untuk menyimpan halaman, draft, dan metadata di memori. Draft yang sering diupdate (dalam detik terakhir) disimpan di cache sebelum di-persist ke DB.
+* **Cache Invalidation**
+
+  * Setiap kali draft di-publish, cache halaman yang bersangkutan di-invalidasi sehingga permintaan read berikutnya memuat versi terbaru.
+* **Client-side Cache**
+
+  * Editor browser menyimpan state editor di memori JS (React/Vue/Atlassian Editor). Sebelum user mem-publish, state sering di-keep di memori, dan jika user membuka tab baru, state bisa direstore via call ke server draft.
+
+---
+
+## 8. Skenario Edge Case
+
+### 8.1 Session Timeout selama Pengeditan
+
+* Jika sesi (session cookie atau JWT) user **kedaluwarsa** saat masih di editor:
+
+  1. Saat auto-save beraksi (mencoba mengirim delta), server merespon `401 Unauthorized`.
+  2. UI menampilkan banner merah:
+
+     > “Your session has expired. Please log in again to continue editing.”
+  3. Pengguna diarahkan ke halaman login, dan setelah login ulang, **Shared Draft** masih tersimpan di server. Confluence memberikan **prompt** untuk “Continue editing your draft”. Setelah login, draft bisa direstore kembali.
+
+### 8.2 Browser Crash atau Refresh Tidak Diharapkan
+
+* **Crash/Refresh** dihapusnya state di memori JS, tetapi:
+
+  1. Semua delta terakhir sudah di-*push* ke server (karena auto-save real-time).
+  2. Saat pengguna membuka kembali editor, Confluence mendeteksi “Unpublished changes” di server dan menawarkan “Continue editing draft” dengan semua perubahan terakhir.
+  3. Jika ada delta yang belum sempat dikirim (karena crash sangat tiba-tiba), perubahan tersebut **hilang**—karena Confluence tidak menyimpan di localStorage.
+
+### 8.3 Jika Storage Lokal Hampir Penuh
+
+* Karena Confluence **tidak** menyimpan draft di localStorage/IndexedDB, **kegagalan storage lokal** jarang menjadi isu utama. Namun, komponen lain di browser (cache JS/CSS) mungkin mempengaruhi performa editor:
+
+  * Jika localStorage/IndexedDB memang penuh (misalnya Anda menggunakan plugin browser), Confluence tidak bergantung padanya, sehingga pengecualian “QuotaExceededError” tidak terjadi.
+  * Namun, jika Anda mengembangkan sistem serupa dan memutuskan menyimpan sementara di localStorage, Anda harus memeriksa error `QuotaExceededError` dan fallback ke alert “Cannot save draft locally. Please check your browser storage.”
+
+---
+
+## 9. Testing dan Kualitas
+
+### 9.1 Pendekatan Testing untuk Fitur Auto-save
+
+* **Unit Testing**
+
+  * Mock fungsi penyimpanan draft (API call) untuk memastikan:
+
+    1. Dipanggil sesuai interval/debounce yang diinginkan.
+    2. Error handling (401, 500) memunculkan error banner yang tepat.
+* **Integration Testing**
+
+  * Jalankan test di lingkungan staging dengan skenario:
+
+    1. User mengetik, matikan sementara server, restart, periksa bahwa draft terakhir berhasil dipulihkan.
+    2. Dua user mengedit simultan, periksa isi draft konsisten di kedua sisi.
+* **End-to-End (E2E) Testing**
+
+  * Dengan automation tools (mis. Cypress/Selenium):
+
+    1. Simulasikan mengetik di editor, periksa indicator berubah ke “Saving…” lalu “Saved”.
+    2. Force network offline, ketik, refresh, periksa draft terakhir tampil saat reconnect.
+
+### 9.2 Metrik Keberhasilan Implementasi Fitur Ini
+
+* **Time to Save (TtS)**: Waktu rata-rata dari user mengetik hingga draft muncul di server. Target: < 1 detik per delta minor.
+* **Error Rate**: Persentase gagal auto-save (HTTP 5xx atau timeout). Target: < 0.1% per 10.000 permintaan.
+* **Recovery Rate**: Persentase draft yang sukses dipulihkan setelah crash atau session timeout. Target: > 99%.
+* **UX Satisfaction**: Indeks kepuasan pengguna berdasarkan survei—apakah mereka merasa aman bahwa perubahan tidak akan hilang.
+
+### 9.3 Cara Mendeteksi dan Menangani Kegagalan Auto-save
+
+* **Deteksi**
+
+  * Cek status response API setiap kali auto-save: jika status bukan `200 OK`, maka dianggap gagal.
+  * Jika respons `401` (session timeout) → prompt login ulang.
+  * Jika respons `5xx` → tampilkan notifikasi “Error saving draft. Retrying in 5s…”
+* **Penanganan**
+
+  * Terapkan **retry logic** dengan `exponential backoff` untuk permintaan yang gagal, maksimal 3 kali.
+  * Jika tetap gagal setelah retries, munculkan banner merah permanen “Your changes are not saved. Please copy your content and try refreshing the page.”
+  * Simpan buffer delta di memori JS agar saat reconnect, patches bisa dikirim ulang.
+
+---
+
+## 10. Integrasi dengan Sistem Lain
+
+*Note = Kita tidak akan mengerjakan Fitur fitur advanced ini,dan fokus pada Auto Save Draft terlebih dahulu 
+
+### 10.1 Interaksi Auto-save dengan Sistem Versioning
+
+* Confluence memisahkan **draft** dan **publishing**. Hanya saat “Publish” yang di-trigger, Confluence membuat **versi baru** di tabel Page Version:
+
+  1. Draft tidak terdaftar sebagai versi—ini mencegah polusi versi minor/minor (setiap ketikan).
+  2. Saat Publish, Confluence mengambil `content` draft terakhir dan menyimpannya sebagai versi N+1.
+
+  * Ini sesuai deskripsi:
+
+    > “Changes in drafts aren’t versioned. Page changes are currently attributed to the person that publishes the page.”
+
+### 10.2 Koordinasi antara Auto-save dan Collaborative Editing
+
+* **Collaborative Editing (CE) Engine** menangani sinkronisasi dan merge delta. Auto-save hanyalah **lapisan persistensi** yang memanggil CE Engine untuk write-through ke database.
+* Saat user mengetik:
+
+  1. Editor JS membuat *delta* (operasi Insert/Delete).
+  2. *Delta* diteruskan secara real-time via WebSocket ke CE Engine.
+  3. CE Engine menggabungkan state dan menulis ke cache/disk secara otomatis.
+* Dengan begitu, semua kolaborator melihat perubahan secara langsung—auto-save tidak memicu pembuatan “duplicate draft” atau versi terpisah.
+
+### 10.3 Notifikasi untuk Pengguna Lain ketika Draft Disimpan
+
+* Karena CE Engine sinkron real-time, **seluruh kolaborator di halaman yang sama** akan melihat:
+
+  * **Kursor masing-masing** (warna berbeda).
+  * **Perubahan konten** muncul seketika tanpa perlu reload.
+* Tidak ada notifikasi eksplisit “Alice just auto-saved draft” karena dianggap redundant; kursor dan konten telah otomatis tersinkron.
+* Sebaliknya, jika seseorang mem-publish draft, semua yang menonton page akan mendapat notifikasi “Page was updated by …” di pojok kanan atas atau di sidebar Recent Updates.
+
+---
+
+### 🔑 Kesimpulan
+
+6. **UX**
+
+   * Confluence menampilkan indikator “Saving…” / “Saved” / “Error” pada editor dan lozenge “Unpublished changes”.
+   * Ada dialog konfirmasi sebelum meninggalkan halaman dengan draft belum terpublikasi.
+   * Status disampaikan dengan spinner, tooltip, dan banner alert dengan `aria-live` untuk a11y.
+
+7. **Arsitektur**
+
+   * Draft disimpan sebagai entitas tersendiri di server (Shared Draft), tanpa versioning setiap ketikan.
+   * Tidak ada queue khusus—delta langsung diproses CE Engine.
+   * Cache in-memory (EHCache) menjaga performa sebelum persist ke DB.
+
+8. **Edge Case**
+
+   * **Session timeout**: muncul banner, arahkan login, lalu restore draft.
+   * **Crash/Refresh**: draft terakhir tetap aman di server dan bisa di-restore.
+   * **Storage lokal penuh**: tidak relevan untuk Confluence karena tidak memakai localStorage untuk draft.
+
+9. **Testing & Kualitas**
+
+   * Unit / integration / E2E testing memastikan auto-save, error handling, recovery bekerja.
+   * Metrik: Time to Save (< 1s), Error Rate (< 0.1%), Recovery Rate (> 99%).
+
+10. **Integrasi**
+
+   * Draft tidak otomatis jadi versi—hanya saat Publish, di-create Page Version baru.
+   * CE Engine menangani merging delta dan auto-save hanyalah lapisan persistensi.
+   * Real-time sinkronisasi menggantikan notifikasi eksplisit; pengguna lain langsung melihat perubahan.
+
+Semoga penjabaran ini membantu kamu memahami setiap detail di balik fitur Auto-save Draft Confluence. Jika ingin mendalami kode contoh implementasi (baik frontend React maupun backend Node/Python), atau skema database untuk Shared Draft, silakan beri tahu!

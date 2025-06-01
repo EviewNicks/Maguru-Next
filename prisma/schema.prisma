@@ -42,21 +42,31 @@ model Module {
 }
 
 model ModulePage {
-  id        String       @id @default(uuid())
-  moduleId  String       @map("module_id")
+  id        String           @id @default(uuid())
+  moduleId  String           @map("module_id")
   order     Int
   type      String
-  content   Json
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  version   Int          @default(1)
+  content   Json // Format Tiptap untuk konten yang sudah dipublish
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  version   Int              @default(1)
   title     String
-  status    ModuleStatus @default(DRAFT)
-  module    Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  status    ModulePageStatus @default(DRAFT)
+
+  // Fields baru untuk fitur draft
+  authorId              String? // Pengguna yang membuat halaman (penting untuk tracking)
+  lastEditBy            String? // User terakhir yang mengedit (untuk collaborative editing)
+  draftData             Json? // Menyimpan data draft terpisah dari konten yang sudah dipublish
+  draftSavedAt          DateTime? // Timestamp terakhir draft disimpan (untuk menampilkan info ke user)
+  isDraft               Boolean   @default(false) // Flag untuk menandai apakah ini versi draft
+  hasUnpublishedChanges Boolean   @default(false) // Flag untuk menandai ada perubahan yang belum dipublish
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   @@unique([moduleId, order])
   @@index([moduleId, order])
   @@index([moduleId, type])
+  @@index([authorId]) // Index baru untuk query berdasarkan author
   @@map("module_pages")
 }
 
@@ -74,5 +84,11 @@ enum UserStatus {
 enum ModuleStatus {
   DRAFT
   ACTIVE
+  ARCHIVED
+}
+
+enum ModulePageStatus {
+  DRAFT
+  PUBLISHED
   ARCHIVED
 }

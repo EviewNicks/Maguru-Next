@@ -3,6 +3,7 @@ import {
   ContentBlockType,
   CreateModulePageInput,
   UpdateModulePageInput,
+  ModulePageStatus,
 } from './modulePageSchema'
 
 export enum ModuleStatus {
@@ -11,10 +12,16 @@ export enum ModuleStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
-export enum ModulePageStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  ARCHIVED = 'ARCHIVED',
+// Mengimpor ModulePageStatus dari modulePageSchema
+export { ModulePageStatus }
+
+// Enum untuk status penyimpanan draft
+export enum DraftSaveStatus {
+  SAVING = 'SAVING',
+  SAVED = 'SAVED',
+  UNSAVED = 'UNSAVED',
+  ERROR = 'ERROR',
+  OFFLINE = 'OFFLINE',
 }
 
 export interface Module {
@@ -118,6 +125,17 @@ export interface StandardEditorContent {
   content: TiptapNode[]
 }
 
+/**
+ * Interface untuk data draft
+ */
+export interface DraftData {
+  content: StandardEditorContent
+  title?: string
+  lastModified: number // timestamp
+  version?: number
+  authorId: string
+}
+
 // Definisi ulang ModulePage agar selaras dengan schema Prisma
 export interface ModulePage {
   id: string
@@ -130,6 +148,14 @@ export interface ModulePage {
   status: ModulePageStatus
   createdAt: Date
   updatedAt: Date
+
+  // Field baru untuk fitur draft
+  authorId?: string
+  lastEditBy?: string
+  draftData?: StandardEditorContent
+  draftSavedAt?: Date
+  isDraft: boolean
+  hasUnpublishedChanges: boolean
 }
 
 // Interface untuk ModulePageService
@@ -150,6 +176,16 @@ export interface IModulePageService {
   deleteModulePage(pageId: string): Promise<boolean>
   reorderModulePages(moduleId: string, pageIds: string[]): Promise<boolean>
   parseContent(content: unknown, returnRawJSON?: boolean): StandardEditorContent
+
+  // Fungsi baru untuk fitur draft
+  saveDraft(
+    pageId: string,
+    draftData: StandardEditorContent,
+    authorId: string
+  ): Promise<ApiEntityResponse<ModulePage> | null>
+  getDraft(pageId: string): Promise<ApiEntityResponse<ModulePage> | null>
+  publishDraft(pageId: string): Promise<ApiEntityResponse<ModulePage> | null>
+  discardDraft(pageId: string): Promise<boolean>
 }
 
 // Interface untuk ModulePageAdapter
@@ -192,4 +228,15 @@ export interface IModulePageAdapter {
     pageId: string,
     status: ModulePageStatus
   ): Promise<ModulePage | null>
+
+  // Fungsi baru untuk fitur draft
+  saveDraft(
+    pageId: string,
+    editorContent: unknown,
+    authorId: string
+  ): Promise<ModulePage | null>
+  getDraft(pageId: string): Promise<ModulePage | null>
+  publishDraft(pageId: string): Promise<ModulePage | null>
+  discardDraft(pageId: string): Promise<boolean>
+  hasDraft(pageId: string): Promise<boolean>
 }

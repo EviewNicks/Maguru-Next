@@ -1,5 +1,14 @@
 import { z } from 'zod'
-import { ModulePageStatus } from './index'
+import { DraftSaveStatus } from './index'
+
+/**
+ * Enum untuk status halaman modul
+ */
+export enum ModulePageStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+}
 
 /**
  * Enum untuk tipe blok konten yang didukung
@@ -67,6 +76,7 @@ export const CreateModulePageSchema = z.object({
         },
       ],
     })),
+  authorId: z.string().optional(), // ID pengguna yang membuat halaman
 })
 
 /**
@@ -85,12 +95,29 @@ export const UpdateModulePageSchema = z.object({
   content: z.lazy(() => StandardEditorContentSchema).optional(),
   // Tambahkan status
   status: z.nativeEnum(ModulePageStatus).optional(),
+  // Field untuk tracking
+  lastEditBy: z.string().optional(),
 })
 
 /**
  * Type untuk input update module page
  */
 export type UpdateModulePageInput = z.infer<typeof UpdateModulePageSchema>
+
+/**
+ * Schema untuk save draft
+ */
+export const SaveDraftSchema = z.object({
+  pageId: z.string().uuid(),
+  draftData: z.lazy(() => StandardEditorContentSchema),
+  authorId: z.string(),
+  title: z.string().min(5, 'Judul harus minimal 5 karakter').optional(),
+})
+
+/**
+ * Type untuk input save draft
+ */
+export type SaveDraftInput = z.infer<typeof SaveDraftSchema>
 
 /**
  * Alias untuk kompatibilitas dengan kode yang sudah ada
@@ -120,6 +147,14 @@ export const ModulePageSchema = z.object({
   status: z.nativeEnum(ModulePageStatus).default(ModulePageStatus.DRAFT),
   createdAt: z.date(),
   updatedAt: z.date(),
+
+  // Field baru untuk fitur draft
+  authorId: z.string().nullable().optional(),
+  lastEditBy: z.string().nullable().optional(),
+  draftData: StandardEditorContentSchema.nullable().optional(),
+  draftSavedAt: z.date().nullable().optional(),
+  isDraft: z.boolean().default(false),
+  hasUnpublishedChanges: z.boolean().default(false),
 })
 
 /**
@@ -136,6 +171,20 @@ export const ModulePageListResponseSchema = z.object({
 export type ModulePageListResponse = z.infer<
   typeof ModulePageListResponseSchema
 >
+
+/**
+ * Schema untuk response draft status
+ */
+export const DraftStatusResponseSchema = z.object({
+  status: z.nativeEnum(DraftSaveStatus),
+  timestamp: z.date().optional(),
+  message: z.string().optional(),
+})
+
+/**
+ * Type untuk response draft status
+ */
+export type DraftStatusResponse = z.infer<typeof DraftStatusResponseSchema>
 
 /**
  * Tipe untuk API response generik

@@ -149,7 +149,13 @@ exports.Prisma.ModulePageScalarFieldEnum = {
   updatedAt: 'updatedAt',
   version: 'version',
   title: 'title',
-  status: 'status'
+  status: 'status',
+  authorId: 'authorId',
+  lastEditBy: 'lastEditBy',
+  draftData: 'draftData',
+  draftSavedAt: 'draftSavedAt',
+  isDraft: 'isDraft',
+  hasUnpublishedChanges: 'hasUnpublishedChanges'
 };
 
 exports.Prisma.SortOrder = {
@@ -158,6 +164,11 @@ exports.Prisma.SortOrder = {
 };
 
 exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull
 };
 
@@ -190,6 +201,12 @@ exports.UserStatus = exports.$Enums.UserStatus = {
 exports.ModuleStatus = exports.$Enums.ModuleStatus = {
   DRAFT: 'DRAFT',
   ACTIVE: 'ACTIVE',
+  ARCHIVED: 'ARCHIVED'
+};
+
+exports.ModulePageStatus = exports.$Enums.ModulePageStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
   ARCHIVED: 'ARCHIVED'
 };
 

@@ -58,6 +58,15 @@ export const ModuleStatus: {
 
 export type ModuleStatus = (typeof ModuleStatus)[keyof typeof ModuleStatus]
 
+
+export const ModulePageStatus: {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+  ARCHIVED: 'ARCHIVED'
+};
+
+export type ModulePageStatus = (typeof ModulePageStatus)[keyof typeof ModulePageStatus]
+
 }
 
 export type UserRole = $Enums.UserRole
@@ -71,6 +80,10 @@ export const UserStatus: typeof $Enums.UserStatus
 export type ModuleStatus = $Enums.ModuleStatus
 
 export const ModuleStatus: typeof $Enums.ModuleStatus
+
+export type ModulePageStatus = $Enums.ModulePageStatus
+
+export const ModulePageStatus: typeof $Enums.ModulePageStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -3298,7 +3311,12 @@ export namespace Prisma {
     updatedAt: Date | null
     version: number | null
     title: string | null
-    status: $Enums.ModuleStatus | null
+    status: $Enums.ModulePageStatus | null
+    authorId: string | null
+    lastEditBy: string | null
+    draftSavedAt: Date | null
+    isDraft: boolean | null
+    hasUnpublishedChanges: boolean | null
   }
 
   export type ModulePageMaxAggregateOutputType = {
@@ -3310,7 +3328,12 @@ export namespace Prisma {
     updatedAt: Date | null
     version: number | null
     title: string | null
-    status: $Enums.ModuleStatus | null
+    status: $Enums.ModulePageStatus | null
+    authorId: string | null
+    lastEditBy: string | null
+    draftSavedAt: Date | null
+    isDraft: boolean | null
+    hasUnpublishedChanges: boolean | null
   }
 
   export type ModulePageCountAggregateOutputType = {
@@ -3324,6 +3347,12 @@ export namespace Prisma {
     version: number
     title: number
     status: number
+    authorId: number
+    lastEditBy: number
+    draftData: number
+    draftSavedAt: number
+    isDraft: number
+    hasUnpublishedChanges: number
     _all: number
   }
 
@@ -3348,6 +3377,11 @@ export namespace Prisma {
     version?: true
     title?: true
     status?: true
+    authorId?: true
+    lastEditBy?: true
+    draftSavedAt?: true
+    isDraft?: true
+    hasUnpublishedChanges?: true
   }
 
   export type ModulePageMaxAggregateInputType = {
@@ -3360,6 +3394,11 @@ export namespace Prisma {
     version?: true
     title?: true
     status?: true
+    authorId?: true
+    lastEditBy?: true
+    draftSavedAt?: true
+    isDraft?: true
+    hasUnpublishedChanges?: true
   }
 
   export type ModulePageCountAggregateInputType = {
@@ -3373,6 +3412,12 @@ export namespace Prisma {
     version?: true
     title?: true
     status?: true
+    authorId?: true
+    lastEditBy?: true
+    draftData?: true
+    draftSavedAt?: true
+    isDraft?: true
+    hasUnpublishedChanges?: true
     _all?: true
   }
 
@@ -3472,7 +3517,13 @@ export namespace Prisma {
     updatedAt: Date
     version: number
     title: string
-    status: $Enums.ModuleStatus
+    status: $Enums.ModulePageStatus
+    authorId: string | null
+    lastEditBy: string | null
+    draftData: JsonValue | null
+    draftSavedAt: Date | null
+    isDraft: boolean
+    hasUnpublishedChanges: boolean
     _count: ModulePageCountAggregateOutputType | null
     _avg: ModulePageAvgAggregateOutputType | null
     _sum: ModulePageSumAggregateOutputType | null
@@ -3505,6 +3556,12 @@ export namespace Prisma {
     version?: boolean
     title?: boolean
     status?: boolean
+    authorId?: boolean
+    lastEditBy?: boolean
+    draftData?: boolean
+    draftSavedAt?: boolean
+    isDraft?: boolean
+    hasUnpublishedChanges?: boolean
     module?: boolean | ModuleDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["modulePage"]>
 
@@ -3519,6 +3576,12 @@ export namespace Prisma {
     version?: boolean
     title?: boolean
     status?: boolean
+    authorId?: boolean
+    lastEditBy?: boolean
+    draftData?: boolean
+    draftSavedAt?: boolean
+    isDraft?: boolean
+    hasUnpublishedChanges?: boolean
     module?: boolean | ModuleDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["modulePage"]>
 
@@ -3533,6 +3596,12 @@ export namespace Prisma {
     version?: boolean
     title?: boolean
     status?: boolean
+    authorId?: boolean
+    lastEditBy?: boolean
+    draftData?: boolean
+    draftSavedAt?: boolean
+    isDraft?: boolean
+    hasUnpublishedChanges?: boolean
     module?: boolean | ModuleDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["modulePage"]>
 
@@ -3547,9 +3616,15 @@ export namespace Prisma {
     version?: boolean
     title?: boolean
     status?: boolean
+    authorId?: boolean
+    lastEditBy?: boolean
+    draftData?: boolean
+    draftSavedAt?: boolean
+    isDraft?: boolean
+    hasUnpublishedChanges?: boolean
   }
 
-  export type ModulePageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "moduleId" | "order" | "type" | "content" | "createdAt" | "updatedAt" | "version" | "title" | "status", ExtArgs["result"]["modulePage"]>
+  export type ModulePageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "moduleId" | "order" | "type" | "content" | "createdAt" | "updatedAt" | "version" | "title" | "status" | "authorId" | "lastEditBy" | "draftData" | "draftSavedAt" | "isDraft" | "hasUnpublishedChanges", ExtArgs["result"]["modulePage"]>
   export type ModulePageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     module?: boolean | ModuleDefaultArgs<ExtArgs>
   }
@@ -3575,7 +3650,13 @@ export namespace Prisma {
       updatedAt: Date
       version: number
       title: string
-      status: $Enums.ModuleStatus
+      status: $Enums.ModulePageStatus
+      authorId: string | null
+      lastEditBy: string | null
+      draftData: Prisma.JsonValue | null
+      draftSavedAt: Date | null
+      isDraft: boolean
+      hasUnpublishedChanges: boolean
     }, ExtArgs["result"]["modulePage"]>
     composites: {}
   }
@@ -4009,7 +4090,13 @@ export namespace Prisma {
     readonly updatedAt: FieldRef<"ModulePage", 'DateTime'>
     readonly version: FieldRef<"ModulePage", 'Int'>
     readonly title: FieldRef<"ModulePage", 'String'>
-    readonly status: FieldRef<"ModulePage", 'ModuleStatus'>
+    readonly status: FieldRef<"ModulePage", 'ModulePageStatus'>
+    readonly authorId: FieldRef<"ModulePage", 'String'>
+    readonly lastEditBy: FieldRef<"ModulePage", 'String'>
+    readonly draftData: FieldRef<"ModulePage", 'Json'>
+    readonly draftSavedAt: FieldRef<"ModulePage", 'DateTime'>
+    readonly isDraft: FieldRef<"ModulePage", 'Boolean'>
+    readonly hasUnpublishedChanges: FieldRef<"ModulePage", 'Boolean'>
   }
     
 
@@ -4476,7 +4563,13 @@ export namespace Prisma {
     updatedAt: 'updatedAt',
     version: 'version',
     title: 'title',
-    status: 'status'
+    status: 'status',
+    authorId: 'authorId',
+    lastEditBy: 'lastEditBy',
+    draftData: 'draftData',
+    draftSavedAt: 'draftSavedAt',
+    isDraft: 'isDraft',
+    hasUnpublishedChanges: 'hasUnpublishedChanges'
   };
 
   export type ModulePageScalarFieldEnum = (typeof ModulePageScalarFieldEnum)[keyof typeof ModulePageScalarFieldEnum]
@@ -4495,6 +4588,14 @@ export namespace Prisma {
   };
 
   export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+  export const NullableJsonNullValueInput: {
+    DbNull: typeof DbNull,
+    JsonNull: typeof JsonNull
+  };
+
+  export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
   export const QueryMode: {
@@ -4622,6 +4723,27 @@ export namespace Prisma {
    * Reference to a field of type 'QueryMode'
    */
   export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+  /**
+   * Reference to a field of type 'ModulePageStatus'
+   */
+  export type EnumModulePageStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ModulePageStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'ModulePageStatus[]'
+   */
+  export type ListEnumModulePageStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ModulePageStatus[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -4792,7 +4914,13 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"ModulePage"> | Date | string
     version?: IntFilter<"ModulePage"> | number
     title?: StringFilter<"ModulePage"> | string
-    status?: EnumModuleStatusFilter<"ModulePage"> | $Enums.ModuleStatus
+    status?: EnumModulePageStatusFilter<"ModulePage"> | $Enums.ModulePageStatus
+    authorId?: StringNullableFilter<"ModulePage"> | string | null
+    lastEditBy?: StringNullableFilter<"ModulePage"> | string | null
+    draftData?: JsonNullableFilter<"ModulePage">
+    draftSavedAt?: DateTimeNullableFilter<"ModulePage"> | Date | string | null
+    isDraft?: BoolFilter<"ModulePage"> | boolean
+    hasUnpublishedChanges?: BoolFilter<"ModulePage"> | boolean
     module?: XOR<ModuleScalarRelationFilter, ModuleWhereInput>
   }
 
@@ -4807,6 +4935,12 @@ export namespace Prisma {
     version?: SortOrder
     title?: SortOrder
     status?: SortOrder
+    authorId?: SortOrderInput | SortOrder
+    lastEditBy?: SortOrderInput | SortOrder
+    draftData?: SortOrderInput | SortOrder
+    draftSavedAt?: SortOrderInput | SortOrder
+    isDraft?: SortOrder
+    hasUnpublishedChanges?: SortOrder
     module?: ModuleOrderByWithRelationInput
   }
 
@@ -4824,7 +4958,13 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"ModulePage"> | Date | string
     version?: IntFilter<"ModulePage"> | number
     title?: StringFilter<"ModulePage"> | string
-    status?: EnumModuleStatusFilter<"ModulePage"> | $Enums.ModuleStatus
+    status?: EnumModulePageStatusFilter<"ModulePage"> | $Enums.ModulePageStatus
+    authorId?: StringNullableFilter<"ModulePage"> | string | null
+    lastEditBy?: StringNullableFilter<"ModulePage"> | string | null
+    draftData?: JsonNullableFilter<"ModulePage">
+    draftSavedAt?: DateTimeNullableFilter<"ModulePage"> | Date | string | null
+    isDraft?: BoolFilter<"ModulePage"> | boolean
+    hasUnpublishedChanges?: BoolFilter<"ModulePage"> | boolean
     module?: XOR<ModuleScalarRelationFilter, ModuleWhereInput>
   }, "id" | "moduleId_order">
 
@@ -4839,6 +4979,12 @@ export namespace Prisma {
     version?: SortOrder
     title?: SortOrder
     status?: SortOrder
+    authorId?: SortOrderInput | SortOrder
+    lastEditBy?: SortOrderInput | SortOrder
+    draftData?: SortOrderInput | SortOrder
+    draftSavedAt?: SortOrderInput | SortOrder
+    isDraft?: SortOrder
+    hasUnpublishedChanges?: SortOrder
     _count?: ModulePageCountOrderByAggregateInput
     _avg?: ModulePageAvgOrderByAggregateInput
     _max?: ModulePageMaxOrderByAggregateInput
@@ -4859,7 +5005,13 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"ModulePage"> | Date | string
     version?: IntWithAggregatesFilter<"ModulePage"> | number
     title?: StringWithAggregatesFilter<"ModulePage"> | string
-    status?: EnumModuleStatusWithAggregatesFilter<"ModulePage"> | $Enums.ModuleStatus
+    status?: EnumModulePageStatusWithAggregatesFilter<"ModulePage"> | $Enums.ModulePageStatus
+    authorId?: StringNullableWithAggregatesFilter<"ModulePage"> | string | null
+    lastEditBy?: StringNullableWithAggregatesFilter<"ModulePage"> | string | null
+    draftData?: JsonNullableWithAggregatesFilter<"ModulePage">
+    draftSavedAt?: DateTimeNullableWithAggregatesFilter<"ModulePage"> | Date | string | null
+    isDraft?: BoolWithAggregatesFilter<"ModulePage"> | boolean
+    hasUnpublishedChanges?: BoolWithAggregatesFilter<"ModulePage"> | boolean
   }
 
   export type UserCreateInput = {
@@ -5029,7 +5181,13 @@ export namespace Prisma {
     updatedAt?: Date | string
     version?: number
     title: string
-    status?: $Enums.ModuleStatus
+    status?: $Enums.ModulePageStatus
+    authorId?: string | null
+    lastEditBy?: string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: Date | string | null
+    isDraft?: boolean
+    hasUnpublishedChanges?: boolean
     module: ModuleCreateNestedOneWithoutPagesInput
   }
 
@@ -5043,7 +5201,13 @@ export namespace Prisma {
     updatedAt?: Date | string
     version?: number
     title: string
-    status?: $Enums.ModuleStatus
+    status?: $Enums.ModulePageStatus
+    authorId?: string | null
+    lastEditBy?: string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: Date | string | null
+    isDraft?: boolean
+    hasUnpublishedChanges?: boolean
   }
 
   export type ModulePageUpdateInput = {
@@ -5055,7 +5219,13 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
     title?: StringFieldUpdateOperationsInput | string
-    status?: EnumModuleStatusFieldUpdateOperationsInput | $Enums.ModuleStatus
+    status?: EnumModulePageStatusFieldUpdateOperationsInput | $Enums.ModulePageStatus
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastEditBy?: NullableStringFieldUpdateOperationsInput | string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDraft?: BoolFieldUpdateOperationsInput | boolean
+    hasUnpublishedChanges?: BoolFieldUpdateOperationsInput | boolean
     module?: ModuleUpdateOneRequiredWithoutPagesNestedInput
   }
 
@@ -5069,7 +5239,13 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
     title?: StringFieldUpdateOperationsInput | string
-    status?: EnumModuleStatusFieldUpdateOperationsInput | $Enums.ModuleStatus
+    status?: EnumModulePageStatusFieldUpdateOperationsInput | $Enums.ModulePageStatus
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastEditBy?: NullableStringFieldUpdateOperationsInput | string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDraft?: BoolFieldUpdateOperationsInput | boolean
+    hasUnpublishedChanges?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ModulePageCreateManyInput = {
@@ -5082,7 +5258,13 @@ export namespace Prisma {
     updatedAt?: Date | string
     version?: number
     title: string
-    status?: $Enums.ModuleStatus
+    status?: $Enums.ModulePageStatus
+    authorId?: string | null
+    lastEditBy?: string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: Date | string | null
+    isDraft?: boolean
+    hasUnpublishedChanges?: boolean
   }
 
   export type ModulePageUpdateManyMutationInput = {
@@ -5094,7 +5276,13 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
     title?: StringFieldUpdateOperationsInput | string
-    status?: EnumModuleStatusFieldUpdateOperationsInput | $Enums.ModuleStatus
+    status?: EnumModulePageStatusFieldUpdateOperationsInput | $Enums.ModulePageStatus
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastEditBy?: NullableStringFieldUpdateOperationsInput | string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDraft?: BoolFieldUpdateOperationsInput | boolean
+    hasUnpublishedChanges?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ModulePageUncheckedUpdateManyInput = {
@@ -5107,7 +5295,13 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
     title?: StringFieldUpdateOperationsInput | string
-    status?: EnumModuleStatusFieldUpdateOperationsInput | $Enums.ModuleStatus
+    status?: EnumModulePageStatusFieldUpdateOperationsInput | $Enums.ModulePageStatus
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastEditBy?: NullableStringFieldUpdateOperationsInput | string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDraft?: BoolFieldUpdateOperationsInput | boolean
+    hasUnpublishedChanges?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -5367,6 +5561,52 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type EnumModulePageStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ModulePageStatus | EnumModulePageStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ModulePageStatus[] | ListEnumModulePageStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ModulePageStatus[] | ListEnumModulePageStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumModulePageStatusFilter<$PrismaModel> | $Enums.ModulePageStatus
+  }
+  export type JsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type ModuleScalarRelationFilter = {
     is?: ModuleWhereInput
     isNot?: ModuleWhereInput
@@ -5388,6 +5628,12 @@ export namespace Prisma {
     version?: SortOrder
     title?: SortOrder
     status?: SortOrder
+    authorId?: SortOrder
+    lastEditBy?: SortOrder
+    draftData?: SortOrder
+    draftSavedAt?: SortOrder
+    isDraft?: SortOrder
+    hasUnpublishedChanges?: SortOrder
   }
 
   export type ModulePageAvgOrderByAggregateInput = {
@@ -5405,6 +5651,11 @@ export namespace Prisma {
     version?: SortOrder
     title?: SortOrder
     status?: SortOrder
+    authorId?: SortOrder
+    lastEditBy?: SortOrder
+    draftSavedAt?: SortOrder
+    isDraft?: SortOrder
+    hasUnpublishedChanges?: SortOrder
   }
 
   export type ModulePageMinOrderByAggregateInput = {
@@ -5417,6 +5668,11 @@ export namespace Prisma {
     version?: SortOrder
     title?: SortOrder
     status?: SortOrder
+    authorId?: SortOrder
+    lastEditBy?: SortOrder
+    draftSavedAt?: SortOrder
+    isDraft?: SortOrder
+    hasUnpublishedChanges?: SortOrder
   }
 
   export type ModulePageSumOrderByAggregateInput = {
@@ -5464,6 +5720,64 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedJsonFilter<$PrismaModel>
     _max?: NestedJsonFilter<$PrismaModel>
+  }
+
+  export type EnumModulePageStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ModulePageStatus | EnumModulePageStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ModulePageStatus[] | ListEnumModulePageStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ModulePageStatus[] | ListEnumModulePageStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumModulePageStatusWithAggregatesFilter<$PrismaModel> | $Enums.ModulePageStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumModulePageStatusFilter<$PrismaModel>
+    _max?: NestedEnumModulePageStatusFilter<$PrismaModel>
+  }
+  export type JsonNullableWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonNullableWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonNullableWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedJsonNullableFilter<$PrismaModel>
+    _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -5544,6 +5858,18 @@ export namespace Prisma {
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type EnumModulePageStatusFieldUpdateOperationsInput = {
+    set?: $Enums.ModulePageStatus
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
   }
 
   export type ModuleUpdateOneRequiredWithoutPagesNestedInput = {
@@ -5714,6 +6040,29 @@ export namespace Prisma {
     _max?: NestedEnumModuleStatusFilter<$PrismaModel>
   }
 
+  export type NestedEnumModulePageStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ModulePageStatus | EnumModulePageStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ModulePageStatus[] | ListEnumModulePageStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ModulePageStatus[] | ListEnumModulePageStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumModulePageStatusFilter<$PrismaModel> | $Enums.ModulePageStatus
+  }
+
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -5764,6 +6113,61 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type NestedEnumModulePageStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ModulePageStatus | EnumModulePageStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ModulePageStatus[] | ListEnumModulePageStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ModulePageStatus[] | ListEnumModulePageStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumModulePageStatusWithAggregatesFilter<$PrismaModel> | $Enums.ModulePageStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumModulePageStatusFilter<$PrismaModel>
+    _max?: NestedEnumModulePageStatusFilter<$PrismaModel>
+  }
+  export type NestedJsonNullableFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonNullableFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonNullableFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonNullableFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonNullableFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
   export type ModulePageCreateWithoutModuleInput = {
     id?: string
     order: number
@@ -5773,7 +6177,13 @@ export namespace Prisma {
     updatedAt?: Date | string
     version?: number
     title: string
-    status?: $Enums.ModuleStatus
+    status?: $Enums.ModulePageStatus
+    authorId?: string | null
+    lastEditBy?: string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: Date | string | null
+    isDraft?: boolean
+    hasUnpublishedChanges?: boolean
   }
 
   export type ModulePageUncheckedCreateWithoutModuleInput = {
@@ -5785,7 +6195,13 @@ export namespace Prisma {
     updatedAt?: Date | string
     version?: number
     title: string
-    status?: $Enums.ModuleStatus
+    status?: $Enums.ModulePageStatus
+    authorId?: string | null
+    lastEditBy?: string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: Date | string | null
+    isDraft?: boolean
+    hasUnpublishedChanges?: boolean
   }
 
   export type ModulePageCreateOrConnectWithoutModuleInput = {
@@ -5827,7 +6243,13 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"ModulePage"> | Date | string
     version?: IntFilter<"ModulePage"> | number
     title?: StringFilter<"ModulePage"> | string
-    status?: EnumModuleStatusFilter<"ModulePage"> | $Enums.ModuleStatus
+    status?: EnumModulePageStatusFilter<"ModulePage"> | $Enums.ModulePageStatus
+    authorId?: StringNullableFilter<"ModulePage"> | string | null
+    lastEditBy?: StringNullableFilter<"ModulePage"> | string | null
+    draftData?: JsonNullableFilter<"ModulePage">
+    draftSavedAt?: DateTimeNullableFilter<"ModulePage"> | Date | string | null
+    isDraft?: BoolFilter<"ModulePage"> | boolean
+    hasUnpublishedChanges?: BoolFilter<"ModulePage"> | boolean
   }
 
   export type ModuleCreateWithoutPagesInput = {
@@ -5899,7 +6321,13 @@ export namespace Prisma {
     updatedAt?: Date | string
     version?: number
     title: string
-    status?: $Enums.ModuleStatus
+    status?: $Enums.ModulePageStatus
+    authorId?: string | null
+    lastEditBy?: string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: Date | string | null
+    isDraft?: boolean
+    hasUnpublishedChanges?: boolean
   }
 
   export type ModulePageUpdateWithoutModuleInput = {
@@ -5911,7 +6339,13 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
     title?: StringFieldUpdateOperationsInput | string
-    status?: EnumModuleStatusFieldUpdateOperationsInput | $Enums.ModuleStatus
+    status?: EnumModulePageStatusFieldUpdateOperationsInput | $Enums.ModulePageStatus
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastEditBy?: NullableStringFieldUpdateOperationsInput | string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDraft?: BoolFieldUpdateOperationsInput | boolean
+    hasUnpublishedChanges?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ModulePageUncheckedUpdateWithoutModuleInput = {
@@ -5923,7 +6357,13 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
     title?: StringFieldUpdateOperationsInput | string
-    status?: EnumModuleStatusFieldUpdateOperationsInput | $Enums.ModuleStatus
+    status?: EnumModulePageStatusFieldUpdateOperationsInput | $Enums.ModulePageStatus
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastEditBy?: NullableStringFieldUpdateOperationsInput | string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDraft?: BoolFieldUpdateOperationsInput | boolean
+    hasUnpublishedChanges?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type ModulePageUncheckedUpdateManyWithoutModuleInput = {
@@ -5935,7 +6375,13 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     version?: IntFieldUpdateOperationsInput | number
     title?: StringFieldUpdateOperationsInput | string
-    status?: EnumModuleStatusFieldUpdateOperationsInput | $Enums.ModuleStatus
+    status?: EnumModulePageStatusFieldUpdateOperationsInput | $Enums.ModulePageStatus
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastEditBy?: NullableStringFieldUpdateOperationsInput | string | null
+    draftData?: NullableJsonNullValueInput | InputJsonValue
+    draftSavedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    isDraft?: BoolFieldUpdateOperationsInput | boolean
+    hasUnpublishedChanges?: BoolFieldUpdateOperationsInput | boolean
   }
 
 

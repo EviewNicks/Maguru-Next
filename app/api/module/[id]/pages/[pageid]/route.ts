@@ -39,7 +39,13 @@ async function getModulePageHandler(
       {
         success: true,
         data: page.data,
-        meta: {}, // Tambahkan meta kosong untuk konsistensi format
+        meta: {
+          // Tambahkan informasi draft jika ada
+          hasUnpublishedChanges: page.data.hasUnpublishedChanges || false,
+          draftSavedAt: page.data.draftSavedAt || null,
+          isDraft: page.data.isDraft || false,
+          lastEditBy: page.data.lastEditBy || null,
+        },
       },
       { status: 200 }
     )
@@ -103,12 +109,36 @@ async function updateModulePageHandler(
       }
     }
 
+    // Validasi draftData jika ada
+    if (body.draftData) {
+      if (
+        typeof body.draftData !== 'object' ||
+        body.draftData.type !== 'doc' ||
+        !Array.isArray(body.draftData.content)
+      ) {
+        console.error('[API] Invalid draftData format:', body.draftData)
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'Format draftData tidak valid. draftData harus berformat Tiptap JSON dengan type="doc"',
+          },
+          { status: 400 }
+        )
+      }
+    }
+
     // Hapus blocks jika ada (backward compatibility)
     if (body.blocks) {
       console.log(
         '[API] Warning: Blocks format is deprecated, removing blocks property'
       )
       delete body.blocks
+    }
+
+    // Tambahkan informasi lastEditBy jika ada authorId
+    if (body.authorId && !body.lastEditBy) {
+      body.lastEditBy = body.authorId
     }
 
     // Perbarui halaman
@@ -129,7 +159,14 @@ async function updateModulePageHandler(
       {
         success: true,
         data: updatedPage.data,
-        meta: {}, // Tambahkan meta kosong untuk konsistensi format
+        meta: {
+          // Tambahkan informasi draft jika ada
+          hasUnpublishedChanges:
+            updatedPage.data.hasUnpublishedChanges || false,
+          draftSavedAt: updatedPage.data.draftSavedAt || null,
+          isDraft: updatedPage.data.isDraft || false,
+          lastEditBy: updatedPage.data.lastEditBy || null,
+        },
       },
       { status: 200 }
     )

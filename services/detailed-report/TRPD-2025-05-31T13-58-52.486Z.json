@@ -1,0 +1,179 @@
+{
+  "summary": {
+    "timestamp": "2025-05-31T13-58-52.486Z",
+    "totalTests": 12,
+    "passedTests": 12,
+    "failedTests": 0,
+    "pendingTests": 0,
+    "skippedTests": 0,
+    "totalTestSuites": 1,
+    "passedTestSuites": 1,
+    "failedTestSuites": 0,
+    "executionTime": "0.88s",
+    "startTime": "2025-05-31T13:58:50.129Z",
+    "endTime": "2025-05-31T13:58:51.009Z",
+    "errorPatterns": {}
+  },
+  "testFiles": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\services\\modulePageService.test.ts",
+      "relativePath": "features\\manage-module\\services\\modulePageService.test.ts",
+      "numFailingTests": 0,
+      "numPassingTests": 12,
+      "numPendingTests": 0,
+      "perfStats": {
+        "runtime": 880,
+        "slowest": false,
+        "startTime": "2025-05-31T13:58:51.578Z",
+        "endTime": "2025-05-31T13:58:52.458Z"
+      },
+      "testResults": [
+        {
+          "title": "should save draft successfully",
+          "fullName": "modulePageService saveDraft should save draft successfully",
+          "ancestorTitles": [
+            "modulePageService",
+            "saveDraft"
+          ],
+          "status": "passed",
+          "duration": 6,
+          "failureDetails": null
+        },
+        {
+          "title": "should return null if page not found",
+          "fullName": "modulePageService saveDraft should return null if page not found",
+          "ancestorTitles": [
+            "modulePageService",
+            "saveDraft"
+          ],
+          "status": "passed",
+          "duration": 3,
+          "failureDetails": null
+        },
+        {
+          "title": "should handle errors",
+          "fullName": "modulePageService saveDraft should handle errors",
+          "ancestorTitles": [
+            "modulePageService",
+            "saveDraft"
+          ],
+          "status": "passed",
+          "duration": 14,
+          "failureDetails": null
+        },
+        {
+          "title": "should get draft successfully",
+          "fullName": "modulePageService getDraft should get draft successfully",
+          "ancestorTitles": [
+            "modulePageService",
+            "getDraft"
+          ],
+          "status": "passed",
+          "duration": 3,
+          "failureDetails": null
+        },
+        {
+          "title": "should return page without draft data if no draft exists",
+          "fullName": "modulePageService getDraft should return page without draft data if no draft exists",
+          "ancestorTitles": [
+            "modulePageService",
+            "getDraft"
+          ],
+          "status": "passed",
+          "duration": 2,
+          "failureDetails": null
+        },
+        {
+          "title": "should return null if page not found",
+          "fullName": "modulePageService getDraft should return null if page not found",
+          "ancestorTitles": [
+            "modulePageService",
+            "getDraft"
+          ],
+          "status": "passed",
+          "duration": 1,
+          "failureDetails": null
+        },
+        {
+          "title": "should publish draft successfully",
+          "fullName": "modulePageService publishDraft should publish draft successfully",
+          "ancestorTitles": [
+            "modulePageService",
+            "publishDraft"
+          ],
+          "status": "passed",
+          "duration": 2,
+          "failureDetails": null
+        },
+        {
+          "title": "should return null if page not found",
+          "fullName": "modulePageService publishDraft should return null if page not found",
+          "ancestorTitles": [
+            "modulePageService",
+            "publishDraft"
+          ],
+          "status": "passed",
+          "duration": 1,
+          "failureDetails": null
+        },
+        {
+          "title": "should return null if no draft exists",
+          "fullName": "modulePageService publishDraft should return null if no draft exists",
+          "ancestorTitles": [
+            "modulePageService",
+            "publishDraft"
+          ],
+          "status": "passed",
+          "duration": 1,
+          "failureDetails": null
+        },
+        {
+          "title": "should discard draft successfully",
+          "fullName": "modulePageService discardDraft should discard draft successfully",
+          "ancestorTitles": [
+            "modulePageService",
+            "discardDraft"
+          ],
+          "status": "passed",
+          "duration": 2,
+          "failureDetails": null
+        },
+        {
+          "title": "should return false if page not found",
+          "fullName": "modulePageService discardDraft should return false if page not found",
+          "ancestorTitles": [
+            "modulePageService",
+            "discardDraft"
+          ],
+          "status": "passed",
+          "duration": 2,
+          "failureDetails": null
+        },
+        {
+          "title": "should handle errors",
+          "fullName": "modulePageService discardDraft should handle errors",
+          "ancestorTitles": [
+            "modulePageService",
+            "discardDraft"
+          ],
+          "status": "passed",
+          "duration": 1,
+          "failureDetails": null
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "snapshots": {
+    "total": 0,
+    "matched": 0,
+    "added": 0,
+    "updated": 0,
+    "unmatched": 0,
+    "unchecked": 0,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesUnmatched": 0,
+    "filesUpdated": 0
+  }
+}

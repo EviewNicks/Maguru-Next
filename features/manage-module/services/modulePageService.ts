@@ -4,6 +4,7 @@ import {
   ApiListResponse,
   ApiEntityResponse,
   ModulePageStatus,
+  ModuleStatus,
   IModulePageService,
   StandardEditorContent,
 } from '../types'
@@ -104,6 +105,7 @@ export const modulePageService: IModulePageService = {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               content: contentJson as any,
               type: data.type || 'content',
+              authorId: data.authorId, // Tambahkan authorId jika ada
             },
           })
 
@@ -170,6 +172,13 @@ export const modulePageService: IModulePageService = {
           (createdPage.status as ModulePageStatus) || ModulePageStatus.DRAFT,
         createdAt: createdPage.createdAt,
         updatedAt: createdPage.updatedAt,
+        // Field baru untuk draft
+        authorId: createdPage.authorId || undefined,
+        lastEditBy: createdPage.lastEditBy || undefined,
+        draftData: undefined,
+        draftSavedAt: undefined,
+        isDraft: false,
+        hasUnpublishedChanges: false,
       }
 
       return {
@@ -224,6 +233,14 @@ export const modulePageService: IModulePageService = {
         status: (page.status as ModulePageStatus) || ModulePageStatus.DRAFT,
         createdAt: page.createdAt,
         updatedAt: page.updatedAt,
+        // Field baru untuk draft
+        authorId: page.authorId || undefined,
+        lastEditBy: page.lastEditBy || undefined,
+        draftData:
+          (page.draftData as unknown as StandardEditorContent) || undefined,
+        draftSavedAt: page.draftSavedAt || undefined,
+        isDraft: page.isDraft || false,
+        hasUnpublishedChanges: page.hasUnpublishedChanges || false,
       }
 
       return pageData
@@ -272,6 +289,14 @@ export const modulePageService: IModulePageService = {
         status: (page.status as ModulePageStatus) || ModulePageStatus.DRAFT,
         createdAt: page.createdAt,
         updatedAt: page.updatedAt,
+        // Field baru untuk draft
+        authorId: page.authorId || undefined,
+        lastEditBy: page.lastEditBy || undefined,
+        draftData:
+          (page.draftData as unknown as StandardEditorContent) || undefined,
+        draftSavedAt: page.draftSavedAt || undefined,
+        isDraft: page.isDraft || false,
+        hasUnpublishedChanges: page.hasUnpublishedChanges || false,
       },
     }
   },
@@ -321,6 +346,11 @@ export const modulePageService: IModulePageService = {
       console.log(`[Service] Updating page status to: ${data.status}`)
     }
 
+    // Jika lastEditBy diupdate
+    if (data.lastEditBy) {
+      updateFields.lastEditBy = data.lastEditBy
+    }
+
     // Pastikan content valid jika diberikan
     if (data.content) {
       // Konversi tipe yang aman dengan ensureValidEditorContent
@@ -328,6 +358,11 @@ export const modulePageService: IModulePageService = {
       // Gunakan type assertion untuk mengatasi masalah tipe
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       updateFields.content = contentValue as any
+
+      // Reset draft jika konten utama diupdate
+      updateFields.hasUnpublishedChanges = false
+      updateFields.draftData = undefined
+      updateFields.draftSavedAt = undefined
     }
 
     // Update halaman
@@ -352,6 +387,15 @@ export const modulePageService: IModulePageService = {
           (updatedPage.status as ModulePageStatus) || ModulePageStatus.DRAFT,
         createdAt: updatedPage.createdAt,
         updatedAt: updatedPage.updatedAt,
+        // Field baru untuk draft
+        authorId: updatedPage.authorId || undefined,
+        lastEditBy: updatedPage.lastEditBy || undefined,
+        draftData:
+          (updatedPage.draftData as unknown as StandardEditorContent) ||
+          undefined,
+        draftSavedAt: updatedPage.draftSavedAt || undefined,
+        isDraft: updatedPage.isDraft || false,
+        hasUnpublishedChanges: updatedPage.hasUnpublishedChanges || false,
       },
     }
   },
@@ -437,6 +481,273 @@ export const modulePageService: IModulePageService = {
    * @returns Hasil parsing sebagai StandardEditorContent
    */
   parseContent(content: unknown): StandardEditorContent {
+    // Jika lib/dataFormats tidak mendukung parameter returnRawJSON, hapus parameter kedua
     return ensureValidEditorContent(content)
+  },
+
+  /**
+   * Menyimpan draft ke database
+   * @param pageId - ID halaman
+   * @param draftData - Konten draft
+   * @param authorId - ID pengguna yang menyimpan draft
+   * @returns Halaman dengan draft yang telah disimpan
+   */
+  async saveDraft(
+    pageId: string,
+    draftData: StandardEditorContent,
+    authorId: string
+  ): Promise<ApiEntityResponse<ModulePage> | null> {
+    try {
+      logger.info(SERVICE, 'Saving draft for page', {
+        pageId,
+        authorId,
+        hasContent: !!draftData,
+      })
+
+      // Cek keberadaan halaman
+      const existingPage = await prisma.modulePage.findUnique({
+        where: { id: pageId },
+      })
+
+      if (!existingPage) {
+        logger.error(SERVICE, 'Page not found for draft save', { pageId })
+        return null
+      }
+
+      // Pastikan draftData valid dan dalam format yang benar
+      const validDraftData = ensureValidEditorContent(draftData)
+
+      // Update halaman dengan draft baru
+      const updatedPage = await prisma.modulePage.update({
+        where: { id: pageId },
+        data: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          draftData: validDraftData as any,
+          draftSavedAt: new Date(),
+          lastEditBy: authorId,
+          hasUnpublishedChanges: true,
+          isDraft: true,
+        },
+      })
+
+      logger.debug(SERVICE, 'Draft saved successfully', {
+        pageId,
+        draftSavedAt: updatedPage.draftSavedAt,
+      })
+
+      // Transform hasil untuk response API
+      return {
+        success: true,
+        data: {
+          id: updatedPage.id,
+          moduleId: updatedPage.moduleId,
+          title: updatedPage.title,
+          order: updatedPage.order,
+          type: updatedPage.type,
+          content: updatedPage.content as unknown as StandardEditorContent,
+          version: updatedPage.version,
+          status:
+            (updatedPage.status as ModulePageStatus) || ModulePageStatus.DRAFT,
+          createdAt: updatedPage.createdAt,
+          updatedAt: updatedPage.updatedAt,
+          authorId: updatedPage.authorId || undefined,
+          lastEditBy: updatedPage.lastEditBy || undefined,
+          draftData: updatedPage.draftData as unknown as StandardEditorContent,
+          draftSavedAt: updatedPage.draftSavedAt || undefined,
+          isDraft: updatedPage.isDraft || false,
+          hasUnpublishedChanges: updatedPage.hasUnpublishedChanges || false,
+        },
+      }
+    } catch (error) {
+      logger.error(SERVICE, 'Error saving draft', { error, pageId })
+      throw error
+    }
+  },
+
+  /**
+   * Mendapatkan draft terbaru dari database
+   * @param pageId - ID halaman
+   * @returns Halaman dengan draft
+   */
+  async getDraft(
+    pageId: string
+  ): Promise<ApiEntityResponse<ModulePage> | null> {
+    try {
+      logger.info(SERVICE, 'Getting draft for page', { pageId })
+
+      // Ambil halaman dengan draft
+      const page = await prisma.modulePage.findUnique({
+        where: { id: pageId },
+      })
+
+      if (!page) {
+        logger.error(SERVICE, 'Page not found for draft retrieval', { pageId })
+        return null
+      }
+
+      // Jika tidak ada draft, kembalikan null untuk draftData
+      if (!page.draftData) {
+        logger.debug(SERVICE, 'No draft found for page', { pageId })
+        return {
+          success: true,
+          data: {
+            id: page.id,
+            moduleId: page.moduleId,
+            title: page.title,
+            order: page.order,
+            type: page.type,
+            content: page.content as unknown as StandardEditorContent,
+            version: page.version,
+            status: (page.status as ModulePageStatus) || ModulePageStatus.DRAFT,
+            createdAt: page.createdAt,
+            updatedAt: page.updatedAt,
+            authorId: page.authorId || undefined,
+            lastEditBy: page.lastEditBy || undefined,
+            draftData: undefined,
+            draftSavedAt: undefined,
+            isDraft: false,
+            hasUnpublishedChanges: false,
+          },
+        }
+      }
+
+      // Transform hasil untuk response API
+      return {
+        success: true,
+        data: {
+          id: page.id,
+          moduleId: page.moduleId,
+          title: page.title,
+          order: page.order,
+          type: page.type,
+          content: page.content as unknown as StandardEditorContent,
+          version: page.version,
+          status: (page.status as ModulePageStatus) || ModulePageStatus.DRAFT,
+          createdAt: page.createdAt,
+          updatedAt: page.updatedAt,
+          authorId: page.authorId || undefined,
+          lastEditBy: page.lastEditBy || undefined,
+          draftData: page.draftData as unknown as StandardEditorContent,
+          draftSavedAt: page.draftSavedAt || undefined,
+          isDraft: page.isDraft || false,
+          hasUnpublishedChanges: page.hasUnpublishedChanges || false,
+        },
+      }
+    } catch (error) {
+      logger.error(SERVICE, 'Error getting draft', { error, pageId })
+      throw error
+    }
+  },
+
+  /**
+   * Mempublikasikan draft menjadi versi published
+   * @param pageId - ID halaman
+   * @returns Halaman yang telah dipublikasikan
+   */
+  async publishDraft(
+    pageId: string
+  ): Promise<ApiEntityResponse<ModulePage> | null> {
+    try {
+      logger.info(SERVICE, 'Publishing draft for page', { pageId })
+
+      // Cek keberadaan halaman dan draft
+      const existingPage = await prisma.modulePage.findUnique({
+        where: { id: pageId },
+      })
+
+      if (!existingPage) {
+        logger.error(SERVICE, 'Page not found for draft publish', { pageId })
+        return null
+      }
+
+      if (!existingPage.draftData) {
+        logger.error(SERVICE, 'No draft found to publish', { pageId })
+        return null
+      }
+
+      // Update halaman dengan konten dari draft dan increment version
+      const updatedPage = await prisma.modulePage.update({
+        where: { id: pageId },
+        data: {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          content: existingPage.draftData as any, // Gunakan konten draft sebagai konten utama
+          draftData: undefined, // Reset draft
+          draftSavedAt: undefined,
+          isDraft: false,
+          hasUnpublishedChanges: false,
+          version: { increment: 1 }, // Increment version saat publish
+          status: ModulePageStatus.PUBLISHED as unknown as ModuleStatus, // Cast ke ModuleStatus
+        },
+      })
+
+      logger.debug(SERVICE, 'Draft published successfully', {
+        pageId,
+        newVersion: updatedPage.version,
+      })
+
+      // Transform hasil untuk response API
+      return {
+        success: true,
+        data: {
+          id: updatedPage.id,
+          moduleId: updatedPage.moduleId,
+          title: updatedPage.title,
+          order: updatedPage.order,
+          type: updatedPage.type,
+          content: updatedPage.content as unknown as StandardEditorContent,
+          version: updatedPage.version,
+          status: ModulePageStatus.PUBLISHED,
+          createdAt: updatedPage.createdAt,
+          updatedAt: updatedPage.updatedAt,
+          authorId: updatedPage.authorId || undefined,
+          lastEditBy: updatedPage.lastEditBy || undefined,
+          draftData: undefined,
+          draftSavedAt: undefined,
+          isDraft: false,
+          hasUnpublishedChanges: false,
+        },
+      }
+    } catch (error) {
+      logger.error(SERVICE, 'Error publishing draft', { error, pageId })
+      throw error
+    }
+  },
+
+  /**
+   * Membuang draft dan kembali ke versi published
+   * @param pageId - ID halaman
+   * @returns True jika berhasil dibuang
+   */
+  async discardDraft(pageId: string): Promise<boolean> {
+    try {
+      logger.info(SERVICE, 'Discarding draft for page', { pageId })
+
+      // Cek keberadaan halaman
+      const existingPage = await prisma.modulePage.findUnique({
+        where: { id: pageId },
+      })
+
+      if (!existingPage) {
+        logger.error(SERVICE, 'Page not found for draft discard', { pageId })
+        return false
+      }
+
+      // Update halaman untuk menghapus draft
+      await prisma.modulePage.update({
+        where: { id: pageId },
+        data: {
+          draftData: undefined,
+          draftSavedAt: undefined,
+          isDraft: false,
+          hasUnpublishedChanges: false,
+        },
+      })
+
+      logger.debug(SERVICE, 'Draft discarded successfully', { pageId })
+      return true
+    } catch (error) {
+      logger.error(SERVICE, 'Error discarding draft', { error, pageId })
+      throw error
+    }
   },
 }

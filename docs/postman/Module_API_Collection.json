@@ -301,6 +301,105 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Module Page Drafts",
+      "description": "Endpoint untuk pengelolaan draft halaman modul",
+      "item": [
+        {
+          "name": "Save Draft",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": {\n    \"type\": \"doc\",\n    \"content\": [\n      {\n        \"type\": \"heading\",\n        \"attrs\": { \"level\": 1 },\n        \"content\": [\n          {\n            \"type\": \"text\",\n            \"text\": \"Draft Halaman\"\n          }\n        ]\n      },\n      {\n        \"type\": \"paragraph\",\n        \"content\": [\n          {\n            \"type\": \"text\",\n            \"text\": \"Ini adalah konten draft yang belum dipublikasikan.\"\n          }\n        ]\n      }\n    ]\n  },\n  \"authorId\": \"{{userId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages/{{pageId}}/draft",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "module",
+                "{{moduleId}}",
+                "pages",
+                "{{pageId}}",
+                "draft"
+              ]
+            },
+            "description": "Menyimpan draft untuk halaman modul yang sudah ada. Draft disimpan terpisah dari konten yang dipublikasikan."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Draft",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages/{{pageId}}/draft",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "module",
+                "{{moduleId}}",
+                "pages",
+                "{{pageId}}",
+                "draft"
+              ]
+            },
+            "description": "Mendapatkan draft terbaru untuk halaman modul tertentu."
+          },
+          "response": []
+        },
+        {
+          "name": "Publish Draft",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages/{{pageId}}/draft",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "module",
+                "{{moduleId}}",
+                "pages",
+                "{{pageId}}",
+                "draft"
+              ]
+            },
+            "description": "Mempublikasikan draft menjadi konten halaman yang dipublikasikan. Ini akan meningkatkan versi halaman dan menghapus draft."
+          },
+          "response": []
+        },
+        {
+          "name": "Discard Draft",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/module/{{moduleId}}/pages/{{pageId}}/draft",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "module",
+                "{{moduleId}}",
+                "pages",
+                "{{pageId}}",
+                "draft"
+              ]
+            },
+            "description": "Membuang draft dan kembali ke versi yang dipublikasikan sebelumnya."
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "event": [
@@ -354,6 +453,12 @@
       "value": "",
       "type": "string",
       "description": "ID halaman modul ketiga untuk testing reorder"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string",
+      "description": "ID pengguna untuk authorId dalam operasi draft"
     }
   ]
 }
