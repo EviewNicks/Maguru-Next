@@ -2,7 +2,7 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { rest } from 'msw'
 import { setupServer } from 'msw/node'
 import { draftHandlers } from '../../__mocks__/mockDraftHandlers'
-import useRichTextAutosave from '../../../hooks/useRichTextAutosave'
+import useRichTextAutosave from '../../../hooks/draft/useRichTextAutosave'
 import { DraftSaveStatus } from '../../../types'
 
 // Setup mock server

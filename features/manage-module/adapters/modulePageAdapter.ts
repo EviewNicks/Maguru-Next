@@ -30,6 +30,12 @@ interface Cache {
       timestamp: number
     }
   }
+  drafts: {
+    [pageId: string]: {
+      data: ModulePage
+      timestamp: number
+    }
+  }
 }
 
 // Cache expiration in milliseconds (5 minutes)
@@ -45,6 +51,7 @@ export const modulePageAdapter: IModulePageAdapter = {
   _cache: {
     pages: {},
     page: {},
+    drafts: {},
   } as Cache,
 
   /**
@@ -65,6 +72,13 @@ export const modulePageAdapter: IModulePageAdapter = {
         delete this._cache.page[pageId]
       }
     })
+
+    // Hapus cache draft yang terkait dengan modul
+    Object.keys(this._cache.drafts).forEach((pageId) => {
+      if (this._cache.drafts[pageId]?.data.moduleId === moduleId) {
+        delete this._cache.drafts[pageId]
+      }
+    })
   },
 
   /**
@@ -81,10 +95,27 @@ export const modulePageAdapter: IModulePageAdapter = {
       // Hapus cache halaman
       delete this._cache.page[pageId]
 
+      // Hapus cache draft untuk halaman ini
+      if (this._cache.drafts[pageId]) {
+        delete this._cache.drafts[pageId]
+      }
+
       // Hapus juga cache modul terkait agar data selalu konsisten
       if (moduleId && this._cache.pages[moduleId]) {
         delete this._cache.pages[moduleId]
       }
+    }
+  },
+
+  /**
+   * Menghapus cache draft untuk halaman tertentu
+   * @param pageId - ID halaman
+   */
+  invalidateDraftCache(pageId: string): void {
+    logger.debug(ADAPTER, `Invalidating draft cache for page ${pageId}`)
+
+    if (this._cache.drafts[pageId]) {
+      delete this._cache.drafts[pageId]
     }
   },
 
@@ -799,6 +830,363 @@ export const modulePageAdapter: IModulePageAdapter = {
           content: [{ type: 'text', text: '' }],
         },
       ],
+    }
+  },
+
+  /**
+   * Menyimpan draft halaman melalui API
+   * @param pageId - ID halaman
+   * @param content - Konten draft dalam format Tiptap
+   * @param authorId - ID pengguna yang menyimpan draft
+   * @returns Promise dengan detail draft yang tersimpan atau null
+   */
+  saveDraft: async (
+    pageId: string,
+    content: StandardEditorContent,
+    authorId: string
+  ): Promise<ModulePage | null> => {
+    try {
+      // Validasi input
+      modulePageAdapter.validatePageId(pageId)
+
+      // Validasi content
+      if (!content || typeof content !== 'object') {
+        logger.error(ADAPTER, `Invalid draft content: ${typeof content}`)
+        throw new Error('Konten draft tidak valid')
+      }
+
+      if (!authorId) {
+        logger.error(ADAPTER, 'Missing authorId for draft save')
+        throw new Error('ID pengguna diperlukan untuk menyimpan draft')
+      }
+
+      logger.info(ADAPTER, `Saving draft for page ${pageId} via API`)
+
+      // Gunakan ensureValidEditorContent untuk validasi dan konversi
+      const validContent = ensureValidEditorContent(content)
+
+      // Dapatkan modul ID dari cache atau dari request GET
+      let moduleId: string | undefined
+      const pageData = modulePageAdapter._cache.page[pageId]?.data
+      if (pageData) {
+        moduleId = pageData.moduleId
+      }
+
+      // Jika tidak ada di cache, coba dapatkan dari API
+      if (!moduleId) {
+        const page = await modulePageAdapter.getPage(pageId)
+        moduleId = page?.moduleId
+      }
+
+      if (!moduleId) {
+        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
+        return null
+      }
+
+      // Panggil API endpoint draft
+      const response = await fetch(
+        `/api/module/${moduleId}/pages/${pageId}/draft`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: validContent,
+            authorId,
+          }),
+        }
+      )
+
+      if (response.status === 404) {
+        return null
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          errorData.error || `Failed to save draft for page ${pageId}`
+        )
+      }
+
+      const result = (await response.json()) as ApiEntityResponse<ModulePage>
+
+      if (result.success && result.data) {
+        // Simpan ke cache draft
+        modulePageAdapter._cache.drafts[pageId] = {
+          data: result.data,
+          timestamp: Date.now(),
+        }
+
+        // Juga update cache halaman jika ada
+        if (modulePageAdapter._cache.page[pageId]) {
+          modulePageAdapter._cache.page[pageId] = {
+            data: result.data,
+            timestamp: Date.now(),
+          }
+        }
+
+        return result.data
+      }
+
+      return null
+    } catch (error) {
+      logger.error(ADAPTER, `Error saving draft for page ${pageId}`, error)
+      throw error
+    }
+  },
+
+  /**
+   * Mendapatkan draft halaman melalui API
+   * @param pageId - ID halaman
+   * @param skipCache - Flag untuk melewati cache
+   * @returns Promise dengan detail draft atau null
+   */
+  getDraft: async (
+    pageId: string,
+    skipCache: boolean = false
+  ): Promise<ModulePage | null> => {
+    try {
+      // Validasi input
+      modulePageAdapter.validatePageId(pageId)
+
+      // Cek cache jika skipCache=false
+      if (
+        !skipCache &&
+        modulePageAdapter._cache.drafts[pageId] &&
+        Date.now() - modulePageAdapter._cache.drafts[pageId].timestamp <
+          CACHE_EXPIRATION
+      ) {
+        logger.debug(ADAPTER, `Using cached draft for page ${pageId}`)
+        return modulePageAdapter._cache.drafts[pageId].data
+      }
+
+      logger.info(ADAPTER, `Fetching draft for page ${pageId} via API`)
+
+      // Dapatkan modul ID dari cache atau dari request GET
+      let moduleId: string | undefined
+      const pageData = modulePageAdapter._cache.page[pageId]?.data
+      if (pageData) {
+        moduleId = pageData.moduleId
+      }
+
+      // Jika tidak ada di cache, coba dapatkan dari API
+      if (!moduleId) {
+        const page = await modulePageAdapter.getPage(pageId)
+        moduleId = page?.moduleId
+      }
+
+      if (!moduleId) {
+        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
+        return null
+      }
+
+      // Panggil API endpoint draft
+      const response = await fetch(
+        `/api/module/${moduleId}/pages/${pageId}/draft`,
+        {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        }
+      )
+
+      if (response.status === 404) {
+        return null
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          errorData.error || `Failed to get draft for page ${pageId}`
+        )
+      }
+
+      const result = (await response.json()) as ApiEntityResponse<ModulePage>
+
+      if (result.success && result.data) {
+        // Simpan ke cache draft
+        modulePageAdapter._cache.drafts[pageId] = {
+          data: result.data,
+          timestamp: Date.now(),
+        }
+
+        return result.data
+      }
+
+      return null
+    } catch (error) {
+      logger.error(ADAPTER, `Error getting draft for page ${pageId}`, error)
+      return null
+    }
+  },
+
+  /**
+   * Mempublikasikan draft menjadi konten halaman yang dipublikasikan
+   * @param pageId - ID halaman
+   * @returns Promise dengan detail halaman yang dipublikasikan atau null
+   */
+  publishDraft: async (pageId: string): Promise<ModulePage | null> => {
+    try {
+      // Validasi input
+      modulePageAdapter.validatePageId(pageId)
+
+      logger.info(ADAPTER, `Publishing draft for page ${pageId} via API`)
+
+      // Dapatkan modul ID dari cache atau dari request GET
+      let moduleId: string | undefined
+      const pageData = modulePageAdapter._cache.page[pageId]?.data
+      if (pageData) {
+        moduleId = pageData.moduleId
+      }
+
+      // Jika tidak ada di cache, coba dapatkan dari API
+      if (!moduleId) {
+        const page = await modulePageAdapter.getPage(pageId)
+        moduleId = page?.moduleId
+      }
+
+      if (!moduleId) {
+        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
+        return null
+      }
+
+      // Panggil API endpoint draft dengan PATCH untuk publish
+      const response = await fetch(
+        `/api/module/${moduleId}/pages/${pageId}/draft`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+
+      if (response.status === 404) {
+        return null
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          errorData.error || `Failed to publish draft for page ${pageId}`
+        )
+      }
+
+      const result = (await response.json()) as ApiEntityResponse<ModulePage>
+
+      if (result.success && result.data) {
+        // Invalidate cache karena konten halaman telah berubah
+        modulePageAdapter.invalidatePageCache(pageId)
+        modulePageAdapter.invalidateDraftCache(pageId)
+        modulePageAdapter.invalidateModuleCache(result.data.moduleId)
+
+        return result.data
+      }
+
+      return null
+    } catch (error) {
+      logger.error(ADAPTER, `Error publishing draft for page ${pageId}`, error)
+      throw error
+    }
+  },
+
+  /**
+   * Membuang draft dan kembali ke versi published
+   * @param pageId - ID halaman
+   * @returns Promise dengan boolean yang menunjukkan keberhasilan
+   */
+  discardDraft: async (pageId: string): Promise<boolean> => {
+    try {
+      // Validasi input
+      modulePageAdapter.validatePageId(pageId)
+
+      logger.info(ADAPTER, `Discarding draft for page ${pageId} via API`)
+
+      // Dapatkan modul ID dari cache atau dari request GET
+      let moduleId: string | undefined
+      const pageData = modulePageAdapter._cache.page[pageId]?.data
+      if (pageData) {
+        moduleId = pageData.moduleId
+      }
+
+      // Jika tidak ada di cache, coba dapatkan dari API
+      if (!moduleId) {
+        const page = await modulePageAdapter.getPage(pageId)
+        moduleId = page?.moduleId
+      }
+
+      if (!moduleId) {
+        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
+        return false
+      }
+
+      // Panggil API endpoint draft dengan DELETE untuk discard
+      const response = await fetch(
+        `/api/module/${moduleId}/pages/${pageId}/draft`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+
+      if (response.status === 404) {
+        return false
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          errorData.error || `Failed to discard draft for page ${pageId}`
+        )
+      }
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Invalidate cache
+        modulePageAdapter.invalidateDraftCache(pageId)
+        modulePageAdapter.invalidatePageCache(pageId)
+
+        return true
+      }
+
+      return false
+    } catch (error) {
+      logger.error(ADAPTER, `Error discarding draft for page ${pageId}`, error)
+      throw error
+    }
+  },
+
+  /**
+   * Memeriksa apakah halaman memiliki draft yang belum dipublikasikan
+   * @param pageId - ID halaman
+   * @returns Promise dengan boolean yang menunjukkan keberadaan draft
+   */
+  hasDraft: async (pageId: string): Promise<boolean> => {
+    try {
+      // Validasi input
+      modulePageAdapter.validatePageId(pageId)
+
+      // Cek cache draft terlebih dahulu
+      if (modulePageAdapter._cache.drafts[pageId]) {
+        return !!modulePageAdapter._cache.drafts[pageId].data.draftData
+      }
+
+      // Cek cache page
+      if (modulePageAdapter._cache.page[pageId]) {
+        return !!modulePageAdapter._cache.page[pageId].data.draftData
+      }
+
+      // Jika tidak ada di cache, ambil dari API
+      const draft = await modulePageAdapter.getDraft(pageId)
+      return !!draft?.draftData
+    } catch (error) {
+      logger.error(ADAPTER, `Error checking draft for page ${pageId}`, error)
+      return false
     }
   },
 }

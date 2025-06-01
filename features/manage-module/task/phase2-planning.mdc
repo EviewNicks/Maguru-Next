@@ -1,6 +1,6 @@
 ---
 description: 
-globs: 
+globs: plan-task.md
 alwaysApply: false
 ---
 # Phase 2: Implementasi Client-side Core untuk Auto-save Draft (3-4 hari)
@@ -38,7 +38,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
 
 **File:** `features/manage-module/adapters/modulePageAdapter.ts`
 
-- [ ] Tambahkan metode `saveDraft`
+- [x] Tambahkan metode `saveDraft`
   ```typescript
   saveDraft(
     pageId: string, 
@@ -47,32 +47,32 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
   ): Promise<ModulePage | null>
   ```
 
-- [ ] Tambahkan metode `getDraft`
+- [x] Tambahkan metode `getDraft`
   ```typescript
   getDraft(pageId: string): Promise<ModulePage | null>
   ```
 
-- [ ] Tambahkan metode `publishDraft`
+- [x] Tambahkan metode `publishDraft`
   ```typescript
   publishDraft(pageId: string): Promise<ModulePage | null>
   ```
 
-- [ ] Tambahkan metode `discardDraft`
+- [x] Tambahkan metode `discardDraft`
   ```typescript
   discardDraft(pageId: string): Promise<boolean>
   ```
 
-- [ ] Tambahkan metode `hasDraft` untuk memeriksa keberadaan draft
+- [x] Tambahkan metode `hasDraft` untuk memeriksa keberadaan draft
   ```typescript
   hasDraft(pageId: string): Promise<boolean>
   ```
 
-- [ ] Implementasi cache invalidation untuk operasi draft
+- [x] Implementasi cache invalidation untuk operasi draft
   ```typescript
   invalidateDraftCache(pageId: string): void
   ```
 
-- [ ] Tambahkan penanganan konflik saat editing simultan
+- [x] Tambahkan penanganan konflik saat editing simultan
   ```typescript
   // Implementasi di metode saveDraft
   async saveDraft(
@@ -104,7 +104,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
 
 **File:** `features/manage-module/lib/DraftFeedbackService.ts`
 
-- [ ] Implementasi kelas `DraftFeedbackService` dengan metode:
+- [x] Implementasi kelas `DraftFeedbackService` dengan metode:
   ```typescript
   class DraftFeedbackService {
     getStatusMessage(status: DraftSaveStatus, timestamp?: Date): string
@@ -114,7 +114,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
   }
   ```
 
-- [ ] Tambahkan enum untuk status penyimpanan
+- [x] Tambahkan enum untuk status penyimpanan
   ```typescript
   enum DraftSaveStatus {
     SAVING = 'SAVING',
@@ -130,7 +130,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
 
 **File:** `features/manage-module/types/index.ts`
 
-- [ ] Tambahkan tipe untuk status draft
+- [x] Tambahkan tipe untuk status draft
   ```typescript
   export enum DraftSaveStatus {
     SAVING = 'SAVING',
@@ -142,7 +142,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
   }
   ```
 
-- [ ] Tambahkan interface untuk format status feedback
+- [x] Tambahkan interface untuk format status feedback
   ```typescript
   export interface DraftStatusFeedback {
     status: DraftSaveStatus
@@ -159,7 +159,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
 
 **File:** `features/manage-module/hooks/useRichTextAutosave.ts`
 
-- [ ] Implementasi debounce save (menyimpan setelah pengguna berhenti mengetik selama 5 detik)
+- [x] Implementasi debounce save (menyimpan setelah pengguna berhenti mengetik selama 5 detik)
   ```typescript
   const debouncedSave = useDebouncedCallback(
     (content: StandardEditorContent) => saveContentToServer(content),
@@ -167,7 +167,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
   )
   ```
 
-- [ ] Implementasi throttle save (maksimal satu penyimpanan setiap 30 detik)
+- [x] Implementasi throttle save (maksimal satu penyimpanan setiap 30 detik)
   ```typescript
   const throttledSave = useThrottleCallback(
     (content: StandardEditorContent) => saveContentToServer(content),
@@ -175,7 +175,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
   )
   ```
 
-- [ ] Tambahkan monitoring online/offline status
+- [x] Tambahkan monitoring online/offline status
   ```typescript
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== 'undefined' ? navigator.onLine : true
@@ -195,7 +195,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
   }, [])
   ```
 
-- [ ] Tambahkan event listeners untuk save triggers
+- [x] Tambahkan event listeners untuk save triggers
   ```typescript
   // Blur event
   useEffect(() => {
@@ -237,7 +237,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
   }, [editor, hasChanges])
   ```
 
-- [ ] Implementasi Optimistic UI
+- [x] Implementasi Optimistic UI
   ```typescript
   // Di saveContent
   const saveContent = useCallback(async () => {
@@ -265,7 +265,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
   }, [isOnline, onSave])
   ```
 
-- [ ] Pastikan integrasi yang tepat dengan Tiptap API
+- [x] Pastikan integrasi yang tepat dengan Tiptap API
   ```typescript
   useEffect(() => {
     if (!editor) return
@@ -291,7 +291,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
 
 **File:** `features/manage-module/hooks/useModulePageData.ts`
 
-- [ ] Tambahkan fungsi untuk draft operations
+- [x] Tambahkan fungsi untuk draft operations
   ```typescript
   const saveDraft = async (
     pageId: string,
@@ -347,7 +347,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
   }
   ```
 
-- [ ] Tambahkan fungsi untuk memeriksa dan recover draft
+- [x] Tambahkan fungsi untuk memeriksa dan recover draft
   ```typescript
   const checkForDraft = async (pageId: string): Promise<boolean> => {
     try {
@@ -365,7 +365,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
 
 **File:** `features/manage-module/context/ModulePageCRUDContext.tsx`
 
-- [ ] Tambahkan state dan handler untuk draft management
+- [x] Tambahkan state dan handler untuk draft management
   ```typescript
   // Draft status state
   const [draftStatus, setDraftStatus] = useState<DraftSaveStatus>(DraftSaveStatus.SAVED)
@@ -464,7 +464,7 @@ Pada fase ini, kita akan mengimplementasikan komponen-komponen client-side untuk
   }, [activePage?.id])
   ```
 
-- [ ] Tambahkan nilai context baru ke provider
+- [x] Tambahkan nilai context baru ke provider
   ```typescript
   const contextValue = {
     // Existing values...
@@ -851,6 +851,17 @@ export const DraftRecoveryDialog = ({
 - **Optimistic UI:** Implementasikan pendekatan optimistic UI untuk feedback yang lebih responsif
 - **Draft Recovery:** Sediakan mekanisme untuk pemulihan draft yang belum dipublikasikan
 - **Concurrent Editing:** Tangani konflik saat terjadi pengeditan simultan
+
+
+
+
+
+
+
+
+
+
+
 
 
 

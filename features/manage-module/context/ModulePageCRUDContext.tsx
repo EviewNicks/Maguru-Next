@@ -16,13 +16,20 @@ import {
   ModulePageStatus,
 } from '../types'
 import { useModulePageData } from '../hooks/useModulePageData'
+import { modulePageAdapter } from '../adapters/modulePageAdapter'
+// Hapus import untuk hooks draft
+//import { useRichTextAutosave } from '../hooks/draft/useRichTextAutosave'
+//import { useDraftRecovery } from '../hooks/draft/useDraftRecovery'
+//import { useUnsavedChangesPrompt } from '../hooks/draft/useUnsavedChangesPrompt'
+//
 import { showErrorNotification } from '../components/ErrorNotifier'
 import { logger } from '../services/logger'
 import { useRouter } from 'next/navigation'
 import debounce from 'lodash/debounce'
 import { debugDataFlow } from '../utils/debugUtils'
 import { useQueryClient } from '@tanstack/react-query'
-import { modulePageAdapter } from '../adapters/modulePageAdapter'
+
+// import { useClerk } from '@clerk/nextjs'
 
 // Konstanta untuk context name (logging)
 const CONTEXT = 'ModulePageCRUDContext'
@@ -30,7 +37,7 @@ const CONTEXT = 'ModulePageCRUDContext'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPromise = Promise<any>
 
-// Tipe untuk status penyimpanan
+// Tipe untuk status penyimpanan lama (untuk backward compatibility)
 export type SaveStatus = 'saved' | 'saving' | 'unsaved' | 'error'
 
 interface ModulePageCRUDContextProps {
@@ -100,6 +107,12 @@ interface ModulePageCRUDContextProps {
   isSidebarOpen: boolean
   toggleExpand: (item: string) => void
   toggleSidebar: () => void
+
+  // Fungsi dasar untuk draft (yang akan tetap di context)
+  checkHasDraft: (pageId: string) => Promise<boolean>
+  getDraft: (pageId: string) => Promise<ModulePage | null>
+  discardDraft: (pageId: string) => Promise<boolean>
+  publishDraft: (pageId: string) => Promise<ModulePage | null>
 }
 
 const ModulePageCRUDContext = createContext<ModulePageCRUDContextProps | null>(
@@ -129,6 +142,7 @@ export function ModulePageCRUDProvider({
 }: ModulePageCRUDProviderProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  // const { user } = useClerk() // Akan digunakan di fase selanjutnya untuk autentikasi
 
   // State untuk halaman aktif
   const [activePage, setActivePage] = useState<ModulePage | null>(
@@ -148,7 +162,7 @@ export function ModulePageCRUDProvider({
     Record<string, string>
   >({})
 
-  // UI state dari ModulePagesContext
+  // State untuk UI state dari ModulePagesContext
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
     ModuleContent: true,
   })
@@ -216,6 +230,12 @@ export function ModulePageCRUDProvider({
     reorderPages: reorderPagesOperation,
     saveEditorContent: saveEditorContentMutation,
     updatePageStatus: updatePageStatusOperation,
+    checkHasDraft,
+    getDraft,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    saveDraft,
+    publishDraft: publishDraftOperation,
+    discardDraft: discardDraftOperation,
   } = useModulePageData(moduleId)
 
   // Ekstrak data dari pagesQuery
@@ -892,6 +912,57 @@ export function ModulePageCRUDProvider({
     [updatePageOperation, refetch, getPage, pages]
   )
 
+  // Setup hooks untuk fitur draft yang akan dihapus
+
+  // Tambahkan implementasi untuk wrapper fungsi draft yang tetap dalam context
+  const publishDraft = useCallback(
+    async (pageId: string): Promise<ModulePage | null> => {
+      try {
+        // Karena publishDraftOperation kemungkinan mengembalikan void,
+        // kita perlu implementasi alternatif untuk mengambil data yang diperbarui
+        try {
+          await publishDraftOperation(pageId)
+          // Setelah operasi selesai, ambil data halaman terbaru
+          return await getPage(pageId)
+        } catch (error) {
+          // Jika gagal panggil publishDraftOperation, gunakan API adapter langsung
+          logger.debug(
+            CONTEXT,
+            `Fallback to adapter for publishing draft ${pageId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+          )
+          return await modulePageAdapter.publishDraft(pageId)
+        }
+      } catch (error) {
+        logger.error(
+          CONTEXT,
+          `Error publishing draft for page ${pageId}`,
+          error
+        )
+        return null
+      }
+    },
+    [publishDraftOperation, getPage]
+  )
+
+  const discardDraft = useCallback(
+    async (pageId: string): Promise<boolean> => {
+      try {
+        // Panggil discardDraftOperation dan cek hasil
+        await discardDraftOperation(pageId)
+        // Karena discardDraftOperation mengembalikan void, kita selalu kembalikan true jika tidak ada error
+        return true
+      } catch (error) {
+        logger.error(
+          CONTEXT,
+          `Error discarding draft for page ${pageId}`,
+          error
+        )
+        return false
+      }
+    },
+    [discardDraftOperation]
+  )
+
   // Memoize context value untuk mencegah re-render yang tidak perlu
   const contextValue = useMemo(
     () => ({
@@ -945,6 +1016,12 @@ export function ModulePageCRUDProvider({
       isSidebarOpen,
       toggleExpand,
       toggleSidebar,
+
+      // Fungsi dasar untuk draft
+      checkHasDraft,
+      getDraft,
+      discardDraft,
+      publishDraft,
     }),
     [
       moduleId,
@@ -981,6 +1058,11 @@ export function ModulePageCRUDProvider({
       isSidebarOpen,
       toggleExpand,
       toggleSidebar,
+      checkHasDraft,
+      getDraft,
+      discardDraft,
+      publishDraft,
+      modulePageAdapter,
     ]
   )
 

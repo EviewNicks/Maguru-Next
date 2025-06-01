@@ -4,7 +4,6 @@ import {
   ApiListResponse,
   ApiEntityResponse,
   ModulePageStatus,
-  ModuleStatus,
   IModulePageService,
   StandardEditorContent,
 } from '../types'
@@ -676,7 +675,7 @@ export const modulePageService: IModulePageService = {
           isDraft: false,
           hasUnpublishedChanges: false,
           version: { increment: 1 }, // Increment version saat publish
-          status: ModulePageStatus.PUBLISHED as unknown as ModuleStatus, // Cast ke ModuleStatus
+          status: ModulePageStatus.PUBLISHED, // Cast ke ModuleStatus
         },
       })
 

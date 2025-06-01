@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { DraftSaveStatus } from './index'
 
 /**
  * Enum untuk status halaman modul
@@ -176,7 +175,15 @@ export type ModulePageListResponse = z.infer<
  * Schema untuk response draft status
  */
 export const DraftStatusResponseSchema = z.object({
-  status: z.nativeEnum(DraftSaveStatus),
+  status: z.enum([
+    'idle',
+    'saving',
+    'saved',
+    'unsaved',
+    'error',
+    'offline',
+    'retrying',
+  ]),
   timestamp: z.date().optional(),
   message: z.string().optional(),
 })

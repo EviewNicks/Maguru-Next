@@ -24,7 +24,7 @@ import { FloatingToolbar } from '@/features/manage-module/components/ModulePageE
 import { EditorToolbar } from '@/features/manage-module/components/ModulePageEditor/toolbars/EditorToolbar'
 import Placeholder from '@tiptap/extension-placeholder'
 import { defaultContentJSON } from '@/features/manage-module/lib/content'
-import { useRichTextAutosave } from '@/features/manage-module/hooks/useRichTextAutosave'
+import { useRichTextAutosave } from '@/features/manage-module/hooks/draft/useRichTextAutosave'
 import { useCallback, useEffect, useState } from 'react'
 import { SaveIcon, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
 import {

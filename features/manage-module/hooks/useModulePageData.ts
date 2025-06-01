@@ -128,6 +128,28 @@ export const useModulePageData = (moduleId: string) => {
     return { previousPage, nextPage }
   }
 
+  // Function untuk mengecek apakah halaman memiliki draft
+  const checkHasDraft = async (pageId: string): Promise<boolean> => {
+    try {
+      logger.debug(HOOK, `Checking draft existence for page: ${pageId}`)
+      return await modulePageAdapter.hasDraft(pageId)
+    } catch (error) {
+      logger.error(HOOK, `Error checking draft for page: ${pageId}`, error)
+      return false
+    }
+  }
+
+  // Function untuk mendapatkan draft halaman
+  const getDraft = async (pageId: string): Promise<ModulePage | null> => {
+    try {
+      logger.debug(HOOK, `Fetching draft for page: ${pageId}`)
+      return await modulePageAdapter.getDraft(pageId)
+    } catch (error) {
+      logger.error(HOOK, `Error fetching draft for page: ${pageId}`, error)
+      return null
+    }
+  }
+
   // Mutation untuk membuat halaman baru
   const createPageMutation = useMutation({
     mutationFn: (data: CreateModulePageInput) => {
@@ -223,6 +245,97 @@ export const useModulePageData = (moduleId: string) => {
     },
   })
 
+  // Mutation untuk menyimpan draft
+  const saveDraftMutation = useMutation({
+    mutationFn: ({
+      pageId,
+      content,
+      authorId,
+    }: {
+      pageId: string
+      content: StandardEditorContent
+      authorId: string
+    }) => {
+      // Pastikan content valid sebelum dikirim ke adapter
+      const validContent = ensureValidEditorContent(content)
+      return modulePageAdapter.saveDraft(pageId, validContent, authorId)
+    },
+    onSuccess: (data, variables) => {
+      if (data) {
+        // Update data di cache
+        queryClient.setQueryData(['modulePage', variables.pageId], {
+          success: true,
+          data,
+        })
+
+        // Update cache draft
+        queryClient.setQueryData(['modulePage', variables.pageId, 'draft'], {
+          success: true,
+          data,
+        })
+
+        // Tidak perlu invalidate query karena draft tidak mengubah daftar halaman
+        // Juga tidak perlu toast karena auto-save berjalan di background
+      }
+    },
+    onError: (error) => {
+      logger.error(HOOK, 'Error saving draft', error)
+      // Tidak perlu toast error karena auto-save berjalan di background
+      // toast.error('Gagal menyimpan draft. Silakan coba lagi.')
+    },
+  })
+
+  // Mutation untuk mempublikasikan draft
+  const publishDraftMutation = useMutation({
+    mutationFn: (pageId: string) => modulePageAdapter.publishDraft(pageId),
+    onSuccess: (data, variables) => {
+      if (data) {
+        // Update data di cache
+        queryClient.setQueryData(['modulePage', variables], {
+          success: true,
+          data,
+        })
+
+        // Hapus cache draft
+        queryClient.removeQueries({
+          queryKey: ['modulePage', variables, 'draft'],
+        })
+
+        // Invalidate query untuk memperbarui daftar halaman
+        queryClient.invalidateQueries({ queryKey })
+        toast.success('Draft berhasil dipublikasikan')
+      }
+    },
+    onError: (error) => {
+      logger.error(HOOK, 'Error publishing draft', error)
+      toast.error('Gagal mempublikasikan draft. Silakan coba lagi.')
+    },
+  })
+
+  // Mutation untuk membuang draft
+  const discardDraftMutation = useMutation({
+    mutationFn: (pageId: string) => modulePageAdapter.discardDraft(pageId),
+    onSuccess: (data, variables) => {
+      if (data) {
+        // Hapus cache draft
+        queryClient.removeQueries({
+          queryKey: ['modulePage', variables, 'draft'],
+        })
+
+        // Invalidate query untuk memperbarui cache halaman
+        queryClient.invalidateQueries({
+          queryKey: ['modulePage', variables],
+        })
+
+        toast.success('Draft berhasil dibuang')
+      }
+    },
+    onError: (error) => {
+      logger.error(HOOK, 'Error discarding draft', error)
+      toast.error('Gagal membuang draft. Silakan coba lagi.')
+    },
+  })
+
   // Mutation untuk menghapus halaman
   const deletePageMutation = useMutation({
     mutationFn: (pageId: string) => modulePageAdapter.deletePage(pageId),
@@ -297,11 +410,16 @@ export const useModulePageData = (moduleId: string) => {
     getPage,
     getParsedEditorContent,
     getAdjacentPages,
+    checkHasDraft,
+    getDraft,
 
     // Mutations
     createPage: createPageMutation.mutate,
     updatePage: updatePageMutation.mutate,
     saveEditorContent: saveEditorContentMutation.mutate,
+    saveDraft: saveDraftMutation.mutate,
+    publishDraft: publishDraftMutation.mutate,
+    discardDraft: discardDraftMutation.mutate,
     deletePage: deletePageMutation.mutate,
     reorderPages: reorderPagesMutation.mutate,
     updatePageStatus: updatePageStatusMutation.mutate,
@@ -310,6 +428,9 @@ export const useModulePageData = (moduleId: string) => {
     isCreating: createPageMutation.isPending,
     isUpdating: updatePageMutation.isPending,
     isSaving: saveEditorContentMutation.isPending,
+    isSavingDraft: saveDraftMutation.isPending,
+    isPublishingDraft: publishDraftMutation.isPending,
+    isDiscardingDraft: discardDraftMutation.isPending,
     isDeleting: deletePageMutation.isPending,
     isReordering: reorderPagesMutation.isPending,
     isUpdatingStatus: updatePageStatusMutation.isPending,

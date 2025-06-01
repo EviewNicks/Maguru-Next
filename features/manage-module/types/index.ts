@@ -15,14 +15,15 @@ export enum ModuleStatus {
 // Mengimpor ModulePageStatus dari modulePageSchema
 export { ModulePageStatus }
 
-// Enum untuk status penyimpanan draft
-export enum DraftSaveStatus {
-  SAVING = 'SAVING',
-  SAVED = 'SAVED',
-  UNSAVED = 'UNSAVED',
-  ERROR = 'ERROR',
-  OFFLINE = 'OFFLINE',
-}
+// Type untuk status penyimpanan draft
+export type DraftSaveStatus =
+  | 'idle'
+  | 'saving'
+  | 'saved'
+  | 'unsaved'
+  | 'error'
+  | 'offline'
+  | 'retrying'
 
 export interface Module {
   id: string
@@ -203,9 +204,16 @@ export interface IModulePageAdapter {
         timestamp: number
       }
     }
+    drafts: {
+      [pageId: string]: {
+        data: ModulePage
+        timestamp: number
+      }
+    }
   }
   invalidateModuleCache(moduleId: string): void
   invalidatePageCache(pageId: string): void
+  invalidateDraftCache(pageId: string): void
   validateModuleId(
     moduleId: string | null | undefined
   ): asserts moduleId is string
@@ -232,10 +240,10 @@ export interface IModulePageAdapter {
   // Fungsi baru untuk fitur draft
   saveDraft(
     pageId: string,
-    editorContent: unknown,
+    editorContent: StandardEditorContent,
     authorId: string
   ): Promise<ModulePage | null>
-  getDraft(pageId: string): Promise<ModulePage | null>
+  getDraft(pageId: string, skipCache?: boolean): Promise<ModulePage | null>
   publishDraft(pageId: string): Promise<ModulePage | null>
   discardDraft(pageId: string): Promise<boolean>
   hasDraft(pageId: string): Promise<boolean>
