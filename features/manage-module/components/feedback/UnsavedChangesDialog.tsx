@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect } from 'react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,71 +11,35 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-
-interface UnsavedChangesDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
-  onCancel: () => void
-  title?: string
-  description?: string
-  confirmText?: string
-  cancelText?: string
-}
+import { useModuleDraftPageContext } from '../../context/ModuleDraftPageContext'
+import { SaveIcon, XIcon } from 'lucide-react'
 
 /**
- * Komponen dialog untuk memperingatkan pengguna sebelum meninggalkan
- * halaman dengan perubahan yang belum disimpan
+ * Dialog konfirmasi yang muncul saat pengguna mencoba menavigasi
+ * dengan perubahan yang belum disimpan
  */
-export function UnsavedChangesDialog({
-  isOpen,
-  onClose,
-  onConfirm,
-  onCancel,
-  title = 'Perubahan Belum Disimpan',
-  description = 'Anda memiliki perubahan yang belum disimpan. Yakin ingin meninggalkan halaman ini? Perubahan yang belum disimpan mungkin hilang.',
-  confirmText = 'Ya, Tinggalkan Halaman',
-  cancelText = 'Tetap di Halaman Ini',
-}: UnsavedChangesDialogProps) {
-  // Ref untuk melacak apakah dialog ditutup karena konfirmasi
-  const confirmedRef = useRef(false)
-
-  // Reset confirmed state ketika dialog dibuka
-  useEffect(() => {
-    if (isOpen) {
-      confirmedRef.current = false
-    }
-  }, [isOpen])
-
-  // Handle konfirmasi
-  const handleConfirm = () => {
-    confirmedRef.current = true
-    onConfirm()
-    onClose()
-  }
-
-  // Handle close (jika pengguna mengklik di luar dialog)
-  const handleClose = () => {
-    if (!confirmedRef.current) {
-      onCancel()
-    }
-    onClose()
-  }
+export function UnsavedChangesDialog() {
+  const { showUnsavedChangesDialog, confirmNavigation, cancelNavigation } =
+    useModuleDraftPageContext()
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={handleClose}>
+    <AlertDialog open={showUnsavedChangesDialog}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <AlertDialogTitle>Perubahan belum tersimpan</AlertDialogTitle>
+          <AlertDialogDescription>
+            Anda memiliki perubahan yang belum tersimpan. Apa yang ingin Anda
+            lakukan?
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onCancel}>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirm}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            {confirmText}
+          <AlertDialogCancel onClick={cancelNavigation}>
+            <XIcon className="h-4 w-4 mr-2" />
+            Kembali ke editor
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={() => confirmNavigation()}>
+            <SaveIcon className="h-4 w-4 mr-2" />
+            Simpan dan lanjutkan
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

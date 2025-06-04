@@ -11,10 +11,9 @@ import {
   ModulePageStatus,
 } from '../types'
 import { ensureValidEditorContent } from '../lib/dataFormats'
-import { logger } from '../services/logger'
 
 // Konstanta untuk adapter name (context)
-const ADAPTER = 'ModulePageAdapter'
+// const ADAPTER = 'ModulePageAdapter'
 
 // Interface untuk cache
 interface Cache {
@@ -59,7 +58,6 @@ export const modulePageAdapter: IModulePageAdapter = {
    * @param moduleId - ID modul
    */
   invalidateModuleCache(moduleId: string): void {
-    logger.debug(ADAPTER, `Invalidating cache for module ${moduleId}`)
 
     // Hapus cache untuk daftar halaman modul
     if (this._cache.pages[moduleId]) {
@@ -86,7 +84,6 @@ export const modulePageAdapter: IModulePageAdapter = {
    * @param pageId - ID halaman
    */
   invalidatePageCache(pageId: string): void {
-    logger.debug(ADAPTER, `Invalidating cache for page ${pageId}`)
 
     if (this._cache.page[pageId]) {
       // Ambil moduleId dari cache sebelum dihapus
@@ -112,7 +109,6 @@ export const modulePageAdapter: IModulePageAdapter = {
    * @param pageId - ID halaman
    */
   invalidateDraftCache(pageId: string): void {
-    logger.debug(ADAPTER, `Invalidating draft cache for page ${pageId}`)
 
     if (this._cache.drafts[pageId]) {
       delete this._cache.drafts[pageId]
@@ -128,12 +124,10 @@ export const modulePageAdapter: IModulePageAdapter = {
     moduleId: string | null | undefined
   ): asserts moduleId is string {
     if (!moduleId) {
-      logger.error(ADAPTER, 'ModuleId is required but was not provided')
       throw new Error('ModuleId diperlukan')
     }
 
     if (typeof moduleId !== 'string') {
-      logger.error(ADAPTER, `Invalid moduleId type: ${typeof moduleId}`)
       throw new Error('ModuleId harus berupa string')
     }
   },
@@ -145,12 +139,10 @@ export const modulePageAdapter: IModulePageAdapter = {
    */
   validatePageId(pageId: string | null | undefined): asserts pageId is string {
     if (!pageId) {
-      logger.error(ADAPTER, 'PageId is required but was not provided')
       throw new Error('PageId diperlukan')
     }
 
     if (typeof pageId !== 'string') {
-      logger.error(ADAPTER, `Invalid pageId type: ${typeof pageId}`)
       throw new Error('PageId harus berupa string')
     }
   },
@@ -168,10 +160,6 @@ export const modulePageAdapter: IModulePageAdapter = {
     try {
       // Tambahkan validasi untuk moduleId undefined atau kosong
       if (!moduleId || moduleId === 'undefined') {
-        logger.error(
-          ADAPTER,
-          `Invalid moduleId: ${moduleId} - skipping API call`
-        )
         return [] // Return array kosong daripada melakukan panggilan API yang tidak valid
       }
 
@@ -186,11 +174,8 @@ export const modulePageAdapter: IModulePageAdapter = {
           CACHE_EXPIRATION
 
       if (useCache) {
-        logger.debug(ADAPTER, `Using cached data for module ${moduleId}`)
         return modulePageAdapter._cache.pages[moduleId].data
       }
-
-      logger.info(ADAPTER, `Fetching pages for module ${moduleId} via API`)
 
       // Gunakan parameter waktu untuk mencegah hasil dari cache browser
       const timestamp = new Date().getTime()
@@ -218,10 +203,6 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       // Ensure data is an array
       if (!Array.isArray(result.data)) {
-        logger.error(
-          ADAPTER,
-          `API returned non-array data for module ${moduleId}: ${typeof result.data}`
-        )
         return [] // Return empty array for consistency
       }
 
@@ -232,16 +213,11 @@ export const modulePageAdapter: IModulePageAdapter = {
       }
 
       return result.data
-    } catch (error) {
-      logger.error(
-        ADAPTER,
-        `Error fetching pages for module ${moduleId}`,
-        error
-      )
+    } catch {
       // Return empty array on error to ensure consistent return type
       return []
     }
-  },
+  },  
 
   /**
    * Mendapatkan detail halaman berdasarkan ID melalui API
@@ -264,11 +240,8 @@ export const modulePageAdapter: IModulePageAdapter = {
         Date.now() - modulePageAdapter._cache.page[pageId].timestamp <
           CACHE_EXPIRATION
       ) {
-        logger.debug(ADAPTER, `Using cached data for page ${pageId}`)
         return modulePageAdapter._cache.page[pageId].data
       }
-
-      logger.info(ADAPTER, `Fetching page ${pageId} via API`)
 
       // Coba dapatkan moduleId dari cache atau dari pages cache
       let moduleId: string | undefined
@@ -290,17 +263,9 @@ export const modulePageAdapter: IModulePageAdapter = {
         }
       }
 
-      // Jika moduleId tidak ditemukan, kita perlu mencari di semua modul
-      // Ini adalah solusi sementara karena endpoint /api/module/pages/${pageId} sudah dihapus
-      if (!moduleId) {
-        // Kita perlu mendapatkan daftar semua modul terlebih dahulu
-        // Ini bisa diimplementasikan dengan memanggil API untuk mendapatkan daftar modul
-        // Untuk sementara, kita bisa menggunakan pendekatan alternatif
 
-        logger.warn(
-          ADAPTER,
-          `ModuleId not found for page ${pageId}, cannot fetch page data`
-        )
+      if (!moduleId) {
+
         return null
       }
 
@@ -344,8 +309,7 @@ export const modulePageAdapter: IModulePageAdapter = {
       }
 
       return null
-    } catch (error) {
-      logger.error(ADAPTER, `Error fetching page ${pageId}`, error)
+    } catch {
       return null
     }
   },
@@ -359,11 +323,6 @@ export const modulePageAdapter: IModulePageAdapter = {
     try {
       // Validasi input
       modulePageAdapter.validateModuleId(data.moduleId)
-
-      logger.info(
-        ADAPTER,
-        `Creating new page for module ${data.moduleId} via API`
-      )
 
       // Pastikan content valid dengan format yang diharapkan
       if (data.content) {
@@ -398,7 +357,6 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       return result.data
     } catch (error) {
-      logger.error(ADAPTER, 'Error creating page', error)
       throw error
     }
   },
@@ -416,8 +374,6 @@ export const modulePageAdapter: IModulePageAdapter = {
     try {
       // Validasi input
       modulePageAdapter.validatePageId(pageId)
-
-      logger.info(ADAPTER, `Updating page ${pageId} via API`)
 
       // Pastikan content valid jika disediakan
       if (data.content) {
@@ -445,7 +401,6 @@ export const modulePageAdapter: IModulePageAdapter = {
       }
 
       if (!moduleId) {
-        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
         return null
       }
 
@@ -479,7 +434,6 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       return null
     } catch (error) {
-      logger.error(ADAPTER, `Error updating page ${pageId}`, error)
       throw error
     }
   },
@@ -498,11 +452,6 @@ export const modulePageAdapter: IModulePageAdapter = {
       // Validasi input
       modulePageAdapter.validatePageId(pageId)
 
-      logger.info(
-        ADAPTER,
-        `Updating page status ${pageId} to ${status} via API`
-      )
-
       // Dapatkan modul ID dari cache atau dari request GET
       let moduleId: string | undefined
       const pageData = modulePageAdapter._cache.page[pageId]?.data
@@ -517,7 +466,6 @@ export const modulePageAdapter: IModulePageAdapter = {
       }
 
       if (!moduleId) {
-        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
         return null
       }
 
@@ -556,7 +504,6 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       return null
     } catch (error) {
-      logger.error(ADAPTER, `Error updating page status ${pageId}`, error)
       throw error
     }
   },
@@ -576,11 +523,8 @@ export const modulePageAdapter: IModulePageAdapter = {
       const moduleId = page?.moduleId
 
       if (!moduleId) {
-        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
         return false
       }
-
-      logger.info(ADAPTER, `Deleting page ${pageId} via API`)
 
       // Invalidate all caches first (pre-emptively)
       modulePageAdapter.invalidatePageCache(pageId)
@@ -613,11 +557,6 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       // Invalidate caches again after successful deletion
       if (result && result.success) {
-        logger.debug(
-          ADAPTER,
-          `Successfully deleted page ${pageId}, invalidating caches`
-        )
-
         // Invalidate cache again to be sure
         modulePageAdapter.invalidatePageCache(pageId)
         modulePageAdapter.invalidateModuleCache(moduleId)
@@ -634,7 +573,6 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       return result.success || false
     } catch (error) {
-      logger.error(ADAPTER, `Error deleting page ${pageId}`, error)
       throw error
     }
   },
@@ -654,11 +592,8 @@ export const modulePageAdapter: IModulePageAdapter = {
       modulePageAdapter.validateModuleId(moduleId)
 
       if (!Array.isArray(pageIds) || pageIds.length === 0) {
-        logger.error(ADAPTER, 'PageIds must be a non-empty array')
         throw new Error('PageIds harus berupa array yang tidak kosong')
       }
-
-      logger.info(ADAPTER, `Reordering pages for module ${moduleId} via API`)
 
       // Panggil API endpoint
       const response = await fetch(`/api/module/${moduleId}/pages/reorder`, {
@@ -690,11 +625,6 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       return result.success || false
     } catch (error) {
-      logger.error(
-        ADAPTER,
-        `Error reordering pages for module ${moduleId}`,
-        error
-      )
       throw error
     }
   },
@@ -714,20 +644,13 @@ export const modulePageAdapter: IModulePageAdapter = {
       modulePageAdapter.validatePageId(pageId)
 
       if (!editorContent || typeof editorContent !== 'object') {
-        logger.error(ADAPTER, `Invalid editor content: ${typeof editorContent}`)
         throw new Error('Konten editor tidak valid')
       }
 
       // Validasi dan konversi ke StandardEditorContent
       if (!('type' in editorContent) || editorContent.type !== 'doc') {
-        logger.error(
-          ADAPTER,
-          'Editor content does not have valid Tiptap format'
-        )
         throw new Error('Format konten editor tidak valid')
       }
-
-      logger.info(ADAPTER, `Saving editor content for page ${pageId} via API`)
 
       // Gunakan ensureValidEditorContent untuk validasi dan konversi
       const validContent = ensureValidEditorContent(editorContent)
@@ -746,7 +669,6 @@ export const modulePageAdapter: IModulePageAdapter = {
       }
 
       if (!moduleId) {
-        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
         return null
       }
 
@@ -784,11 +706,6 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       return null
     } catch (error) {
-      logger.error(
-        ADAPTER,
-        `Error saving editor content for page ${pageId}`,
-        error
-      )
       throw error
     }
   },
@@ -800,7 +717,6 @@ export const modulePageAdapter: IModulePageAdapter = {
    */
   getParsedEditorContent: (page: ModulePage | null): StandardEditorContent => {
     if (!page) {
-      logger.debug(ADAPTER, 'No page provided, returning empty editor content')
       return {
         type: 'doc',
         content: [
@@ -812,8 +728,6 @@ export const modulePageAdapter: IModulePageAdapter = {
       }
     }
 
-    logger.debug(ADAPTER, `Parsing editor content for page ${page.id}`)
-
     // Ambil content langsung dari page.content jika tersedia
     if (page.content) {
       // Gunakan ensureValidEditorContent untuk validasi dan konversi
@@ -821,7 +735,6 @@ export const modulePageAdapter: IModulePageAdapter = {
     }
 
     // Fallback ke default content jika content tidak valid
-    logger.warn(ADAPTER, `Invalid content format for page ${page.id}`)
     return {
       type: 'doc',
       content: [
@@ -851,16 +764,12 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       // Validasi content
       if (!content || typeof content !== 'object') {
-        logger.error(ADAPTER, `Invalid draft content: ${typeof content}`)
         throw new Error('Konten draft tidak valid')
       }
 
       if (!authorId) {
-        logger.error(ADAPTER, 'Missing authorId for draft save')
         throw new Error('ID pengguna diperlukan untuk menyimpan draft')
       }
-
-      logger.info(ADAPTER, `Saving draft for page ${pageId} via API`)
 
       // Gunakan ensureValidEditorContent untuk validasi dan konversi
       const validContent = ensureValidEditorContent(content)
@@ -879,7 +788,6 @@ export const modulePageAdapter: IModulePageAdapter = {
       }
 
       if (!moduleId) {
-        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
         return null
       }
 
@@ -931,94 +839,7 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       return null
     } catch (error) {
-      logger.error(ADAPTER, `Error saving draft for page ${pageId}`, error)
       throw error
-    }
-  },
-
-  /**
-   * Mendapatkan draft halaman melalui API
-   * @param pageId - ID halaman
-   * @param skipCache - Flag untuk melewati cache
-   * @returns Promise dengan detail draft atau null
-   */
-  getDraft: async (
-    pageId: string,
-    skipCache: boolean = false
-  ): Promise<ModulePage | null> => {
-    try {
-      // Validasi input
-      modulePageAdapter.validatePageId(pageId)
-
-      // Cek cache jika skipCache=false
-      if (
-        !skipCache &&
-        modulePageAdapter._cache.drafts[pageId] &&
-        Date.now() - modulePageAdapter._cache.drafts[pageId].timestamp <
-          CACHE_EXPIRATION
-      ) {
-        logger.debug(ADAPTER, `Using cached draft for page ${pageId}`)
-        return modulePageAdapter._cache.drafts[pageId].data
-      }
-
-      logger.info(ADAPTER, `Fetching draft for page ${pageId} via API`)
-
-      // Dapatkan modul ID dari cache atau dari request GET
-      let moduleId: string | undefined
-      const pageData = modulePageAdapter._cache.page[pageId]?.data
-      if (pageData) {
-        moduleId = pageData.moduleId
-      }
-
-      // Jika tidak ada di cache, coba dapatkan dari API
-      if (!moduleId) {
-        const page = await modulePageAdapter.getPage(pageId)
-        moduleId = page?.moduleId
-      }
-
-      if (!moduleId) {
-        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
-        return null
-      }
-
-      // Panggil API endpoint draft
-      const response = await fetch(
-        `/api/module/${moduleId}/pages/${pageId}/draft`,
-        {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache',
-          },
-        }
-      )
-
-      if (response.status === 404) {
-        return null
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(
-          errorData.error || `Failed to get draft for page ${pageId}`
-        )
-      }
-
-      const result = (await response.json()) as ApiEntityResponse<ModulePage>
-
-      if (result.success && result.data) {
-        // Simpan ke cache draft
-        modulePageAdapter._cache.drafts[pageId] = {
-          data: result.data,
-          timestamp: Date.now(),
-        }
-
-        return result.data
-      }
-
-      return null
-    } catch (error) {
-      logger.error(ADAPTER, `Error getting draft for page ${pageId}`, error)
-      return null
     }
   },
 
@@ -1032,8 +853,6 @@ export const modulePageAdapter: IModulePageAdapter = {
       // Validasi input
       modulePageAdapter.validatePageId(pageId)
 
-      logger.info(ADAPTER, `Publishing draft for page ${pageId} via API`)
-
       // Dapatkan modul ID dari cache atau dari request GET
       let moduleId: string | undefined
       const pageData = modulePageAdapter._cache.page[pageId]?.data
@@ -1048,7 +867,6 @@ export const modulePageAdapter: IModulePageAdapter = {
       }
 
       if (!moduleId) {
-        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
         return null
       }
 
@@ -1087,7 +905,6 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       return null
     } catch (error) {
-      logger.error(ADAPTER, `Error publishing draft for page ${pageId}`, error)
       throw error
     }
   },
@@ -1101,8 +918,6 @@ export const modulePageAdapter: IModulePageAdapter = {
     try {
       // Validasi input
       modulePageAdapter.validatePageId(pageId)
-
-      logger.info(ADAPTER, `Discarding draft for page ${pageId} via API`)
 
       // Dapatkan modul ID dari cache atau dari request GET
       let moduleId: string | undefined
@@ -1118,7 +933,6 @@ export const modulePageAdapter: IModulePageAdapter = {
       }
 
       if (!moduleId) {
-        logger.error(ADAPTER, `Could not determine moduleId for page ${pageId}`)
         return false
       }
 
@@ -1156,7 +970,6 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       return false
     } catch (error) {
-      logger.error(ADAPTER, `Error discarding draft for page ${pageId}`, error)
       throw error
     }
   },
@@ -1181,12 +994,63 @@ export const modulePageAdapter: IModulePageAdapter = {
         return !!modulePageAdapter._cache.page[pageId].data.draftData
       }
 
-      // Jika tidak ada di cache, ambil dari API
-      const draft = await modulePageAdapter.getDraft(pageId)
-      return !!draft?.draftData
-    } catch (error) {
-      logger.error(ADAPTER, `Error checking draft for page ${pageId}`, error)
+      // Jika tidak ada di cache, ambil dari API menggunakan getPage
+      const page = await modulePageAdapter.getPage(pageId)
+      return !!page?.draftData || !!page?.hasUnpublishedChanges
+    } catch {
       return false
+    }
+  },
+
+  /**
+   * Mendapatkan draft halaman melalui API
+   * @param pageId - ID halaman
+   * @param skipCache - Flag untuk melewati cache
+   * @returns Promise dengan detail draft atau null
+   */
+  getDraft: async (
+    pageId: string,
+    skipCache: boolean = false
+  ): Promise<ModulePage | null> => {
+    try {
+      // Validasi input
+      modulePageAdapter.validatePageId(pageId)
+
+      // Cek cache draft terlebih dahulu jika skipCache=false
+      if (!skipCache && modulePageAdapter._cache.drafts[pageId]) {
+        const cachedDraft = modulePageAdapter._cache.drafts[pageId]
+        const now = Date.now()
+
+        // Gunakan cache jika masih valid (belum expired)
+        if (now - cachedDraft.timestamp < CACHE_EXPIRATION) {
+          return cachedDraft.data
+        }
+      }
+
+      // Karena endpoint getDraft tidak ada lagi, kita gunakan getPage sebagai gantinya
+      // getPage sudah mengembalikan informasi draft jika tersedia
+      try {
+        const page = await modulePageAdapter.getPage(pageId, skipCache)
+
+        // Jika halaman memiliki draft, kembalikan halaman tersebut
+        if (page && (page.draftData || page.hasUnpublishedChanges)) {
+
+          // Simpan ke cache draft
+          modulePageAdapter._cache.drafts[pageId] = {
+            data: page,
+            timestamp: Date.now(),
+          }
+
+          return page
+        }
+
+        // Jika tidak ada draft, kembalikan null
+        return null
+      } catch {
+        return null
+      }
+    } catch {
+      return null
     }
   },
 }

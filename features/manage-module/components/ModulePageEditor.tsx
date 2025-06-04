@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import DocumentHeader from './ModulePageEditor/document/DocumentHeader'
 import ModulePageFooterNav from './ModulePageFooterNav'
 import { RichTextEditor } from './RichTextEditor'
@@ -15,6 +15,8 @@ import { ErrorBoundary } from './ErrorBoundary'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
+import { useModuleDraftPageContext } from '../context/ModuleDraftPageContext'
+import { cn } from '@/lib/utils'
 
 interface ModulePageEditorProps {
   isLoading?: boolean
@@ -28,6 +30,45 @@ export default function ModulePageEditor({
 
   // Buat koneksi ke context hanya untuk mendapatkan saveStatus untuk A11yAnnouncer
   const { saveStatus } = useModulePageCRUDContext()
+
+  // Gunakan ModuleDraftPageContext untuk mengakses mode editor dan fungsi toggle
+  const { editorMode, toggleEditorMode } = useModuleDraftPageContext()
+
+  // Event handler untuk double-click pada container editor
+  const handleContainerDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Hanya toggle jika dalam mode view dan target adalah container (bukan elemen lain di dalamnya)
+      if (editorMode === 'view' && e.currentTarget === e.target) {
+        toggleEditorMode()
+      }
+    },
+    [editorMode, toggleEditorMode]
+  )
+
+  // Keyboard shortcut handler untuk toggle mode
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // 'e' untuk edit mode ketika dalam view mode
+      if (
+        event.key === 'e' &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        editorMode === 'view'
+      ) {
+        toggleEditorMode()
+      }
+      // Escape untuk view mode ketika dalam edit mode
+      else if (event.key === 'Escape' && editorMode === 'edit') {
+        toggleEditorMode()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [editorMode, toggleEditorMode])
 
   // State untuk status announcement untuk screen readers
   const [statusAnnouncement, setStatusAnnouncement] = useState('')
@@ -94,17 +135,21 @@ export default function ModulePageEditor({
         ref={editorContainerRef}
         className="h-full flex flex-col bg-[#121212] text-white"
       >
-        {/* Header - sekarang menggunakan context langsung */}
+        {/* Header */}
         <DocumentHeader isLoading={propIsLoading} />
 
         {/* Editor Area */}
         <div
           id="editor-content"
-          className="flex flex-1 overflow-hidden"
+          className={cn(
+            'flex flex-1 overflow-hidden',
+            editorMode === 'view' ? 'view-mode' : 'edit-mode'
+          )}
           ref={editorFocusRef as React.RefObject<HTMLDivElement>}
           tabIndex={-1}
+          onDoubleClick={handleContainerDoubleClick}
         >
-          {/* Main editor - sekarang menggunakan context langsung */}
+          {/* Main editor */}
           <div className="flex-1 h-full">
             <ErrorBoundary
               fallback={
@@ -128,7 +173,7 @@ export default function ModulePageEditor({
                 </div>
               }
             >
-              <RichTextEditor className="h-full" autosave={false} />
+              <RichTextEditor className="h-full" />
             </ErrorBoundary>
           </div>
         </div>

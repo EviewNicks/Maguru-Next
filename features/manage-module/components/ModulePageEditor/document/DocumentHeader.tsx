@@ -2,14 +2,13 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   ChevronDown,
-  Link,
   MessageSquare,
   MoreHorizontal,
   Share2,
-  CheckCircle,
-  Clock,
   Loader2,
-  AlertCircle,
+  ExternalLink,
+  Trash2,
+  Edit,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { useState, useEffect, useCallback, useRef } from 'react'
@@ -29,6 +28,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { useModuleDraftPageContext } from '../../../context/ModuleDraftPageContext'
+import { DraftStatusIndicator } from '../../../components/feedback/DraftStatusIndicator'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Separator } from '@/components/ui/separator'
+import {
+  ActiveEditorIndicator,
+  ConflictDialog,
+} from '../../../components/feedback/ActiveEditorIndicator'
+import {
+  type ActiveEditor,
+  getConcurrentEditingService,
+} from '../../../lib/draft/ConcurrentEditingService'
+import { useUser } from '@clerk/nextjs'
+import Image from 'next/image'
+import { ModulePageStatus } from '../../../types'
+
+// TODO: Phase 4 - Mode View dan Edit
+// Import Edit dan Check icons dari lucide-react untuk tombol toggle mode
 
 interface DocumentHeaderProps {
   isLoading?: boolean
@@ -43,10 +65,55 @@ export default function DocumentHeader({
     deletePage,
     saveStatus: contextSaveStatus,
     savePage,
+    refetch,
   } = useModulePageCRUDContext()
+
+  // Mengambil data dan fungsi dari draft context
+  const {
+    draftSaveStatus,
+    lastSavedAt,
+    forceSave,
+    hasDraft,
+    publishDraft,
+    discardDraft,
+    editorMode,
+    toggleEditorMode,
+    refreshActivePage,
+  } = useModuleDraftPageContext()
+
+  // TODO: Phase 4 - Mode View dan Edit
+  // 1. Gunakan useModuleDraftPageContext untuk mendapatkan:
+  //    - editorMode: 'view' | 'edit'
+  //    - toggleEditorMode: () => void
+  // 2. Tambahkan tombol Edit/Selesai berdasarkan mode
+  // 3. Tampilkan status draft dan tombol publikasi hanya dalam mode edit
+
+  // State untuk concurrent editing
+  const [activeEditors, setActiveEditors] = useState<ActiveEditor[]>([])
+  const [showConflictDialog, setShowConflictDialog] = useState(false)
+  const [conflictEditorName, setConflictEditorName] = useState<
+    string | undefined
+  >(undefined)
+
+  // Ref untuk concurrent editing service
+  const concurrentEditingServiceRef = useRef(getConcurrentEditingService())
+
+  // Integrasi dengan Clerk untuk data user
+  const { user, isLoaded } = useUser()
+  const currentUserId = user?.id || 'anonymous'
+  const currentUserName = user?.fullName || user?.username || 'Pengguna'
+  const userProfileImage = user?.imageUrl
 
   // Ref untuk mendeteksi apakah perubahan judul sedang dalam proses penyimpanan
   const isSavingRef = useRef(false)
+
+  // State untuk operasi publikasi
+  const [isPublishing, setIsPublishing] = useState(false)
+  const [showPublishDialog, setShowPublishDialog] = useState(false)
+
+  // State untuk operasi buang draft
+  const [isDiscarding, setIsDiscarding] = useState(false)
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
 
   // Gunakan data dari context langsung
   const title = activePage?.title || 'Untitled Page'
@@ -63,6 +130,82 @@ export default function DocumentHeader({
   // Gunakan pageId dari activePage context
   const effectivePageId = activePage ? activePage.id : undefined
 
+  // Efek untuk meregister aktivitas pengguna dan memonitor pengguna aktif lainnya
+  useEffect(() => {
+    if (!effectivePageId || !isLoaded) return
+
+    const concurrentEditingService = concurrentEditingServiceRef.current
+
+    // Register aktivitas pengguna saat ini dengan data dari Clerk
+    concurrentEditingService.registerActivity(
+      effectivePageId,
+      currentUserId,
+      currentUserName,
+      userProfileImage
+    )
+
+    // Set callback untuk perubahan aktivitas
+    concurrentEditingService.setActivityChangeCallback((pageId, editors) => {
+      if (pageId === effectivePageId) {
+        const filteredEditors = editors.filter(
+          (e) => e.userId !== currentUserId
+        )
+        setActiveEditors(filteredEditors)
+
+        // Deteksi konflik berdasarkan lastEditBy dan timestamp
+        if (filteredEditors.length > 0 && activePage && activePage.lastEditBy) {
+          // Cek apakah ada editor yang memiliki ID yang sama dengan lastEditBy
+          const conflictingEditor = filteredEditors.find(
+            (editor) => editor.userId === activePage.lastEditBy
+          )
+
+          // Cek apakah draft memiliki timestamp yang lebih baru dari versi lokal
+          if (
+            conflictingEditor &&
+            activePage.draftSavedAt &&
+            new Date(conflictingEditor.timestamp) >
+              new Date(activePage.draftSavedAt)
+          ) {
+            setConflictEditorName(conflictingEditor.userName)
+            setShowConflictDialog(true)
+          }
+        }
+      }
+    })
+
+    // Heartbeat interval untuk update aktivitas
+    const heartbeatInterval = setInterval(() => {
+      concurrentEditingService.registerActivity(
+        effectivePageId,
+        currentUserId,
+        currentUserName,
+        userProfileImage
+      )
+    }, 30000) // Setiap 30 detik
+
+    // Dapatkan editor aktif saat mount
+    const initialEditors =
+      concurrentEditingService.getActiveEditors(effectivePageId)
+    setActiveEditors(initialEditors.filter((e) => e.userId !== currentUserId))
+
+    // Cleanup
+    return () => {
+      clearInterval(heartbeatInterval)
+      // Unregister aktivitas saat unmount
+      concurrentEditingService.unregisterActivity(
+        effectivePageId,
+        currentUserId
+      )
+    }
+  }, [
+    effectivePageId,
+    currentUserId,
+    currentUserName,
+    userProfileImage,
+    activePage,
+    isLoaded,
+  ])
+
   // Sync title dari context saat activePage berubah
   useEffect(() => {
     if (activePage && activePage.title !== localTitle) {
@@ -77,13 +220,6 @@ export default function DocumentHeader({
     }
   }, [contextSaveStatus, titleSaveStatus])
 
-  // Handler untuk membuka dialog konfirmasi hapus
-  const handleCloseDraft = () => {
-    if (effectivePageId) {
-      setShowDeleteDialog(true)
-    }
-  }
-
   // Handler untuk konfirmasi hapus halaman
   const handleDeleteConfirm = async () => {
     if (!effectivePageId) return
@@ -96,11 +232,83 @@ export default function DocumentHeader({
       // karena kita sudah mengimplementasikan logika di deletePage
       toast.success('Halaman berhasil dihapus')
     } catch (error) {
-      console.error('Error deleting page:', error)
       showErrorNotification(error)
     } finally {
       setIsDeleting(false)
       setShowDeleteDialog(false)
+    }
+  }
+
+  // Handler untuk publikasi draft
+  const handlePublishDraft = async () => {
+    if (!effectivePageId) return
+
+    try {
+      setIsPublishing(true)
+
+      // Paksa save terlebih dahulu untuk memastikan semua perubahan tersimpan
+      await forceSave()
+
+      // Berikan sedikit waktu untuk memastikan save selesai
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Publikasikan draft
+      const result = await publishDraft(effectivePageId)
+
+      if (result) {
+        toast.success('Draft berhasil dipublikasikan')
+
+        // Berikan sedikit waktu untuk cache invalidation
+        await new Promise((resolve) => setTimeout(resolve, 200))
+
+        // Refresh data halaman dari server untuk memperbarui UI
+
+        // Refetch data halaman dari context CRUD untuk memperbarui seluruh UI
+        await refetch()
+
+        // Perbarui state context berdasarkan halaman yang diperbarui
+        refreshActivePage(true)
+
+        // Pastikan mode editor diubah ke view
+        if (editorMode === 'edit') {
+          toggleEditorMode()
+        }
+      } else {
+        toast.error('Gagal mempublikasikan draft')
+      }
+    } catch (error) {
+      showErrorNotification(error)
+    } finally {
+      setIsPublishing(false)
+      setShowPublishDialog(false)
+    }
+  }
+
+  // Handler untuk conflict resolution
+  const handleUseLocalVersion = async () => {
+    // Paksa save versi lokal
+    try {
+      await forceSave()
+      toast.success('Perubahan Anda telah disimpan')
+    } catch (error) {
+      showErrorNotification(error)
+    } finally {
+      setShowConflictDialog(false)
+    }
+  }
+
+  const handleUseRemoteVersion = async () => {
+    if (!effectivePageId) return
+
+    try {
+      // Discard draft dan reload halaman
+      await discardDraft(effectivePageId)
+      toast.info('Menggunakan versi terbaru dari server')
+      // Reload page data
+    } catch (error) {
+      showErrorNotification(error)
+    } finally {
+      setShowConflictDialog(false)
     }
   }
 
@@ -145,8 +353,7 @@ export default function DocumentHeader({
       setIsEditing(false)
       toast.success('Judul berhasil disimpan')
     } catch (error) {
-      console.error('Error saving title:', error)
-      setTitleSaveStatus('error')
+      setTitleSaveStatus('unsaved')
 
       // Tampilkan error notification dengan opsi retry
       showErrorNotification(error, {
@@ -176,177 +383,388 @@ export default function DocumentHeader({
     }
   }, [isEditing, handleTitleSave])
 
-  // Render status save yang lebih informatif
-  const renderSaveStatus = () => {
-    switch (titleSaveStatus) {
-      case 'saved':
-        return (
-          <div
-            className="flex items-center text-[#a9abaf] mr-2"
-            aria-live="polite"
-          >
-            <CheckCircle
-              className="h-3 w-3 mr-1 text-green-500"
-              aria-hidden="true"
-            />
-            <span>Tersimpan</span>
-          </div>
-        )
-      case 'saving':
-        return (
-          <div
-            className="flex items-center text-[#a9abaf] mr-2"
-            aria-live="polite"
-          >
-            <Loader2 className="h-3 w-3 mr-1 animate-spin" aria-hidden="true" />
-            <span>Menyimpan...</span>
-          </div>
-        )
-      case 'unsaved':
-        return (
-          <div
-            className="flex items-center text-[#a9abaf] mr-2"
-            aria-live="polite"
-          >
-            <Clock className="h-3 w-3 mr-1 text-amber-500" aria-hidden="true" />
-            <span>Belum tersimpan</span>
-          </div>
-        )
-      case 'error':
-        return (
-          <div
-            className="flex items-center text-red-400 mr-2"
-            aria-live="assertive"
-          >
-            <AlertCircle className="h-3 w-3 mr-1" aria-hidden="true" />
-            <span>Gagal menyimpan</span>
-          </div>
-        )
-      default:
-        return null
+  // Handler untuk membuang draft
+  const handleDiscardDraft = async () => {
+    if (!effectivePageId) return
+
+    try {
+      setIsDiscarding(true)
+
+      // Panggil discardDraft dari modulePageAdapter melalui context
+      const result = await discardDraft(effectivePageId)
+
+      if (result) {
+        toast.success('Draft berhasil dibuang')
+
+        // Berikan sedikit waktu untuk cache invalidation
+        await new Promise((resolve) => setTimeout(resolve, 200))
+
+        // Refresh data halaman dari server untuk memperbarui UI
+
+        // Refetch data halaman dari context CRUD untuk memperbarui seluruh UI
+        await refetch()
+
+        // Perbarui state context berdasarkan halaman yang diperbarui
+        refreshActivePage(true)
+
+        // Ubah mode editor ke view setelah draft dibuang
+        if (editorMode === 'edit') {
+          toggleEditorMode()
+        }
+      } else {
+        toast.error('Gagal membuang draft')
+      }
+    } catch (error) {
+      showErrorNotification(error)
+    } finally {
+      setIsDiscarding(false)
+      setShowDiscardDialog(false)
     }
   }
 
-  return (
-    <div
-      className="flex items-center px-4 h-12 border-b border-[#3b3b3b]"
-      role="region"
-      aria-label="Header dokumen"
-    >
-      <Button
-        variant="ghost"
-        size="icon"
-        className="mr-1"
-        aria-label="Menu utama"
-      >
-        <ChevronDown className="h-4 w-4" aria-hidden="true" />
-      </Button>
+  // State for toggle mode loading
+  const [isTogglingMode, setIsTogglingMode] = useState(false)
 
-      {/* Title Input */}
-      <div className="w-[280px] mr-3">
-        <Input
-          value={localTitle}
-          onChange={handleTitleChange}
-          onKeyDown={handleKeyDown}
-          onBlur={handleBlur}
-          placeholder="Untitled Page"
-          className="border-0 bg-transparent h-8 px-2 focus-visible:ring-0 focus-visible:ring-offset-0 text-[#e3e4f2]"
-          aria-label="Judul halaman"
-          disabled={isLoading || titleSaveStatus === 'saving'}
-        />
+  // Handler untuk toggle mode
+  const handleToggleMode = useCallback(async () => {
+    try {
+      setIsTogglingMode(true)
+      // Set flag di sessionStorage untuk koordinasi dengan refreshActivePage
+      window.sessionStorage.setItem('isTogglingMode', 'true')
+      // Call the toggle function and wait for it to complete
+      try {
+        await toggleEditorMode()
+      } catch {
+        // Jika toggleEditorMode gagal, kita tetap lanjutkan untuk memastikan state UI konsisten
+      }
+
+      // Berikan sedikit waktu untuk memastikan UI diperbarui
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // Refresh data halaman untuk memastikan UI konsisten
+      try {
+        await refetch()
+      } catch {
+        // Jika refetch gagal, kita tetap lanjutkan untuk memastikan state UI konsisten
+      }
+
+      // Perbarui state context berdasarkan halaman yang diperbarui
+      // Gunakan try-catch untuk menangkap error yang mungkin terjadi
+      try {
+        refreshActivePage(true)
+      } catch {
+        // Jika refreshActivePage gagal, kita tetap lanjutkan untuk memastikan state UI konsisten
+      }
+    } catch (error) {
+      // Tampilkan notifikasi error
+      toast.error('Gagal mengubah mode editor. Silakan coba lagi.')
+
+      showErrorNotification(
+        error instanceof Error ? error : new Error('Gagal mengubah mode editor')
+      )
+    } finally {
+      setIsTogglingMode(false)
+      // Hapus flag dari sessionStorage
+      window.sessionStorage.removeItem('isTogglingMode')
+    }
+  }, [editorMode, toggleEditorMode, refetch, refreshActivePage])
+
+  return (
+    <div className="border-b sticky top-0 z-10 bg-background">
+      <div className="container flex h-14 max-w-screen-2xl items-center">
+        <div className="flex-1 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2"
+              aria-label="Menu utama"
+            >
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            </Button>
+
+            <div className="flex items-center space-x-2 flex-1">
+              <Input
+                value={localTitle}
+                onChange={handleTitleChange}
+                onKeyDown={handleKeyDown}
+                onBlur={handleBlur}
+                placeholder="Untitled Page"
+                className="border-none bg-transparent text-lg font-semibold h-9 focus-visible:ring-transparent w-full max-w-lg"
+                aria-label="Judul halaman"
+                disabled={isLoading || titleSaveStatus === 'saving'}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            {/* User Avatar */}
+            {userProfileImage ? (
+              <Avatar className="h-8 w-8">
+                <div className="relative w-full h-full">
+                  <Image
+                    src={userProfileImage}
+                    alt={currentUserName}
+                    fill
+                    className="object-cover rounded-full"
+                  />
+                </div>
+              </Avatar>
+            ) : (
+              <Avatar className="h-8 w-8 bg-[#669df1]">
+                <AvatarFallback className="bg-[#669df1] text-white">
+                  {currentUserName.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            )}
+
+            {/* Comment Button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" aria-label="Komentar">
+                    <MessageSquare className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Komentar</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {/* Draft Status Indicator - hanya tampilkan di mode edit */}
+            {editorMode === 'edit' && (
+              <div className="flex items-center">
+                <DraftStatusIndicator
+                  status={draftSaveStatus}
+                  lastSavedAt={lastSavedAt}
+                  onRetry={forceSave}
+                />
+              </div>
+            )}
+
+            <Separator
+              orientation="vertical"
+              className="h-6 mx-1 bg-[#3b3b3b]"
+            />
+
+            {/* Toggle Mode Button - hanya tampilkan di mode view */}
+            {editorMode === 'view' && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 gap-1"
+                      onClick={handleToggleMode}
+                      disabled={isLoading || isTogglingMode}
+                    >
+                      {isTogglingMode ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Mengubah...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Edit className="h-4 w-4" />
+                          <span>Edit</span>
+                        </>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Edit halaman</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+            {/* Active Editors Indicator */}
+            {activeEditors.length > 0 && (
+              <ActiveEditorIndicator editors={activeEditors} />
+            )}
+
+            {/* Tampilkan tombol publikasi dan buang draft hanya dalam mode edit */}
+            {editorMode === 'edit' &&
+              (hasDraft ||
+                activePage?.status === ModulePageStatus.DRAFT ||
+                activePage?.hasUnpublishedChanges) && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="h-8 gap-1"
+                    aria-label="Publikasikan draft"
+                    onClick={() => setShowPublishDialog(true)}
+                    disabled={
+                      isPublishing ||
+                      !effectivePageId ||
+                      draftSaveStatus === 'saving'
+                    }
+                  >
+                    {isPublishing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Memproses...</span>
+                      </>
+                    ) : (
+                      <>
+                        <ExternalLink className="h-4 w-4" />
+                        <span>Publikasikan</span>
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1"
+                    aria-label="Buang draft"
+                    onClick={() => setShowDiscardDialog(true)}
+                    disabled={isDiscarding || !effectivePageId}
+                  >
+                    {isDiscarding ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Memproses...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4" />
+                        <span>Buang Draft</span>
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
+
+            {/* Share Button */}
+            <Button
+              variant="outline"
+              className="border-[#3b3b3b] bg-transparent h-8 gap-1"
+            >
+              <Share2 className="h-4 w-4" />
+              <span>Share</span>
+            </Button>
+
+            {/* Delete Button */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="h-8"
+                    disabled={isDeleting || !effectivePageId}
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Hapus halaman</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {/* More Options Button */}
+            <Button variant="ghost" size="icon">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Save Status */}
-      {renderSaveStatus()}
+      {/* Dialog konfirmasi publikasi draft */}
+      <AlertDialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Publikasikan draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Draft akan dipublikasikan dan menjadi versi publik dari halaman
+              ini. Versi publik sebelumnya akan digantikan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPublishing}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handlePublishDraft()
+              }}
+              disabled={isPublishing}
+            >
+              {isPublishing ? 'Memproses...' : 'Publikasikan'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <Avatar className="h-6 w-6 bg-[#669df1] mr-2">
-        <AvatarFallback className="bg-[#669df1] text-white text-xs">
-          EN
-        </AvatarFallback>
-      </Avatar>
+      {/* Dialog konfirmasi buang draft */}
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Buang draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Draft akan dibuang dan Anda akan kembali ke versi yang sudah
+              dipublikasikan sebelumnya. Semua perubahan dalam draft akan
+              hilang.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDiscarding}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDiscardDraft()
+              }}
+              disabled={isDiscarding}
+            >
+              {isDiscarding ? 'Memproses...' : 'Buang Draft'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="mr-2"
-        aria-label="Komentar"
-      >
-        <MessageSquare className="h-4 w-4" aria-hidden="true" />
-      </Button>
-
-      <Button
-        className="bg-[#669df1] hover:bg-[#669df1]/90 text-white h-8 mr-2"
-        aria-label="Publikasikan halaman"
-      >
-        Publish...
-      </Button>
-
-      {/* Close draft button dengan konfirmasi dialog */}
-      <Button
-        variant="ghost"
-        className="text-[#a9abaf] h-8 mr-2"
-        aria-label="Tutup draft"
-        onClick={handleCloseDraft}
-        disabled={!effectivePageId || isDeleting || isLoading}
-      >
-        {isDeleting ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-            Deleting...
-          </>
-        ) : (
-          'Close draft'
-        )}
-      </Button>
-
-      <Button
-        variant="outline"
-        className="border-[#3b3b3b] bg-transparent h-8 mr-2"
-      >
-        <Share2 className="h-4 w-4 mr-1" />
-        Share
-      </Button>
-
-      <Button
-        variant="outline"
-        className="border-[#3b3b3b] bg-transparent h-8 mr-2"
-      >
-        <Link className="h-4 w-4" />
-      </Button>
-
-      <Button variant="ghost" size="icon">
-        <MoreHorizontal className="h-4 w-4" />
-      </Button>
-
-      {/* Alert Dialog untuk konfirmasi penghapusan halaman */}
+      {/* Dialog konfirmasi hapus halaman */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Hapus halaman?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tindakan ini tidak dapat dibatalkan. Halaman ini akan dihapus
-              secara permanen.
+              Halaman akan dihapus secara permanen. Tindakan ini tidak dapat
+              dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-red-500 hover:bg-red-600"
+              onClick={(e) => {
+                e.preventDefault()
+                handleDeleteConfirm()
+              }}
               disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600"
             >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  Menghapus...
-                </>
-              ) : (
-                'Hapus'
-              )}
+              {isDeleting ? 'Menghapus...' : 'Hapus'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Dialog konflik editing */}
+      <ConflictDialog
+        isOpen={showConflictDialog}
+        onClose={() => setShowConflictDialog(false)}
+        onUseRemoteVersion={handleUseRemoteVersion}
+        onUseLocalVersion={handleUseLocalVersion}
+        editorName={conflictEditorName}
+      />
     </div>
   )
 }

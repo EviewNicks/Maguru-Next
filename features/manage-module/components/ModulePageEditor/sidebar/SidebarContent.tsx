@@ -29,12 +29,6 @@ import { useModulePageCRUDContext } from '@/features/manage-module/context/Modul
 import { ModulePage, ModulePageStatus } from '@/features/manage-module/types'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import {
-  debugDataFlow,
-  debugExpandedItems,
-  DebugLevel,
-  setDebugLevel,
-} from '@/features/manage-module/utils/debugUtils'
 
 interface SidebarContentProps {
   expandedItems: Record<string, boolean>
@@ -69,37 +63,18 @@ export default function SidebarContent({
     isLoading,
   } = useModulePageCRUDContext()
 
-  // Set debug level to INFO in development
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      setDebugLevel(DebugLevel.DEBUG)
-    }
-  }, [])
+
 
   // Filter pages based on search term using useMemo with forceUpdateCounter dependency
   const filteredPages = useMemo(() => {
-    console.log(
-      `[SidebarContent] Recalculating filteredPages, pages count: ${Array.isArray(pages) ? pages.length : 'undefined'}, force update: ${forceUpdateCounter}`
-    )
-
     // Pastikan array halaman valid
     const pagesArray = Array.isArray(pages) ? [...pages] : []
 
     if (pagesArray.length === 0) {
-      console.log(
-        '[SidebarContent] Warning: No pages available or pages is not an array'
-      )
-
       // Jika pages kosong dan bukan karena loading, coba muat ulang data
       if (!error && !isLoading && forceUpdateCounter > 0) {
-        console.log(
-          '[SidebarContent] Pages array is empty but not in loading state, triggering refetch'
-        )
         setTimeout(() => {
           refetch().then(() => {
-            console.log(
-              '[SidebarContent] Refetch completed after empty pages array'
-            )
             setForceUpdateCounter((prev) => prev + 1)
           })
         }, 500)
@@ -114,9 +89,6 @@ export default function SidebarContent({
           (page) => page.id === newlyCreatedPage.id
         )
         if (!pageExists) {
-          console.log(
-            `[SidebarContent] Adding newly created page to list: ${newlyCreatedPage.title || 'Untitled'}`
-          )
           pagesArray.push(newlyCreatedPage)
         }
       }
@@ -130,8 +102,7 @@ export default function SidebarContent({
           page.title &&
           page.title.toLowerCase().includes((searchTerm || '').toLowerCase())
       )
-    } catch (error) {
-      console.error('[SidebarContent] Error filtering pages:', error)
+    } catch {
       return pagesArray // Return unfiltered array on error
     }
   }, [
@@ -144,47 +115,22 @@ export default function SidebarContent({
     refetch,
   ])
 
-  // Debug data flow when pages change
-  useEffect(() => {
-    debugDataFlow('SidebarContent', pages)
-  }, [pages])
 
-  // Debug expandedItems when they change
-  useEffect(() => {
-    debugExpandedItems(expandedItems)
-  }, [expandedItems])
 
   // Tambahkan debugging untuk memahami data yang ada
   useEffect(() => {
-    console.log(`[SidebarContent] Data loaded - Pages count: ${pages.length}`)
     if (pages.length > 0) {
-      console.log(`[SidebarContent] First page title: ${pages[0].title}`)
-      console.log(`[SidebarContent] First page status: ${pages[0].status}`)
-    }
-    if (error) {
-      console.error(`[SidebarContent] Error loading pages:`, error)
     }
   }, [pages, error])
 
   // Tambahkan debugging untuk memahami data yang ada
   useEffect(() => {
     if (Array.isArray(pages)) {
-      console.log(`[SidebarContent] Data loaded - Pages count: ${pages.length}`)
       if (pages.length > 0 && pages[0]) {
-        console.log(
-          `[SidebarContent] First page title: ${pages[0].title || 'Untitled'}`
-        )
-        console.log(
-          `[SidebarContent] First page status: ${pages[0].status || 'Unknown'}`
-        )
       }
     } else {
-      console.log(
-        `[SidebarContent] Data loaded - Pages is not an array: ${typeof pages}`
-      )
     }
     if (error) {
-      console.error(`[SidebarContent] Error loading pages:`, error)
     }
   }, [pages, error])
 
@@ -201,27 +147,13 @@ export default function SidebarContent({
   // Add effect to log pages when they change
   useEffect(() => {
     if (Array.isArray(pages)) {
-      console.log(`[SidebarContent] Received ${pages.length} pages`)
-
-      // Log pages IDs untuk debugging
-      if (pages.length > 0) {
-        console.log(
-          `[SidebarContent] Page IDs: ${pages.map((p) => p.id).join(', ')}`
-        )
-      }
     } else {
-      console.log(
-        `[SidebarContent] Received pages but it's not an array: ${typeof pages}`
-      )
     }
   }, [pages])
 
   // Add effect to log pages when forceUpdateCounter changes
   useEffect(() => {
     if (forceUpdateCounter > 0) {
-      console.log(
-        `[SidebarContent] Force update triggered (${forceUpdateCounter}), pages count: ${pages.length}`
-      )
     }
   }, [forceUpdateCounter, pages.length])
 
@@ -230,9 +162,6 @@ export default function SidebarContent({
     if (newlyCreatedPage && Array.isArray(pages)) {
       const pageExists = pages.some((page) => page.id === newlyCreatedPage.id)
       if (pageExists) {
-        console.log(
-          `[SidebarContent] Newly created page found in pages array, clearing local state`
-        )
         setNewlyCreatedPage(null)
       }
     }
@@ -241,12 +170,9 @@ export default function SidebarContent({
   // Add effect to auto-refetch if pages array is empty but not in loading state
   useEffect(() => {
     if (Array.isArray(pages) && pages.length === 0 && !isLoading && !error) {
-      console.log(
-        '[SidebarContent] Empty pages array detected, triggering refetch'
-      )
-      refetch().catch((err) =>
-        console.error('[SidebarContent] Refetch error:', err)
-      )
+      refetch().catch(() => {
+        // ignore
+      })
     }
   }, [pages, isLoading, error, refetch])
 
@@ -261,15 +187,13 @@ export default function SidebarContent({
 
   // Force update helper function to pass to DeletePageConfirmation
   const handleForceUpdate = () => {
-    console.log('[SidebarContent] Force updating after page deletion')
-
     // Increment counter to trigger re-render
     setForceUpdateCounter((prev) => prev + 1)
 
     // Force a refetch to ensure we have latest data
-    refetch().catch((err) =>
-      console.error('[SidebarContent] Error during force refetch:', err)
-    )
+    refetch().catch(() => {
+      // ignore
+    })
 
     // Ensure "ModuleContent" is expanded
     if (!expandedItems['ModuleContent']) {
@@ -307,11 +231,6 @@ export default function SidebarContent({
 
         // Pastikan memiliki moduleId yang valid
         if (newPage.moduleId) {
-          // Log untuk debug
-          console.log(
-            `[SidebarContent] Created page with moduleId: ${newPage.moduleId}, id: ${newPage.id}`
-          )
-
           // Pastikan "Module Content" terbuka agar halaman baru terlihat
           if (!expandedItems['ModuleContent']) {
             toggleExpand('ModuleContent')
@@ -322,18 +241,12 @@ export default function SidebarContent({
         setForceUpdateCounter((prev) => prev + 1)
 
         // Debug to verify pages are updated
-        console.log(
-          `[SidebarContent] After refetch - Pages count: ${pages.length}`
-        )
-
         toast.success('Halaman baru berhasil dibuat')
 
         // Secara otomatis pilih halaman baru
         contextHandleSelectPage(newPage)
       }
     } catch (error) {
-      console.error('Error creating new page:', error)
-
       // Detail error handling
       let errorMessage = 'Gagal membuat halaman. Silakan coba lagi.'
 

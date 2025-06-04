@@ -10,6 +10,7 @@ export interface ActiveEditor {
   userName: string
   timestamp: number // Waktu terakhir aktivitas dalam ms
   pageId: string
+  profileImageUrl?: string // Foto profil (opsional)
 }
 
 /**
@@ -66,8 +67,14 @@ export class ConcurrentEditingService {
    * @param pageId - ID halaman
    * @param userId - ID pengguna
    * @param userName - Nama pengguna
+   * @param profileImageUrl - URL foto profil (opsional)
    */
-  public registerActivity(pageId: string, userId: string, userName: string) {
+  public registerActivity(
+    pageId: string,
+    userId: string,
+    userName: string,
+    profileImageUrl?: string
+  ) {
     const now = Date.now()
 
     // Dapatkan atau buat array untuk pageId ini
@@ -83,8 +90,11 @@ export class ConcurrentEditingService {
     )
 
     if (existingEditorIndex >= 0) {
-      // Update timestamp
+      // Update timestamp dan profileImageUrl jika ada
       editors[existingEditorIndex].timestamp = now
+      if (profileImageUrl) {
+        editors[existingEditorIndex].profileImageUrl = profileImageUrl
+      }
     } else {
       // Tambahkan pengguna baru
       editors.push({
@@ -92,6 +102,7 @@ export class ConcurrentEditingService {
         userName,
         timestamp: now,
         pageId,
+        profileImageUrl,
       })
 
       // Notifikasi perubahan
@@ -150,10 +161,48 @@ export class ConcurrentEditingService {
   ): boolean {
     if (!localPage || !remotePage) return false
 
+    // Fungsi yang lebih aman untuk mendapatkan timestamp dari berbagai format tanggal
+    const getTimestamp = (date: unknown): number => {
+      try {
+        if (!date) return 0
+
+        // Handle Date object
+        if (date instanceof Date) return date.getTime()
+
+        // Handle string date
+        if (typeof date === 'string') return new Date(date).getTime()
+
+        // Handle number (timestamp)
+        if (typeof date === 'number') return date
+
+        // Handle object with toISOString or getTime method
+        if (typeof date === 'object' && date !== null) {
+          // Handle Date-like objects with getTime method
+          const dateObj = date as { getTime?: () => number }
+          if (typeof dateObj.getTime === 'function') return dateObj.getTime()
+
+          // Handle objects with toISOString method
+          const isoObj = date as { toISOString?: () => string }
+          if (typeof isoObj.toISOString === 'function') {
+            return new Date(isoObj.toISOString()).getTime()
+          }
+        }
+
+        // Last resort: try to convert to string and parse
+        return new Date(String(date)).getTime()
+      } catch (error) {
+        console.error('Error parsing date in hasVersionConflict:', error, date)
+        return 0
+      }
+    }
+
+    const localTimestamp = getTimestamp(localPage.updatedAt)
+    const remoteTimestamp = getTimestamp(remotePage.updatedAt)
+
     // Ada konflik jika versi berbeda dan ada perubahan di kedua sisi
     return (
       localPage.version !== remotePage.version &&
-      (localPage.updatedAt.getTime() !== remotePage.updatedAt.getTime() ||
+      (localTimestamp !== remoteTimestamp ||
         localPage.lastEditBy !== remotePage.lastEditBy)
     )
   }

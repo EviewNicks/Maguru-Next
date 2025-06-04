@@ -7,10 +7,9 @@ import { formatDistanceToNow } from 'date-fns'
 import { id } from 'date-fns/locale'
 import { modulePageAdapter } from '../../adapters/modulePageAdapter'
 import { useClerk } from '@clerk/nextjs'
-import { logger } from '../../services/logger'
 
 // Konstanta untuk hook name (logging)
-const HOOK = 'useRichTextAutosave'
+// const HOOK = 'useRichTextAutosave'
 
 // Konfigurasi autosave
 const DEBOUNCE_DELAY = 5000 // 5 detik debounce
@@ -69,8 +68,7 @@ export function useRichTextAutosave({
         addSuffix: true,
         locale: id,
       })
-    } catch (error) {
-      logger.error(HOOK, `Error formatting lastSavedAt: ${error}`)
+    } catch {
       return ''
     }
   }, [lastSavedAt])
@@ -153,7 +151,6 @@ export function useRichTextAutosave({
         }
       }
     } catch (error) {
-      logger.error(HOOK, `Error saving draft: ${error}`)
       updateSaveStatus('error')
       lastErrorRef.current =
         error instanceof Error ? error : new Error(String(error))
@@ -290,8 +287,7 @@ export function useRichTextAutosave({
                 authorId: userId,
               })
             )
-          } catch (error) {
-            logger.error(HOOK, `Error in sync save: ${error}`)
+          } catch  {
           }
         }
       }

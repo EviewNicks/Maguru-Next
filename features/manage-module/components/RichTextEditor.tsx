@@ -1,6 +1,7 @@
 'use client'
 import '@/styles/tiptap.css'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
+import { useModuleDraftPageContext } from '../context/ModuleDraftPageContext'
 import { StandardEditorContent } from '../types'
 
 //components implementasion
@@ -24,20 +25,11 @@ import { FloatingToolbar } from '@/features/manage-module/components/ModulePageE
 import { EditorToolbar } from '@/features/manage-module/components/ModulePageEditor/toolbars/EditorToolbar'
 import Placeholder from '@tiptap/extension-placeholder'
 import { defaultContentJSON } from '@/features/manage-module/lib/content'
-import { useRichTextAutosave } from '@/features/manage-module/hooks/draft/useRichTextAutosave'
+
 import { useCallback, useEffect, useState } from 'react'
-import { SaveIcon, AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+import { AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Button } from '@/components/ui/button'
-
-// Import RichTextEditorWithAutosave dari file terpisah
-import { RichTextEditorWithAutosave } from './RichTextEditorWithAutosave'
 
 const extensions = [
   StarterKit.configure({
@@ -92,10 +84,9 @@ const extensions = [
 
 export interface RichTextEditorProps {
   className?: string
-  initialContent?: string
+  initialContent?: string | object
   onChange?: (content: object) => void
   pageId?: string
-  autosave?: boolean
   onEditorReady?: (editor: Editor | null) => void
 }
 
@@ -105,12 +96,20 @@ export function RichTextEditor({
   initialContent,
   onChange,
   pageId: propPageId,
-  autosave = false,
   onEditorReady,
 }: RichTextEditorProps) {
   // Gunakan context untuk mengakses data dan handler
-  const { activePage, handleEditorChange, getParsedEditorContent } =
-    useModulePageCRUDContext()
+  const { activePage, handleEditorChange } = useModulePageCRUDContext()
+
+  // Gunakan ModuleDraftPageContext untuk mengakses mode editor
+  const {
+    editorMode,
+    setEditor: setContextEditor,
+    getDraftOrPublishedContent,
+  } = useModuleDraftPageContext()
+
+  // Derive readOnly dari editorMode
+  const readOnly = editorMode === 'view'
 
   // Dapatkan pageId dari activePage atau dari props
   const pageId = propPageId || activePage?.id
@@ -124,7 +123,7 @@ export function RichTextEditor({
       ? JSON.parse(initialContent)
       : initialContent
     : activePage
-      ? getParsedEditorContent(activePage)
+      ? getDraftOrPublishedContent(activePage)
       : defaultContentJSON
 
   // Gunakan JSON.parse untuk mendapatkan konten yang sudah diparse oleh komponen parent
@@ -134,8 +133,7 @@ export function RichTextEditor({
         return JSON.parse(parsedContent)
       }
       return parsedContent
-    } catch (error) {
-      console.error('RichTextEditor: error in getParsedContent:', error)
+    } catch {
       return defaultContentJSON
     }
   }, [parsedContent])
@@ -154,12 +152,12 @@ export function RichTextEditor({
         onChange(editorContent)
       }
 
-      // Gunakan handleEditorChange dari context untuk autosave HANYA jika autosave=true
-      if (pageId && autosave) {
+      // Gunakan handleEditorChange dari context untuk autosave HANYA jika dalam mode edit
+      if (pageId && editorMode === 'edit') {
         handleEditorChange(typedContent, pageId)
       }
     },
-    [onChange, handleEditorChange, pageId, autosave]
+    [onChange, handleEditorChange, pageId, editorMode]
   )
 
   // Initialize editor when component mounts
@@ -167,7 +165,6 @@ export function RichTextEditor({
     // Cleanup untuk mencegah memory leak
     return () => {
       if (editor) {
-        console.log('RichTextEditor: destroying editor')
         editor.destroy()
       }
     }
@@ -181,11 +178,8 @@ export function RichTextEditor({
         if (content) {
           editor.commands.setContent(content)
         }
-      } catch (error) {
-        console.error(
-          'RichTextEditor: error memperbarui content editor:',
-          error
-        )
+      } catch {
+        // ignore
       }
     }
   }, [editor, parsedContent, getParsedContent])
@@ -193,11 +187,9 @@ export function RichTextEditor({
   // Buat editor instance
   const createEditor = useCallback(() => {
     if (editor) return
-    console.log('RichTextEditor: creating editor instance')
 
     try {
       const parsedContent = getParsedContent()
-      console.log('RichTextEditor: parsedContent for editor:', parsedContent)
 
       // Gunakan type assertion untuk mengatasi masalah tipe dengan extensions
       const newEditor = new Editor({
@@ -205,53 +197,118 @@ export function RichTextEditor({
         extensions,
         content: parsedContent,
         autofocus: false,
-        editable: true,
+        editable: !readOnly, // Set editable berdasarkan mode
         onUpdate: ({ editor }) => {
-          handleChange(editor.getJSON())
+          try {
+            if (editor) {
+              handleChange(editor.getJSON())
+            }
+          } catch {
+            // ignore
+          }
         },
       })
 
       // Set editor instance ke state
       setEditor(newEditor)
 
+      // Set editor ke context untuk digunakan oleh komponen lain
+      setContextEditor(newEditor)
+
       // Panggil callback onEditorReady jika disediakan
       if (onEditorReady) {
         onEditorReady(newEditor)
       }
-    } catch (error) {
-      console.error('RichTextEditor: error creating editor:', error)
+      } catch {
+      // ignore
     }
-  }, [editor, getParsedContent, handleChange, onEditorReady])
+  }, [
+    editor,
+    getParsedContent,
+    handleChange,
+    onEditorReady,
+    readOnly,
+    setContextEditor,
+  ])
 
   // Create editor on mount
   useEffect(() => {
     createEditor()
   }, [createEditor])
 
-  // Integrasi dengan autosave hook
-  const { isSaving, lastSaved, triggerSave } = useRichTextAutosave({
-    editor,
-    enabled: autosave && !!pageId,
-    pageId: pageId || '',
-  })
+  // Perbarui editor editable state saat editorMode berubah dengan penanganan error yang lebih baik
+  useEffect(() => {
+    // Gunakan setTimeout untuk memastikan DOM sudah siap
+    const updateEditorMode = setTimeout(() => {
+      try {
+        if (editor) {
+          // Set editable state dengan aman
+          try {
+            editor.setEditable(!readOnly)
+          } catch {
+            // ignore
+          }
 
-  // Jika pageId disediakan dan autosave diaktifkan, gunakan RichTextEditorWithAutosave sebagai pengganti
-  if (pageId && autosave) {
-    return (
-      <RichTextEditorWithAutosave
-        className={className}
-        initialContent={
-          typeof parsedContent === 'string'
-            ? parsedContent
-            : JSON.stringify(parsedContent)
+          // Force refresh editor content saat mode berubah
+          try {
+            const content = getParsedContent()
+
+            // Set ulang konten dengan aman
+            if (editor && editor.commands && editor.commands.setContent) {
+              try {
+                editor.commands.setContent(content)
+              } catch {
+                // ignore
+              }
+            }
+
+            // Manipulasi DOM dengan lebih aman
+            setTimeout(() => {
+              try {
+                // Gunakan querySelector hanya jika elemen ada di DOM
+                const editorElement = document.querySelector('.ProseMirror')
+                if (editorElement) {
+                  if (readOnly) {
+                    editorElement.classList.add('view-mode')
+                    editorElement.classList.remove('edit-mode')
+                  } else {
+                    editorElement.classList.add('edit-mode')
+                    editorElement.classList.remove('view-mode')
+                  }
+                }
+
+                // Fokus editor hanya jika dalam mode edit dan editor masih ada
+                if (
+                  editorMode === 'edit' &&
+                  editor &&
+                  editor.commands &&
+                  editor.commands.focus
+                ) {
+                  try {
+                    editor.commands.focus()
+                  } catch {
+                    // ignore
+                  }
+                }
+              } catch {
+                // ignore
+              }
+            }, 200) // Increase timeout to ensure DOM is ready
+            } catch {
+            // ignore
+          }
         }
-        onChange={onChange}
-        pageId={pageId}
-      />
-    )
-  }
+      } catch {
+        // ignore
+      }
+    }, 50) // Small delay to ensure component is mounted
 
-  // Render editor normal jika tidak menggunakan autosave + pageId
+    return () => {
+      clearTimeout(updateEditorMode)
+    }
+  }, [editor, readOnly, editorMode, getParsedContent])
+
+  // Render editor
   return (
     <ErrorBoundary
       fallback={
@@ -274,14 +331,29 @@ export function RichTextEditor({
         </div>
       }
     >
-      <div className={cn('flex flex-col h-full', className)}>
-        {editor && <EditorToolbar editor={editor} />}
+      <div
+        className={cn(
+          'flex flex-col h-full',
+          className,
+          readOnly ? 'rich-text-view-mode' : 'rich-text-edit-mode'
+        )}
+      >
+        {/* Tampilkan toolbar hanya jika dalam mode edit */}
+        {editor && !readOnly && <EditorToolbar editor={editor} />}
 
-        <div className="flex-1 overflow-auto prose prose-slate max-w-full">
+        <div
+          className={cn(
+            'flex-1 overflow-auto prose prose-slate max-w-full',
+            readOnly ? 'view-content' : 'edit-content'
+          )}
+        >
           {editor ? (
             <EditorContent
               editor={editor}
-              className="min-h-[50vh] p-4 focus:outline-none"
+              className={cn(
+                'min-h-[50vh] p-4 focus:outline-none',
+                readOnly ? 'cursor-default' : ''
+              )}
             />
           ) : (
             <div className="flex justify-center items-center h-full">
@@ -290,44 +362,8 @@ export function RichTextEditor({
           )}
         </div>
 
-        {/* Toolbar bawah dengan status autosave */}
-        {autosave && (
-          <div className="border-t border-gray-200 bg-gray-50 px-4 py-2 flex justify-between items-center text-sm">
-            <div className="flex items-center">
-              {isSaving ? (
-                <span className="flex items-center text-gray-500">
-                  <Loader2 className="h-3 w-3 animate-spin mr-2" />
-                  Menyimpan...
-                </span>
-              ) : lastSaved ? (
-                <span className="flex items-center text-green-600">
-                  <SaveIcon className="h-3 w-3 mr-2" />
-                  Disimpan {lastSaved}
-                </span>
-              ) : null}
-            </div>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={triggerSave}
-                    disabled={isSaving}
-                  >
-                    <SaveIcon className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Simpan konten</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        )}
-
-        {editor && (
+        {/* Tampilkan floating menu dan toolbar hanya jika dalam mode edit */}
+        {editor && !readOnly && (
           <>
             <TipTapFloatingMenu editor={editor} />
             <FloatingToolbar editor={editor} />

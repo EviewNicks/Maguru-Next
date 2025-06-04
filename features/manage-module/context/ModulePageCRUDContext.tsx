@@ -17,22 +17,17 @@ import {
 } from '../types'
 import { useModulePageData } from '../hooks/useModulePageData'
 import { modulePageAdapter } from '../adapters/modulePageAdapter'
-// Hapus import untuk hooks draft
-//import { useRichTextAutosave } from '../hooks/draft/useRichTextAutosave'
-//import { useDraftRecovery } from '../hooks/draft/useDraftRecovery'
-//import { useUnsavedChangesPrompt } from '../hooks/draft/useUnsavedChangesPrompt'
-//
 import { showErrorNotification } from '../components/ErrorNotifier'
-import { logger } from '../services/logger'
 import { useRouter } from 'next/navigation'
 import debounce from 'lodash/debounce'
-import { debugDataFlow } from '../utils/debugUtils'
 import { useQueryClient } from '@tanstack/react-query'
+// Import ModuleDraftPageProvider
+import { ModuleDraftPageProvider } from './ModuleDraftPageContext'
 
 // import { useClerk } from '@clerk/nextjs'
 
-// Konstanta untuk context name (logging)
-const CONTEXT = 'ModulePageCRUDContext'
+// // Konstanta untuk context name (logging)
+// const CONTEXT = 'ModulePageCRUDContext'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPromise = Promise<any>
@@ -183,8 +178,8 @@ export function ModulePageCRUDProvider({
         try {
           const parsedItems = JSON.parse(savedExpandedItems)
           setExpandedItems(parsedItems)
-        } catch (error) {
-          console.error('Failed to parse saved expanded items:', error)
+        } catch {
+          // ignore
         }
       }
     }
@@ -232,10 +227,6 @@ export function ModulePageCRUDProvider({
     updatePageStatus: updatePageStatusOperation,
     checkHasDraft,
     getDraft,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    saveDraft,
-    publishDraft: publishDraftOperation,
-    discardDraft: discardDraftOperation,
   } = useModulePageData(moduleId)
 
   // Ekstrak data dari pagesQuery
@@ -243,38 +234,6 @@ export function ModulePageCRUDProvider({
   const isLoading = pagesQuery.isLoading
   const error = pagesQuery.error
   const refetch = pagesQuery.refetch
-
-  // Debug data flow ketika pagesQuery berubah
-  useEffect(() => {
-    if (pagesQuery.data !== undefined) {
-      logger.debug(
-        CONTEXT,
-        `pagesQuery.data is type: ${typeof pagesQuery.data}, isArray: ${Array.isArray(pagesQuery.data)}`
-      )
-    }
-  }, [pagesQuery.data])
-
-  // Debug data flow ketika pages berubah
-  useEffect(() => {
-    if (pages.length > 0) {
-      debugDataFlow('ModulePageCRUDContext', pages)
-      logger.debug(
-        CONTEXT,
-        `Received ${pages.length} pages`,
-        pages.map((p: ModulePage) => ({
-          id: p.id,
-          title: p.title,
-          status: p.status,
-        }))
-      )
-    } else if (isLoading) {
-      logger.debug(CONTEXT, 'Loading pages...')
-    } else if (error) {
-      logger.error(CONTEXT, 'Error loading pages', error)
-    } else {
-      logger.debug(CONTEXT, 'No pages available')
-    }
-  }, [pages, isLoading, error])
 
   // Set active page otomatis ke halaman pertama jika belum diset
   React.useEffect(() => {
@@ -284,10 +243,6 @@ export function ModulePageCRUDProvider({
     // 3. Tidak sedang loading
     if (!activePage && pages.length > 0 && !isLoading) {
       const firstPage = pages[0]
-      logger.info(
-        CONTEXT,
-        `Auto-setting active page to first page: ${firstPage.title}`
-      )
 
       // Set active page tanpa memanggil API
       setActivePage(firstPage)
@@ -312,7 +267,6 @@ export function ModulePageCRUDProvider({
         const result = await createPageOperation(page)
         return result
       } catch (error) {
-        logger.error(CONTEXT, 'Error creating page', error)
         showErrorNotification(error)
         throw error
       }
@@ -326,7 +280,6 @@ export function ModulePageCRUDProvider({
         const result = await updatePageOperation({ pageId, data })
         return result
       } catch (error) {
-        logger.error(CONTEXT, 'Error updating page', error)
         showErrorNotification(error)
         throw error
       }
@@ -343,38 +296,23 @@ export function ModulePageCRUDProvider({
 
         if (pageToDelete) {
           pageModuleId = pageToDelete.moduleId || moduleId
-          logger.info(
-            CONTEXT,
-            `Deleting page ${pageId} from module ${pageModuleId}`
-          )
         } else {
-          logger.warn(
-            CONTEXT,
-            `Page ${pageId} not found in current pages array, using current moduleId ${moduleId}`
-          )
+          // ignore
         }
 
         // Call the delete operation - wrapped in try-catch since it might not return a value
         try {
-          await deletePageOperation(pageId)
+          deletePageOperation(pageId)
 
           // If we get here, the deletion was successful (no error thrown)
           // Jika halaman yang dihapus adalah active page, reset ke null dan navigasi ke halaman pertama
           if (activePage && activePage.id === pageId) {
-            logger.info(
-              CONTEXT,
-              `Deleted page was the active page, resetting activePage`
-            )
             setActivePage(null)
 
             // Find available pages for navigation
             const availablePages = pages.filter((p) => p.id !== pageId)
             if (availablePages.length > 0) {
               const firstAvailablePage = availablePages[0]
-              logger.info(
-                CONTEXT,
-                `Navigating to alternative page: ${firstAvailablePage.id}`
-              )
               // Use router directly instead of handlePageChange to avoid circular dependency
               router.push(
                 `/manage-module/${moduleId}?pageId=${firstAvailablePage.id}`
@@ -385,14 +323,9 @@ export function ModulePageCRUDProvider({
           // Ensure the query cache is updated
           if (queryClient && pageModuleId) {
             // Langkah 1: Hapus page dari cache terlebih dahulu
-            logger.debug(CONTEXT, `Removing page ${pageId} from cache`)
             queryClient.removeQueries({ queryKey: ['modulePage', pageId] })
 
             // Langkah 2: Invalidate query untuk modul
-            logger.debug(
-              CONTEXT,
-              `Invalidating and refetching cache for module ${pageModuleId}`
-            )
 
             // Invalidate dengan refetchType 'all' untuk memastikan data diambil ulang
             await queryClient.invalidateQueries({
@@ -422,12 +355,10 @@ export function ModulePageCRUDProvider({
 
           // Return true to indicate success
           return true
-        } catch (deleteError) {
-          logger.error(CONTEXT, `Failed to delete page ${pageId}`, deleteError)
+        } catch {
           return false
         }
       } catch (error) {
-        logger.error(CONTEXT, 'Error in deletePage function', error)
         showErrorNotification(error)
         throw error
       }
@@ -449,7 +380,6 @@ export function ModulePageCRUDProvider({
         const result = await reorderPagesOperation(pageIds)
         return result
       } catch (error) {
-        logger.error(CONTEXT, 'Error reordering pages', error)
         showErrorNotification(error)
         throw error
       }
@@ -468,7 +398,6 @@ export function ModulePageCRUDProvider({
 
         return result
       } catch (error) {
-        logger.error(CONTEXT, 'Error updating page status', error)
         showErrorNotification(error)
         throw error
       }
@@ -520,8 +449,7 @@ export function ModulePageCRUDProvider({
     async (pageId: string): Promise<ModulePage | null> => {
       try {
         return await getPage(pageId)
-      } catch (error) {
-        logger.error(CONTEXT, 'Error fetching page by ID', error)
+      } catch {
         return null
       }
     },
@@ -555,7 +483,6 @@ export function ModulePageCRUDProvider({
       if (!page) return
 
       // Log page selection untuk debugging
-      logger.debug(CONTEXT, `Selected page: ${page.id} - ${page.title}`)
 
       // Buat deep clone page object untuk mencegah referensi yang tidak diinginkan
       const pageClone = JSON.parse(JSON.stringify(page)) as ModulePage
@@ -576,7 +503,6 @@ export function ModulePageCRUDProvider({
 
       // Jika sedang navigasi, jangan update konten
       if (isNavigating) {
-        logger.debug(CONTEXT, 'Navigation in progress, skipping content update')
         return
       }
 
@@ -585,7 +511,6 @@ export function ModulePageCRUDProvider({
 
       // Periksa apakah konten benar-benar berubah dengan membandingkan dengan yang terakhir disimpan
       if (lastSavedContent[pageId] === contentString) {
-        logger.debug(CONTEXT, 'Content unchanged, skipping save')
         return
       }
 
@@ -597,16 +522,11 @@ export function ModulePageCRUDProvider({
       const minTimeBetweenSaves = 5000 // 5 detik minimum antara save operations
 
       if (lastSaveTime && now - parseInt(lastSaveTime) < minTimeBetweenSaves) {
-        logger.debug(
-          CONTEXT,
-          'Save throttled, too recent. Skipping save operation.'
-        )
         return
       }
 
       // Update status UI
       setSaveStatus('saving')
-      logger.debug(CONTEXT, 'Saving page content...')
 
       // Simpan timestamp save terakhir
       window.sessionStorage.setItem(`lastSaveTime_${pageId}`, now.toString())
@@ -617,9 +537,7 @@ export function ModulePageCRUDProvider({
         // Simpan referensi ke konten yang baru disimpan
         setLastSavedContent((prev) => ({ ...prev, [pageId]: contentString }))
         setSaveStatus('saved')
-        logger.debug(CONTEXT, 'Content saved successfully')
-      } catch (error) {
-        logger.error(CONTEXT, 'Error saving content', error)
+      } catch {
         setSaveStatus('error')
       }
     },
@@ -632,17 +550,12 @@ export function ModulePageCRUDProvider({
       debounce((content: StandardEditorContent, pageId: string) => {
         // Pastikan pageId valid
         if (!pageId) {
-          logger.debug(CONTEXT, 'Invalid pageId, skipping editor content save')
           return
         }
 
         // Cek apakah halaman ada di cache
         const currentPage = pages.find((p) => p.id === pageId)
         if (!currentPage) {
-          logger.debug(
-            CONTEXT,
-            `Page ${pageId} not found in cache, proceeding with save`
-          )
           saveEditorContent(content, pageId)
           return
         }
@@ -653,13 +566,8 @@ export function ModulePageCRUDProvider({
 
         // Hanya simpan jika konten benar-benar berubah
         if (contentString !== currentContentString) {
-          logger.debug(CONTEXT, `Content changed for page ${pageId}, saving...`)
           saveEditorContent(content, pageId)
         } else {
-          logger.debug(
-            CONTEXT,
-            `Content unchanged for page ${pageId}, skipping save`
-          )
         }
       }, 10000), // 10 detik debounce, meningkat dari 5 detik untuk lebih mengurangi API calls
     [saveEditorContent, pages]
@@ -736,21 +644,14 @@ export function ModulePageCRUDProvider({
         },
       }
 
-      logger.info(CONTEXT, `Creating new page for moduleId: ${moduleId}`)
-
       // Create the page manually with the adapter to bypass the void type issue
       let createdPage: ModulePage | null = null
 
       try {
         // Call modulePageAdapter.createPage directly to get properly typed result
         createdPage = await modulePageAdapter.createPage(newPageData)
-        logger.info(
-          CONTEXT,
-          `Successfully created page with id: ${createdPage.id}`
-        )
-      } catch (error) {
-        logger.error(CONTEXT, `Error creating page: ${error}`)
-        throw error
+      } catch {
+        // ignore
       }
 
       // Ensure the query cache is updated
@@ -777,11 +678,8 @@ export function ModulePageCRUDProvider({
           null
 
         if (!createdPage) {
-          logger.error(CONTEXT, 'Failed to find newly created page in cache')
           throw new Error('Halaman baru tidak ditemukan setelah dibuat')
         }
-
-        logger.info(CONTEXT, `Found page in cache with id: ${createdPage.id}`)
       }
 
       // Set the newly created page as active
@@ -792,7 +690,6 @@ export function ModulePageCRUDProvider({
 
       return createdPage
     } catch (error) {
-      logger.error(CONTEXT, 'Error creating new page', error)
       showErrorNotification(error)
       throw error
     }
@@ -815,10 +712,6 @@ export function ModulePageCRUDProvider({
         // Cek perubahan title
         if (params.title !== undefined && params.title !== currentPage.title) {
           hasChanges = true
-          logger.debug(
-            CONTEXT,
-            `Title changed from "${currentPage.title}" to "${params.title}"`
-          )
         }
 
         // Cek perubahan content (jika ada)
@@ -829,20 +722,13 @@ export function ModulePageCRUDProvider({
 
           if (contentString !== currentContentString) {
             hasChanges = true
-            logger.debug(CONTEXT, `Content changed for page ${params.pageId}`)
           }
         }
 
         if (!hasChanges) {
-          logger.debug(
-            CONTEXT,
-            `No significant changes detected for page ${params.pageId}, skipping update`
-          )
           return Promise.resolve(currentPage)
         }
       }
-
-      logger.debug(CONTEXT, `Saving page ${params.pageId} with data:`, params)
 
       return updatePage(params.pageId, {
         title: params.title,
@@ -869,28 +755,17 @@ export function ModulePageCRUDProvider({
           // Cek perubahan title
           if (data.title !== undefined && data.title !== currentPage.title) {
             hasChanges = true
-            logger.debug(
-              CONTEXT,
-              `Title changed from "${currentPage.title}" to "${data.title}"`
-            )
           }
 
           // Cek perubahan blocks (jika ada)
           if (data.blocks !== undefined) {
             hasChanges = true
-            logger.debug(CONTEXT, `Content blocks changed for page ${pageId}`)
           }
 
           if (!hasChanges) {
-            logger.debug(
-              CONTEXT,
-              `No significant changes detected for page ${pageId}, skipping update`
-            )
             return currentPage
           }
         }
-
-        logger.debug(CONTEXT, `Updating page ${pageId} with data:`, data)
 
         // Panggil updatePageOperation jika ada perubahan
         updatePageOperation({
@@ -904,63 +779,11 @@ export function ModulePageCRUDProvider({
         // Ambil halaman yang diperbarui
         const updatedPage = await getPage(pageId)
         return updatedPage
-      } catch (error) {
-        logger.error(CONTEXT, 'Error in savePageWrapper', error)
+      } catch {
         throw error
       }
     },
     [updatePageOperation, refetch, getPage, pages]
-  )
-
-  // Setup hooks untuk fitur draft yang akan dihapus
-
-  // Tambahkan implementasi untuk wrapper fungsi draft yang tetap dalam context
-  const publishDraft = useCallback(
-    async (pageId: string): Promise<ModulePage | null> => {
-      try {
-        // Karena publishDraftOperation kemungkinan mengembalikan void,
-        // kita perlu implementasi alternatif untuk mengambil data yang diperbarui
-        try {
-          await publishDraftOperation(pageId)
-          // Setelah operasi selesai, ambil data halaman terbaru
-          return await getPage(pageId)
-        } catch (error) {
-          // Jika gagal panggil publishDraftOperation, gunakan API adapter langsung
-          logger.debug(
-            CONTEXT,
-            `Fallback to adapter for publishing draft ${pageId}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-          )
-          return await modulePageAdapter.publishDraft(pageId)
-        }
-      } catch (error) {
-        logger.error(
-          CONTEXT,
-          `Error publishing draft for page ${pageId}`,
-          error
-        )
-        return null
-      }
-    },
-    [publishDraftOperation, getPage]
-  )
-
-  const discardDraft = useCallback(
-    async (pageId: string): Promise<boolean> => {
-      try {
-        // Panggil discardDraftOperation dan cek hasil
-        await discardDraftOperation(pageId)
-        // Karena discardDraftOperation mengembalikan void, kita selalu kembalikan true jika tidak ada error
-        return true
-      } catch (error) {
-        logger.error(
-          CONTEXT,
-          `Error discarding draft for page ${pageId}`,
-          error
-        )
-        return false
-      }
-    },
-    [discardDraftOperation]
   )
 
   // Memoize context value untuk mencegah re-render yang tidak perlu
@@ -1005,10 +828,6 @@ export function ModulePageCRUDProvider({
       getParsedEditorContent:
         mockValues.getParsedEditorContent ||
         ((page: ModulePage | null) => {
-          logger.debug(
-            CONTEXT,
-            `Getting parsed editor content for page ${page?.id || 'null'}`
-          )
           return getParsedEditorContentOperation(page)
         }),
       // UI state dari ModulePagesContext
@@ -1020,8 +839,8 @@ export function ModulePageCRUDProvider({
       // Fungsi dasar untuk draft
       checkHasDraft,
       getDraft,
-      discardDraft,
-      publishDraft,
+      discardDraft: modulePageAdapter.discardDraft,
+      publishDraft: modulePageAdapter.publishDraft,
     }),
     [
       moduleId,
@@ -1060,15 +879,16 @@ export function ModulePageCRUDProvider({
       toggleSidebar,
       checkHasDraft,
       getDraft,
-      discardDraft,
-      publishDraft,
       modulePageAdapter,
     ]
   )
 
+  // Bungkus children dengan ModuleDraftPageProvider
   return (
     <ModulePageCRUDContext.Provider value={contextValue}>
-      {children}
+      <ModuleDraftPageProvider activePage={activePage} enabled={!isLoading}>
+        {children}
+      </ModuleDraftPageProvider>
     </ModulePageCRUDContext.Provider>
   )
 }

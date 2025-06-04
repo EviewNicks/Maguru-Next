@@ -7,12 +7,11 @@ import {
   StandardEditorContent,
   ModulePageStatus,
 } from '../types'
-import { logger } from '../services/logger'
 import { toast } from 'sonner'
 import { ensureValidEditorContent } from '../lib/dataFormats'
 
 // Konstanta untuk hook name (logging)
-const HOOK = 'useModulePageData'
+// const HOOK = 'useModulePageData'
 
 /**
  * Custom hook untuk mengelola data module page dengan React Query
@@ -34,15 +33,10 @@ export const useModulePageData = (moduleId: string) => {
         const pages = await modulePageAdapter.getPages(moduleId)
         // Ensure we return an array
         if (!Array.isArray(pages)) {
-          logger.error(
-            HOOK,
-            `getPages returned non-array data: ${typeof pages}`
-          )
           return []
         }
         return pages
-      } catch (error) {
-        logger.error(HOOK, `Error fetching pages: ${error}`)
+      } catch {   
         return []
       }
     },
@@ -73,10 +67,8 @@ export const useModulePageData = (moduleId: string) => {
   // Function untuk mendapatkan halaman spesifik berdasarkan ID
   const getPage = async (pageId: string): Promise<ModulePage | null> => {
     try {
-      logger.debug(HOOK, `Fetching page: ${pageId}`)
       return await modulePageAdapter.getPage(pageId)
-    } catch (error) {
-      logger.error(HOOK, `Error fetching page: ${pageId}`, error)
+    } catch {
       return null
     }
   }
@@ -90,14 +82,9 @@ export const useModulePageData = (moduleId: string) => {
     page: ModulePage | null
   ): StandardEditorContent => {
     try {
-      logger.debug(
-        HOOK,
-        `Parsing editor content for page ${page?.id || 'null'}`
-      )
       // Gunakan modulePageAdapter yang sudah menggunakan ensureValidEditorContent
       return modulePageAdapter.getParsedEditorContent(page)
-    } catch (error) {
-      logger.error(HOOK, 'Error parsing editor content', error)
+    } catch {
       // Kembalikan konten default jika terjadi error
       return ensureValidEditorContent(null)
     }
@@ -131,10 +118,8 @@ export const useModulePageData = (moduleId: string) => {
   // Function untuk mengecek apakah halaman memiliki draft
   const checkHasDraft = async (pageId: string): Promise<boolean> => {
     try {
-      logger.debug(HOOK, `Checking draft existence for page: ${pageId}`)
       return await modulePageAdapter.hasDraft(pageId)
-    } catch (error) {
-      logger.error(HOOK, `Error checking draft for page: ${pageId}`, error)
+    } catch {
       return false
     }
   }
@@ -142,10 +127,8 @@ export const useModulePageData = (moduleId: string) => {
   // Function untuk mendapatkan draft halaman
   const getDraft = async (pageId: string): Promise<ModulePage | null> => {
     try {
-      logger.debug(HOOK, `Fetching draft for page: ${pageId}`)
       return await modulePageAdapter.getDraft(pageId)
-    } catch (error) {
-      logger.error(HOOK, `Error fetching draft for page: ${pageId}`, error)
+    } catch {
       return null
     }
   }
@@ -169,8 +152,7 @@ export const useModulePageData = (moduleId: string) => {
       queryClient.invalidateQueries({ queryKey })
       toast.success('Halaman berhasil dibuat')
     },
-    onError: (error) => {
-      logger.error(HOOK, 'Error creating page', error)
+    onError: () => {
       toast.error('Gagal membuat halaman. Silakan coba lagi.')
     },
   })
@@ -208,8 +190,7 @@ export const useModulePageData = (moduleId: string) => {
         toast.success('Halaman berhasil diperbarui')
       }
     },
-    onError: (error) => {
-      logger.error(HOOK, 'Error updating page', error)
+    onError: () => {
       toast.error('Gagal memperbarui halaman. Silakan coba lagi.')
     },
   })
@@ -239,8 +220,7 @@ export const useModulePageData = (moduleId: string) => {
         queryClient.invalidateQueries({ queryKey })
       }
     },
-    onError: (error) => {
-      logger.error(HOOK, 'Error saving editor content', error)
+    onError: () => {
       toast.error('Gagal menyimpan konten. Silakan coba lagi.')
     },
   })
@@ -278,8 +258,7 @@ export const useModulePageData = (moduleId: string) => {
         // Juga tidak perlu toast karena auto-save berjalan di background
       }
     },
-    onError: (error) => {
-      logger.error(HOOK, 'Error saving draft', error)
+    onError: () => {
       // Tidak perlu toast error karena auto-save berjalan di background
       // toast.error('Gagal menyimpan draft. Silakan coba lagi.')
     },
@@ -306,8 +285,7 @@ export const useModulePageData = (moduleId: string) => {
         toast.success('Draft berhasil dipublikasikan')
       }
     },
-    onError: (error) => {
-      logger.error(HOOK, 'Error publishing draft', error)
+    onError: () => {
       toast.error('Gagal mempublikasikan draft. Silakan coba lagi.')
     },
   })
@@ -330,8 +308,7 @@ export const useModulePageData = (moduleId: string) => {
         toast.success('Draft berhasil dibuang')
       }
     },
-    onError: (error) => {
-      logger.error(HOOK, 'Error discarding draft', error)
+    onError: () => {
       toast.error('Gagal membuang draft. Silakan coba lagi.')
     },
   })
@@ -344,8 +321,7 @@ export const useModulePageData = (moduleId: string) => {
       queryClient.invalidateQueries({ queryKey })
       toast.success('Halaman berhasil dihapus')
     },
-    onError: (error) => {
-      logger.error(HOOK, 'Error deleting page', error)
+    onError: () => {
       toast.error('Gagal menghapus halaman. Silakan coba lagi.')
     },
   })
@@ -359,8 +335,7 @@ export const useModulePageData = (moduleId: string) => {
       queryClient.invalidateQueries({ queryKey })
       toast.success('Urutan halaman berhasil diperbarui')
     },
-    onError: (error) => {
-      logger.error(HOOK, 'Error reordering pages', error)
+    onError: () => {
       toast.error('Gagal mengubah urutan halaman. Silakan coba lagi.')
     },
   })
@@ -397,8 +372,7 @@ export const useModulePageData = (moduleId: string) => {
         )
       }
     },
-    onError: (error) => {
-      logger.error(HOOK, 'Error updating page status', error)
+    onError: () => {
       toast.error('Gagal mengubah status halaman. Silakan coba lagi.')
     },
   })

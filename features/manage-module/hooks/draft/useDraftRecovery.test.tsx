@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react-hooks'
-import { useDraftRecovery } from '../useDraftRecovery'
-import { modulePageAdapter } from '../../../adapters/modulePageAdapter'
-import { ModulePage, ModulePageStatus, StandardEditorContent } from '../../../types'
+import { useDraftRecovery } from './useDraftRecovery'
+import { modulePageAdapter } from '../../adapters/modulePageAdapter'
+import { ModulePage, ModulePageStatus, StandardEditorContent } from '../../types'
 
 
 // Mock modulePageAdapter

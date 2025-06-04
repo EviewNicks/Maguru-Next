@@ -116,50 +116,6 @@ async function saveDraftHandler(request: NextRequest, context: RouteParams) {
 }
 
 /**
- * Handler untuk GET request
- * Mendapatkan draft halaman modul
- */
-async function getDraftHandler(request: NextRequest, context: RouteParams) {
-  try {
-    const pageId = context.params.id
-
-    // Dapatkan draft
-    const draft = await modulePageService.getDraft(pageId)
-
-    if (!draft) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Halaman tidak ditemukan',
-        },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: draft.data,
-        meta: {
-          draftSavedAt: draft.data.draftSavedAt,
-          hasUnpublishedChanges: draft.data.hasUnpublishedChanges,
-        },
-      },
-      { status: 200 }
-    )
-  } catch (error) {
-    console.error('Error getting draft:', error)
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Terjadi kesalahan saat mengambil draft',
-      },
-      { status: 500 }
-    )
-  }
-}
-
-/**
  * Handler untuk PATCH request
  * Mempublikasikan draft halaman modul
  */
@@ -283,12 +239,6 @@ function createRouteHandler(
 export const POST = composeMiddlewares(
   [withAdminAuth, withAuditTrail],
   createRouteHandler(saveDraftHandler)
-)
-
-// Gunakan middleware untuk GET request (get draft)
-export const GET = composeMiddlewares(
-  [withAdminAuth, withAuditTrail],
-  createRouteHandler(getDraftHandler)
 )
 
 // Gunakan middleware untuk PATCH request (publish draft)

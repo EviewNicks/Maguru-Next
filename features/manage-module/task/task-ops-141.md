@@ -448,7 +448,7 @@ function useUnsavedChangesPrompt({
 - Mendeteksi navigasi dengan Next.js router
 - Menangani event beforeunload untuk navigasi browser
 - Menampilkan dialog konfirmasi sebelum meninggalkan halaman
-- Menyediakan router wrapper dengan konfirmasi navigasi
+- Menyediakan router wrapper dengan konfirmasi untuk navigasi
 - Mencegah navigasi tidak disengaja yang dapat menyebabkan kehilangan data
 
 ##### 3.4. Integrasi dengan modulePageAdapter
@@ -564,17 +564,185 @@ Dengan update context layer ini, fitur auto-save draft sekarang tersedia di selu
 
 ---
 
-### 5. UI Status Indicators
+### Phase 3 : UI Integration (3-4 hari)
 
-Implementasi UI status untuk memberikan feedback ke pengguna:
+#### 1. Draft StatusIndicator
 
-- **Saved**: Ikon checkmark hijau dengan label "Tersimpan" + timestamp
-- **Saving**: Animasi loading dengan label "Menyimpan..."
-- **Unsaved**: Indikator warna amber dengan label "Belum tersimpan"
-- **Error**: Indikator merah dengan label "Gagal menyimpan" dan tombol "Coba lagi"
-- **Offline**: Indikator dengan label "Anda offline"
+Implementasi komponen UI untuk menampilkan status penyimpanan draft kepada pengguna telah selesai:
 
-### 6. Testing dan Validasi
+- **DraftStatusIndicator.tsx**: Komponen utama yang menampilkan status penyimpanan draft.
+
+  - Mendukung semua status: 'idle', 'saving', 'saved', 'unsaved', 'error', 'offline', 'retrying'
+  - Menggunakan ikon intuitif dari Lucide React untuk setiap status
+  - Menampilkan pesan yang informatif sesuai status
+  - Menampilkan waktu terakhir disimpan dengan format "X menit yang lalu"
+  - Menyediakan tooltip dengan format waktu lengkap saat hover
+  - Mendukung aksesibilitas dengan atribut semantik HTML5
+
+- **FloatingDraftStatus**: Varian komponen yang muncul di pojok kanan bawah editor.
+
+  - Hanya muncul untuk status tertentu (tidak ditampilkan saat 'idle')
+  - Memberikan feedback visual yang tidak mengganggu pengalaman editing
+    - Ditampilkan sebagai floating badge dengan animasi fade
+  - Opacity berkurang setelah beberapa detik untuk mengurangi gangguan visual
+  - Tetap terlihat saat terjadi error atau status unsaved
+
+- **Integrasi dengan Tipe Data**:
+
+  - Menggunakan enum `DraftSaveStatus` dari `types/index.ts`
+  - Mendukung validasi dengan Zod schema di `modulePageSchema.ts`
+
+- **Fitur Aksesibilitas**:
+  - Menggunakan elemen `time` dengan atribut `dateTime` untuk waktu terakhir disimpan
+  - Kontras warna yang memenuhi standar WCAG AA
+  - Pesan status yang jelas melalui teks, tidak hanya mengandalkan warna
+  - Mendukung keyboard navigation untuk tombol "Coba lagi"
+
+#### 2. DocumentHeader
+
+Implementasi pembaruan untuk **DocumentHeader.tsx** telah selesai dengan mengintegrasikan fitur draft otomatis:
+
+- **Integrasi dengan ModuleDraftPageContext**:
+
+  - Mengakses status draft dan fungsi-fungsi terkait draft dari context
+  - Menampilkan status penyimpanan draft secara real-time menggunakan `DraftStatusIndicator`
+  - Menyediakan tombol untuk memaksa penyimpanan draft dengan tooltip informatif
+
+- **Tombol Aksi untuk Manajemen Draft**:
+
+  - **Publish Draft**: Tombol untuk mempublikasikan draft ke versi publik, dengan dialog konfirmasi
+  - **Discard Draft**: Tombol untuk membuang draft dan kembali ke versi publik, dengan dialog konfirmasi
+  - **Save Draft**: Tombol dengan ikon untuk menyimpan draft secara manual (selain auto-save)
+
+- **Dialog Konfirmasi**:
+
+  - Dialog konfirmasi publikasi draft dengan informasi konsekuensi tindakan
+  - Dialog konfirmasi pembuangan draft dengan peringatan bahwa perubahan akan hilang
+  - Status loading yang jelas saat operasi sedang berlangsung
+
+- **Penanganan Error**:
+
+  - Integrasi dengan sistem notifikasi untuk menampilkan pesan error yang informatif
+  - Opsi retry untuk tindakan yang gagal
+  - Logging error yang komprehensif untuk troubleshooting
+
+- **Aksesibilitas**:
+
+  - Label ARIA untuk semua tombol dan elemen interaktif
+  - Teks informatif untuk screen reader
+  - Tooltips untuk memberikan konteks tambahan
+  - Support keyboard navigation
+
+- **Performa dan UX**:
+  - Menggunakan useCallback untuk fungsi-fungsi handler untuk mencegah re-render yang tidak perlu
+  - Penanganan status loading untuk mencegah tindakan ganda
+  - Visual feedback yang jelas untuk setiap status operasi
+  - Layout yang konsisten dengan hierarki visual yang jelas
+
+#### 3. UnsavedChangesDialog
+
+Dialog konfirmasi untuk mencegah pengguna kehilangan perubahan yang belum disimpan telah diimplementasikan:
+
+- **UnsavedChangesDialog.tsx**: Dialog modal yang muncul saat pengguna mencoba meninggalkan halaman dengan perubahan yang belum disimpan.
+  - Menggunakan shadcn/ui Dialog, AlertDialog, dan Button components
+  - Menampilkan pesan peringatan yang jelas tentang konsekuensi meninggalkan halaman
+  - Memberikan opsi untuk tetap di halaman atau meninggalkan perubahan
+  - Mendukung keyboard navigation (Escape untuk tutup, Enter untuk konfirmasi)
+  - Menyediakan router wrapper dengan konfirmasi untuk navigasi
+
+#### 4. DraftRecoveryDialog
+
+Dialog untuk pemulihan draft yang tersimpan telah diimplementasikan:
+
+- **DraftRecoveryDialog.tsx**: Dialog modal yang muncul saat ditemukan draft yang tersimpan.
+  - Menampilkan informasi tentang draft yang tersedia (waktu penyimpanan)
+  - Memberikan preview ringkas dari konten draft
+  - Menawarkan opsi untuk menggunakan draft atau melanjutkan dengan versi terpublikasi
+  - Menampilkan data penulis terakhir yang mengedit draft
+  - Menggunakan komponan shadcn/ui untuk konsistensi UI
+
+#### 5. RichTextEditorWithAutosave
+
+Komponen wrapper untuk editor rich text dengan integrasi autosave telah diimplementasikan:
+
+- **RichTextEditorWithAutosave.tsx**: Komponen yang mengintegrasikan editor dengan fungsionalitas autosave.
+
+  - Menggunakan `useRichTextAutosave` hook untuk manajemen penyimpanan otomatis
+  - Menampilkan `FloatingDraftStatus` untuk memberikan feedback visual kepada pengguna
+  - Mengintegrasikan dengan adapter melalui hook `useModulePageData` untuk operasi draft
+  - Mendukung berbagai parameter seperti:
+    - `pageId`: ID halaman yang sedang diedit
+    - `initialContent`: Konten awal editor
+    - `onChange`: Callback saat konten berubah
+    - `readOnly`: Mode hanya baca
+    - `className`: Styling tambahan
+  - Memiliki mekanisme debounce untuk mengoptimalkan operasi penyimpanan
+  - Menangani skenario offline dan retry dengan graceful degradation
+  - Melakukan logging untuk troubleshooting
+
+- **Integrasi dengan Hooks**:
+
+  - `useRichTextAutosave`: Mengelola logika penyimpanan otomatis
+  - `useDraftRecovery`: Digunakan untuk pemulihan draft
+  - `useUnsavedChangesPrompt`: Digunakan untuk konfirmasi navigasi
+  - Semua hook telah diintegrasikan dengan context melalui `ModulePageCRUDContext`
+
+- **Alur Data**:
+
+  - Perubahan editor → `useRichTextAutosave` → adapter → API → database
+  - Status penyimpanan → `DraftStatusIndicator` → feedback visual ke pengguna
+  - Error handling dengan retry mechanism dan logging
+
+- **Optimasi Performa**:
+  - Menggunakan debounce untuk mengurangi jumlah request
+  - Meminimalkan re-render dengan useMemo dan useCallback
+  - Menggunakan React Query untuk caching data
+  - Offline support dengan penyimpanan lokal dan retry saat online kembali
+
+#### 6. ModulePageCRUD Context Update
+
+Implementasi update context layer untuk mengintegrasikan fitur draft telah selesai:
+
+- **ModuleDraftPageContext.tsx**: Context baru yang khusus mengelola state draft.
+
+  - Mengintegrasikan hooks `useRichTextAutosave`, `useDraftRecovery`, dan `useUnsavedChangesPrompt` dalam satu konteks
+  - Menyediakan API terpadu untuk fitur draft yang dapat diakses oleh seluruh komponen
+  - Menggunakan pendekatan memoization untuk meminimalkan re-render
+  - Mendukung logging yang komprehensif untuk troubleshooting
+  - Menangani edge cases seperti navigasi dengan perubahan belum tersimpan
+  - Memisahkan logic draft dari `ModulePageCRUDContext` untuk menjaga kode tetap modular dan maintainable
+
+- **Integrasi dengan ModulePageCRUDContext**:
+
+  - `ModuleDraftPageProvider` di-nest di dalam `ModulePageCRUDProvider`
+  - Memperbarui `ModulePageCRUDContext` untuk menerima `activePage` dan melewatkannya ke `ModuleDraftPageProvider`
+  - Memastikan context draft hanya aktif saat ada halaman aktif
+  - Menggunakan state loading untuk memastikan context draft hanya diaktifkan setelah data dimuat
+
+- **Alur Data**:
+
+  - Context → Hooks → Adapter → API → Database
+  - Perubahan editor memicu status update melalui hooks
+  - Context menyediakan status dan actions untuk komponen UI
+  - Komponen UI menampilkan status dan memungkinkan interaksi pengguna
+
+- **Keunggulan Pendekatan**:
+
+  - Separation of Concerns: Memisahkan logic draft dari logic CRUD umum
+  - Reusability: Context draft dapat digunakan kembali di berbagai komponen
+  - Maintainability: Lebih mudah melakukan perubahan pada satu aspek tanpa memengaruhi aspek lain
+  - Testability: Lebih mudah menulis unit test untuk masing-masing context
+  - Performance: Mengurangi re-render dengan pemisahan logic dan state
+
+- **Best Practices yang Diterapkan**:
+  - Menggunakan React Context API untuk state management global
+  - Memisahkan context berdasarkan domain fungsional
+  - Menggunakan memoization untuk performa
+  - Menerapkan error handling yang konsisten
+  - Menggunakan logging untuk debugging
+  - Memberikan pesan yang jelas kepada pengguna
+
+### 7. Testing dan Validasi
 
 Implementasi pengujian untuk fitur auto-save:
 
@@ -589,7 +757,7 @@ Hasil pengujian API:
 3. **PATCH `/api/module/[id]/pages/[pageid]/draft`**: Status 200 OK
 4. **DELETE `/api/module/[id]/pages/[pageid]/draft`**: Status 200 OK
 
-### 7. File yang Dimodifikasi/Dibuat
+### 8. File yang Dimodifikasi/Dibuat
 
 #### Database & Schema:
 
@@ -605,6 +773,26 @@ Hasil pengujian API:
 - `features/manage-module/hooks/useRichTextAutosave.ts`: Hook untuk auto-save
 - `features/manage-module/components/RichTextEditorWithAutosave.tsx`: Komponen editor dengan indikator status
 - `features/manage-module/adapters/modulePageAdapter.ts`: Adapter untuk komunikasi dengan API
+- `features/manage-module/components/ModulePageEditor/document/DocumentHeader.tsx`: Header dokumen dengan status draft, tombol publikasi, dan indikator pengguna aktif yang sedang mengedit
+- `features/manage-module/lib/draft/ConcurrentEditingService.ts`: Service untuk mengelola pengguna aktif dan deteksi konflik pengeditan, dengan dukungan untuk foto profil pengguna
+
+#### UI Components:
+
+- `features/manage-module/components/feedback/DraftStatusIndicator.tsx`: Indikator status draft
+- `features/manage-module/components/UnsavedChangesDialog.tsx`: Dialog konfirmasi perubahan belum disimpan
+- `features/manage-module/components/DraftRecoveryDialog.tsx`: Dialog pemulihan draft
+- `features/manage-module/components/feedback/ActiveEditorIndicator.tsx`: Komponen untuk menampilkan pengguna lain yang sedang mengedit dokumen (dengan avatar profil) dan dialog konflik saat terjadi konflik pengeditan
+
+#### Context & Providers:
+
+- `features/manage-module/context/ModuleDraftPageContext.tsx`: Context khusus untuk manajemen draft
+- `features/manage-module/context/ModulePageCRUDContext.tsx`: Update untuk integrasi dengan draft context
+
+#### Authentication Integration:
+
+- Integrasi dengan Clerk Authentication untuk mendapatkan data pengguna (ID, nama, foto profil)
+- Penggunaan data pengguna untuk tracking aktivitas pengeditan
+- Tampilan avatar/nama akurat untuk pengguna yang sedang mengedit
 
 #### Testing:
 
@@ -614,54 +802,168 @@ Hasil pengujian API:
 - `features/manage-module/__tests__/integration/module-page/auto-save.integration.test.tsx`: Testing fungsi auto-save
 - `features/manage-module/__tests__/integration/module-page/rich-text-autosave.integration.test.tsx`: Testing komponen UI
 
-### 8. Diagram Workflow
+### 9. Diagram Workflow
 
+```mermaid
 flowchart TD
-subgraph "Client Side"
-A[Editor Tiptap] -->|Perubahan Konten| B{Auto-save Trigger}
-B -->|Debounce 5s| C[useRichTextAutosave Hook]
-B -->|Throttle 30s| C
-B -->|Event: Blur| C
-B -->|Event: Visibility Change| C
-B -->|Event: Before Unload| C
-C -->|Menyimpan Draft| D[modulePageAdapter.saveDraft]
-C -->|Status: Saving| J[UI Feedback]
-D -->|Request| E[API Route]
-E -->|Response| F[Handle Response]
-F -->|Success| G[Update State]
-F -->|Error| H[Handle Error]
-G -->|Status: Saved| J
-H -->|Status: Error| J
-H -->|Status: Offline| J
-end
+    %% Main Components
+    classDef editorClass fill:#f9d5e5,stroke:#333,stroke-width:1px
+    classDef hookClass fill:#d5f9e5,stroke:#333,stroke-width:1px
+    classDef adapterClass fill:#d5e5f9,stroke:#333,stroke-width:1px
+    classDef apiClass fill:#f9e5d5,stroke:#333,stroke-width:1px
+    classDef dbClass fill:#e5d5f9,stroke:#333,stroke-width:1px
+    classDef uiClass fill:#e5f9d5,stroke:#333,stroke-width:1px
+    classDef contextClass fill:#f5f5d5,stroke:#333,stroke-width:1px
 
-    subgraph "Server Side"
-        E -->|POST| K[Draft API Handler]
-        K -->|Process| L[modulePageService.saveDraft]
-        L -->|Save| M[(Database)]
-        M -->|Result| N[Format Response]
-        N -->|JSON| E
+    %% Client Side Data Flow
+    subgraph ClientSide["Client Side"]
+        Editor["Editor Tiptap"]:::editorClass
+        AutoSaveTrigger{"Auto-save Trigger"}
+        RichTextHook["useRichTextAutosave Hook"]:::hookClass
+        ModuleAdapter["modulePageAdapter.saveDraft"]:::adapterClass
+        UIFeedback["UI Feedback"]:::uiClass
+        HandleResponse["Handle Response"]
+        UpdateState["Update State"]
+        HandleError["Handle Error"]
+
+        %% Editor events
+        Editor -->|"Perubahan Konten"| AutoSaveTrigger
+        AutoSaveTrigger -->|"Debounce 5s"| RichTextHook
+        AutoSaveTrigger -->|"Throttle 30s"| RichTextHook
+        AutoSaveTrigger -->|"Event: Blur"| RichTextHook
+        AutoSaveTrigger -->|"Event: Visibility Change"| RichTextHook
+        AutoSaveTrigger -->|"Event: Before Unload"| RichTextHook
+
+        %% Hook actions
+        RichTextHook -->|"Menyimpan Draft"| ModuleAdapter
+        RichTextHook -->|"Status: Saving"| UIFeedback
+
+        %% Response handling
+        ModuleAdapter -->|"Request"| APIRoute
+        APIRoute -->|"Response"| HandleResponse
+        HandleResponse -->|"Success"| UpdateState
+        HandleResponse -->|"Error"| HandleError
+        UpdateState -->|"Status: Saved"| UIFeedback
+        HandleError -->|"Status: Error"| UIFeedback
+        HandleError -->|"Status: Offline"| UIFeedback
     end
 
-    subgraph "Draft Management"
-        O[User Action] -->|Get Draft| P[modulePageAdapter.getDraft]
-        O -->|Publish Draft| Q[modulePageAdapter.publishDraft]
-        O -->|Discard Draft| R[modulePageAdapter.discardDraft]
+    %% Server Side Data Flow
+    subgraph ServerSide["Server Side"]
+        APIRoute["API Route"]:::apiClass
+        DraftHandler["Draft API Handler"]:::apiClass
+        SaveDraftService["modulePageService.saveDraft"]:::apiClass
+        Database[(Database)]:::dbClass
+        FormatResponse["Format Response"]
 
-        P -->|Request| S[API GET /draft]
-        Q -->|Request| T[API PATCH /draft]
-        R -->|Request| U[API DELETE /draft]
-
-        S -->|Process| V[modulePageService.getDraft]
-        T -->|Process| W[modulePageService.publishDraft]
-        U -->|Process| X[modulePageService.discardDraft]
-
-        V -->|Database Query| M
-        W -->|Database Update| M
-        X -->|Database Update| M
+        APIRoute -->|"POST"| DraftHandler
+        DraftHandler -->|"Process"| SaveDraftService
+        SaveDraftService -->|"Save"| Database
+        Database -->|"Result"| FormatResponse
+        FormatResponse -->|"JSON"| APIRoute
     end
 
-### 9. Pengalaman Pengguna
+    %% Draft Management
+    subgraph DraftManagement["Draft Management"]
+        UserAction["User Action"]
+        GetDraft["modulePageAdapter.getDraft"]:::adapterClass
+        PublishDraft["modulePageAdapter.publishDraft"]:::adapterClass
+        DiscardDraft["modulePageAdapter.discardDraft"]:::adapterClass
+
+        APIGetDraft["API GET /draft"]:::apiClass
+        APIPatchDraft["API PATCH /draft"]:::apiClass
+        APIDeleteDraft["API DELETE /draft"]:::apiClass
+
+        GetDraftService["modulePageService.getDraft"]:::apiClass
+        PublishDraftService["modulePageService.publishDraft"]:::apiClass
+        DiscardDraftService["modulePageService.discardDraft"]:::apiClass
+
+        UserAction -->|"Get Draft"| GetDraft
+        UserAction -->|"Publish Draft"| PublishDraft
+        UserAction -->|"Discard Draft"| DiscardDraft
+
+        GetDraft -->|"Request"| APIGetDraft
+        PublishDraft -->|"Request"| APIPatchDraft
+        DiscardDraft -->|"Request"| APIDeleteDraft
+
+        APIGetDraft -->|"Process"| GetDraftService
+        APIPatchDraft -->|"Process"| PublishDraftService
+        APIDeleteDraft -->|"Process"| DiscardDraftService
+
+        GetDraftService -->|"Database Query"| Database
+        PublishDraftService -->|"Database Update"| Database
+        DiscardDraftService -->|"Database Update"| Database
+    end
+
+    %% Architecture Layers
+    subgraph ArchitectureLayers["Architecture Layers"]
+        %% Context Layer
+        subgraph ContextLayer["Context Layer"]
+            ModuleCRUDContext["ModulePageCRUDContext"]:::contextClass
+            ModuleDraftContext["ModuleDraftPageContext"]:::contextClass
+            UIComponents["UI Components"]:::uiClass
+
+            ModuleCRUDContext --> ModuleDraftContext
+            ModuleDraftContext --> UIComponents
+        end
+
+        %% Hooks Layer
+        subgraph HooksLayer["Hooks Layer"]
+            RTA["useRichTextAutosave"]:::hookClass
+            DRH["useDraftRecovery"]:::hookClass
+            UUCP["useUnsavedChangesPrompt"]:::hookClass
+            UMP["useModulePageData"]:::hookClass
+
+            RTA --> ModuleDraftContext
+            DRH --> ModuleDraftContext
+            UUCP --> ModuleDraftContext
+            UMP --> ModuleCRUDContext
+        end
+
+        %% Adapter Layer
+        subgraph AdapterLayer["Adapter Layer"]
+            MPA["modulePageAdapter"]:::adapterClass
+
+            MPA --> RTA
+            MPA --> DRH
+            MPA --> UMP
+        end
+
+        %% UI Components
+        subgraph ComponentsLayer["UI Components"]
+            DSI["DraftStatusIndicator"]:::uiClass
+            RTE["RichTextEditorWithAutosave"]:::uiClass
+            UCD["UnsavedChangesDialog"]:::uiClass
+            DRD["DraftRecoveryDialog"]:::uiClass
+
+            DSI --> ModuleDraftContext
+            RTE --> ModuleDraftContext
+            UCD --> ModuleDraftContext
+            DRD --> ModuleDraftContext
+        end
+
+        %% API Layer
+        subgraph APILayer["API Layer"]
+            API["API Routes"]:::apiClass
+            API --> MPA
+        end
+
+        %% Database Layer
+        subgraph DBLayer["Database Layer"]
+            DB["Database"]:::dbClass
+            DB --> API
+        end
+    end
+```
+
+Diagram di atas menunjukkan:
+
+1. **Alur Client Side**: Menjelaskan bagaimana konten editor Tiptap memicu auto-save melalui berbagai event dan trigger.
+2. **Alur Server Side**: Menunjukkan bagaimana request auto-save diproses oleh API dan disimpan ke database.
+3. **Management Draft**: Menampilkan operasi utama pada draft (get, publish, discard) dan alur datanya.
+4. **Arsitektur Layer**: Mengilustrasikan hubungan antar layer dalam aplikasi (Context, Hooks, Adapter, Components, API, Database).
+
+### 10. Pengalaman Pengguna
 
 Pengguna akan mengalami:
 
@@ -669,12 +971,21 @@ Pengguna akan mengalami:
 2. Indikator status yang jelas tentang status penyimpanan
 3. Kemampuan untuk mempublikasikan draft atau membuangnya
 4. Draft yang aman dari crash browser atau kehilangan koneksi
+5. Visibilitas pengguna lain yang sedang mengedit dokumen secara real-time dengan avatar dan nama yang akurat
+6. Dialog penyelesaian konflik yang jelas saat terjadi konflik pengeditan
+7. Integrasi dengan informasi profil pengguna melalui sistem autentikasi Clerk (avatar, nama, dll.)
 
-### 10. Challenges dan Solutions
+### 11. Challenges dan Solutions
 
 #### Challenge 1: Concurrent Editing
 
-- **Solusi**: Implementasi tracking `lastEditBy` dan `draftSavedAt` untuk mendeteksi konflik
+- **Solusi**:
+  - Implementasi tracking `lastEditBy` dan `draftSavedAt` untuk mendeteksi konflik
+  - Pengembangan `ConcurrentEditingService` untuk memantau pengguna aktif yang sedang mengedit
+  - Integrasi indikator visual `ActiveEditorIndicator` pada header dokumen
+  - Dialog resolusi konflik yang memungkinkan pengguna memilih versi mana yang digunakan saat terjadi konflik pengeditan
+  - Deteksi konflik yang akurat menggunakan perbandingan timestamp dan lastEditBy
+  - Integrasi dengan sistem autentikasi Clerk untuk menampilkan informasi pengguna yang akurat (nama, avatar)
 
 #### Challenge 2: Network Interruptions
 

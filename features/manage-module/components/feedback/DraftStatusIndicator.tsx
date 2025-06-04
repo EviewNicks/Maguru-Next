@@ -1,28 +1,29 @@
 'use client'
 
-import React from 'react'
-import { format, formatDistanceToNow } from 'date-fns'
+import { useState, useEffect } from 'react'
+import { Loader2, CheckCircle, AlertCircle, Save } from 'lucide-react'
+import { formatDistanceToNow } from 'date-fns'
 import { id } from 'date-fns/locale'
-import {
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  WifiOff,
-  RefreshCw,
-} from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { type DraftSaveStatus } from '../../types'
+import { DraftSaveStatus } from '../../types'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 interface DraftStatusIndicatorProps {
   status: DraftSaveStatus
-  lastSavedAt?: Date | null
+  lastSavedAt: Date | null
   onRetry?: () => void
   className?: string
 }
 
 /**
  * Komponen untuk menampilkan status penyimpanan draft
- * dengan indikator visual dan teks yang sesuai
+ * Menampilkan status (saved, saving, error) dan waktu penyimpanan terakhir
  */
 export function DraftStatusIndicator({
   status,
@@ -30,137 +31,116 @@ export function DraftStatusIndicator({
   onRetry,
   className,
 }: DraftStatusIndicatorProps) {
-  // Mendapatkan formatLastSaved yang informatif
-  const formatLastSaved = React.useMemo(() => {
-    if (!lastSavedAt) return ''
+  const [formattedTime, setFormattedTime] = useState<string>('')
 
-    // Format "10 menit yang lalu"
-    const timeAgo = formatDistanceToNow(lastSavedAt, {
-      addSuffix: true,
-      locale: id,
-    })
+  // Update formatted time setiap menit
+  useEffect(() => {
+    if (!lastSavedAt) return
 
-    // Format jam lengkap untuk tooltip/title
-    const fullTime = format(lastSavedAt, 'dd MMM yyyy, HH:mm:ss', {
-      locale: id,
-    })
+    const updateFormattedTime = () => {
+      setFormattedTime(
+        formatDistanceToNow(lastSavedAt, {
+          addSuffix: true,
+          locale: id,
+        })
+      )
+    }
 
-    return { timeAgo, fullTime }
+    // Update awal
+    updateFormattedTime()
+
+    // Update setiap menit
+    const interval = setInterval(updateFormattedTime, 60000)
+
+    return () => clearInterval(interval)
   }, [lastSavedAt])
 
-  // Render indikator berdasarkan status
+  // Render status icon dan text berdasarkan status
+  const renderStatusContent = () => {
+    switch (status) {
+      case 'saving':
+        return (
+          <div className="flex items-center text-gray-500">
+            <Loader2 className="h-3 w-3 animate-spin mr-2" />
+            <span>Menyimpan...</span>
+          </div>
+        )
+      case 'saved':
+        return lastSavedAt ? (
+          <div className="flex items-center text-green-600">
+            <CheckCircle className="h-3 w-3 mr-2" />
+            <span>Disimpan {formattedTime}</span>
+          </div>
+        ) : null
+      case 'error':
+        return (
+          <div className="flex items-center text-red-500">
+            <AlertCircle className="h-3 w-3 mr-2" />
+            <span>Gagal menyimpan</span>
+            {onRetry && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-2 h-6 px-2"
+                onClick={onRetry}
+              >
+                Coba lagi
+              </Button>
+            )}
+          </div>
+        )
+      case 'offline':
+        return (
+          <div className="flex items-center text-amber-500">
+            <AlertCircle className="h-3 w-3 mr-2" />
+            <span>Offline - perubahan akan disimpan saat online</span>
+          </div>
+        )
+      default:
+        return null
+    }
+  }
+
   return (
     <div
       className={cn(
-        'flex items-center gap-1.5 text-sm whitespace-nowrap',
+        'px-3 py-1.5 text-xs flex items-center justify-between',
         className
       )}
     >
-      {status === 'saving' && (
-        <>
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-500" />
-          <span className="text-amber-500">Menyimpan...</span>
-        </>
-      )}
+      <div className="flex-1">{renderStatusContent()}</div>
 
-      {status === 'saved' && (
-        <>
-          <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-          <span className="text-green-500">
-            Tersimpan{' '}
-            {lastSavedAt && (
-              <time
-                dateTime={lastSavedAt.toISOString()}
-                title={formatLastSaved.fullTime}
-              >
-                {formatLastSaved.timeAgo}
-              </time>
-            )}
-          </span>
-        </>
-      )}
-
-      {status === 'error' && (
-        <>
-          <AlertCircle className="h-3.5 w-3.5 text-red-500" />
-          <span className="text-red-500">
-            Gagal menyimpan
-            {onRetry && (
-              <button
+      {onRetry && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
                 onClick={onRetry}
-                className="ml-1.5 underline hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 rounded"
-                aria-label="Coba simpan ulang"
               >
-                Coba lagi
-              </button>
-            )}
-          </span>
-        </>
-      )}
-
-      {status === 'unsaved' && (
-        <>
-          <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
-          <span className="text-amber-500">Belum tersimpan</span>
-        </>
-      )}
-
-      {status === 'offline' && (
-        <>
-          <WifiOff className="h-3.5 w-3.5 text-gray-500" />
-          <span className="text-gray-500">
-            Anda offline, perubahan tidak akan disimpan
-          </span>
-        </>
-      )}
-
-      {status === 'retrying' && (
-        <>
-          <RefreshCw className="h-3.5 w-3.5 animate-spin text-amber-500" />
-          <span className="text-amber-500">Mencoba ulang penyimpanan...</span>
-        </>
-      )}
-
-      {status === 'idle' && lastSavedAt && (
-        <>
-          <CheckCircle2 className="h-3.5 w-3.5 text-gray-400" />
-          <span className="text-gray-500">
-            Terakhir disimpan{' '}
-            <time
-              dateTime={lastSavedAt.toISOString()}
-              title={formatLastSaved.fullTime}
-            >
-              {formatLastSaved.timeAgo}
-            </time>
-          </span>
-        </>
+                <Save className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Simpan sekarang</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
     </div>
   )
 }
 
 /**
- * Komponen floating untuk menampilkan status penyimpanan draft
- * yang muncul di pojok kanan bawah editor
+ * Versi floating dari DraftStatusIndicator
+ * Ditampilkan di pojok kanan bawah editor
  */
-export function FloatingDraftStatus({
-  status,
-  lastSavedAt,
-  onRetry,
-}: Omit<DraftStatusIndicatorProps, 'className'>) {
-  // Status yang perlu ditampilkan di floating indicator
-  // Idle tidak ditampilkan di floating indicator
-  const shouldDisplay = status !== 'idle'
-
-  return shouldDisplay ? (
-    <div className="absolute bottom-3 right-3 z-10">
-      <div className="rounded-full bg-white/95 shadow-md border px-3 py-1.5 dark:bg-gray-800/95 dark:border-gray-700">
-        <DraftStatusIndicator
-          status={status}
-          lastSavedAt={lastSavedAt}
-          onRetry={onRetry}
-        />
-      </div>
+export function FloatingDraftStatus(props: DraftStatusIndicatorProps) {
+  return (
+    <div className="absolute bottom-2 right-2 bg-white border border-gray-200 rounded-md shadow-md">
+      <DraftStatusIndicator {...props} />
     </div>
-  ) : null
+  )
 }

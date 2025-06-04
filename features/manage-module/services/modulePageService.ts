@@ -8,11 +8,10 @@ import {
   StandardEditorContent,
 } from '../types'
 import prisma from '@/lib/prisma'
-import { logger } from './logger'
 import { ensureValidEditorContent } from '../lib/dataFormats'
 
 // Konstanta untuk service name (context)
-const SERVICE = 'ModulePageService'
+// const SERVICE = 'ModulePageService'
 
 /**
  * Service untuk operasi CRUD halaman modul
@@ -33,10 +32,6 @@ export const modulePageService: IModulePageService = {
     if (typeof window !== 'undefined') {
       const storedModuleId = sessionStorage.getItem('activeModuleId')
       if (storedModuleId) {
-        logger.debug(
-          SERVICE,
-          `Retrieved moduleId from storage: ${storedModuleId}`
-        )
         return storedModuleId
       }
     }
@@ -53,14 +48,6 @@ export const modulePageService: IModulePageService = {
     data: CreateModulePageInput & { language?: string }
   ): Promise<ApiEntityResponse<ModulePage>> {
     try {
-      logger.info(SERVICE, 'Creating module page', {
-        moduleId: data.moduleId,
-        title: data.title,
-        type: data.type,
-        order: data.order,
-        hasContent: !!data.content,
-      })
-
       // Validasi keberadaan modul
       const moduleData = await prisma.module.findUnique({
         where: { id: data.moduleId },
@@ -497,19 +484,12 @@ export const modulePageService: IModulePageService = {
     authorId: string
   ): Promise<ApiEntityResponse<ModulePage> | null> {
     try {
-      logger.info(SERVICE, 'Saving draft for page', {
-        pageId,
-        authorId,
-        hasContent: !!draftData,
-      })
-
       // Cek keberadaan halaman
       const existingPage = await prisma.modulePage.findUnique({
         where: { id: pageId },
       })
 
       if (!existingPage) {
-        logger.error(SERVICE, 'Page not found for draft save', { pageId })
         return null
       }
 
@@ -527,11 +507,6 @@ export const modulePageService: IModulePageService = {
           hasUnpublishedChanges: true,
           isDraft: true,
         },
-      })
-
-      logger.debug(SERVICE, 'Draft saved successfully', {
-        pageId,
-        draftSavedAt: updatedPage.draftSavedAt,
       })
 
       // Transform hasil untuk response API
@@ -558,7 +533,6 @@ export const modulePageService: IModulePageService = {
         },
       }
     } catch (error) {
-      logger.error(SERVICE, 'Error saving draft', { error, pageId })
       throw error
     }
   },
@@ -572,21 +546,17 @@ export const modulePageService: IModulePageService = {
     pageId: string
   ): Promise<ApiEntityResponse<ModulePage> | null> {
     try {
-      logger.info(SERVICE, 'Getting draft for page', { pageId })
-
       // Ambil halaman dengan draft
       const page = await prisma.modulePage.findUnique({
         where: { id: pageId },
       })
 
       if (!page) {
-        logger.error(SERVICE, 'Page not found for draft retrieval', { pageId })
         return null
       }
 
       // Jika tidak ada draft, kembalikan null untuk draftData
       if (!page.draftData) {
-        logger.debug(SERVICE, 'No draft found for page', { pageId })
         return {
           success: true,
           data: {
@@ -633,7 +603,6 @@ export const modulePageService: IModulePageService = {
         },
       }
     } catch (error) {
-      logger.error(SERVICE, 'Error getting draft', { error, pageId })
       throw error
     }
   },
@@ -647,20 +616,16 @@ export const modulePageService: IModulePageService = {
     pageId: string
   ): Promise<ApiEntityResponse<ModulePage> | null> {
     try {
-      logger.info(SERVICE, 'Publishing draft for page', { pageId })
-
       // Cek keberadaan halaman dan draft
       const existingPage = await prisma.modulePage.findUnique({
         where: { id: pageId },
       })
 
       if (!existingPage) {
-        logger.error(SERVICE, 'Page not found for draft publish', { pageId })
         return null
       }
 
       if (!existingPage.draftData) {
-        logger.error(SERVICE, 'No draft found to publish', { pageId })
         return null
       }
 
@@ -677,11 +642,6 @@ export const modulePageService: IModulePageService = {
           version: { increment: 1 }, // Increment version saat publish
           status: ModulePageStatus.PUBLISHED, // Cast ke ModuleStatus
         },
-      })
-
-      logger.debug(SERVICE, 'Draft published successfully', {
-        pageId,
-        newVersion: updatedPage.version,
       })
 
       // Transform hasil untuk response API
@@ -707,7 +667,6 @@ export const modulePageService: IModulePageService = {
         },
       }
     } catch (error) {
-      logger.error(SERVICE, 'Error publishing draft', { error, pageId })
       throw error
     }
   },
@@ -719,15 +678,12 @@ export const modulePageService: IModulePageService = {
    */
   async discardDraft(pageId: string): Promise<boolean> {
     try {
-      logger.info(SERVICE, 'Discarding draft for page', { pageId })
-
       // Cek keberadaan halaman
       const existingPage = await prisma.modulePage.findUnique({
         where: { id: pageId },
       })
 
       if (!existingPage) {
-        logger.error(SERVICE, 'Page not found for draft discard', { pageId })
         return false
       }
 
@@ -742,10 +698,8 @@ export const modulePageService: IModulePageService = {
         },
       })
 
-      logger.debug(SERVICE, 'Draft discarded successfully', { pageId })
       return true
     } catch (error) {
-      logger.error(SERVICE, 'Error discarding draft', { error, pageId })
       throw error
     }
   },

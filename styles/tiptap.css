@@ -333,6 +333,7 @@
     gap: var(--editor-spacing-1);
     align-items: center;
     animation: fadeIn var(--editor-transition-normal);
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
 }
 
@@ -430,4 +431,86 @@
     float: left;
     height: 0;
     pointer-events: none;
+}
+
+/* TODO: Phase 4 - Mode View dan Edit */
+/* Styling untuk mode view dan edit */
+
+/* Mode view styling */
+.view-mode {
+    position: relative;
+    cursor: pointer;
+}
+
+.view-mode:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.rich-text-view-mode .editor-content {
+    cursor: pointer;
+}
+
+.rich-text-view-mode .editor-content:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.view-mode .edit-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.view-mode:hover .edit-button {
+    opacity: 1;
+}
+
+/* Mode edit styling */
+.edit-mode {
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+/* Transisi antar mode */
+.rich-text-editor {
+    transition:
+        padding 0.3s ease,
+        border 0.3s ease,
+        background-color 0.3s ease;
+}
+
+/* View content styling */
+.view-content {
+    padding: 1rem;
+}
+
+.edit-content {
+    padding: 0;
+}
+
+/* Cursor styling */
+.rich-text-view-mode .ProseMirror {
+    cursor: pointer;
+}
+
+.rich-text-view-mode .ProseMirror:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Disable editing features in view mode */
+.rich-text-view-mode .ProseMirror * {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+.rich-text-view-mode .ProseMirror {
+    outline: none !important;
+}
+
+/* Animation for mode transition */
+.rich-text-view-mode,
+.rich-text-edit-mode {
+    transition: all 0.3s ease;
 }

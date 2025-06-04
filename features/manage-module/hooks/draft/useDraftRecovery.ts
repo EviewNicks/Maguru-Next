@@ -3,12 +3,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import { StandardEditorContent, ModulePage } from '../../types'
 import { modulePageAdapter } from '../../adapters/modulePageAdapter'
-import { logger } from '../../services/logger'
 import { formatDistanceToNow } from 'date-fns'
 import { id } from 'date-fns/locale'
 
 // Konstanta untuk hook name (logging)
-const HOOK = 'useDraftRecovery'
+// const HOOK = 'useDraftRecovery'
 
 interface UseDraftRecoveryOptions {
   pageId: string
@@ -44,15 +43,13 @@ export function useDraftRecovery({
 
     try {
       setIsLoading(true)
-      logger.debug(HOOK, `Checking draft for pageId: ${pageId}`)
 
       // Gunakan adapter untuk mengecek keberadaan draft
       const result = await modulePageAdapter.hasDraft(pageId)
       setHasDraft(result)
 
       return result
-    } catch (error) {
-      logger.error(HOOK, `Error checking draft: ${error}`)
+    } catch {
       setHasDraft(false)
       return false
     } finally {
@@ -66,7 +63,6 @@ export function useDraftRecovery({
 
     try {
       setIsLoading(true)
-      logger.debug(HOOK, `Fetching draft for pageId: ${pageId}`)
 
       // Gunakan adapter untuk mendapatkan draft
       const draft = await modulePageAdapter.getDraft(pageId)
@@ -79,8 +75,7 @@ export function useDraftRecovery({
 
       setHasDraft(false)
       return null
-    } catch (error) {
-      logger.error(HOOK, `Error fetching draft: ${error}`)
+    } catch {
       setHasDraft(false)
       setDraftData(null)
       return null
@@ -104,8 +99,6 @@ export function useDraftRecovery({
   const handleRecover = useCallback(() => {
     if (!draftData || !draftData.draftData) return
 
-    logger.debug(HOOK, `Recovering draft for pageId: ${pageId}`)
-
     // Panggil callback onRecover dengan data draft
     if (onRecover) {
       onRecover(draftData.draftData)
@@ -121,7 +114,6 @@ export function useDraftRecovery({
 
     try {
       setIsLoading(true)
-      logger.debug(HOOK, `Discarding draft for pageId: ${pageId}`)
 
       // Gunakan adapter untuk membuang draft
       const result = await modulePageAdapter.discardDraft(pageId)
@@ -135,8 +127,7 @@ export function useDraftRecovery({
           onDiscard()
         }
       }
-    } catch (error) {
-      logger.error(HOOK, `Error discarding draft: ${error}`)
+    } catch {
     } finally {
       setIsLoading(false)
       setShowRecoveryDialog(false)

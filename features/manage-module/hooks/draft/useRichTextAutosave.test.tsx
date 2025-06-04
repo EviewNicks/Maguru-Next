@@ -1,8 +1,8 @@
 import { renderHook, act } from '@testing-library/react'
-import { useRichTextAutosave } from '../useRichTextAutosave'
-import { modulePageAdapter } from '../../../adapters/modulePageAdapter'
-import { StandardEditorContent } from '../../../types'
-import { ModulePageEditor } from '../../../types/modulePageSchema'
+import { useRichTextAutosave } from './useRichTextAutosave'
+import { modulePageAdapter } from '../../adapters/modulePageAdapter'
+import { StandardEditorContent } from '../../types'
+import { ModulePageEditor } from '../../types/modulePageSchema'
 
 // Mock modulePageAdapter
 jest.mock('../../../adapters/modulePageAdapter', () => ({

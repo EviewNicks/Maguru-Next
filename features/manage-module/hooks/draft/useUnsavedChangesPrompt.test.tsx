@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react-hooks'
-import { useUnsavedChangesPrompt } from '../useUnsavedChangesPrompt'
+import { useUnsavedChangesPrompt } from './useUnsavedChangesPrompt'
 import { useRouter } from 'next/navigation'
 
 // Mock Next.js router

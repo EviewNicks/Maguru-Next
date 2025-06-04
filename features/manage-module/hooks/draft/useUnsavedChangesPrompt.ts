@@ -2,10 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { logger } from '../../services/logger'
 
 // Konstanta untuk hook name (logging)
-const HOOK = 'useUnsavedChangesPrompt'
+// const HOOK = 'useUnsavedChangesPrompt'
 
 interface UseUnsavedChangesPromptOptions {
   hasUnsavedChanges: boolean
@@ -32,7 +31,6 @@ export function useUnsavedChangesPrompt({
 
   // Handle dialog confirm action
   const handleConfirm = useCallback(async () => {
-    logger.debug(HOOK, 'Confirming navigation with unsaved changes')
 
     if (onConfirmNavigation) {
       await onConfirmNavigation()
@@ -42,7 +40,6 @@ export function useUnsavedChangesPrompt({
 
     // Resume navigation jika ada pendingUrl
     if (pendingUrl) {
-      logger.debug(HOOK, `Resuming navigation to: ${pendingUrl}`)
       window.sessionStorage.setItem('isNavigating', 'true')
       router.push(pendingUrl)
       setPendingUrl(null)
@@ -51,7 +48,6 @@ export function useUnsavedChangesPrompt({
 
   // Handle dialog cancel action
   const handleCancel = useCallback(() => {
-    logger.debug(HOOK, 'Canceling navigation, staying on current page')
     setShowDialog(false)
     setPendingUrl(null)
   }, [])
@@ -60,8 +56,6 @@ export function useUnsavedChangesPrompt({
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (!hasUnsavedChanges || !preventNavigation) return
-
-      logger.debug(HOOK, 'Detected beforeunload event with unsaved changes')
 
       // Standard way to show confirmation dialog
       e.preventDefault()
