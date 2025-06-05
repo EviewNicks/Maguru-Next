@@ -36,7 +36,7 @@ export const useModulePageData = (moduleId: string) => {
           return []
         }
         return pages
-      } catch {   
+      } catch {
         return []
       }
     },
@@ -345,10 +345,12 @@ export const useModulePageData = (moduleId: string) => {
     mutationFn: ({
       pageId,
       status,
+      options,
     }: {
       pageId: string
       status: ModulePageStatus
-    }) => modulePageAdapter.updatePageStatus(pageId, status),
+      options?: { isDraft?: boolean; hasUnpublishedChanges?: boolean }
+    }) => modulePageAdapter.updatePageStatus(pageId, status, options),
     onSuccess: (data, variables) => {
       if (data) {
         // Update data di cache
@@ -396,7 +398,11 @@ export const useModulePageData = (moduleId: string) => {
     discardDraft: discardDraftMutation.mutate,
     deletePage: deletePageMutation.mutate,
     reorderPages: reorderPagesMutation.mutate,
-    updatePageStatus: updatePageStatusMutation.mutate,
+    updatePageStatus: (
+      pageId: string,
+      status: ModulePageStatus,
+      options?: { isDraft?: boolean; hasUnpublishedChanges?: boolean }
+    ) => updatePageStatusMutation.mutate({ pageId, status, options }),
 
     // Loading states
     isCreating: createPageMutation.isPending,

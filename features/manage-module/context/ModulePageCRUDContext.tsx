@@ -23,6 +23,11 @@ import debounce from 'lodash/debounce'
 import { useQueryClient } from '@tanstack/react-query'
 // Import ModuleDraftPageProvider
 import { ModuleDraftPageProvider } from './ModuleDraftPageContext'
+// Import logger
+// import { logger } from '../services/logger'
+
+// Konstanta untuk context name (logging)
+// const CONTEXT = 'ModulePageCRUDContext'
 
 // import { useClerk } from '@clerk/nextjs'
 
@@ -224,7 +229,6 @@ export function ModulePageCRUDProvider({
     deletePage: deletePageOperation,
     reorderPages: reorderPagesOperation,
     saveEditorContent: saveEditorContentMutation,
-    updatePageStatus: updatePageStatusOperation,
     checkHasDraft,
     getDraft,
   } = useModulePageData(moduleId)
@@ -387,22 +391,106 @@ export function ModulePageCRUDProvider({
     [reorderPagesOperation]
   )
 
+  // Helper untuk mendapatkan halaman berdasarkan ID
+  const getPageById = useCallback(
+    async (pageId: string): Promise<ModulePage | null> => {
+      try {
+        return await getPage(pageId)
+      } catch {
+        return null
+      }
+    },
+    [getPage]
+  )
+
   // Perbarui implementasi updatePageStatus untuk menggunakan enum ModulePageStatus
   const updatePageStatus = useCallback(
     async (params: { pageId: string; status: ModulePageStatus }) => {
+      const { pageId, status } = params
+
+      if (!pageId) {
+
+        return null
+      }
+
+
+
       try {
-        const { pageId, status } = params
+        // Tentukan nilai isDraft dan hasUnpublishedChanges berdasarkan status
+        const isDraft = status === ModulePageStatus.DRAFT
+        const hasUnpublishedChanges = status === ModulePageStatus.DRAFT
 
-        // Gunakan hook updatePageStatus
-        const result = await updatePageStatusOperation({ pageId, status })
+        // Step 1: Panggil modulePageAdapter.updatePageStatus langsung
 
-        return result
+        // Panggil modulePageAdapter.updatePageStatus langsung dengan parameter options
+        await modulePageAdapter.updatePageStatus(pageId, status, {
+          isDraft,
+          hasUnpublishedChanges,
+        })
+
+        // Step 2: Tunggu sebentar untuk memastikan cache diperbarui
+
+        await new Promise((resolve) => setTimeout(resolve, 100))
+
+        // Step 3: Coba ambil halaman yang diperbarui dari API
+        let updatedPage: ModulePage | null = null
+
+        try {
+
+          updatedPage = await getPageById(pageId)
+
+          if (updatedPage) {
+
+          } else {
+
+          }
+        } catch {
+
+        }
+
+        // Step 4: Jika API fetch gagal, coba ambil dari cache
+        if (!updatedPage) {
+          updatedPage = pages.find((p) => p.id === pageId) || null
+
+          if (updatedPage) {
+
+          } else {
+
+          }
+        }
+
+        // Step 5: Verifikasi status halaman sesuai dengan yang diminta
+        if (updatedPage) {
+          // Verifikasi apakah status sesuai dengan yang diminta
+          if (updatedPage.status !== status) {
+
+          } else {
+
+          }
+        } else {
+
+        }
+
+        return updatedPage
       } catch (error) {
-        showErrorNotification(error)
+        // Tangani error dengan lebih detail
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+
+
+
+        showErrorNotification(
+          error instanceof Error
+            ? error
+            : new Error(
+                `Gagal mengubah status halaman ke ${status}: ${errorMessage}`
+              )
+        )
+
         throw error
       }
     },
-    [updatePageStatusOperation]
+    [getPageById, pages, modulePageAdapter]
   )
 
   // Navigation helpers
@@ -443,18 +531,6 @@ export function ModulePageCRUDProvider({
   const getLastPage = useCallback(() => {
     return pages.length > 0 ? pages[pages.length - 1] : null
   }, [pages])
-
-  // Helper untuk mendapatkan halaman berdasarkan ID
-  const getPageById = useCallback(
-    async (pageId: string): Promise<ModulePage | null> => {
-      try {
-        return await getPage(pageId)
-      } catch {
-        return null
-      }
-    },
-    [getPage]
-  )
 
   // Handler untuk navigasi halaman
   const handlePageChange = useCallback(

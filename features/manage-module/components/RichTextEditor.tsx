@@ -30,6 +30,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Button } from '@/components/ui/button'
+import { logger } from '../services/logger'
 
 const extensions = [
   StarterKit.configure({
@@ -219,7 +220,7 @@ export function RichTextEditor({
       if (onEditorReady) {
         onEditorReady(newEditor)
       }
-      } catch {
+    } catch {
       // ignore
     }
   }, [
@@ -242,23 +243,48 @@ export function RichTextEditor({
     const updateEditorMode = setTimeout(() => {
       try {
         if (editor) {
+          logger.debug(
+            'RichTextEditor',
+            `editorMode changed to: ${editorMode}, setting editor editable to: ${!readOnly}`
+          )
+
           // Set editable state dengan aman
           try {
             editor.setEditable(!readOnly)
-          } catch {
-            // ignore
+            logger.debug(
+              'RichTextEditor',
+              `Editor setEditable(${!readOnly}) successful`
+            )
+          } catch (error) {
+            logger.error(
+              'RichTextEditor',
+              'Error setting editor editable state',
+              error as Error
+            )
           }
 
           // Force refresh editor content saat mode berubah
           try {
             const content = getParsedContent()
+            logger.debug(
+              'RichTextEditor',
+              `Refreshing editor content after mode change to: ${editorMode}`
+            )
 
             // Set ulang konten dengan aman
             if (editor && editor.commands && editor.commands.setContent) {
               try {
                 editor.commands.setContent(content)
-              } catch {
-                // ignore
+                logger.debug(
+                  'RichTextEditor',
+                  `Editor content refresh successful`
+                )
+              } catch (error) {
+                logger.error(
+                  'RichTextEditor',
+                  'Error setting editor content',
+                  error as Error
+                )
               }
             }
 
@@ -268,6 +294,10 @@ export function RichTextEditor({
                 // Gunakan querySelector hanya jika elemen ada di DOM
                 const editorElement = document.querySelector('.ProseMirror')
                 if (editorElement) {
+                  logger.debug(
+                    'RichTextEditor',
+                    `Updating DOM classes for mode: ${editorMode}`
+                  )
                   if (readOnly) {
                     editorElement.classList.add('view-mode')
                     editorElement.classList.remove('edit-mode')
@@ -275,6 +305,15 @@ export function RichTextEditor({
                     editorElement.classList.add('edit-mode')
                     editorElement.classList.remove('view-mode')
                   }
+                  logger.debug(
+                    'RichTextEditor',
+                    `DOM classes updated successfully`
+                  )
+                } else {
+                  logger.warn(
+                    'RichTextEditor',
+                    `Could not find .ProseMirror element in DOM`
+                  )
                 }
 
                 // Fokus editor hanya jika dalam mode edit dan editor masih ada
@@ -285,21 +324,47 @@ export function RichTextEditor({
                   editor.commands.focus
                 ) {
                   try {
+                    logger.debug(
+                      'RichTextEditor',
+                      `Focusing editor in edit mode`
+                    )
                     editor.commands.focus()
-                  } catch {
-                    // ignore
+                    logger.debug('RichTextEditor', `Editor focus successful`)
+                  } catch (error) {
+                    logger.error(
+                      'RichTextEditor',
+                      'Error focusing editor',
+                      error as Error
+                    )
                   }
                 }
-              } catch {
-                // ignore
+              } catch (error) {
+                logger.error(
+                  'RichTextEditor',
+                  'Error updating DOM classes',
+                  error as Error
+                )
               }
             }, 200) // Increase timeout to ensure DOM is ready
-            } catch {
-            // ignore
+          } catch (error) {
+            logger.error(
+              'RichTextEditor',
+              'Error refreshing content after mode change',
+              error as Error
+            )
           }
+        } else {
+          logger.warn(
+            'RichTextEditor',
+            `Editor not available but editorMode changed to: ${editorMode}`
+          )
         }
-      } catch {
-        // ignore
+      } catch (error) {
+        logger.error(
+          'RichTextEditor',
+          'Error in editor mode update effect',
+          error as Error
+        )
       }
     }, 50) // Small delay to ensure component is mounted
 

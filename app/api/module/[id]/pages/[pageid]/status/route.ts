@@ -7,13 +7,20 @@ import {
 } from '../../../../middleware'
 import { z } from 'zod'
 import { ModulePageStatus } from '@/features/manage-module/types'
+// import { logger } from '@/features/manage-module/services/logger'
+
+// Konstanta untuk context name (logging)
+// const CONTEXT = 'StatusRo  uteHandler'
 
 // Tipe untuk params dari route dynamic
 type RouteParams = { params: { id: string } }
 
-// Schema untuk validasi input
+// Schema untuk validasi input yang diperluas
 const UpdatePageStatusSchema = z.object({
   status: z.nativeEnum(ModulePageStatus),
+  // Parameter opsional untuk override nilai default
+  isDraft: z.boolean().optional(),
+  hasUnpublishedChanges: z.boolean().optional(),
 })
 
 /**
@@ -31,11 +38,7 @@ async function updateModulePageStatusHandler(
     let body
     try {
       body = await request.json()
-    } catch (jsonError) {
-      console.error(
-        'Error parsing JSON in updateModulePageStatusHandler:',
-        jsonError
-      )
+    } catch {
       return NextResponse.json(
         {
           success: false,
@@ -45,6 +48,8 @@ async function updateModulePageStatusHandler(
         { status: 400 }
       )
     }
+
+    // Log request untuk debugging
 
     // Validasi input
     const validationResult = UpdatePageStatusSchema.safeParse(body)
@@ -61,9 +66,23 @@ async function updateModulePageStatusHandler(
 
     const { status } = validationResult.data
 
-    // Perbarui status halaman
+    // Tentukan nilai isDraft dan hasUnpublishedChanges berdasarkan status
+    // Gunakan nilai dari request jika disediakan, atau default berdasarkan status
+    const isDraft =
+      validationResult.data.isDraft !== undefined
+        ? validationResult.data.isDraft
+        : status === ModulePageStatus.DRAFT
+
+    const hasUnpublishedChanges =
+      validationResult.data.hasUnpublishedChanges !== undefined
+        ? validationResult.data.hasUnpublishedChanges
+        : status === ModulePageStatus.DRAFT
+
+    // Perbarui status halaman dengan field tambahan
     const updatedPage = await modulePageService.updateModulePage(pageId, {
       status,
+      isDraft,
+      hasUnpublishedChanges,
     })
 
     if (!updatedPage) {
@@ -76,19 +95,22 @@ async function updateModulePageStatusHandler(
       )
     }
 
+    // Log hasil update untuk debugging
+
     // Gunakan format response yang konsisten
     return NextResponse.json(
       {
         success: true,
         data: updatedPage.data,
         message: `Status halaman berhasil diubah menjadi ${status}`,
-        meta: {},
+        meta: {
+          isDraft: updatedPage.data.isDraft,
+          hasUnpublishedChanges: updatedPage.data.hasUnpublishedChanges,
+        },
       },
       { status: 200 }
     )
   } catch (error) {
-    console.error('Error updating module page status:', error)
-
     // Berikan respons yang lebih spesifik berdasarkan jenis error
     if (error instanceof Error) {
       return NextResponse.json(
@@ -120,24 +142,16 @@ function createRouteHandler(
     const pathParts = url.pathname.split('/')
 
     // Format URL yang diharapkan: /api/module/{moduleId}/pages/{pageId}/status
-    const moduleIndex = pathParts.indexOf('module')
+
     const pagesIndex = pathParts.indexOf('pages')
 
     // Ambil moduleId (setelah 'module')
-    const moduleId =
-      moduleIndex !== -1 && moduleIndex + 1 < pathParts.length
-        ? pathParts[moduleIndex + 1]
-        : ''
 
     // Ambil pageId (setelah 'pages')
     const pageId =
       pagesIndex !== -1 && pagesIndex + 1 < pathParts.length
         ? pathParts[pagesIndex + 1]
         : ''
-
-    console.log(
-      `[API] Extracted moduleId: ${moduleId}, pageId: ${pageId}, path: ${url.pathname}`
-    )
 
     // Buat context dengan params
     const context: RouteParams = {

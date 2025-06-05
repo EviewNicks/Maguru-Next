@@ -9,6 +9,7 @@ import {
 } from '../types'
 import prisma from '@/lib/prisma'
 import { ensureValidEditorContent } from '../lib/dataFormats'
+// import { logger } from '../services/logger'
 
 // Konstanta untuk service name (context)
 // const SERVICE = 'ModulePageService'
@@ -297,92 +298,117 @@ export const modulePageService: IModulePageService = {
     pageId: string,
     data: UpdateModulePageInput
   ): Promise<ApiEntityResponse<ModulePage> | null> {
-    // Cek keberadaan halaman
-    const existingPage = await prisma.modulePage.findUnique({
-      where: { id: pageId },
-    })
+    try {
+      // Cek keberadaan halaman
+      const existingPage = await prisma.modulePage.findUnique({
+        where: { id: pageId },
+      })
 
-    if (!existingPage) {
-      return null
-    }
+      if (!existingPage) {
+        return null
+      }
 
-    // Persiapkan data update yang akan di-spread
-    const baseUpdateData = {
-      version: { increment: 1 }, // Optimistic locking
-    }
+      // Persiapkan data update yang akan di-spread
+      const baseUpdateData = {
+        version: { increment: 1 }, // Optimistic locking
+      }
 
-    // Penggunaan Record<string, unknown> untuk tipe yang lebih aman
-    const updateFields: Record<string, unknown> = { ...baseUpdateData }
+      // Penggunaan Record<string, unknown> untuk tipe yang lebih aman
+      const updateFields: Record<string, unknown> = { ...baseUpdateData }
 
-    if (data.title) {
-      updateFields.title = data.title
-    }
+      if (data.title) {
+        updateFields.title = data.title
+      }
 
-    if (data.order) {
-      updateFields.order = data.order
-    }
+      if (data.order) {
+        updateFields.order = data.order
+      }
 
-    if (data.type) {
-      updateFields.type = data.type
-    }
+      if (data.type) {
+        updateFields.type = data.type
+      }
 
-    // Jika status diupdate
-    if (data.status) {
-      updateFields.status = data.status
-      console.log(`[Service] Updating page status to: ${data.status}`)
-    }
+      // Jika status diupdate
+      if (data.status) {
+        updateFields.status = data.status
 
-    // Jika lastEditBy diupdate
-    if (data.lastEditBy) {
-      updateFields.lastEditBy = data.lastEditBy
-    }
+        // Jika isDraft tidak diberikan secara eksplisit, tentukan berdasarkan status
+        if (data.isDraft === undefined) {
+          updateFields.isDraft = data.status === ModulePageStatus.DRAFT
+        }
 
-    // Pastikan content valid jika diberikan
-    if (data.content) {
-      // Konversi tipe yang aman dengan ensureValidEditorContent
-      const contentValue = ensureValidEditorContent(data.content)
-      // Gunakan type assertion untuk mengatasi masalah tipe
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      updateFields.content = contentValue as any
+        // Jika hasUnpublishedChanges tidak diberikan secara eksplisit, tentukan berdasarkan status
+        if (data.hasUnpublishedChanges === undefined) {
+          updateFields.hasUnpublishedChanges =
+            data.status === ModulePageStatus.DRAFT
+        }
+      }
 
-      // Reset draft jika konten utama diupdate
-      updateFields.hasUnpublishedChanges = false
-      updateFields.draftData = undefined
-      updateFields.draftSavedAt = undefined
-    }
+      // Jika isDraft diberikan secara eksplisit
+      if (data.isDraft !== undefined) {
+        updateFields.isDraft = data.isDraft
+      }
 
-    // Update halaman
-    const updatedPage = await prisma.modulePage.update({
-      where: { id: pageId },
-      data: updateFields,
-    })
+      // Jika hasUnpublishedChanges diberikan secara eksplisit
+      if (data.hasUnpublishedChanges !== undefined) {
+        updateFields.hasUnpublishedChanges = data.hasUnpublishedChanges
+      }
 
-    // Transform hasil untuk response API
-    return {
-      success: true,
-      data: {
-        id: updatedPage.id,
-        moduleId: updatedPage.moduleId,
-        title: updatedPage.title,
-        order: updatedPage.order,
-        type: updatedPage.type,
-        content: updatedPage.content as unknown as StandardEditorContent,
-        version: updatedPage.version,
-        // Cast status karena TypeScript belum mengenali pembaruan prisma schema
-        status:
-          (updatedPage.status as ModulePageStatus) || ModulePageStatus.DRAFT,
-        createdAt: updatedPage.createdAt,
-        updatedAt: updatedPage.updatedAt,
-        // Field baru untuk draft
-        authorId: updatedPage.authorId || undefined,
-        lastEditBy: updatedPage.lastEditBy || undefined,
-        draftData:
-          (updatedPage.draftData as unknown as StandardEditorContent) ||
-          undefined,
-        draftSavedAt: updatedPage.draftSavedAt || undefined,
-        isDraft: updatedPage.isDraft || false,
-        hasUnpublishedChanges: updatedPage.hasUnpublishedChanges || false,
-      },
+      // Jika lastEditBy diupdate
+      if (data.lastEditBy) {
+        updateFields.lastEditBy = data.lastEditBy
+      }
+
+      // Pastikan content valid jika diberikan
+      if (data.content) {
+        // Konversi tipe yang aman dengan ensureValidEditorContent
+        const contentValue = ensureValidEditorContent(data.content)
+        // Gunakan type assertion untuk mengatasi masalah tipe
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        updateFields.content = contentValue as any
+
+        // Reset draft jika konten utama diupdate
+        updateFields.hasUnpublishedChanges = false
+        updateFields.draftData = undefined
+        updateFields.draftSavedAt = undefined
+      }
+
+      // Update halaman
+
+      const updatedPage = await prisma.modulePage.update({
+        where: { id: pageId },
+        data: updateFields,
+      })
+
+      // Transform hasil untuk response API
+      return {
+        success: true,
+        data: {
+          id: updatedPage.id,
+          moduleId: updatedPage.moduleId,
+          title: updatedPage.title,
+          order: updatedPage.order,
+          type: updatedPage.type,
+          content: updatedPage.content as unknown as StandardEditorContent,
+          version: updatedPage.version,
+          // Cast status karena TypeScript belum mengenali pembaruan prisma schema
+          status:
+            (updatedPage.status as ModulePageStatus) || ModulePageStatus.DRAFT,
+          createdAt: updatedPage.createdAt,
+          updatedAt: updatedPage.updatedAt,
+          // Field baru untuk draft
+          authorId: updatedPage.authorId || undefined,
+          lastEditBy: updatedPage.lastEditBy || undefined,
+          draftData:
+            (updatedPage.draftData as unknown as StandardEditorContent) ||
+            undefined,
+          draftSavedAt: updatedPage.draftSavedAt || undefined,
+          isDraft: updatedPage.isDraft || false,
+          hasUnpublishedChanges: updatedPage.hasUnpublishedChanges || false,
+        },
+      }
+    } catch (error) {
+      throw error
     }
   },
 

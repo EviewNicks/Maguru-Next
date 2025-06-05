@@ -58,7 +58,6 @@ export const modulePageAdapter: IModulePageAdapter = {
    * @param moduleId - ID modul
    */
   invalidateModuleCache(moduleId: string): void {
-
     // Hapus cache untuk daftar halaman modul
     if (this._cache.pages[moduleId]) {
       delete this._cache.pages[moduleId]
@@ -84,7 +83,6 @@ export const modulePageAdapter: IModulePageAdapter = {
    * @param pageId - ID halaman
    */
   invalidatePageCache(pageId: string): void {
-
     if (this._cache.page[pageId]) {
       // Ambil moduleId dari cache sebelum dihapus
       const moduleId = this._cache.page[pageId].data.moduleId
@@ -109,7 +107,6 @@ export const modulePageAdapter: IModulePageAdapter = {
    * @param pageId - ID halaman
    */
   invalidateDraftCache(pageId: string): void {
-
     if (this._cache.drafts[pageId]) {
       delete this._cache.drafts[pageId]
     }
@@ -217,7 +214,7 @@ export const modulePageAdapter: IModulePageAdapter = {
       // Return empty array on error to ensure consistent return type
       return []
     }
-  },  
+  },
 
   /**
    * Mendapatkan detail halaman berdasarkan ID melalui API
@@ -263,9 +260,7 @@ export const modulePageAdapter: IModulePageAdapter = {
         }
       }
 
-
       if (!moduleId) {
-
         return null
       }
 
@@ -442,11 +437,13 @@ export const modulePageAdapter: IModulePageAdapter = {
    * Memperbarui status halaman menggunakan endpoint khusus status
    * @param pageId - ID halaman
    * @param status - Status baru (DRAFT, PUBLISHED, ARCHIVED)
+   * @param options - Parameter opsional seperti isDraft dan hasUnpublishedChanges
    * @returns Promise dengan ModulePage yang telah diperbarui atau null
    */
   updatePageStatus: async (
     pageId: string,
-    status: ModulePageStatus
+    status: ModulePageStatus,
+    options?: { isDraft?: boolean; hasUnpublishedChanges?: boolean }
   ): Promise<ModulePage | null> => {
     try {
       // Validasi input
@@ -469,6 +466,22 @@ export const modulePageAdapter: IModulePageAdapter = {
         return null
       }
 
+      // Siapkan payload dengan status dan parameter opsional
+      const payload: {
+        status: ModulePageStatus
+        isDraft?: boolean
+        hasUnpublishedChanges?: boolean
+      } = { status }
+
+      // Tambahkan parameter opsional jika disediakan
+      if (options?.isDraft !== undefined) {
+        payload.isDraft = options.isDraft
+      }
+
+      if (options?.hasUnpublishedChanges !== undefined) {
+        payload.hasUnpublishedChanges = options.hasUnpublishedChanges
+      }
+
       // Panggil API endpoint status yang benar
       const response = await fetch(
         `/api/module/${moduleId}/pages/${pageId}/status`,
@@ -477,7 +490,7 @@ export const modulePageAdapter: IModulePageAdapter = {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ status }),
+          body: JSON.stringify(payload),
         }
       )
 
@@ -1034,7 +1047,6 @@ export const modulePageAdapter: IModulePageAdapter = {
 
         // Jika halaman memiliki draft, kembalikan halaman tersebut
         if (page && (page.draftData || page.hasUnpublishedChanges)) {
-
           // Simpan ke cache draft
           modulePageAdapter._cache.drafts[pageId] = {
             data: page,

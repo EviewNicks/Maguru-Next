@@ -66,6 +66,7 @@ export default function DocumentHeader({
     saveStatus: contextSaveStatus,
     savePage,
     refetch,
+    getPageById,
   } = useModulePageCRUDContext()
 
   // Mengambil data dan fungsi dari draft context
@@ -80,13 +81,6 @@ export default function DocumentHeader({
     toggleEditorMode,
     refreshActivePage,
   } = useModuleDraftPageContext()
-
-  // TODO: Phase 4 - Mode View dan Edit
-  // 1. Gunakan useModuleDraftPageContext untuk mendapatkan:
-  //    - editorMode: 'view' | 'edit'
-  //    - toggleEditorMode: () => void
-  // 2. Tambahkan tombol Edit/Selesai berdasarkan mode
-  // 3. Tampilkan status draft dan tombol publikasi hanya dalam mode edit
 
   // State untuk concurrent editing
   const [activeEditors, setActiveEditors] = useState<ActiveEditor[]>([])
@@ -129,6 +123,7 @@ export default function DocumentHeader({
 
   // Gunakan pageId dari activePage context
   const effectivePageId = activePage ? activePage.id : undefined
+  const pageId = effectivePageId
 
   // Efek untuk meregister aktivitas pengguna dan memonitor pengguna aktif lainnya
   useEffect(() => {
@@ -427,47 +422,92 @@ export default function DocumentHeader({
 
   // Handler untuk toggle mode
   const handleToggleMode = useCallback(async () => {
+    const targetMode = editorMode === 'view' ? 'edit' : 'view'
+
+    let toggleSuccess = false
+
     try {
+      
       setIsTogglingMode(true)
-      // Set flag di sessionStorage untuk koordinasi dengan refreshActivePage
       window.sessionStorage.setItem('isTogglingMode', 'true')
-      // Call the toggle function and wait for it to complete
+
       try {
-        await toggleEditorMode()
-      } catch {
-        // Jika toggleEditorMode gagal, kita tetap lanjutkan untuk memastikan state UI konsisten
+        try {
+          await toggleEditorMode()
+          toggleSuccess = true
+        } catch (toggleError) {
+          throw new Error(
+            `Gagal mengubah mode: ${toggleError instanceof Error ? toggleError.message : 'Unknown error'}`
+          )
+        }
+
+      } catch (toggleError) {
+        throw toggleError
       }
 
-      // Berikan sedikit waktu untuk memastikan UI diperbarui
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      try {
+          await refetch()
+      } catch {
+      }
+
       await new Promise((resolve) => setTimeout(resolve, 300))
 
-      // Refresh data halaman untuk memastikan UI konsisten
-      try {
-        await refetch()
-      } catch {
-        // Jika refetch gagal, kita tetap lanjutkan untuk memastikan state UI konsisten
-      }
-
-      // Perbarui state context berdasarkan halaman yang diperbarui
-      // Gunakan try-catch untuk menangkap error yang mungkin terjadi
       try {
         refreshActivePage(true)
-      } catch {
-        // Jika refreshActivePage gagal, kita tetap lanjutkan untuk memastikan state UI konsisten
+
+      } catch  {
+      }
+
+      try {
+        if (!pageId) {
+          return
+        }
+
+        const currentPage = await getPageById(pageId)
+
+        if (currentPage) {
+
+        }
+      } catch    {
+      }
+
+      if (targetMode === 'edit') {
+        toast.success(
+          'Mode edit diaktifkan. Sekarang Anda dapat mengedit halaman ini.'
+        )
+      } else {
+        toast.success('Mode lihat diaktifkan.')
       }
     } catch (error) {
-      // Tampilkan notifikasi error
-      toast.error('Gagal mengubah mode editor. Silakan coba lagi.')
+      const errorMessage =
+        error instanceof Error
+          ? `Gagal mengubah mode editor: ${error.message}`
+          : 'Gagal mengubah mode editor. Silakan coba lagi.'
+
+      toast.error(errorMessage)
 
       showErrorNotification(
-        error instanceof Error ? error : new Error('Gagal mengubah mode editor')
+        error instanceof Error ? error : new Error(errorMessage)
       )
+
+      if (toggleSuccess) {
+        try {
+          await refetch()
+          refreshActivePage(true)
+        } catch {
+        }
+      }
     } finally {
       setIsTogglingMode(false)
-      // Hapus flag dari sessionStorage
-      window.sessionStorage.removeItem('isTogglingMode')
+
+      try {
+        window.sessionStorage.removeItem('isTogglingMode')
+      } catch  {
+      }
     }
-  }, [editorMode, toggleEditorMode, refetch, refreshActivePage])
+  }, [editorMode, toggleEditorMode, refetch, refreshActivePage, activePage, pageId, getPageById])
 
   return (
     <div className="border-b sticky top-0 z-10 bg-background">

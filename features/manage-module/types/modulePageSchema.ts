@@ -96,6 +96,9 @@ export const UpdateModulePageSchema = z.object({
   status: z.nativeEnum(ModulePageStatus).optional(),
   // Field untuk tracking
   lastEditBy: z.string().optional(),
+  // Field untuk draft status
+  isDraft: z.boolean().optional(),
+  hasUnpublishedChanges: z.boolean().optional(),
 })
 
 /**

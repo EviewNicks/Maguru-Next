@@ -234,7 +234,8 @@ export interface IModulePageAdapter {
   getParsedEditorContent(page: ModulePage | null): StandardEditorContent
   updatePageStatus(
     pageId: string,
-    status: ModulePageStatus
+    status: ModulePageStatus,
+    options?: { isDraft?: boolean; hasUnpublishedChanges?: boolean }
   ): Promise<ModulePage | null>
 
   // Fungsi baru untuk fitur draft
