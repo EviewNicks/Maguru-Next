@@ -17,14 +17,25 @@ import { OrderedListToolbar } from '../toolbars/OrderedList'
 import { ImagePlaceholderToolbar } from '../toolbars/ImagePlaceholderToolbar'
 import { AlignmentTooolbar } from '../toolbars/Alignment'
 import { BlockquoteToolbar } from '../toolbars/BlockQuote'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export function FloatingToolbar({ editor }: { editor: Editor | null }) {
   const isMobile = useMediaQuery('(max-width: 640px)')
 
+  // Tambahkan state untuk tracking mounted state
+  const [isMounted, setIsMounted] = useState(true)
+
+  // Set mounted state pada mount/unmount
+  useEffect(() => {
+    setIsMounted(true)
+    return () => {
+      setIsMounted(false)
+    }
+  }, [])
+
   // Prevent default context menu on mobile
   useEffect(() => {
-    if (!editor?.options.element || !isMobile) return
+    if (!editor?.options.element || !isMobile || editor.isDestroyed) return
 
     const handleContextMenu = (e: Event) => {
       e.preventDefault()
@@ -33,11 +44,21 @@ export function FloatingToolbar({ editor }: { editor: Editor | null }) {
     const el = editor.options.element
     el.addEventListener('contextmenu', handleContextMenu)
 
-    return () => el.removeEventListener('contextmenu', handleContextMenu)
+    return () => {
+      try {
+        if (el) {
+          el.removeEventListener('contextmenu', handleContextMenu)
+        }
+      } catch (error) {
+        console.error('Error removing context menu event listener:', error)
+      }
+    }
   }, [editor, isMobile])
 
-  if (!editor) return null
+  // Validasi editor sebelum rendering
+  if (!editor || editor.isDestroyed || !isMounted) return null
 
+  // Hanya tampilkan di mobile dan pastikan editor editable
   if (isMobile) {
     return (
       <TooltipProvider>
@@ -48,8 +69,18 @@ export function FloatingToolbar({ editor }: { editor: Editor | null }) {
             offset: [0, 10],
           }}
           shouldShow={() => {
-            // Show toolbar when editor is focused and has selection
-            return editor.isEditable && editor.isFocused
+            try {
+              // Show toolbar when editor is focused and has selection
+              return (
+                isMounted &&
+                !editor.isDestroyed &&
+                editor.isEditable &&
+                editor.isFocused
+              )
+            } catch (error) {
+              console.error('Error in shouldShow:', error)
+              return false
+            }
           }}
           editor={editor}
           className="w-full min-w-full mx-0 shadow-sm border rounded-sm bg-background"

@@ -6,6 +6,7 @@ import {
   composeMiddlewares,
 } from '../../../../middleware'
 import { StandardEditorContent } from '@/features/manage-module/types'
+import { logger } from '@/features/manage-module/services/logger'
 
 // Tipe untuk params dari route dynamic
 type RouteParams = { params: { id: string } }
@@ -15,6 +16,9 @@ type RouteParams = { params: { id: string } }
  * Menyimpan draft halaman modul
  */
 async function saveDraftHandler(request: NextRequest, context: RouteParams) {
+  const ROUTE = 'API_SAVE_DRAFT'
+  const FUNCTION_NAME = 'saveDraftHandler'
+
   try {
     const pageId = context.params.id
 
@@ -22,9 +26,15 @@ async function saveDraftHandler(request: NextRequest, context: RouteParams) {
     let body
     try {
       body = await request.json()
-      console.log('[API] Save draft request body:', JSON.stringify(body))
     } catch (jsonError) {
-      console.error('Error parsing JSON in saveDraftHandler:', jsonError)
+      logger.error(
+        ROUTE,
+        FUNCTION_NAME,
+        'Error parsing JSON in saveDraftHandler',
+        jsonError instanceof Error
+          ? jsonError
+          : new Error('Unknown JSON parsing error')
+      )
       return NextResponse.json(
         {
           success: false,
@@ -42,7 +52,16 @@ async function saveDraftHandler(request: NextRequest, context: RouteParams) {
       body.content.type !== 'doc' ||
       !Array.isArray(body.content.content)
     ) {
-      console.error('[API] Invalid content format:', body.content)
+      logger.error(ROUTE, FUNCTION_NAME, 'Invalid content format', {
+        pageId,
+        contentType: typeof body.content,
+        hasType: body.content && 'type' in body.content,
+        hasContent: body.content && 'content' in body.content,
+        isContentArray:
+          body.content &&
+          'content' in body.content &&
+          Array.isArray(body.content.content),
+      })
       return NextResponse.json(
         {
           success: false,
@@ -55,7 +74,10 @@ async function saveDraftHandler(request: NextRequest, context: RouteParams) {
 
     // Validasi authorId
     if (!body.authorId) {
-      console.error('[API] Missing authorId:', body)
+      logger.error(ROUTE, FUNCTION_NAME, 'Missing authorId', {
+        pageId,
+        body: { ...body, content: '[content omitted]' },
+      })
       return NextResponse.json(
         {
           success: false,
@@ -120,13 +142,63 @@ async function saveDraftHandler(request: NextRequest, context: RouteParams) {
  * Mempublikasikan draft halaman modul
  */
 async function publishDraftHandler(request: NextRequest, context: RouteParams) {
+  const ROUTE = 'API_PUBLISH_DRAFT'
+  const FUNCTION_NAME = 'publishDraftHandler'
+
   try {
     const pageId = context.params.id
 
+    logger.info(ROUTE, FUNCTION_NAME, 'Memulai publikasi draft', { pageId })
+
+    // Ambil data halaman sebelum publikasi untuk logging
+    try {
+      const pageBeforePublish = await modulePageService.getModulePage(pageId)
+      if (pageBeforePublish) {
+        logger.debug(ROUTE, FUNCTION_NAME, 'Data halaman sebelum publikasi', {
+          pageId,
+          status: pageBeforePublish.data.status,
+          hasDraft: !!pageBeforePublish.data.draftData,
+          hasUnpublishedChanges: pageBeforePublish.data.hasUnpublishedChanges,
+          version: pageBeforePublish.data.version,
+        })
+      } else {
+        logger.warn(
+          ROUTE,
+          FUNCTION_NAME,
+          'Halaman tidak ditemukan sebelum publikasi',
+          {
+            pageId,
+          }
+        )
+      }
+    } catch (preCheckError) {
+      logger.error(
+        ROUTE,
+        FUNCTION_NAME,
+        'Error saat pre-check halaman',
+        preCheckError instanceof Error
+          ? preCheckError
+          : new Error('Unknown error')
+      )
+      // Lanjutkan eksekusi meskipun pre-check gagal
+    }
+
     // Publikasikan draft
+    logger.info(
+      ROUTE,
+      FUNCTION_NAME,
+      'Memanggil modulePageService.publishDraft',
+      { pageId }
+    )
     const publishedPage = await modulePageService.publishDraft(pageId)
 
     if (!publishedPage) {
+      logger.warn(
+        ROUTE,
+        FUNCTION_NAME,
+        'Gagal publikasi, tidak ada halaman atau draft',
+        { pageId }
+      )
       return NextResponse.json(
         {
           success: false,
@@ -136,6 +208,14 @@ async function publishDraftHandler(request: NextRequest, context: RouteParams) {
       )
     }
 
+    logger.info(ROUTE, FUNCTION_NAME, 'Draft berhasil dipublikasikan', {
+      pageId,
+      status: publishedPage.data.status,
+      version: publishedPage.data.version,
+      hasDraft: !!publishedPage.data.draftData,
+      hasUnpublishedChanges: publishedPage.data.hasUnpublishedChanges,
+    })
+
     return NextResponse.json(
       {
         success: true,
@@ -143,12 +223,31 @@ async function publishDraftHandler(request: NextRequest, context: RouteParams) {
         meta: {
           version: publishedPage.data.version,
           publishedAt: publishedPage.data.updatedAt,
+          isDraft: publishedPage.data.isDraft,
+          hasUnpublishedChanges: publishedPage.data.hasUnpublishedChanges,
+          lastEditBy: publishedPage.data.lastEditBy,
+          status: publishedPage.data.status,
         },
       },
       { status: 200 }
     )
   } catch (error) {
-    console.error('Error publishing draft:', error)
+    logger.error(
+      ROUTE,
+      FUNCTION_NAME,
+      'Error saat publikasi draft',
+      error instanceof Error ? error : new Error('Unknown error')
+    )
+
+    // Log error detail jika tersedia
+    if (error instanceof Error) {
+      logger.error(ROUTE, FUNCTION_NAME, 'Error detail', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      })
+    }
+
     return NextResponse.json(
       {
         success: false,
@@ -164,13 +263,26 @@ async function publishDraftHandler(request: NextRequest, context: RouteParams) {
  * Membuang draft halaman modul
  */
 async function discardDraftHandler(request: NextRequest, context: RouteParams) {
+  const ROUTE = 'API_DISCARD_DRAFT'
+  const FUNCTION_NAME = 'discardDraftHandler'
+
   try {
     const pageId = context.params.id
+
+    logger.info(ROUTE, FUNCTION_NAME, 'Memulai proses membuang draft', {
+      pageId,
+    })
 
     // Buang draft
     const discarded = await modulePageService.discardDraft(pageId)
 
     if (!discarded) {
+      logger.warn(
+        ROUTE,
+        FUNCTION_NAME,
+        'Halaman tidak ditemukan saat membuang draft',
+        { pageId }
+      )
       return NextResponse.json(
         {
           success: false,
@@ -180,6 +292,7 @@ async function discardDraftHandler(request: NextRequest, context: RouteParams) {
       )
     }
 
+    logger.info(ROUTE, FUNCTION_NAME, 'Draft berhasil dibuang', { pageId })
     return NextResponse.json(
       {
         success: true,
@@ -188,7 +301,12 @@ async function discardDraftHandler(request: NextRequest, context: RouteParams) {
       { status: 200 }
     )
   } catch (error) {
-    console.error('Error discarding draft:', error)
+    logger.error(
+      ROUTE,
+      FUNCTION_NAME,
+      'Error saat membuang draft',
+      error instanceof Error ? error : new Error('Unknown error')
+    )
     return NextResponse.json(
       {
         success: false,
@@ -219,8 +337,15 @@ function createRouteHandler(
         ? pathParts[pagesIndex + 1]
         : ''
 
-    console.log(
-      `[API] Draft operation for pageId: ${pageId}, path: ${url.pathname}`
+    logger.debug(
+      'API_ROUTE',
+      'createRouteHandler',
+      'Draft operation requested',
+      {
+        pageId,
+        path: url.pathname,
+        method: req.method,
+      }
     )
 
     // Buat context dengan params

@@ -173,6 +173,7 @@ const groups: CommandGroupType[] = [
   },
 ]
 
+// Komponen yang disederhanakan untuk mengatasi error DOM
 export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -181,6 +182,17 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
 
+  // Simpan flag active untuk memastikan tidak ada operasi setelah unmount
+  const isActiveRef = useRef(true)
+
+  // Gunakan useEffect untuk membersihkan state saat unmount
+  useEffect(() => {
+    return () => {
+      isActiveRef.current = false
+    }
+  }, [])
+
+  // Filter grup berdasarkan pencarian
   const filteredGroups = useMemo(
     () =>
       groups
@@ -203,14 +215,16 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
     [debouncedSearch]
   )
 
+  // Flattenkan item yang difilter untuk navigasi keyboard
   const flatFilteredItems = useMemo(
     () => filteredGroups.flatMap((g) => g.items),
     [filteredGroups]
   )
 
+  // Jalankan perintah saat item dipilih
   const executeCommand = useCallback(
     (commandFn: (editor: Editor) => void) => {
-      if (!editor) return
+      if (!editor || editor.isDestroyed) return
 
       try {
         const { from } = editor.state.selection
@@ -229,17 +243,20 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
       } catch (error) {
         console.error('Error executing command:', error)
       } finally {
-        setIsOpen(false)
-        setSearch('')
-        setSelectedIndex(-1)
+        if (isActiveRef.current) {
+          setIsOpen(false)
+          setSearch('')
+          setSelectedIndex(-1)
+        }
       }
     },
     [editor, search]
   )
 
+  // Tangani penekanan tombol untuk navigasi keyboard
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (!isOpen || !editor) return
+      if (!isOpen || !editor || editor.isDestroyed) return
 
       const preventDefault = () => {
         e.preventDefault()
@@ -273,72 +290,105 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
 
         case 'Escape':
           preventDefault()
-          setIsOpen(false)
-          setSelectedIndex(-1)
+          if (isActiveRef.current) {
+            setIsOpen(false)
+            setSelectedIndex(-1)
+          }
           break
       }
     },
     [isOpen, selectedIndex, flatFilteredItems, executeCommand, editor]
   )
 
+  // Tambahkan event listener keydown ke editor
   useEffect(() => {
-    if (!editor?.options.element) return
+    if (!editor?.options.element || editor.isDestroyed) return
 
     const editorElement = editor.options.element
     const handleEditorKeyDown = (e: Event) => handleKeyDown(e as KeyboardEvent)
 
     editorElement.addEventListener('keydown', handleEditorKeyDown)
-    return () =>
-      editorElement.removeEventListener('keydown', handleEditorKeyDown)
+
+    return () => {
+      // Gunakan try-catch untuk mencegah error jika element dihapus
+      try {
+        if (editorElement) {
+          editorElement.removeEventListener('keydown', handleEditorKeyDown)
+        }
+      } catch (e) {
+        // Abaikan error saat cleanup
+      }
+    }
   }, [handleKeyDown, editor])
 
-  // Add new effect for resetting selectedIndex
+  // Reset selectedIndex saat search berubah
   useEffect(() => {
-    setSelectedIndex(-1)
+    if (isActiveRef.current) {
+      setSelectedIndex(-1)
+    }
   }, [search])
 
+  // Fokus ke item yang dipilih
   useEffect(() => {
-    if (selectedIndex >= 0 && itemRefs.current[selectedIndex]) {
+    if (
+      selectedIndex >= 0 &&
+      itemRefs.current[selectedIndex] &&
+      isActiveRef.current
+    ) {
       itemRefs.current[selectedIndex]?.focus()
     }
   }, [selectedIndex])
 
+  // Validasi bahwa editor valid sebelum rendering
+  if (!editor || editor.isDestroyed) return null
+
+  // Gunakan FloatingMenu yang disediakan oleh Tiptap dengan opsi minimal
   return (
     <FloatingMenu
       editor={editor}
       shouldShow={({ state }) => {
-        if (!editor) return false
+        if (!editor || editor.isDestroyed || !isActiveRef.current) return false
 
-        const { $from } = state.selection
-        const currentLineText = $from.parent.textBetween(
-          0,
-          $from.parentOffset,
-          '\n',
-          ' '
-        )
+        try {
+          const { $from } = state.selection
+          const currentLineText = $from.parent.textBetween(
+            0,
+            $from.parentOffset,
+            '\n',
+            ' '
+          )
 
-        const isSlashCommand =
-          currentLineText.startsWith('/') &&
-          $from.parent.type.name !== 'codeBlock' &&
-          $from.parentOffset === currentLineText.length
+          // Deteksi apakah ini adalah slash command
+          const isSlashCommand =
+            currentLineText.startsWith('/') &&
+            $from.parent.type.name !== 'codeBlock' &&
+            $from.parentOffset === currentLineText.length
 
-        if (!isSlashCommand) {
-          if (isOpen) setIsOpen(false)
+          if (!isSlashCommand) {
+            if (isOpen && isActiveRef.current) setIsOpen(false)
+            return false
+          }
+
+          // Update search dan tampilkan menu
+          const query = currentLineText.slice(1).trim()
+          if (query !== search && isActiveRef.current) setSearch(query)
+          if (!isOpen && isActiveRef.current) setIsOpen(true)
+          return true
+        } catch (error) {
           return false
         }
-
-        const query = currentLineText.slice(1).trim()
-        if (query !== search) setSearch(query)
-        if (!isOpen) setIsOpen(true)
-        return true
       }}
       tippyOptions={{
-        placement: 'bottom-start',
+        appendTo: document.body,
+        duration: 0, // Nonaktifkan animasi
+        animation: false, // Nonaktifkan animasi
+        zIndex: 9999,
         interactive: true,
-        appendTo: () => document.body,
         onHide: () => {
-          setIsOpen(false)
-          setSelectedIndex(-1)
+          if (isActiveRef.current) {
+            setIsOpen(false)
+            setSelectedIndex(-1)
+          }
         },
       }}
     >
@@ -380,7 +430,9 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
                       )}
                       aria-selected={flatIndex === selectedIndex}
                       ref={(el) => {
-                        itemRefs.current[flatIndex] = el
+                        if (isActiveRef.current) {
+                          itemRefs.current[flatIndex] = el
+                        }
                       }}
                       tabIndex={flatIndex === selectedIndex ? 0 : -1}
                     >

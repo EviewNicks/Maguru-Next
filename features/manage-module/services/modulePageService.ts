@@ -9,10 +9,10 @@ import {
 } from '../types'
 import prisma from '@/lib/prisma'
 import { ensureValidEditorContent } from '../lib/dataFormats'
-// import { logger } from '../services/logger'
+import { logger } from '../services/logger'
 
 // Konstanta untuk service name (context)
-// const SERVICE = 'ModulePageService'
+const SERVICE = 'ModulePageService'
 
 /**
  * Service untuk operasi CRUD halaman modul
@@ -641,21 +641,71 @@ export const modulePageService: IModulePageService = {
   async publishDraft(
     pageId: string
   ): Promise<ApiEntityResponse<ModulePage> | null> {
+    const FUNCTION_NAME = 'publishDraft'
+
     try {
+      logger.info(SERVICE, FUNCTION_NAME, 'Memulai proses publikasi draft', {
+        pageId,
+      })
+
       // Cek keberadaan halaman dan draft
+      logger.debug(SERVICE, FUNCTION_NAME, 'Mencari halaman di database', {
+        pageId,
+      })
       const existingPage = await prisma.modulePage.findUnique({
         where: { id: pageId },
       })
 
       if (!existingPage) {
+        logger.warn(SERVICE, FUNCTION_NAME, 'Halaman tidak ditemukan', {
+          pageId,
+        })
         return null
       }
+
+      logger.debug(
+        SERVICE,
+        FUNCTION_NAME,
+        'Halaman ditemukan, memeriksa keberadaan draft',
+        {
+          pageId,
+          moduleId: existingPage.moduleId,
+          status: existingPage.status,
+          hasDraftData: !!existingPage.draftData,
+          isDraft: existingPage.isDraft || false,
+          hasUnpublishedChanges: existingPage.hasUnpublishedChanges || false,
+        }
+      )
 
       if (!existingPage.draftData) {
+        logger.warn(
+          SERVICE,
+          FUNCTION_NAME,
+          'Tidak ada draft untuk dipublikasikan',
+          { pageId }
+        )
         return null
       }
 
+      logger.info(
+        SERVICE,
+        FUNCTION_NAME,
+        'Draft ditemukan, melanjutkan publikasi',
+        { pageId }
+      )
+
       // Update halaman dengan konten dari draft dan increment version
+      logger.debug(
+        SERVICE,
+        FUNCTION_NAME,
+        'Memperbarui halaman dengan konten draft',
+        {
+          pageId,
+          contentType: typeof existingPage.draftData,
+          willIncrementVersion: true,
+        }
+      )
+
       const updatedPage = await prisma.modulePage.update({
         where: { id: pageId },
         data: {
@@ -670,7 +720,23 @@ export const modulePageService: IModulePageService = {
         },
       })
 
+      logger.debug(SERVICE, FUNCTION_NAME, 'Halaman berhasil diperbarui', {
+        pageId,
+        newVersion: updatedPage.version,
+        newStatus: updatedPage.status,
+        isDraft: updatedPage.isDraft || false,
+        hasUnpublishedChanges: updatedPage.hasUnpublishedChanges || false,
+        hasDraftDataAfterUpdate: !!updatedPage.draftData,
+      })
+
       // Transform hasil untuk response API
+      logger.info(SERVICE, FUNCTION_NAME, 'Draft berhasil dipublikasikan', {
+        pageId,
+        moduleId: updatedPage.moduleId,
+        version: updatedPage.version,
+        status: ModulePageStatus.PUBLISHED,
+      })
+
       return {
         success: true,
         data: {
@@ -693,6 +759,12 @@ export const modulePageService: IModulePageService = {
         },
       }
     } catch (error) {
+      logger.error(
+        SERVICE,
+        FUNCTION_NAME,
+        'Error saat mempublikasikan draft',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
       throw error
     }
   },

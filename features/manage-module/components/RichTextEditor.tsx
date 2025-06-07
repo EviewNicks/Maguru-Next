@@ -26,11 +26,10 @@ import { EditorToolbar } from '@/features/manage-module/components/ModulePageEdi
 import Placeholder from '@tiptap/extension-placeholder'
 import { defaultContentJSON } from '@/features/manage-module/lib/content'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useRef } from 'react'
 import { AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Button } from '@/components/ui/button'
-import { logger } from '../services/logger'
 
 const extensions = [
   StarterKit.configure({
@@ -112,6 +111,9 @@ export function RichTextEditor({
   // Derive readOnly dari editorMode
   const readOnly = editorMode === 'view'
 
+  // Ref untuk menangani cleanup saat unmount
+  const unmountingRef = useRef(false)
+
   // Dapatkan pageId dari activePage atau dari props
   const pageId = propPageId || activePage?.id
 
@@ -163,8 +165,12 @@ export function RichTextEditor({
 
   // Initialize editor when component mounts
   useEffect(() => {
+    // Set unmounting flag ke false saat mounting
+    unmountingRef.current = false
+
     // Cleanup untuk mencegah memory leak
     return () => {
+      unmountingRef.current = true
       if (editor) {
         editor.destroy()
       }
@@ -237,145 +243,22 @@ export function RichTextEditor({
     createEditor()
   }, [createEditor])
 
-  // Perbarui editor editable state saat editorMode berubah dengan penanganan error yang lebih baik
+  // Simplified event handlers for mode changes
   useEffect(() => {
-    // Gunakan setTimeout untuk memastikan DOM sudah siap
-    const updateEditorMode = setTimeout(() => {
-      try {
-        if (editor) {
-          logger.debug(
-            'RichTextEditor',
-            `editorMode changed to: ${editorMode}, setting editor editable to: ${!readOnly}`
-          )
+    // State dari mode editor sekarang ditangani secara langsung oleh ModuleDraftPageContext
+    // dan menu/toolbar akan muncul/hilang secara otomatis melalui conditional rendering
+    // Tidak perlu lagi event listener yang kompleks atau perubahan DOM secara manual
 
-          // Set editable state dengan aman
-          try {
-            editor.setEditable(!readOnly)
-            logger.debug(
-              'RichTextEditor',
-              `Editor setEditable(${!readOnly}) successful`
-            )
-          } catch (error) {
-            logger.error(
-              'RichTextEditor',
-              'Error setting editor editable state',
-              error as Error
-            )
-          }
-
-          // Force refresh editor content saat mode berubah
-          try {
-            const content = getParsedContent()
-            logger.debug(
-              'RichTextEditor',
-              `Refreshing editor content after mode change to: ${editorMode}`
-            )
-
-            // Set ulang konten dengan aman
-            if (editor && editor.commands && editor.commands.setContent) {
-              try {
-                editor.commands.setContent(content)
-                logger.debug(
-                  'RichTextEditor',
-                  `Editor content refresh successful`
-                )
-              } catch (error) {
-                logger.error(
-                  'RichTextEditor',
-                  'Error setting editor content',
-                  error as Error
-                )
-              }
-            }
-
-            // Manipulasi DOM dengan lebih aman
-            setTimeout(() => {
-              try {
-                // Gunakan querySelector hanya jika elemen ada di DOM
-                const editorElement = document.querySelector('.ProseMirror')
-                if (editorElement) {
-                  logger.debug(
-                    'RichTextEditor',
-                    `Updating DOM classes for mode: ${editorMode}`
-                  )
-                  if (readOnly) {
-                    editorElement.classList.add('view-mode')
-                    editorElement.classList.remove('edit-mode')
-                  } else {
-                    editorElement.classList.add('edit-mode')
-                    editorElement.classList.remove('view-mode')
-                  }
-                  logger.debug(
-                    'RichTextEditor',
-                    `DOM classes updated successfully`
-                  )
-                } else {
-                  logger.warn(
-                    'RichTextEditor',
-                    `Could not find .ProseMirror element in DOM`
-                  )
-                }
-
-                // Fokus editor hanya jika dalam mode edit dan editor masih ada
-                if (
-                  editorMode === 'edit' &&
-                  editor &&
-                  editor.commands &&
-                  editor.commands.focus
-                ) {
-                  try {
-                    logger.debug(
-                      'RichTextEditor',
-                      `Focusing editor in edit mode`
-                    )
-                    editor.commands.focus()
-                    logger.debug('RichTextEditor', `Editor focus successful`)
-                  } catch (error) {
-                    logger.error(
-                      'RichTextEditor',
-                      'Error focusing editor',
-                      error as Error
-                    )
-                  }
-                }
-              } catch (error) {
-                logger.error(
-                  'RichTextEditor',
-                  'Error updating DOM classes',
-                  error as Error
-                )
-              }
-            }, 200) // Increase timeout to ensure DOM is ready
-          } catch (error) {
-            logger.error(
-              'RichTextEditor',
-              'Error refreshing content after mode change',
-              error as Error
-            )
-          }
-        } else {
-          logger.warn(
-            'RichTextEditor',
-            `Editor not available but editorMode changed to: ${editorMode}`
-          )
-        }
-      } catch (error) {
-        logger.error(
-          'RichTextEditor',
-          'Error in editor mode update effect',
-          error as Error
-        )
-      }
-    }, 50) // Small delay to ensure component is mounted
-
-    return () => {
-      clearTimeout(updateEditorMode)
+    // Jika editorMode berubah, update editor.setEditable
+    if (editor) {
+      editor.setEditable(editorMode === 'edit')
     }
-  }, [editor, readOnly, editorMode, getParsedContent])
+  }, [editor, editorMode])
 
   // Render editor
   return (
     <ErrorBoundary
+      name="RichTextEditor"
       fallback={
         <div className="flex flex-col items-center justify-center h-full p-8 text-center">
           <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
@@ -427,12 +310,14 @@ export function RichTextEditor({
           )}
         </div>
 
-        {/* Tampilkan floating menu dan toolbar hanya jika dalam mode edit */}
-        {editor && !readOnly && (
-          <>
-            <TipTapFloatingMenu editor={editor} />
-            <FloatingToolbar editor={editor} />
-          </>
+        {/* Tampilkan floating menu dan toolbar hanya jika dalam mode edit - simple conditional rendering */}
+        {editor && editorMode === 'edit' && (
+          <ErrorBoundary name="RichTextEditor-FloatingUI">
+            <>
+              <TipTapFloatingMenu editor={editor} />
+              <FloatingToolbar editor={editor} />
+            </>
+          </ErrorBoundary>
         )}
       </div>
     </ErrorBoundary>

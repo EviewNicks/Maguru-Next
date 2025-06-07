@@ -56,30 +56,77 @@ interface LogData {
 
 // Definisikan tipe untuk logger
 interface Logger {
-  debug(context: string, message: string, data?: Record<string, unknown>): void
-  info(context: string, message: string, data?: Record<string, unknown>): void
-  warn(context: string, message: string, data?: Record<string, unknown>): void
+  debug(
+    context: string,
+    functionName: string,
+    message: string,
+    data?: Record<string, unknown>
+  ): void
+  info(
+    context: string,
+    functionName: string,
+    message: string,
+    data?: Record<string, unknown>
+  ): void
+  warn(
+    context: string,
+    functionName: string,
+    message: string,
+    data?: Record<string, unknown>
+  ): void
   error(
     context: string,
+    functionName: string,
     message: string,
     error?: Error | Record<string, unknown>
   ): void
-  http(context: string, message: string, data?: Record<string, unknown>): void
+  http(
+    context: string,
+    functionName: string,
+    message: string,
+    data?: Record<string, unknown>
+  ): void
   verbose(
     context: string,
+    functionName: string,
     message: string,
     data?: Record<string, unknown>
   ): void
   child(context: string): {
-    debug(message: string, data?: Record<string, unknown>): void
-    info(message: string, data?: Record<string, unknown>): void
-    warn(message: string, data?: Record<string, unknown>): void
-    error(message: string, error?: Error | Record<string, unknown>): void
-    http(message: string, data?: Record<string, unknown>): void
-    verbose(message: string, data?: Record<string, unknown>): void
+    debug(
+      functionName: string,
+      message: string,
+      data?: Record<string, unknown>
+    ): void
+    info(
+      functionName: string,
+      message: string,
+      data?: Record<string, unknown>
+    ): void
+    warn(
+      functionName: string,
+      message: string,
+      data?: Record<string, unknown>
+    ): void
+    error(
+      functionName: string,
+      message: string,
+      error?: Error | Record<string, unknown>
+    ): void
+    http(
+      functionName: string,
+      message: string,
+      data?: Record<string, unknown>
+    ): void
+    verbose(
+      functionName: string,
+      message: string,
+      data?: Record<string, unknown>
+    ): void
   }
   startTimer(
     context: string,
+    functionName: string,
     label: string
   ): {
     end(message?: string): number
@@ -130,11 +177,13 @@ const addPerformanceData = (data?: Record<string, unknown>): LogData => {
 const formatLogMessage = (
   level: string,
   context: string,
+  functionName: string,
   message: string,
   data?: Record<string, unknown>
 ): string => {
   const timestamp = getTimestamp()
-  const prefix = `${timestamp} [${level.toUpperCase()}] [${context || 'APP'}]`
+  const functionInfo = functionName ? `[${functionName}]` : ''
+  const prefix = `${timestamp} [${level.toUpperCase()}] [${context || 'APP'}]${functionInfo}`
   const dataString =
     data && Object.keys(data).length ? `\n${JSON.stringify(data, null, 2)}` : ''
 
@@ -146,11 +195,13 @@ export const logger: Logger = {
   /**
    * Log pesan debug
    * @param context - Konteks log (nama service/module)
+   * @param functionName - Nama function yang memanggil log
    * @param message - Pesan log
    * @param data - Data tambahan (opsional)
    */
   debug(
     context: string,
+    functionName: string,
     message: string,
     data?: Record<string, unknown>
   ): void {
@@ -160,6 +211,7 @@ export const logger: Logger = {
     const formattedMessage = formatLogMessage(
       'debug',
       context,
+      functionName,
       message,
       logData
     )
@@ -173,14 +225,26 @@ export const logger: Logger = {
   /**
    * Log pesan info
    * @param context - Konteks log (nama service/module)
+   * @param functionName - Nama function yang memanggil log
    * @param message - Pesan log
    * @param data - Data tambahan (opsional)
    */
-  info(context: string, message: string, data?: Record<string, unknown>): void {
+  info(
+    context: string,
+    functionName: string,
+    message: string,
+    data?: Record<string, unknown>
+  ): void {
     if (!shouldLog('info')) return
 
     const logData = addPerformanceData(data)
-    const formattedMessage = formatLogMessage('info', context, message, logData)
+    const formattedMessage = formatLogMessage(
+      'info',
+      context,
+      functionName,
+      message,
+      logData
+    )
 
     console.info(`${COLORS.info}${formattedMessage}${COLORS.reset}`)
 
@@ -191,14 +255,26 @@ export const logger: Logger = {
   /**
    * Log pesan warning
    * @param context - Konteks log (nama service/module)
+   * @param functionName - Nama function yang memanggil log
    * @param message - Pesan log
    * @param data - Data tambahan (opsional)
    */
-  warn(context: string, message: string, data?: Record<string, unknown>): void {
+  warn(
+    context: string,
+    functionName: string,
+    message: string,
+    data?: Record<string, unknown>
+  ): void {
     if (!shouldLog('warn')) return
 
     const logData = addPerformanceData(data)
-    const formattedMessage = formatLogMessage('warn', context, message, logData)
+    const formattedMessage = formatLogMessage(
+      'warn',
+      context,
+      functionName,
+      message,
+      logData
+    )
 
     console.warn(`${COLORS.warn}${formattedMessage}${COLORS.reset}`)
 
@@ -209,11 +285,13 @@ export const logger: Logger = {
   /**
    * Log pesan error
    * @param context - Konteks log (nama service/module)
+   * @param functionName - Nama function yang memanggil log
    * @param message - Pesan log
    * @param error - Error object atau data error (opsional)
    */
   error(
     context: string,
+    functionName: string,
     message: string,
     error?: Error | Record<string, unknown>
   ): void {
@@ -233,6 +311,7 @@ export const logger: Logger = {
     const formattedMessage = formatLogMessage(
       'error',
       context,
+      functionName,
       message,
       errorData
     )
@@ -246,14 +325,26 @@ export const logger: Logger = {
   /**
    * Log pesan HTTP (untuk request/response)
    * @param context - Konteks log (nama service/module)
+   * @param functionName - Nama function yang memanggil log
    * @param message - Pesan log
    * @param data - Data tambahan (opsional)
    */
-  http(context: string, message: string, data?: Record<string, unknown>): void {
+  http(
+    context: string,
+    functionName: string,
+    message: string,
+    data?: Record<string, unknown>
+  ): void {
     if (!shouldLog('http')) return
 
     const logData = addPerformanceData(data)
-    const formattedMessage = formatLogMessage('http', context, message, logData)
+    const formattedMessage = formatLogMessage(
+      'http',
+      context,
+      functionName,
+      message,
+      logData
+    )
 
     console.log(`${COLORS.http}${formattedMessage}${COLORS.reset}`)
 
@@ -264,11 +355,13 @@ export const logger: Logger = {
   /**
    * Log pesan verbose (lebih detail dari info)
    * @param context - Konteks log (nama service/module)
+   * @param functionName - Nama function yang memanggil log
    * @param message - Pesan log
    * @param data - Data tambahan (opsional)
    */
   verbose(
     context: string,
+    functionName: string,
     message: string,
     data?: Record<string, unknown>
   ): void {
@@ -278,6 +371,7 @@ export const logger: Logger = {
     const formattedMessage = formatLogMessage(
       'verbose',
       context,
+      functionName,
       message,
       logData
     )
@@ -295,33 +389,52 @@ export const logger: Logger = {
    */
   child(context: string) {
     return {
-      debug: (message: string, data?: Record<string, unknown>) =>
-        this.debug(context, message, data),
-      info: (message: string, data?: Record<string, unknown>) =>
-        this.info(context, message, data),
-      warn: (message: string, data?: Record<string, unknown>) =>
-        this.warn(context, message, data),
-      error: (message: string, error?: Error | Record<string, unknown>) =>
-        this.error(context, message, error),
-      http: (message: string, data?: Record<string, unknown>) =>
-        this.http(context, message, data),
-      verbose: (message: string, data?: Record<string, unknown>) =>
-        this.verbose(context, message, data),
+      debug: (
+        functionName: string,
+        message: string,
+        data?: Record<string, unknown>
+      ) => this.debug(context, functionName, message, data),
+      info: (
+        functionName: string,
+        message: string,
+        data?: Record<string, unknown>
+      ) => this.info(context, functionName, message, data),
+      warn: (
+        functionName: string,
+        message: string,
+        data?: Record<string, unknown>
+      ) => this.warn(context, functionName, message, data),
+      error: (
+        functionName: string,
+        message: string,
+        error?: Error | Record<string, unknown>
+      ) => this.error(context, functionName, message, error),
+      http: (
+        functionName: string,
+        message: string,
+        data?: Record<string, unknown>
+      ) => this.http(context, functionName, message, data),
+      verbose: (
+        functionName: string,
+        message: string,
+        data?: Record<string, unknown>
+      ) => this.verbose(context, functionName, message, data),
     }
   },
 
   /**
    * Mulai mengukur waktu eksekusi
    * @param context - Konteks log
+   * @param functionName - Nama function yang memanggil timer
    * @param label - Label untuk identifikasi pengukuran
    * @returns Fungsi untuk mengakhiri pengukuran dan mencatat hasilnya
    */
-  startTimer(context: string, label: string) {
+  startTimer(context: string, functionName: string, label: string) {
     const start = Date.now()
     return {
       end: (message?: string) => {
         const duration = Date.now() - start
-        this.info(context, message || `${label} completed`, {
+        this.info(context, functionName, message || `${label} completed`, {
           performance: {
             label,
             duration: `${duration}ms`,

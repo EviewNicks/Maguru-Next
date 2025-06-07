@@ -48,6 +48,7 @@ import {
 import { useUser } from '@clerk/nextjs'
 import Image from 'next/image'
 import { ModulePageStatus } from '../../../types'
+import { logger } from '../../../services/logger'
 
 // TODO: Phase 4 - Mode View dan Edit
 // Import Edit dan Check icons dari lucide-react untuk tombol toggle mode
@@ -55,6 +56,9 @@ import { ModulePageStatus } from '../../../types'
 interface DocumentHeaderProps {
   isLoading?: boolean
 }
+
+// Konstanta untuk nama komponen (context)
+const COMPONENT_NAME = 'DocumentHeader'
 
 export default function DocumentHeader({
   isLoading = false,
@@ -71,15 +75,16 @@ export default function DocumentHeader({
 
   // Mengambil data dan fungsi dari draft context
   const {
+    editorMode,
     draftSaveStatus,
     lastSavedAt,
-    forceSave,
     hasDraft,
+    forceSave,
     publishDraft,
     discardDraft,
-    editorMode,
     toggleEditorMode,
     refreshActivePage,
+    updatePageStatus,
   } = useModuleDraftPageContext()
 
   // State untuk concurrent editing
@@ -236,46 +241,105 @@ export default function DocumentHeader({
 
   // Handler untuk publikasi draft
   const handlePublishDraft = async () => {
-    if (!effectivePageId) return
+    let publishSuccess = false
 
     try {
       setIsPublishing(true)
+      // Tandai bahwa operasi publikasi sedang berlangsung
+      window.sessionStorage.setItem('isPublishingDraft', 'true')
 
-      // Paksa save terlebih dahulu untuk memastikan semua perubahan tersimpan
-      await forceSave()
+      // 1. Simpan perubahan terakhir
+
+      try {
+        await forceSave()
+      } catch {
+        // Lanjutkan meskipun ada error pada save
+      }
 
       // Berikan sedikit waktu untuk memastikan save selesai
+
       await new Promise((resolve) => setTimeout(resolve, 300))
 
-      // Publikasikan draft
-      const result = await publishDraft(effectivePageId)
+      // 2. Publikasikan draft
 
-      if (result) {
-        toast.success('Draft berhasil dipublikasikan')
+      try {
+        const result = await publishDraft(effectivePageId)
 
-        // Berikan sedikit waktu untuk cache invalidation
-        await new Promise((resolve) => setTimeout(resolve, 200))
+        if (result) {
+          publishSuccess = true
 
-        // Refresh data halaman dari server untuk memperbarui UI
-
-        // Refetch data halaman dari context CRUD untuk memperbarui seluruh UI
-        await refetch()
-
-        // Perbarui state context berdasarkan halaman yang diperbarui
-        refreshActivePage(true)
-
-        // Pastikan mode editor diubah ke view
-        if (editorMode === 'edit') {
-          toggleEditorMode()
+          toast.success('Draft berhasil dipublikasikan')
+        } else {
+          toast.error('Gagal mempublikasikan draft')
+          return
         }
-      } else {
-        toast.error('Gagal mempublikasikan draft')
+      } catch {
+        throw new Error('Gagal mempublikasikan draft')
       }
+
+      // 3. Ubah mode editor ke view melalui toggleEditorMode jika sekarang dalam edit mode
+      if (editorMode === 'edit') {
+        try {
+          await toggleEditorMode()
+        } catch {
+          // Lanjutkan meskipun ada error dalam toggle mode
+        }
+      }
+
+      // Berikan waktu untuk transisi mode selesai
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      // 4. Refresh data dari server seperti di handleToggleMode
+
+      try {
+        await refetch()
+      } catch {}
+
+      // Berikan waktu untuk data direfresh
+      await new Promise((resolve) => setTimeout(resolve, 300))
+
+      // 5. Perbarui state context berdasarkan halaman yang diperbarui
+
+      try {
+        // Gunakan true untuk memastikan state diperbarui dengan benar setelah publikasi
+        refreshActivePage(true)
+      } catch {}
+
+      // 6. Validasi status halaman seperti di handleToggleMode
+      try {
+        if (!effectivePageId) {
+          return
+        }
+
+        const updatedPage = await getPageById(effectivePageId)
+        if (updatedPage) {
+          // Jika status masih DRAFT, coba perbarui lagi
+          if (updatedPage.status !== ModulePageStatus.PUBLISHED) {
+            try {
+              await updatePageStatus(
+                effectivePageId,
+                ModulePageStatus.PUBLISHED
+              )
+            } catch {}
+          }
+        }
+      } catch {}
     } catch (error) {
       showErrorNotification(error)
+      // Jika publikasi berhasil tapi terjadi error setelahnya, tetap lakukan refresh
+      if (publishSuccess) {
+        try {
+          await refetch()
+          refreshActivePage(true)
+        } catch {}
+      }
     } finally {
       setIsPublishing(false)
       setShowPublishDialog(false)
+      try {
+        // Hapus flag operasi dari sessionStorage
+        window.sessionStorage.removeItem('isPublishingDraft')
+      } catch {}
     }
   }
 
@@ -378,44 +442,7 @@ export default function DocumentHeader({
     }
   }, [isEditing, handleTitleSave])
 
-  // Handler untuk membuang draft
-  const handleDiscardDraft = async () => {
-    if (!effectivePageId) return
 
-    try {
-      setIsDiscarding(true)
-
-      // Panggil discardDraft dari modulePageAdapter melalui context
-      const result = await discardDraft(effectivePageId)
-
-      if (result) {
-        toast.success('Draft berhasil dibuang')
-
-        // Berikan sedikit waktu untuk cache invalidation
-        await new Promise((resolve) => setTimeout(resolve, 200))
-
-        // Refresh data halaman dari server untuk memperbarui UI
-
-        // Refetch data halaman dari context CRUD untuk memperbarui seluruh UI
-        await refetch()
-
-        // Perbarui state context berdasarkan halaman yang diperbarui
-        refreshActivePage(true)
-
-        // Ubah mode editor ke view setelah draft dibuang
-        if (editorMode === 'edit') {
-          toggleEditorMode()
-        }
-      } else {
-        toast.error('Gagal membuang draft')
-      }
-    } catch (error) {
-      showErrorNotification(error)
-    } finally {
-      setIsDiscarding(false)
-      setShowDiscardDialog(false)
-    }
-  }
 
   // State for toggle mode loading
   const [isTogglingMode, setIsTogglingMode] = useState(false)
@@ -427,7 +454,6 @@ export default function DocumentHeader({
     let toggleSuccess = false
 
     try {
-      
       setIsTogglingMode(true)
       window.sessionStorage.setItem('isTogglingMode', 'true')
 
@@ -440,7 +466,6 @@ export default function DocumentHeader({
             `Gagal mengubah mode: ${toggleError instanceof Error ? toggleError.message : 'Unknown error'}`
           )
         }
-
       } catch (toggleError) {
         throw toggleError
       }
@@ -448,17 +473,14 @@ export default function DocumentHeader({
       await new Promise((resolve) => setTimeout(resolve, 500))
 
       try {
-          await refetch()
-      } catch {
-      }
+        await refetch()
+      } catch {}
 
       await new Promise((resolve) => setTimeout(resolve, 300))
 
       try {
         refreshActivePage(true)
-
-      } catch  {
-      }
+      } catch {}
 
       try {
         if (!pageId) {
@@ -468,10 +490,8 @@ export default function DocumentHeader({
         const currentPage = await getPageById(pageId)
 
         if (currentPage) {
-
         }
-      } catch    {
-      }
+      } catch {}
 
       if (targetMode === 'edit') {
         toast.success(
@@ -496,18 +516,24 @@ export default function DocumentHeader({
         try {
           await refetch()
           refreshActivePage(true)
-        } catch {
-        }
+        } catch {}
       }
     } finally {
       setIsTogglingMode(false)
 
       try {
         window.sessionStorage.removeItem('isTogglingMode')
-      } catch  {
-      }
+      } catch {}
     }
-  }, [editorMode, toggleEditorMode, refetch, refreshActivePage, activePage, pageId, getPageById])
+  }, [
+    editorMode,
+    toggleEditorMode,
+    refetch,
+    refreshActivePage,
+    activePage,
+    pageId,
+    getPageById,
+  ])
 
   return (
     <div className="border-b sticky top-0 z-10 bg-background">
@@ -627,9 +653,7 @@ export default function DocumentHeader({
 
             {/* Tampilkan tombol publikasi dan buang draft hanya dalam mode edit */}
             {editorMode === 'edit' &&
-              (hasDraft ||
-                activePage?.status === ModulePageStatus.DRAFT ||
-                activePage?.hasUnpublishedChanges) && (
+              (hasDraft || activePage?.status === ModulePageStatus.DRAFT) && (
                 <>
                   <Button
                     size="sm"
