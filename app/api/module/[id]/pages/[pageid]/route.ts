@@ -35,10 +35,16 @@ async function getModulePageHandler(
     }
 
     // Format response untuk konsistensi
+    const responseData = {
+      ...page.data,
+      draftData: page.data.isDraft ? page.data.draftData : undefined,
+      draftSavedAt: page.data.isDraft ? page.data.draftSavedAt : undefined,
+    }
+
     return NextResponse.json(
       {
         success: true,
-        data: page.data,
+        data: responseData,
         meta: {
           // Tambahkan informasi draft jika ada
           hasUnpublishedChanges: page.data.hasUnpublishedChanges || false,

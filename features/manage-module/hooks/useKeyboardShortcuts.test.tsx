@@ -4,7 +4,7 @@
 
 import { renderHook, act } from '@testing-library/react'
 import { useKeyboardShortcuts } from './useKeyboardShortcuts'
-import { ShortcutDefinition } from '../constants/shortcuts'
+import { ShortcutDefinition } from '../types/shortcuts'
 
 // Mock shortcut definitions untuk testing
 const mockShortcuts: ShortcutDefinition[] = [

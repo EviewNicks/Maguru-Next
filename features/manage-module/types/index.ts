@@ -186,7 +186,7 @@ export interface IModulePageService {
   ): Promise<ApiEntityResponse<ModulePage> | null>
   getDraft(pageId: string): Promise<ApiEntityResponse<ModulePage> | null>
   publishDraft(pageId: string): Promise<ApiEntityResponse<ModulePage> | null>
-  discardDraft(pageId: string): Promise<boolean>
+  discardDraft(pageId: string): Promise<ApiEntityResponse<ModulePage> | null>
 }
 
 // Interface untuk ModulePageAdapter
@@ -246,6 +246,6 @@ export interface IModulePageAdapter {
   ): Promise<ModulePage | null>
   getDraft(pageId: string, skipCache?: boolean): Promise<ModulePage | null>
   publishDraft(pageId: string): Promise<ModulePage | null>
-  discardDraft(pageId: string): Promise<boolean>
+  discardDraft(pageId: string): Promise<ApiEntityResponse<ModulePage> | null>
   hasDraft(pageId: string): Promise<boolean>
 }

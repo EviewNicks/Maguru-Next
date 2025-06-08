@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react'
-import { ShortcutDefinition, ShortcutScope } from '../constants/shortcuts'
+import { ShortcutDefinition, ShortcutScope } from '../types/shortcuts'
 import {
   handleKeyboardEvent,
   shouldHandleShortcut,

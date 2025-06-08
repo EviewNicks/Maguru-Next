@@ -18,16 +18,23 @@
 - Implementasi fitur publish draft
 - Implementasi fitur discard draft
 
-## Fase 4: Mode View dan Edit (Dalam Proses 🔄)
+## Fase 4: Mode View dan Edit (Selesai ✅)
 
-- Implementasi mode view dan edit dalam satu komponen
-- Integrasi dengan fitur auto-save yang sudah ada
-- Implementasi trigger untuk toggle mode (button, double-click, keyboard shortcut)
-- Styling dan UX untuk kedua mode
+- Refactor implementasi mode view dan edit mengikuti pendekatan Confluence
+- Pisahkan komponen untuk mode view dan edit
+- Implementasi navigasi berbasis URL untuk mode view dan edit
+- Optimasi performa dengan menghilangkan editor aktif di mode view
 
-## Fase 5: Testing & Optimasi (Belum Dimulai ⏳)
+## Fase 5: Testing dan Refinement (Dalam Proses 🔄)
 
-- Unit testing untuk semua komponen dan hooks
-- Integration testing untuk alur kerja utama
-- Optimasi performa dan UX
-- Dokumentasi penggunaan
+- Implementasi unit test untuk komponen baru
+- Implementasi integration test untuk alur kerja mode view/edit
+- Implementasi E2E test untuk simulasi user flow
+- Optimasi performa dan penyempurnaan UI
+
+## Fase 6: Fitur Lanjutan (Direncanakan 📝)
+
+- Implementasi sistem riwayat versi
+- Implementasi fitur kolaborasi real-time
+- Implementasi fitur komentar dan anotasi
+- Integrasi dengan sistem notifikasi

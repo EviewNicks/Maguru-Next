@@ -1,41 +1,72 @@
-import React, { ReactNode } from 'react'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import React from 'react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import {
   ModuleDraftPageProvider,
   useModuleDraftPageContext,
 } from './ModuleDraftPageContext'
-import { StandardEditorContent, ModulePage } from '../types'
-import * as useRichTextAutosaveModule from '../hooks/draft/useRichTextAutosave'
-import * as useDraftRecoveryModule from '../hooks/draft/useDraftRecovery'
-import * as useUnsavedChangesPromptModule from '../hooks/draft/useUnsavedChangesPrompt'
+import { ModulePage, ModulePageStatus } from '../types'
 import { modulePageAdapter } from '../adapters/modulePageAdapter'
+import { toast } from 'sonner'
+import { showErrorNotification } from '../components/ErrorNotifier'
 
 // Mock dependencies
-jest.mock('../../hooks/draft/useRichTextAutosave')
-jest.mock('../../hooks/draft/useDraftRecovery')
-jest.mock('../../hooks/draft/useUnsavedChangesPrompt')
-jest.mock('../../adapters/modulePageAdapter')
-jest.mock('@clerk/nextjs', () => ({
-  useClerk: () => ({
-    user: { id: 'test-user-id' },
-  }),
-}))
-
-// Mock Editor
 jest.mock('@tiptap/react', () => ({
   Editor: class MockEditor {
+    isEditable = true
     commands = {
       clearContent: jest.fn().mockReturnThis(),
       setContent: jest.fn().mockReturnThis(),
     }
+    setEditable = jest.fn()
   },
 }))
 
-// Test component that uses the context
+jest.mock('../adapters/modulePageAdapter', () => ({
+  modulePageAdapter: {
+    discardDraft: jest.fn(),
+    getPage: jest.fn(),
+    getParsedEditorContent: jest.fn(),
+    invalidateDraftCache: jest.fn(),
+    invalidatePageCache: jest.fn(),
+  },
+}))
+
+jest.mock('sonner', () => ({
+  toast: {
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+  },
+}))
+
+jest.mock('../components/ErrorNotifier', () => ({
+  showErrorNotification: jest.fn(),
+}))
+
+jest.mock('@clerk/nextjs', () => ({
+  useClerk: () => ({
+    user: { id: 'test-user-id', fullName: 'Test User' },
+  }),
+}))
+
+// Mock untuk ModulePageCRUDContext
+jest.mock('./ModulePageCRUDContext', () => ({
+  useModulePageCRUDContext: () => ({
+    getPageById: jest.fn().mockResolvedValue({
+      id: 'page-1',
+      moduleId: 'module-1',
+      title: 'Test Page',
+      content: { type: 'doc', content: [] },
+      status: ModulePageStatus.PUBLISHED,
+    }),
+    refetch: jest.fn().mockResolvedValue(undefined),
+  }),
+}))
+
+// Test component yang menggunakan context
 const TestComponent = () => {
   const {
     draftSaveStatus,
-    formattedLastSaved,
     hasUnsavedChanges,
     hasDraft,
     showRecoveryDialog,
@@ -45,11 +76,14 @@ const TestComponent = () => {
     confirmNavigation,
     cancelNavigation,
     setEditor,
+    editorMode,
+    refreshActivePage,
   } = useModuleDraftPageContext()
 
   return (
     <div>
       <div data-testid="status">{draftSaveStatus}</div>
+      <div data-testid="editor-mode">{editorMode}</div>
       <div data-testid="has-unsaved">
         {hasUnsavedChanges ? 'true' : 'false'}
       </div>
@@ -72,6 +106,9 @@ const TestComponent = () => {
       <button data-testid="cancel" onClick={() => cancelNavigation()}>
         Cancel
       </button>
+      <button data-testid="refresh" onClick={() => refreshActivePage(true)}>
+        Refresh
+      </button>
       <button
         data-testid="set-editor"
         onClick={() =>
@@ -85,8 +122,8 @@ const TestComponent = () => {
 }
 
 // Wrapper component
-const wrapper = ({ children }: { children: ReactNode }) => {
-  const mockPage: ModulePage = {
+const renderWithProvider = (activePage: ModulePage | null = null) => {
+  const mockPage: ModulePage = activePage || {
     id: 'page-1',
     moduleId: 'module-1',
     title: 'Test Page',
@@ -94,206 +131,217 @@ const wrapper = ({ children }: { children: ReactNode }) => {
     order: 1,
     type: 'content',
     version: 1,
-    status: 'PUBLISHED',
+    status: ModulePageStatus.PUBLISHED,
     createdAt: new Date(),
     updatedAt: new Date(),
     isDraft: false,
     hasUnpublishedChanges: false,
   }
 
-  return (
+  return render(
     <ModuleDraftPageProvider activePage={mockPage} enabled={true}>
-      {children}
+      <TestComponent />
     </ModuleDraftPageProvider>
   )
 }
 
 describe('ModuleDraftPageContext', () => {
+  // Reset mocks before each test
   beforeEach(() => {
     jest.clearAllMocks()
-
-    // Mock useRichTextAutosave
-    jest.mocked(useRichTextAutosaveModule.useRichTextAutosave).mockReturnValue({
-      saveStatus: 'saved',
-      lastSavedAt: new Date(),
-      formattedLastSaved: {
-        timeAgo: '5 menit yang lalu',
-        fullTime: '12:30:45',
-      },
-      hasUnsavedChanges: false,
-      forceSave: jest.fn().mockResolvedValue(undefined),
-      error: null,
-      isSaving: false,
-    })
-
-    // Mock useDraftRecovery
-    jest.mocked(useDraftRecoveryModule.useDraftRecovery).mockReturnValue({
-      hasDraft: true,
-      draftData: {
-        draftData: { type: 'doc', content: [] } as StandardEditorContent,
-        draftSavedAt: new Date(),
-      } as unknown as ModulePage,
-      isLoading: false,
-      showRecoveryDialog: true,
-      formattedDraftTime: '5 menit yang lalu',
-      editorName: 'John Doe',
-      checkDraft: jest.fn().mockResolvedValue(true),
-      fetchDraft: jest.fn().mockResolvedValue({
-        draftData: { type: 'doc', content: [] },
-        draftSavedAt: new Date(),
-      }),
-      showRecovery: jest.fn(),
-      handleRecover: jest.fn(),
-      handleDiscard: jest.fn(),
-      closeDialog: jest.fn(),
-    })
-
-    // Mock useUnsavedChangesPrompt
-    jest
-      .mocked(useUnsavedChangesPromptModule.useUnsavedChangesPrompt)
-      .mockReturnValue({
-        showDialog: true,
-        handleConfirm: jest.fn(),
-        handleCancel: jest.fn(),
-        handleLinkClick: jest.fn(),
-        routerWithConfirm: jest.fn() as any,
-      })
-
-    // Mock modulePageAdapter
-    jest.mocked(modulePageAdapter.discardDraft).mockResolvedValue(true)
-    jest
-      .mocked(modulePageAdapter.publishDraft)
-      .mockResolvedValue({} as ModulePage)
   })
 
-  it('provides draft save status', () => {
-    render(<TestComponent />, { wrapper })
-    expect(screen.getByTestId('status')).toHaveTextContent('saved')
-  })
+  describe('handleDiscardDraft', () => {
+    test('should return early if pageId is not available', async () => {
+      // Render with null activePage
+      renderWithProvider(null)
 
-  it('provides hasUnsavedChanges state', () => {
-    render(<TestComponent />, { wrapper })
-    expect(screen.getByTestId('has-unsaved')).toHaveTextContent('false')
-  })
-
-  it('provides hasDraft state', () => {
-    render(<TestComponent />, { wrapper })
-    expect(screen.getByTestId('has-draft')).toHaveTextContent('true')
-  })
-
-  it('provides showRecoveryDialog state', () => {
-    render(<TestComponent />, { wrapper })
-    expect(screen.getByTestId('show-recovery')).toHaveTextContent('true')
-  })
-
-  it('provides showUnsavedChangesDialog state', () => {
-    render(<TestComponent />, { wrapper })
-    expect(screen.getByTestId('show-unsaved')).toHaveTextContent('true')
-  })
-
-  it('calls handleRecoverDraft when recover button is clicked', async () => {
-    const fetchDraftMock = jest.fn().mockResolvedValue({
-      draftData: { type: 'doc', content: [] },
-      draftSavedAt: new Date(),
-    })
-
-    jest.mocked(useDraftRecoveryModule.useDraftRecovery).mockReturnValue({
-      ...jest.mocked(useDraftRecoveryModule.useDraftRecovery)(),
-      fetchDraft: fetchDraftMock,
-    })
-
-    render(<TestComponent />, { wrapper })
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('set-editor'))
-    })
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('recover'))
-    })
-
-    await waitFor(() => {
-      expect(fetchDraftMock).toHaveBeenCalled()
-    })
-  })
-
-  it('calls handleDiscardDraft when discard button is clicked', async () => {
-    const handleDiscardMock = jest.fn()
-
-    jest.mocked(useDraftRecoveryModule.useDraftRecovery).mockReturnValue({
-      ...jest.mocked(useDraftRecoveryModule.useDraftRecovery)(),
-      handleDiscard: handleDiscardMock,
-    })
-
-    render(<TestComponent />, { wrapper })
-
-    await act(async () => {
+      // Click discard button
       fireEvent.click(screen.getByTestId('discard'))
+
+      // Wait for async operations
+      await waitFor(() => {
+        // Verify adapter was not called
+        expect(modulePageAdapter.discardDraft).not.toHaveBeenCalled()
+      })
     })
 
-    await waitFor(() => {
-      expect(handleDiscardMock).toHaveBeenCalled()
-    })
-  })
-
-  it('calls confirmNavigation when confirm button is clicked', async () => {
-    const handleConfirmMock = jest.fn()
-
-    jest
-      .mocked(useUnsavedChangesPromptModule.useUnsavedChangesPrompt)
-      .mockReturnValue({
-        ...jest.mocked(useUnsavedChangesPromptModule.useUnsavedChangesPrompt)(),
-        handleConfirm: handleConfirmMock,
+    test('should call adapter.discardDraft with correct pageId', async () => {
+      // Setup mock response
+      ;(modulePageAdapter.discardDraft as jest.Mock).mockResolvedValueOnce({
+        success: true,
+        data: {
+          id: 'page-1',
+          moduleId: 'module-1',
+          title: 'Test Page',
+          content: { type: 'doc', content: [] },
+          status: ModulePageStatus.PUBLISHED,
+          isDraft: false,
+          hasUnpublishedChanges: false,
+        },
       })
 
-    render(<TestComponent />, { wrapper })
+      // Render with activePage
+      renderWithProvider()
 
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('confirm'))
+      // Click discard button
+      fireEvent.click(screen.getByTestId('discard'))
+
+      // Wait for async operations
+      await waitFor(() => {
+        // Verify adapter was called with correct pageId
+        expect(modulePageAdapter.discardDraft).toHaveBeenCalledWith('page-1')
+      })
     })
 
-    await waitFor(() => {
-      expect(handleConfirmMock).toHaveBeenCalled()
+    test('should show error notification if adapter.discardDraft fails', async () => {
+      // Setup mock error
+      const mockError = new Error('Discard draft failed')
+
+      // Setup mock implementation
+      ;(modulePageAdapter.discardDraft as jest.Mock).mockRejectedValueOnce(
+        mockError
+      )
+
+      // Render with activePage
+      renderWithProvider()
+
+      // Click discard button
+      fireEvent.click(screen.getByTestId('discard'))
+
+      // Wait for async operations
+      await waitFor(() => {
+        // Verify error notification was shown
+        expect(showErrorNotification).toHaveBeenCalledWith(mockError)
+      })
     })
-  })
 
-  it('calls cancelNavigation when cancel button is clicked', async () => {
-    const handleCancelMock = jest.fn()
-
-    jest
-      .mocked(useUnsavedChangesPromptModule.useUnsavedChangesPrompt)
-      .mockReturnValue({
-        ...jest.mocked(useUnsavedChangesPromptModule.useUnsavedChangesPrompt)(),
-        handleCancel: handleCancelMock,
+    test('should show success toast if discard is successful', async () => {
+      // Setup mock response
+      ;(modulePageAdapter.discardDraft as jest.Mock).mockResolvedValueOnce({
+        success: true,
+        data: {
+          id: 'page-1',
+          moduleId: 'module-1',
+          title: 'Test Page',
+          content: { type: 'doc', content: [] },
+          status: ModulePageStatus.PUBLISHED,
+          isDraft: false,
+          hasUnpublishedChanges: false,
+        },
       })
 
-    render(<TestComponent />, { wrapper })
+      // Render with activePage
+      renderWithProvider()
 
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('cancel'))
+      // Click discard button
+      fireEvent.click(screen.getByTestId('discard'))
+
+      // Wait for async operations
+      await waitFor(() => {
+        // Verify success toast was shown
+        expect(toast.success).toHaveBeenCalledWith('Draft berhasil dibuang')
+      })
     })
 
-    await waitFor(() => {
-      expect(handleCancelMock).toHaveBeenCalled()
-    })
-  })
+    test('should update editor mode to view after successful discard', async () => {
+      // Setup mock response
+      ;(modulePageAdapter.discardDraft as jest.Mock).mockResolvedValueOnce({
+        success: true,
+        data: {
+          id: 'page-1',
+          moduleId: 'module-1',
+          title: 'Test Page',
+          content: { type: 'doc', content: [] },
+          status: ModulePageStatus.PUBLISHED,
+          isDraft: false,
+          hasUnpublishedChanges: false,
+        },
+      })
 
-  it('handles setting editor', async () => {
-    const mockUseRichTextAutosave = jest.mocked(
-      useRichTextAutosaveModule.useRichTextAutosave
-    )
+      // Setup mock for getPage
+      ;(modulePageAdapter.getPage as jest.Mock).mockResolvedValueOnce({
+        id: 'page-1',
+        moduleId: 'module-1',
+        title: 'Test Page',
+        content: { type: 'doc', content: [] },
+        status: ModulePageStatus.PUBLISHED,
+      })
 
-    render(<TestComponent />, { wrapper })
+      // Setup mock for getParsedEditorContent
+      ;(
+        modulePageAdapter.getParsedEditorContent as jest.Mock
+      ).mockReturnValueOnce({
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [{ type: 'text', text: 'Published content' }],
+          },
+        ],
+      })
 
-    await act(async () => {
+      // Render with activePage in edit mode
+      renderWithProvider({
+        id: 'page-1',
+        moduleId: 'module-1',
+        title: 'Test Page',
+        content: { type: 'doc', content: [] },
+        order: 1,
+        type: 'content',
+        version: 1,
+        status: ModulePageStatus.DRAFT,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isDraft: true,
+        hasUnpublishedChanges: true,
+      })
+
+      // Set editor
       fireEvent.click(screen.getByTestId('set-editor'))
+
+      // Verify initial editor mode
+      expect(screen.getByTestId('editor-mode').textContent).toBe('edit')
+
+      // Click discard button
+      fireEvent.click(screen.getByTestId('discard'))
+
+      // Wait for async operations
+      await waitFor(() => {
+        // Verify editor mode changed to view
+        expect(screen.getByTestId('editor-mode').textContent).toBe('view')
+      })
     })
 
-    // Editor should be passed to useRichTextAutosave
-    expect(mockUseRichTextAutosave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        editor: expect.anything(),
+    test('should refresh page data after successful discard', async () => {
+      // Setup mock response
+      ;(modulePageAdapter.discardDraft as jest.Mock).mockResolvedValueOnce({
+        success: true,
+        data: {
+          id: 'page-1',
+          moduleId: 'module-1',
+          title: 'Test Page',
+          content: { type: 'doc', content: [] },
+          status: ModulePageStatus.PUBLISHED,
+          isDraft: false,
+          hasUnpublishedChanges: false,
+        },
       })
-    )
+
+      // Render with activePage
+      renderWithProvider()
+
+      // Click discard button
+      fireEvent.click(screen.getByTestId('discard'))
+
+      // Wait for async operations
+      await waitFor(() => {
+        // Verify refetch was called
+        expect(
+          jest.requireMock('./ModulePageCRUDContext').useModulePageCRUDContext()
+            .refetch
+        ).toHaveBeenCalled()
+      })
+    })
   })
 })

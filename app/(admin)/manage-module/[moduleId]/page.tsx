@@ -1,58 +1,54 @@
 'use client'
 
-import { Suspense, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import ModulePageEditor from '@/features/manage-module/components/ModulePageEditor'
+import { Suspense, useEffect, useState } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorBoundary } from '@/features/manage-module/components/ErrorBoundary'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useQuery } from '@tanstack/react-query'
-import { useModulePageCRUDContext } from '@/features/manage-module/context/ModulePageCRUDContext'
+import { ModulePageView } from '@/features/manage-module/components/ModulePageView'
+import { ModulePageEdit } from '@/features/manage-module/components/ModulePageEdit'
 
 export default function ModulePageEditorPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   // Mendapatkan moduleId dari URL parameters
   const moduleId = params.moduleId as string
 
-  // Mendapatkan pageId dari parameters
-  const pageId = (params.pageid as string) || undefined
+  // Mendapatkan pageId dan mode dari search params
+  const pageId = searchParams.get('pageId')
+  const mode = searchParams.get('mode') || 'view' // Default ke mode view
 
-  // Gunakan context untuk mendapatkan data dan fungsi
-  const { pages, getPageById } = useModulePageCRUDContext()
+  // State untuk mencegah hydration mismatch
+  const [mounted, setMounted] = useState(false)
 
-  // Fetch data halaman aktif menggunakan context
-  const { isLoading: activePageLoading } = useQuery({
-    queryKey: ['modulePage', moduleId, pageId],
-    queryFn: async () => {
-      if (!pageId) return { data: null, success: true }
-      return getPageById(pageId)
-    },
-    enabled: !!pageId, // Hanya jalankan query jika pageId ada
-    staleTime: 15 * 60 * 1000, // 15 menit (ditingkatkan dari 5 menit)
-    gcTime: 30 * 60 * 1000, // 30 menit cache retention
-    refetchOnMount: false, // Jangan refetch saat komponen di-mount
-    refetchOnWindowFocus: false, // Jangan refetch saat window mendapat fokus
-    retry: (failureCount, error) => {
-      // Hanya retry maksimal 2 kali
-      if (failureCount >= 2) return false
-      // Jangan retry untuk error 404
-      if (error instanceof Error && error.message.includes('404')) return false
-      return true
-    },
-  })
-
-  // Jika tidak ada pageId di URL tapi ada halaman, redirect ke halaman pertama
+  // Set mounted state setelah hydration
   useEffect(() => {
-    if (!pageId && pages.length > 0) {
-      const firstPageId = pages[0].id
-      router.push(`/manage-module/${moduleId}?pageId=${firstPageId}`)
-    }
-  }, [moduleId, pageId, pages, router])
+    setMounted(true)
+  }, [])
 
-  // Custom fallback untuk error boundary dalam konteks editor
+  // Jika belum mounted, tampilkan skeleton
+  if (!mounted) {
+    return <ModulePageEditorSkeleton />
+  }
+
+  // Jika tidak ada pageId, redirect ke halaman modul
+  if (!pageId) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Pilih halaman</h2>
+          <p className="text-gray-500">
+            Pilih halaman dari sidebar untuk melihat atau mengedit konten.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Custom fallback untuk error boundary
   const editorErrorFallback = (
     <div className="flex flex-col items-center justify-center h-screen bg-[#121212] text-white p-6">
       <AlertTriangle className="h-16 w-16 text-amber-500 mb-6" />
@@ -81,13 +77,15 @@ export default function ModulePageEditorPage() {
     </div>
   )
 
-  // Gabungkan status loading
-  const isLoading = pageId && activePageLoading
-
   return (
     <ErrorBoundary fallback={editorErrorFallback}>
       <Suspense fallback={<ModulePageEditorSkeleton />}>
-        <ModulePageEditor isLoading={isLoading || false} />
+        {/* Render komponen berdasarkan mode */}
+        {mode === 'edit' ? (
+          <ModulePageEdit moduleId={moduleId} pageId={pageId} />
+        ) : (
+          <ModulePageView moduleId={moduleId} pageId={pageId} />
+        )}
       </Suspense>
     </ErrorBoundary>
   )

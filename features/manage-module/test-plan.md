@@ -1,559 +1,294 @@
-# Rencana Testing untuk Modul Page
+# Test Plan: Mode View dan Edit (Fase 4)
 
-## 1. Pendahuluan
+## Pendahuluan
 
-Dokumen ini menjelaskan strategi dan rencana implementasi testing untuk sistem page pada modul manage-module. Testing akan fokus pada alur pengguna dan interaksi antar komponen, dengan simulasi berbagai skenario penggunaan sesuai arsitektur yang didefinisikan dalam `architecture-module-page.md`. Strategi testing ini mencakup unit test, integration test, dan performance test untuk memastikan kualitas dan keandalan fitur.
+Dokumen ini menjelaskan strategi dan rencana pengujian untuk implementasi baru mode view dan edit pada aplikasi Maguru. Implementasi ini mengadopsi pendekatan Confluence dengan memisahkan komponen untuk mode view dan edit, serta menggunakan routing untuk transisi antar mode.
 
-## 2. Tujuan Testing
+## Alur Kerja Mode View dan Edit
 
-- Memastikan komponen-komponen berinteraksi dengan benar sesuai alur yang diharapkan
-- Memvalidasi fungsi CRUD halaman modul berjalan dengan baik
-- Memverifikasi fitur draft auto-save berfungsi sesuai spesifikasi
-- Menguji penanganan concurrent editing dan resolusi konflik
-- Memastikan toggle mode view/edit berjalan dengan benar
-- Validasi navigasi antar halaman dan penanganan perubahan yang belum disimpan
-- Mengidentifikasi dan mendiagnosis masalah pada fitur handleToggleMode
-- Mendeteksi potensial race condition dan timing issues
+1. **URL Routing (app/(admin)/manage-module/[moduleId]/page.tsx)**:
 
-## 3. Strategi Mocking
+   - URL dengan `?mode=view` menampilkan ModulePageView
+   - URL dengan `?mode=edit` menampilkan ModulePageEdit
+   - Default ke mode view jika parameter tidak ada
 
-### 3.1 Layer Adapter (modulePageAdapter.ts)
+2. **Mode View (ModulePageView.tsx)**:
 
-#### Komponen yang Perlu Di-mock:
+   - Menggunakan ViewHeader untuk navigasi
+   - Menggunakan RichTextViewer untuk menampilkan konten statis
+   - Menyediakan tombol floating untuk beralih ke mode edit
 
-- **Fungsi CRUD**: `getPages`, `getPage`, `createPage`, `updatePage`, `deletePage`, `reorderPages`
-- **Fungsi Draft**: `saveDraft`, `getDraft`, `publishDraft`, `discardDraft`, `hasDraft`
-- **Fungsi Cache**: `invalidateModuleCache`, `invalidatePageCache`, `invalidateDraftCache`
+3. **Mode Edit (ModulePageEdit.tsx)**:
 
-#### Pendekatan Mocking:
+   - Menggunakan EditHeader untuk navigasi dan operasi draft
+   - Menggunakan RichTextEditor untuk mengedit konten
+   - Menyediakan tombol floating untuk menyimpan dan beralih ke mode view
 
-- Menggunakan Jest mock functions untuk semua metode adapter
-- Menyediakan implementasi mock yang mengembalikan data statis untuk operasi read
-- Mensimulasikan operasi write dengan memperbarui data dalam memory
-- Menambahkan kemampuan untuk memicu error dan edge cases
-- Melacak pemanggilan fungsi untuk verifikasi dalam test
+4. **Rendering Konten (RichTextViewer.tsx)**:
+   - Mengkonversi konten JSON dari Tiptap ke HTML statis
+   - Menampilkan konten tanpa inisialisasi editor Tiptap
 
-#### Manfaat Pendekatan:
+## Unit Tests (Co-location)
 
-- Isolasi dari API dan database sebenarnya
-- Kontrol penuh atas kondisi test dan respons
-- Kemampuan untuk mensimulasikan berbagai skenario termasuk error handling
-- Konsistensi hasil test antar eksekusi
+### 1. RichTextViewer.test.tsx
 
-### 3.2 Layer Hooks
+#### Test Cases:
 
-#### useModulePageData.ts
+- **Rendering komponen dengan benar**
 
-- **State yang Perlu Di-mock**: `pages`, `isLoading`, `error`
-- **Fungsi yang Perlu Di-mock**: `getPage`, `createPage`, `updatePage`, `deletePage`, `getParsedEditorContent`
+  - Verifikasi komponen merender tanpa error
+  - Verifikasi tampilan loading saat isLoading=true
+  - Verifikasi tampilan placeholder saat content=null
 
-#### useRichTextAutosave.ts
+- **Rendering konten HTML**
 
-- **State yang Perlu Di-mock**: `saveStatus`, `lastSavedAt`, `hasUnsavedChanges`
-- **Event Handlers**: `handleUpdate`, `handleOnline`, `handleOffline`, `handleBeforeUnload`, `handleVisibilityChange`
-- **Fungsi Utama**: `forceSave`
+  - Verifikasi konten JSON dikonversi ke HTML dengan benar
+  - Verifikasi tipe konten berbeda (paragraf, heading, list) dirender dengan benar
+  - Verifikasi mark (bold, italic, link) dirender dengan benar
 
-#### useDraftRecovery.ts
+- **Handling error**
 
-- **State yang Perlu Di-mock**: `hasDraft`, `draftData`, `isLoading`, `showRecoveryDialog`
-- **Fungsi yang Perlu Di-mock**: `checkDraft`, `fetchDraft`, `handleRecover`, `handleDiscard`
+  - Verifikasi error saat rendering konten ditangani dengan benar
+  - Verifikasi pesan error ditampilkan
 
-#### useUnsavedChangesPrompt.ts
+- **Fungsi helper**
+  - Verifikasi renderTiptapContent menghasilkan HTML yang benar
+  - Verifikasi renderInlineContent menghasilkan HTML yang benar
+  - Verifikasi renderListItems menghasilkan HTML yang benar
 
-- **State yang Perlu Di-mock**: `showDialog`
-- **Event Handlers**: `handleConfirm`, `handleCancel`, `handleLinkClick`
-- **Router Wrapper**: `routerWithConfirm`
+### 2. RichTextEditor.test.tsx
 
-#### Pendekatan Mocking Hooks:
+#### Test Cases:
 
-- Membuat mock module untuk setiap hook dengan Jest
-- Mengembalikan objek dengan semua properties dan functions yang digunakan oleh komponen
-- Menggunakan Jest spies untuk melacak pemanggilan dan parameter
-- Menyediakan implementasi custom untuk fungsi-fungsi yang memerlukan logika khusus
-- Mengontrol state hooks melalui setup test
+- **Rendering komponen dengan benar**
 
-#### Pertimbangan Khusus:
+  - Verifikasi komponen merender tanpa error
+  - Verifikasi toolbar editor ditampilkan
+  - Verifikasi loading state ditampilkan saat editor belum siap
 
-- Hooks dengan efek samping (seperti event listeners) memerlukan cleanup yang tepat
-- Hooks yang menggunakan browser APIs perlu mock khusus (localStorage, sessionStorage)
-- Hooks dengan timers (debounce, throttle) memerlukan mock timer Jest
+- **Inisialisasi Editor**
 
-### 3.3 Layer Context
+  - Verifikasi editor diinisialisasi dengan konten yang benar
+  - Verifikasi editor selalu dalam mode editable
+  - Verifikasi callback onEditorReady dipanggil dengan instance editor
 
-#### ModulePageCRUDContext.tsx
+- **Autosave dan event handling**
 
-- **State yang Perlu Di-mock**: `moduleId`, `pages`, `activePage`, `saveStatus`, `isNavigating`
-- **Fungsi Navigasi**: `getNextPage`, `getPreviousPage`, `getFirstPage`, `getLastPage`
-- **Fungsi CRUD**: `createPage`, `updatePage`, `deletePage`, `savePage`
-- **Handler**: `handlePageChange`, `handleSelectPage`, `handleEditorChange`
+  - Verifikasi handleEditorChange dipanggil saat konten berubah
+  - Verifikasi editor menggunakan handleChange untuk autosave
+  - Verifikasi editor memanggil onChange prop jika disediakan
 
-#### ModuleDraftPageContext.tsx
+- **Cleanup dan memory management**
+  - Verifikasi editor.destroy() dipanggil saat komponen unmount
+  - Verifikasi tidak ada memory leak setelah unmount
 
-- **State Draft**: `draftSaveStatus`, `lastSavedAt`, `hasUnsavedChanges`, `hasDraft`
-- **State Editor**: `editorMode`, `activeEditors`, `hasEditingConflict`
-- **Fungsi Draft**: `forceSave`, `publishDraft`, `discardDraft`, `getDraftOrPublishedContent`
-- **Fungsi Mode**: `toggleEditorMode`, `setEditorMode`
+### 3. ModulePageView.test.tsx
 
-#### Pendekatan Mocking Context:
+#### Test Cases:
 
-- Membuat custom wrapper components yang menyediakan mock context values
-- Menggunakan React Testing Library untuk render komponen dengan context providers
-- Mempersiapkan nilai awal context yang sesuai dengan skenario test
-- Menyediakan fungsi untuk memperbarui nilai context selama test
-- Mengimplementasikan mock handlers yang dapat dilacak dengan Jest spies
+- **Rendering komponen dengan benar**
 
-#### Strategi Pengujian Context:
+  - Verifikasi ViewHeader ditampilkan
+  - Verifikasi ViewContent ditampilkan
+  - Verifikasi tombol edit ditampilkan
 
-- Menguji provider dan consumer secara terpisah
-- Memverifikasi bahwa nilai context diperbarui dengan benar setelah aksi
-- Menguji interaksi antar context (seperti ModulePageCRUDContext dan ModuleDraftPageContext)
-- Memastikan komponen yang menggunakan context menerima nilai yang benar
+- **Navigasi ke mode edit**
 
-## 4. Mock Server Worker (MSW) untuk API Routes
+  - Verifikasi router.push dipanggil dengan URL yang benar saat tombol edit diklik
+  - Verifikasi URL mengandung parameter mode=edit
 
-### 4.1 Endpoint yang Perlu Di-mock
+- **ViewContent Component**
+  - Verifikasi mengambil data dari context dengan benar
+  - Verifikasi RichTextViewer dirender dengan props yang benar
+  - Verifikasi loading state ditangani dengan benar
 
-- **Halaman Modul**:
+### 4. ModulePageEdit.test.tsx
 
-  - `GET /api/module/[id]/pages`: Mendapatkan daftar halaman
-  - `POST /api/module/[id]/pages`: Membuat halaman baru
-  - `GET /api/module/[id]/pages/[pageid]`: Mendapatkan detail halaman
-  - `PUT /api/module/[id]/pages/[pageid]`: Memperbarui halaman
-  - `DELETE /api/module/[id]/pages/[pageid]`: Menghapus halaman
+#### Test Cases:
 
-- **Draft Halaman**:
+- **Rendering komponen dengan benar**
 
-  - `POST /api/module/[id]/pages/[pageid]/draft`: Menyimpan draft
-  - `GET /api/module/[id]/pages/[pageid]/draft`: Mendapatkan draft
-  - `PATCH /api/module/[id]/pages/[pageid]/draft`: Mempublikasikan draft
-  - `DELETE /api/module/[id]/pages/[pageid]/draft`: Membuang draft
+  - Verifikasi EditHeader ditampilkan
+  - Verifikasi RichTextEditor ditampilkan dengan readOnly=false
+  - Verifikasi tombol save ditampilkan
 
-- **Status Halaman**:
-  - `PATCH /api/module/[id]/pages/[pageid]/status`: Mengubah status halaman
+- **Penyimpanan konten dan navigasi**
 
-### 4.2 Strategi MSW
+  - Verifikasi savePage dipanggil dengan konten yang benar saat tombol save diklik
+  - Verifikasi router.push dipanggil dengan URL yang benar setelah save
+  - Verifikasi toast.success dipanggil setelah save berhasil
 
-#### Pendekatan Umum:
+- **Error handling**
+  - Verifikasi showErrorNotification dipanggil saat save gagal
+  - Verifikasi navigasi tetap dilakukan meskipun tidak ada editor
 
-- Menggunakan MSW untuk intercept HTTP requests di level network
-- Membuat handlers terpisah untuk setiap endpoint API
-- Mengimplementasikan logika respons yang mirip dengan backend asli
-- Menyediakan mekanisme untuk override respons default untuk skenario test spesifik
+## Integration Tests
 
-#### Fitur MSW yang Akan Dimanfaatkan:
+### 1. Alur View-Edit.test.tsx
 
-- Response transformers untuk manipulasi data respons
-- Request matching berdasarkan path, method, dan query parameters
-- Delay response untuk mensimulasikan latency jaringan
-- Response composition untuk membangun respons yang kompleks
-- Runtime request handlers untuk mengubah perilaku selama test
+#### Test Cases:
 
-#### Integrasi dengan Mock Data:
+- **Navigasi dari view ke edit**
 
-- Menggunakan data dari mock store sebagai sumber untuk respons API
-- Memperbarui mock store saat operasi write dilakukan
-- Menjaga konsistensi data antar requests
-- Mensimulasikan relasi antar data (misalnya halaman dalam modul)
+  - Verifikasi pengguna dapat mengklik tombol edit di mode view
+  - Verifikasi URL berubah ke mode=edit
+  - Verifikasi komponen ModulePageEdit ditampilkan
 
-## 5. Mock Data
+- **Navigasi dari edit ke view**
 
-### 5.1 Mock Modules dan Pages
+  - Verifikasi pengguna dapat mengklik tombol save di mode edit
+  - Verifikasi konten disimpan sebelum navigasi
+  - Verifikasi URL berubah ke mode=view
+  - Verifikasi komponen ModulePageView ditampilkan
 
-#### Struktur Data Modules:
+- **Konsistensi data**
+  - Verifikasi konten yang diedit di mode edit ditampilkan dengan benar di mode view
+  - Verifikasi tidak ada kehilangan data saat beralih antar mode
 
-- ID modul
-- Judul dan deskripsi
-- Status dan metadata
-- Relasi dengan halaman
+### 2. URL Routing.test.tsx
 
-#### Struktur Data Pages:
+#### Test Cases:
 
-- ID halaman dan ID modul parent
-- Judul dan konten (dalam format blocks)
-- Status halaman (draft, published)
-- Metadata seperti order, createdAt, updatedAt
-- Informasi versi dan author
+- **Parameter URL**
 
-#### Strategi Pengelolaan Data:
+  - Verifikasi URL dengan mode=view menampilkan ModulePageView
+  - Verifikasi URL dengan mode=edit menampilkan ModulePageEdit
+  - Verifikasi URL tanpa parameter mode defaultnya ke view
 
-- Menyediakan dataset default untuk semua test
-- Memungkinkan override data untuk test spesifik
-- Memastikan data mencakup berbagai kasus (halaman dengan/tanpa draft, dll)
-- Menjaga konsistensi relasi antar data
+- **Parameter pageId**
+  - Verifikasi URL tanpa pageId menampilkan pesan untuk memilih halaman
+  - Verifikasi URL dengan pageId yang valid menampilkan halaman yang sesuai
 
-### 5.2 Mock Draft Data
+## BDD Tests (Behavior-Driven Development)
 
-#### Struktur Data Draft:
+### Feature: Mode View dan Edit
 
-- Konten dalam format Tiptap JSON
-- Timestamp penyimpanan (draftSavedAt)
-- Informasi author (authorId)
-- Flag untuk status (hasUnpublishedChanges)
+```gherkin
+Feature: Mode View dan Edit
+  Sebagai pengguna admin
+  Saya ingin dapat melihat dan mengedit halaman modul
+  Agar saya dapat mengelola konten modul dengan mudah
 
-#### Skenario Draft yang Perlu Dicakup:
+  Scenario: Melihat halaman modul
+    Given saya berada di halaman modul dengan ID "module-123"
+    And halaman memiliki pageId "page-456"
+    When halaman dimuat dengan mode "view"
+    Then saya melihat konten halaman dalam format yang mudah dibaca
+    And saya melihat tombol edit di sudut kanan bawah
 
-- Draft yang lebih baru dari versi published
-- Draft yang sama dengan versi published
-- Tidak ada draft (hanya versi published)
-- Draft dengan konflik (multiple authors)
+  Scenario: Mengedit halaman modul
+    Given saya berada di halaman modul dengan ID "module-123"
+    And halaman memiliki pageId "page-456"
+    When saya mengklik tombol edit
+    Then URL berubah ke mode "edit"
+    And saya melihat editor rich text dengan toolbar
+    And saya melihat tombol save di sudut kanan bawah
 
-### 5.3 Mock User Data
-
-#### Struktur Data User:
-
-- ID pengguna
-- Nama dan informasi profil
-- URL gambar avatar
-- Role dan permissions
-
-#### Penggunaan Data User:
-
-- Simulasi concurrent editing dengan multiple users
-- Pengujian fitur yang bergantung pada user identity
-- Verifikasi tampilan UI yang berkaitan dengan user (avatar, nama)
-
-## 6. Test Utilities
-
-### 6.1 Custom Renderer
-
-#### Fungsi dan Fitur:
-
-- Menyediakan wrapper yang mencakup semua provider yang diperlukan
-- Mengonfigurasi React Query dengan opsi yang sesuai untuk testing
-- Menyediakan parameter untuk kustomisasi setup test
-- Menangani cleanup setelah test selesai
-
-#### Parameter Konfigurasi:
-
-- moduleId: ID modul untuk testing
-- initialPages: Data halaman awal
-- initialActivePage: Halaman aktif awal
-- queryClient: Konfigurasi React Query client
-- Opsi tambahan untuk render dari React Testing Library
-
-### 6.2 Wait Helpers
-
-#### Fungsi-fungsi Utility:
-
-- waitForDraftSave: Menunggu hingga status draft berubah menjadi "Tersimpan"
-- waitForApiCall: Menunggu hingga fungsi API dipanggil
-- waitForElementToBeVisible: Menunggu elemen UI muncul
-- waitForElementToDisappear: Menunggu elemen UI menghilang
-- waitForAsyncOperation: Menunggu operasi asinkron selesai
-
-#### Konfigurasi Timeout:
-
-- Timeout default: 2000ms
-- Timeout extended: 5000ms untuk operasi yang lebih lambat
-- Opsi retry: Mengulangi pengecekan dengan interval tertentu
-
-## 7. Skenario Test
-
-### 7.1 CRUD Halaman
-
-#### 7.1.1 Membuat Halaman Baru
-
-- Klik tombol "Tambah Halaman"
-- Verifikasi halaman baru muncul di sidebar
-- Verifikasi navigasi otomatis ke halaman baru
-- Verifikasi API call untuk createPage dipanggil dengan parameter yang benar
-
-#### 7.1.2 Memperbarui Halaman
-
-- Edit judul halaman
-- Verifikasi judul berubah setelah blur atau enter
-- Verifikasi API call untuk updatePage dipanggil dengan parameter yang benar
-
-#### 7.1.3 Menghapus Halaman
-
-- Klik tombol hapus halaman
-- Verifikasi dialog konfirmasi muncul
-- Konfirmasi penghapusan
-- Verifikasi halaman dihapus dari sidebar
-- Verifikasi navigasi ke halaman lain
-- Verifikasi API call untuk deletePage dipanggil dengan parameter yang benar
-
-### 7.2 Operasi Draft
-
-#### 7.2.1 Auto-save Draft
-
-- Edit konten editor
-- Verifikasi status berubah menjadi "Menyimpan..."
-- Verifikasi status berubah menjadi "Tersimpan" setelah debounce
-- Verifikasi API call untuk saveDraft dipanggil dengan parameter yang benar
-
-#### 7.2.2 Pemulihan Draft
-
-- Muat halaman dengan draft yang tersedia
-- Verifikasi dialog pemulihan muncul
-- Pilih opsi pemulihan
-- Verifikasi konten editor berubah menjadi konten draft
-- Verifikasi API call untuk getDraft dipanggil dengan parameter yang benar
-
-#### 7.2.3 Publikasi Draft
-
-- Dengan draft yang tersedia, klik tombol "Publikasikan"
-- Verifikasi dialog konfirmasi muncul
-- Konfirmasi publikasi
-- Verifikasi status publikasi
-- Verifikasi API call untuk publishDraft dipanggil dengan parameter yang benar
-
-#### 7.2.4 Pembuangan Draft
-
-- Dengan draft yang tersedia, klik tombol "Buang Draft"
-- Verifikasi dialog konfirmasi muncul
-- Konfirmasi pembuangan
-- Verifikasi konten kembali ke versi published
-- Verifikasi API call untuk discardDraft dipanggil dengan parameter yang benar
-
-### 7.3 Toggle Mode View/Edit
-
-#### 7.3.1 Perubahan Mode
-
-- Klik tombol "Edit" di mode view
-- Verifikasi mode berubah ke edit
-- Verifikasi toolbar editor muncul
-- Klik tombol "Selesai" di mode edit
-- Verifikasi mode berubah ke view
-- Verifikasi toolbar editor hilang
-
-#### 7.3.2 Konten Sesuai Mode
-
-- Dalam mode view, verifikasi konten published ditampilkan
-- Ubah ke mode edit
-- Verifikasi konten draft ditampilkan jika tersedia
-- Verifikasi konten published ditampilkan jika tidak ada draft
-
-#### 7.3.3 Konfirmasi Perubahan Belum Tersimpan
-
-- Dalam mode edit dengan perubahan belum tersimpan
-- Coba ubah ke mode view
-- Verifikasi dialog konfirmasi muncul
-- Konfirmasi perubahan mode
-- Verifikasi mode berubah dan perubahan disimpan sebagai draft
-
-### 7.4 Concurrent Editing
-
-#### 7.4.1 Deteksi Editor Aktif
-
-- Simulasikan editor lain aktif dengan mock ConcurrentEditingService
-- Muat halaman
-- Verifikasi indikator editor aktif muncul dengan nama dan avatar yang benar
-
-#### 7.4.2 Konflik Edit
-
-- Simulasikan konflik edit dengan timestamp draft yang lebih baru dari editor lain
-- Muat halaman
-- Verifikasi dialog konflik muncul
-- Pilih opsi menggunakan versi lokal
-- Verifikasi konten lokal dipertahankan dan disimpan
-
-### 7.5 Pengujian Khusus handleToggleMode
-
-#### 7.5.1 Unit Test untuk handleToggleMode
-
-- Menguji fungsi handleToggleMode secara terisolasi
-- Memverifikasi urutan panggilan fungsi (toggleEditorMode → refetch → refreshActivePage)
-- Menguji penanganan error pada setiap tahap
-- Memverifikasi state loading dan flag sessionStorage
-
-#### 7.5.2 Integration Test untuk Toggle Mode
-
-- Menguji interaksi antara handleToggleMode dan komponen lain
-- Memverifikasi perubahan UI setelah toggle mode
-- Menguji skenario dengan network delay
-- Menguji skenario dengan error pada salah satu tahap
-
-#### 7.5.3 Performance Test untuk Toggle Mode
-
-- Mengukur waktu eksekusi handleToggleMode
-- Menguji dengan kondisi jaringan yang berbeda
-- Mendeteksi potensial race condition
-- Mengidentifikasi bottleneck dalam proses toggle mode
-
-## 8. Struktur File Test
-
-```
-features/manage-module/__tests__/
-├── __mocks__/
-│   ├── mockModules.ts
-│   ├── mockPages.ts
-│   ├── mockDrafts.ts
-│   ├── mockUsers.ts
-│   └── mockHandlers.ts
-├── unit/
-│   ├── hooks/
-│   │   ├── useRichTextAutosave.test.ts
-│   │   └── useDraftRecovery.test.ts
-│   ├── context/
-│   │   ├── ModulePageCRUDContext.test.tsx
-│   │   └── ModuleDraftPageContext.test.tsx
-│   └── components/
-│       ├── DocumentHeader.test.tsx
-│       └── RichTextEditor.test.tsx
-├── integration/
-│   ├── module-page/
-│   │   ├── page-crud.integration.test.tsx
-│   │   ├── draft-operations.integration.test.tsx
-│   │   ├── editor-mode-toggle.integration.test.tsx
-│   │   └── concurrent-editing.integration.test.tsx
-│   └── utils/
-│       ├── test-renderer.tsx
-│       └── wait-helpers.ts
-├── performance/
-│   └── toggle-mode.perf.test.ts
-└── setup-tests.ts
+  Scenario: Menyimpan perubahan dan kembali ke mode view
+    Given saya berada di halaman modul dalam mode edit
+    When saya membuat perubahan pada konten
+    And saya mengklik tombol save
+    Then perubahan disimpan ke server
+    And URL berubah ke mode "view"
+    And saya melihat notifikasi sukses
+    And saya melihat konten yang diperbarui dalam mode view
 ```
 
-## 9. Implementasi Test
+## Performance Tests
 
-### 9.1 Setup Test Environment
+### 1. Perbandingan RichTextViewer vs RichTextEditor
 
-#### Konfigurasi Jest:
+#### Test Cases:
 
-- Setup DOM environment dengan jest-dom
-- Konfigurasi MSW server
-- Mock untuk dependencies eksternal (Next.js router, Clerk, dll)
-- Setup dan teardown untuk setiap test
+- **Waktu loading**
 
-#### Mock Dependencies:
+  - Ukur waktu yang dibutuhkan untuk merender RichTextViewer vs RichTextEditor
+  - Bandingkan penggunaan memori antara kedua komponen
+  - Ukur CPU usage saat merender konten yang sama
 
-- Next.js router dan navigation
-- Clerk authentication
-- Browser APIs (localStorage, sessionStorage)
-- External libraries (TipTap, dll)
+- **Rendering konten besar**
+  - Ukur performa saat merender dokumen dengan konten yang sangat besar
+  - Bandingkan waktu respons dan frame rate antara kedua komponen
 
-#### Konfigurasi React Testing Library:
+## Mock Objects
 
-- Custom queries jika diperlukan
-- Timeout settings untuk operasi asinkron
-- Error handling untuk debugging
+### 1. ModulePageCRUDContext Mock
 
-### 9.2 Pendekatan Testing
+```typescript
+// ModulePageCRUDContextMock.ts
+export const mockModulePageCRUDContext = {
+  activePage: {
+    id: 'page-123',
+    title: 'Test Page',
+    content: {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [{ type: 'text', text: 'Hello World' }],
+        },
+      ],
+    },
+  },
+  savePage: jest.fn(),
+  handleEditorChange: jest.fn(),
+  getParsedEditorContent: jest.fn((page) => page.content),
+}
 
-#### Unit Testing:
+export const ModulePageCRUDContextMock = ({
+  children,
+  customValues = {},
+}: {
+  children: React.ReactNode
+  customValues?: Partial<typeof mockModulePageCRUDContext>
+}) => (
+  <ModulePageCRUDContext.Provider
+    value={{ ...mockModulePageCRUDContext, ...customValues }}
+  >
+    {children}
+  </ModulePageCRUDContext.Provider>
+)
+```
 
-- Fokus pada fungsi dan komponen individual
-- Isolasi dari dependencies dengan mocking
-- Pengujian berbagai kondisi input dan output
-- Verifikasi state internal dan side effects
+### 2. Router Mock
 
-#### Integration Testing:
+```typescript
+// RouterMock.ts
+export const mockRouter = {
+  push: jest.fn(),
+  replace: jest.fn(),
+  back: jest.fn(),
+  prefetch: jest.fn(),
+  pathname: '/manage-module/module-123',
+  query: { pageId: 'page-456', mode: 'view' },
+}
 
-- Pengujian interaksi antar komponen
-- Simulasi alur pengguna end-to-end
-- Verifikasi state aplikasi setelah serangkaian aksi
-- Pengujian dengan mock API responses
+jest.mock('next/navigation', () => ({
+  useRouter: () => mockRouter,
+  useSearchParams: () => new URLSearchParams('pageId=page-456&mode=view'),
+  useParams: () => ({ moduleId: 'module-123' }),
+}))
+```
 
-#### Performance Testing:
+## Implementasi Test
 
-- Pengukuran waktu eksekusi fungsi kritis
-- Simulasi kondisi jaringan yang berbeda
-- Deteksi memory leaks dan bottlenecks
-- Pengujian dengan berbagai ukuran data
+1. **Setup Testing Environment**:
 
-## 10. Integrasi dengan CI/CD
+   - Konfigurasi Jest dengan React Testing Library
+   - Setup mock untuk Next.js router dan context
+   - Setup mock untuk TipTap editor
 
-### 10.1 GitHub Actions Workflow
+2. **Test Implementation**:
 
-#### Konfigurasi Workflow:
+   - Implementasi unit test untuk setiap komponen
+   - Implementasi integration test untuk alur kerja
+   - Implementasi performance test dengan React Profiler
 
-- Trigger pada push ke branch utama dan pull requests
-- Setup Node.js environment
-- Instalasi dependencies
-- Eksekusi test dengan coverage
-- Upload hasil test sebagai artifacts
+3. **Continuous Integration**:
+   - Integrasi test ke dalam pipeline CI/CD
+   - Konfigurasi GitHub Actions untuk menjalankan test secara otomatis
+   - Setup reporting untuk hasil test
 
-#### Optimasi CI/CD:
+## Kesimpulan
 
-- Caching node_modules untuk mempercepat build
-- Paralelisasi test untuk mengurangi waktu eksekusi
-- Konfigurasi timeouts yang sesuai untuk test asinkron
-- Reporting hasil test dalam format yang mudah dibaca
-
-## 11. Debugging dan Troubleshooting
-
-### 11.1 Teknik Debugging
-
-#### Tools dan Approaches:
-
-- Menggunakan screen.debug() untuk inspeksi DOM
-- Logging strategis dengan prefix yang jelas
-- Menggunakan breakpoints dalam test
-- Visualisasi state dengan React DevTools
-
-#### Debugging Asynchronous Tests:
-
-- Menggunakan waitFor dengan timeout yang sesuai
-- Menambahkan debug logs untuk operasi asinkron
-- Menggunakan fake timers untuk kontrol waktu
-- Memahami event loop dan timing dalam Jest
-
-### 11.2 Penanganan Kasus Sulit
-
-#### Strategies:
-
-- Menggunakan act() untuk membungkus operasi React
-- Menangani warning dengan waitFor yang tepat
-- Menggunakan mock timers untuk komponen dengan timing kompleks
-- Implementasi retry logic untuk test yang flaky
-
-#### Debugging Race Conditions:
-
-- Menambahkan delays yang konsisten
-- Memastikan urutan operasi yang benar
-- Menggunakan semaphores atau locks jika perlu
-- Memahami bagaimana React dan Jest menangani operasi asinkron
-
-## 12. Timeline Implementasi
-
-1. **Minggu 1**: Setup test environment dan mock data
-
-   - Setup Jest, React Testing Library, dan MSW
-   - Implementasi mock data dan handlers
-   - Persiapan test utilities dan helpers
-
-2. **Minggu 2**: Unit testing untuk komponen kritis
-
-   - Test untuk hooks (useRichTextAutosave, useDraftRecovery)
-   - Test untuk context providers
-   - Test untuk komponen UI utama (DocumentHeader, RichTextEditor)
-
-3. **Minggu 3**: Integration testing untuk fitur utama
-
-   - Test CRUD halaman dan operasi draft
-   - Test toggle mode view/edit
-   - Test concurrent editing dan resolusi konflik
-
-4. **Minggu 4**: Performance testing dan debugging
-   - Performance test untuk handleToggleMode
-   - Debugging masalah yang ditemukan
-   - Optimasi test suite
-   - Integrasi dengan CI/CD
-
-## 13. Evaluasi dan Perbaikan Test Plan
-
-### 13.1 Kekuatan Plan Saat Ini:
-
-- Coverage komprehensif untuk semua layer aplikasi
-- Fokus pada pengujian interaksi antar komponen
-- Strategi mocking yang terstruktur untuk setiap layer
-- Pendekatan multi-level (unit, integration, performance)
-
-### 13.2 Area yang Perlu Ditingkatkan:
-
-- Menambahkan lebih banyak detail tentang implementasi mock untuk browser APIs
-- Memperjelas strategi untuk menangani race conditions
-- Menambahkan metrik untuk mengukur coverage test
-- Menambahkan strategi untuk menguji edge cases
-
-### 13.3 Rekomendasi Tambahan:
-
-- Implementasikan snapshot testing untuk UI components
-- Tambahkan visual regression testing untuk UI
-- Pertimbangkan penggunaan test doubles yang lebih spesifik (spy, stub, fake)
-- Implementasikan contract testing antara frontend dan backend
-
-## 14. Kesimpulan
-
-Rencana testing ini memberikan pendekatan komprehensif untuk menguji sistem page di modul manage-module, dengan fokus khusus pada identifikasi dan penyelesaian masalah pada fitur handleToggleMode. Dengan mengimplementasikan strategi mocking yang terstruktur dan pendekatan testing multi-level, kita dapat memastikan bahwa semua komponen berinteraksi dengan benar dan fitur-fitur utama berfungsi sesuai spesifikasi. Pendekatan ini juga akan membantu mengidentifikasi masalah timing dan race conditions yang mungkin menjadi penyebab bug pada fitur toggle mode.
+Dengan pendekatan testing yang komprehensif ini, kita dapat memastikan bahwa implementasi mode view dan edit berfungsi dengan baik, memberikan pengalaman pengguna yang optimal, dan memiliki performa yang baik. Pendekatan TDD dan BDD membantu kita memastikan bahwa kode memenuhi persyaratan dan berperilaku sesuai harapan.

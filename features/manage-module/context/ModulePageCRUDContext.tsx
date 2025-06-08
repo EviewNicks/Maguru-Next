@@ -14,6 +14,7 @@ import {
   ContentBlock,
   StandardEditorContent,
   ModulePageStatus,
+  ApiEntityResponse,
 } from '../types'
 import { useModulePageData } from '../hooks/useModulePageData'
 import { modulePageAdapter } from '../adapters/modulePageAdapter'
@@ -21,18 +22,6 @@ import { showErrorNotification } from '../components/ErrorNotifier'
 import { useRouter } from 'next/navigation'
 import debounce from 'lodash/debounce'
 import { useQueryClient } from '@tanstack/react-query'
-// Import ModuleDraftPageProvider
-import { ModuleDraftPageProvider } from './ModuleDraftPageContext'
-// Import logger
-// import { logger } from '../services/logger'
-
-// Konstanta untuk context name (logging)
-// const CONTEXT = 'ModulePageCRUDContext'
-
-// import { useClerk } from '@clerk/nextjs'
-
-// // Konstanta untuk context name (logging)
-// const CONTEXT = 'ModulePageCRUDContext'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPromise = Promise<any>
@@ -111,7 +100,9 @@ interface ModulePageCRUDContextProps {
   // Fungsi dasar untuk draft (yang akan tetap di context)
   checkHasDraft: (pageId: string) => Promise<boolean>
   getDraft: (pageId: string) => Promise<ModulePage | null>
-  discardDraft: (pageId: string) => Promise<boolean>
+  discardDraft: (
+    pageId: string
+  ) => Promise<ApiEntityResponse<ModulePage> | null>
   publishDraft: (pageId: string) => Promise<ModulePage | null>
 }
 
@@ -409,14 +400,11 @@ export function ModulePageCRUDProvider({
       const { pageId, status } = params
 
       if (!pageId) {
-
         return null
       }
 
-
-
       try {
-        // Tentukan nilai isDraft dan hasUnpublishedChanges berdasarkan status
+        // Tentukan nilai isDraft dfungsian hasUnpublishedChanges berdasarkan status
         const isDraft = status === ModulePageStatus.DRAFT
         const hasUnpublishedChanges = status === ModulePageStatus.DRAFT
 
@@ -436,26 +424,19 @@ export function ModulePageCRUDProvider({
         let updatedPage: ModulePage | null = null
 
         try {
-
           updatedPage = await getPageById(pageId)
 
           if (updatedPage) {
-
           } else {
-
           }
-        } catch {
-
-        }
+        } catch {}
 
         // Step 4: Jika API fetch gagal, coba ambil dari cache
         if (!updatedPage) {
           updatedPage = pages.find((p) => p.id === pageId) || null
 
           if (updatedPage) {
-
           } else {
-
           }
         }
 
@@ -463,12 +444,9 @@ export function ModulePageCRUDProvider({
         if (updatedPage) {
           // Verifikasi apakah status sesuai dengan yang diminta
           if (updatedPage.status !== status) {
-
           } else {
-
           }
         } else {
-
         }
 
         return updatedPage
@@ -476,8 +454,6 @@ export function ModulePageCRUDProvider({
         // Tangani error dengan lebih detail
         const errorMessage =
           error instanceof Error ? error.message : String(error)
-
-
 
         showErrorNotification(
           error instanceof Error

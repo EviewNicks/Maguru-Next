@@ -273,10 +273,48 @@ async function discardDraftHandler(request: NextRequest, context: RouteParams) {
       pageId,
     })
 
-    // Buang draft
-    const discarded = await modulePageService.discardDraft(pageId)
+    // Ambil data halaman sebelum discard untuk logging
+    try {
+      const pageBeforeDiscard = await modulePageService.getModulePage(pageId)
+      if (pageBeforeDiscard) {
+        logger.debug(
+          ROUTE,
+          FUNCTION_NAME,
+          'Data halaman sebelum discard draft',
+          {
+            pageId,
+            status: pageBeforeDiscard.data.status,
+            hasDraft: !!pageBeforeDiscard.data.draftData,
+            hasUnpublishedChanges: pageBeforeDiscard.data.hasUnpublishedChanges,
+            version: pageBeforeDiscard.data.version,
+          }
+        )
+      } else {
+        logger.warn(
+          ROUTE,
+          FUNCTION_NAME,
+          'Halaman tidak ditemukan sebelum discard draft',
+          {
+            pageId,
+          }
+        )
+      }
+    } catch (preCheckError) {
+      logger.error(
+        ROUTE,
+        FUNCTION_NAME,
+        'Error saat pre-check halaman',
+        preCheckError instanceof Error
+          ? preCheckError
+          : new Error('Unknown error')
+      )
+      // Lanjutkan eksekusi meskipun pre-check gagal
+    }
 
-    if (!discarded) {
+    // Buang draft
+    const discardedPage = await modulePageService.discardDraft(pageId)
+
+    if (!discardedPage) {
       logger.warn(
         ROUTE,
         FUNCTION_NAME,
@@ -292,11 +330,24 @@ async function discardDraftHandler(request: NextRequest, context: RouteParams) {
       )
     }
 
-    logger.info(ROUTE, FUNCTION_NAME, 'Draft berhasil dibuang', { pageId })
+    logger.info(ROUTE, FUNCTION_NAME, 'Draft berhasil dibuang', {
+      pageId,
+      status: discardedPage.data.status,
+      isDraft: discardedPage.data.isDraft,
+      hasUnpublishedChanges: discardedPage.data.hasUnpublishedChanges,
+    })
+
     return NextResponse.json(
       {
         success: true,
-        message: 'Draft berhasil dibuang',
+        data: discardedPage.data,
+        meta: {
+          version: discardedPage.data.version,
+          updatedAt: discardedPage.data.updatedAt,
+          isDraft: discardedPage.data.isDraft,
+          hasUnpublishedChanges: discardedPage.data.hasUnpublishedChanges,
+          status: discardedPage.data.status,
+        },
       },
       { status: 200 }
     )

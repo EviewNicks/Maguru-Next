@@ -19,7 +19,7 @@ import {
   ALL_SHORTCUTS,
   ShortcutCategory,
   getShortcutsByCategory,
-} from '../constants/shortcuts'
+} from '../types/shortcuts'
 import { formatKeyForPlatform } from '../utils/shortcutUtils'
 
 interface ShortcutHelpProps {

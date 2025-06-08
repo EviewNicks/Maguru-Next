@@ -48,7 +48,6 @@ import {
 import { useUser } from '@clerk/nextjs'
 import Image from 'next/image'
 import { ModulePageStatus } from '../../../types'
-import { logger } from '../../../services/logger'
 
 // TODO: Phase 4 - Mode View dan Edit
 // Import Edit dan Check icons dari lucide-react untuk tombol toggle mode
@@ -56,9 +55,6 @@ import { logger } from '../../../services/logger'
 interface DocumentHeaderProps {
   isLoading?: boolean
 }
-
-// Konstanta untuk nama komponen (context)
-const COMPONENT_NAME = 'DocumentHeader'
 
 export default function DocumentHeader({
   isLoading = false,
@@ -81,7 +77,7 @@ export default function DocumentHeader({
     hasDraft,
     forceSave,
     publishDraft,
-    discardDraft,
+    handleDiscardDraft,
     toggleEditorMode,
     refreshActivePage,
     updatePageStatus,
@@ -263,6 +259,11 @@ export default function DocumentHeader({
       // 2. Publikasikan draft
 
       try {
+        if (!effectivePageId) {
+          toast.error('Halaman tidak tersedia')
+          return
+        }
+
         const result = await publishDraft(effectivePageId)
 
         if (result) {
@@ -357,13 +358,10 @@ export default function DocumentHeader({
   }
 
   const handleUseRemoteVersion = async () => {
-    if (!effectivePageId) return
-
     try {
       // Discard draft dan reload halaman
-      await discardDraft(effectivePageId)
+      await handleDiscardDraftWithState()
       toast.info('Menggunakan versi terbaru dari server')
-      // Reload page data
     } catch (error) {
       showErrorNotification(error)
     } finally {
@@ -441,8 +439,6 @@ export default function DocumentHeader({
       handleTitleSave()
     }
   }, [isEditing, handleTitleSave])
-
-
 
   // State for toggle mode loading
   const [isTogglingMode, setIsTogglingMode] = useState(false)
@@ -534,6 +530,45 @@ export default function DocumentHeader({
     pageId,
     getPageById,
   ])
+
+  // Fungsi untuk mengelola dialog discard draft
+  const openDiscardDialog = useCallback(() => {
+    setShowDiscardDialog(true)
+  }, [])
+
+  const closeDiscardDialog = useCallback(() => {
+    setShowDiscardDialog(false)
+  }, [])
+
+  // Wrapper untuk handleDiscardDraft dari context
+  const handleDiscardDraftWithState = useCallback(async () => {
+    if (!effectivePageId) {
+      toast.error('Halaman tidak tersedia')
+      return
+    }
+
+    try {
+      setIsDiscarding(true)
+      // Tandai bahwa operasi discard sedang berlangsung
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('isDiscardingDraft', 'true')
+      }
+
+      // Panggil handleDiscardDraft dari context
+      await handleDiscardDraft()
+    } catch (error) {
+      showErrorNotification(error)
+    } finally {
+      setIsDiscarding(false)
+      setShowDiscardDialog(false)
+      try {
+        // Hapus flag operasi dari sessionStorage
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.removeItem('isDiscardingDraft')
+        }
+      } catch {}
+    }
+  }, [effectivePageId, handleDiscardDraft])
 
   return (
     <div className="border-b sticky top-0 z-10 bg-background">
@@ -685,7 +720,7 @@ export default function DocumentHeader({
                     variant="outline"
                     className="h-8 gap-1"
                     aria-label="Buang draft"
-                    onClick={() => setShowDiscardDialog(true)}
+                    onClick={() => openDiscardDialog()}
                     disabled={isDiscarding || !effectivePageId}
                   >
                     {isDiscarding ? (
@@ -770,7 +805,7 @@ export default function DocumentHeader({
       </AlertDialog>
 
       {/* Dialog konfirmasi buang draft */}
-      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+      <AlertDialog open={showDiscardDialog} onOpenChange={closeDiscardDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Buang draft?</AlertDialogTitle>
@@ -783,10 +818,7 @@ export default function DocumentHeader({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDiscarding}>Batal</AlertDialogCancel>
             <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault()
-                handleDiscardDraft()
-              }}
+              onClick={handleDiscardDraftWithState}
               disabled={isDiscarding}
             >
               {isDiscarding ? 'Memproses...' : 'Buang Draft'}

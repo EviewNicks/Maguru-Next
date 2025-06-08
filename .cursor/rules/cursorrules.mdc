@@ -130,7 +130,7 @@ Dokumentasi ini berisi standar coding, alur sistem, serta aturan proyek.
 ## Format File
 - **Unit Test**: `ComponentName.test.tsx` (FE) / `ServiceName.test.ts` (BE).
 - **Integration Test**: `FeatureName.integration.test.ts`.
-- **E2E Test**: `FeatureName.e2e.spec.ts`.
+- **E2E Test**: `FeatureName.spec.ts`.
 
 ## Tools
 - **Unit**: Jest + React Testing Library (FE) / Jest (BE). 

@@ -15,6 +15,7 @@ import {
   StandardEditorContent,
   DraftSaveStatus,
   ModulePageStatus,
+  ApiEntityResponse,
 } from '../types'
 import { useRichTextAutosave } from '../hooks/draft/useRichTextAutosave'
 import { useDraftRecovery } from '../hooks/draft/useDraftRecovery'
@@ -26,6 +27,7 @@ import { getConcurrentEditingService } from '../lib/draft/ConcurrentEditingServi
 import { useClerk } from '@clerk/nextjs'
 import { useModulePageCRUDContext } from './ModulePageCRUDContext'
 import { logger } from '../services/logger'
+import { toast } from 'sonner'
 
 // Nama komponen untuk logging
 const CONTEXT = 'ModuleDraftPageContext'
@@ -63,7 +65,9 @@ interface ModuleDraftPageContextProps {
   checkForDraft: (pageId: string) => Promise<boolean>
   recoverDraft: (pageId: string) => Promise<ModulePage | null>
   handleRecoverDraft: () => Promise<void>
-  discardDraft: (pageId: string) => Promise<boolean>
+  discardDraft: (
+    pageId: string
+  ) => Promise<ApiEntityResponse<ModulePage> | null>
   handleDiscardDraft: () => Promise<void>
   publishDraft: (pageId: string) => Promise<ModulePage | null>
   closeRecoveryDialog: () => void
@@ -131,7 +135,7 @@ export function ModuleDraftPageProvider({
   const userName = user?.fullName || user?.username || 'Unknown User'
 
   // Gunakan getPageById dari ModulePageCRUDContext
-  const { getPageById } = useModulePageCRUDContext()
+  const { getPageById, refetch } = useModulePageCRUDContext()
 
   // Ref untuk editor
   const [editor, setEditor] = useState<Editor | null>(null)
@@ -252,55 +256,18 @@ export function ModuleDraftPageProvider({
         const isTogglingInProgress =
           window.sessionStorage.getItem('isTogglingMode') === 'true'
 
-        logger.debug(
-          CONTEXT,
-          'refreshActivePage',
-          'Memperbarui state berdasarkan halaman aktif',
-          {
-            forceSync,
-            isTogglingInProgress,
-            currentEditorMode: editorMode,
-            pageStatus: activePage.status,
-            isDraft: activePage.isDraft,
-            hasUnpublishedChanges: activePage.hasUnpublishedChanges,
-          }
-        )
-
         // Perbarui mode editor berdasarkan status halaman HANYA jika forceSync=true
         if (forceSync) {
           // Jika sedang dalam proses toggle, skip pembaruan mode untuk mencegah race condition
           if (isTogglingInProgress) {
-            logger.debug(
-              CONTEXT,
-              'refreshActivePage',
-              'Skip pembaruan mode karena sedang dalam proses toggle',
-              { isTogglingInProgress }
-            )
             return
           }
 
           const newMode =
             activePage.status === ModulePageStatus.DRAFT ? 'edit' : 'view'
 
-          logger.debug(
-            CONTEXT,
-            'refreshActivePage',
-            'Evaluasi mode editor berdasarkan status halaman',
-            {
-              currentMode: editorMode,
-              newMode,
-              pageStatus: activePage.status,
-              isDraft: activePage.isDraft,
-              hasUnpublishedChanges: activePage.hasUnpublishedChanges,
-            }
-          )
-
           if (editorMode !== newMode) {
             // Set mode editor
-            logger.info(CONTEXT, 'refreshActivePage', 'Mengubah mode editor', {
-              from: editorMode,
-              to: newMode,
-            })
 
             setEditorMode(newMode)
 
@@ -310,77 +277,21 @@ export function ModuleDraftPageProvider({
 
               try {
                 editor.setEditable(expectedEditable)
-                logger.debug(
-                  CONTEXT,
-                  'refreshActivePage',
-                  'Editor editable state diubah',
-                  {
-                    editable: expectedEditable,
-                  }
-                )
 
                 // Verifikasi perubahan
                 setTimeout(() => {
                   if (editor.isEditable !== expectedEditable) {
-                    logger.warn(
-                      CONTEXT,
-                      'refreshActivePage',
-                      'Editor editable state tidak sesuai dengan yang diharapkan',
-                      {
-                        expected: expectedEditable,
-                        actual: editor.isEditable,
-                      }
-                    )
                   } else {
-                    logger.debug(
-                      CONTEXT,
-                      'refreshActivePage',
-                      'Verifikasi editor editable state berhasil',
-                      {
-                        editable: expectedEditable,
-                      }
-                    )
                   }
                 }, 50)
-              } catch (error) {
-                logger.error(
-                  CONTEXT,
-                  'refreshActivePage',
-                  'Error saat mengubah editor editable state',
-                  error instanceof Error ? error : new Error('Unknown error')
-                )
-              }
+              } catch {}
             } else {
-              logger.warn(
-                CONTEXT,
-                'refreshActivePage',
-                'Editor tidak tersedia, tidak dapat mengubah editable state'
-              )
             }
           } else {
-            logger.debug(
-              CONTEXT,
-              'refreshActivePage',
-              'Mode editor sudah sesuai dengan status halaman',
-              {
-                mode: editorMode,
-                pageStatus: activePage.status,
-              }
-            )
           }
         } else {
-          logger.debug(
-            CONTEXT,
-            'refreshActivePage',
-            'Skip pembaruan mode karena forceSync=false'
-          )
         }
       } else {
-        logger.debug(
-          CONTEXT,
-          'refreshActivePage',
-          'Skip pembaruan karena tidak ada halaman aktif'
-        )
       }
     },
     [activePage, editorMode, editor]
@@ -392,25 +303,14 @@ export function ModuleDraftPageProvider({
       return false
     }
 
-    const FUNCTION_NAME = 'toggleEditorMode'
+    // const FUNCTION_NAME = 'toggleEditorMode'
     const targetMode = editorMode === 'view' ? 'edit' : 'view'
-
-    logger.info(CONTEXT, FUNCTION_NAME, 'Memulai proses toggle mode editor', {
-      pageId,
-      currentMode: editorMode,
-      targetMode,
-    })
 
     try {
       // Langsung ubah status halaman di database jika diperlukan
       if (targetMode === 'edit') {
         // Mengubah ke mode edit - halaman menjadi DRAFT
         if (activePage.status === ModulePageStatus.PUBLISHED) {
-          logger.debug(
-            CONTEXT,
-            FUNCTION_NAME,
-            'Mengubah status halaman ke DRAFT'
-          )
           const updatedPage = await updatePageStatus(
             pageId,
             ModulePageStatus.DRAFT
@@ -428,7 +328,6 @@ export function ModuleDraftPageProvider({
           try {
             await forceSave()
           } catch {
-            logger.warn(CONTEXT, FUNCTION_NAME, 'Gagal menyimpan perubahan')
             // Lanjutkan meskipun gagal menyimpan
           }
         }
@@ -459,29 +358,13 @@ export function ModuleDraftPageProvider({
 
       // Refresh data halaman
       try {
-        const refreshedPage = await getPageById(pageId)
-        logger.debug(
-          CONTEXT,
-          FUNCTION_NAME,
-          'Data halaman berhasil direfresh',
-          {
-            status: refreshedPage?.status,
-          }
-        )
+        await getPageById(pageId)
       } catch {
-        logger.warn(CONTEXT, FUNCTION_NAME, 'Gagal refresh data halaman')
         // Lanjutkan meskipun gagal refresh
       }
 
-      logger.info(CONTEXT, FUNCTION_NAME, 'Toggle mode berhasil', {
-        newMode: targetMode,
-      })
       return true
     } catch (error) {
-      logger.error(CONTEXT, FUNCTION_NAME, 'Error saat toggle mode editor', {
-        error: error instanceof Error ? error.message : String(error),
-      })
-
       // Tampilkan notifikasi error
       showErrorNotification(
         error instanceof Error ? error : new Error('Gagal mengubah mode editor')
@@ -599,6 +482,175 @@ export function ModuleDraftPageProvider({
     }
   }, [pageId, editor, closeRecoveryDialog, updatePageStatus])
 
+  // Implementasi handleDiscardDraft yang ditingkatkan
+  const handleDiscardDraft = useCallback(async (): Promise<void> => {
+    const FUNCTION_NAME = 'handleDiscardDraft'
+
+    if (!pageId) {
+      logger.warn(CONTEXT, FUNCTION_NAME, 'Tidak ada pageId yang tersedia')
+      return
+    }
+
+    try {
+      logger.info(CONTEXT, FUNCTION_NAME, 'Memulai proses membuang draft', {
+        pageId,
+      })
+
+      // Panggil adapter untuk membuang draft
+      const result = await modulePageAdapter.discardDraft(pageId)
+
+      if (!result || !result.success) {
+        logger.error(CONTEXT, FUNCTION_NAME, 'Gagal membuang draft', { pageId })
+        showErrorNotification(new Error('Gagal membuang draft'))
+        return
+      }
+
+      logger.info(CONTEXT, FUNCTION_NAME, 'Draft berhasil dibuang', {
+        pageId,
+        status: result.data.status,
+        isDraft: result.data.isDraft,
+        hasUnpublishedChanges: result.data.hasUnpublishedChanges,
+      })
+
+      // Tampilkan notifikasi sukses
+      toast.success('Draft berhasil dibuang')
+
+      // Berikan sedikit waktu untuk cache invalidation
+      logger.debug(
+        CONTEXT,
+        FUNCTION_NAME,
+        'Menunggu untuk cache invalidation',
+        { delay: '200ms' }
+      )
+      await new Promise((resolve) => setTimeout(resolve, 200))
+
+      // Refresh data halaman dari server untuk memperbarui UI
+      logger.info(
+        CONTEXT,
+        FUNCTION_NAME,
+        'Memanggil refetch untuk memperbarui data'
+      )
+      await refetch()
+      logger.debug(CONTEXT, FUNCTION_NAME, 'refetch berhasil dipanggil')
+
+      // Jika editor tersedia, perbarui konten dengan versi published
+      if (editor) {
+        try {
+          // Dapatkan versi published dari server
+          const publishedPage = await modulePageAdapter.getPage(pageId, true)
+
+          if (publishedPage) {
+            // Gunakan getParsedEditorContent untuk memastikan format konten valid
+            const publishedContent =
+              modulePageAdapter.getParsedEditorContent(publishedPage)
+
+            // Update editor dengan konten published
+            editor.commands.setContent(publishedContent)
+
+            logger.debug(
+              CONTEXT,
+              FUNCTION_NAME,
+              'Editor content diperbarui dengan versi published',
+              { pageId }
+            )
+          }
+        } catch (updateError) {
+          logger.warn(
+            CONTEXT,
+            FUNCTION_NAME,
+            'Gagal memperbarui konten editor dengan versi published',
+            updateError instanceof Error
+              ? { message: updateError.message, stack: updateError.stack }
+              : { message: 'Unknown error' }
+          )
+        }
+      }
+
+      // Ubah mode ke view setelah membuang draft
+      if (editorMode === 'edit') {
+        setEditorMode('view')
+
+        // Update editor editable state
+        if (editor) {
+          editor.setEditable(false)
+        }
+
+        logger.debug(CONTEXT, FUNCTION_NAME, 'Mode editor diubah ke view', {
+          pageId,
+        })
+      }
+
+      // Validasi status halaman
+      try {
+        const updatedPage = await getPageById(pageId)
+        if (updatedPage) {
+          // Jika status masih DRAFT, coba perbarui lagi
+          if (updatedPage.status !== ModulePageStatus.PUBLISHED) {
+            try {
+              logger.info(
+                CONTEXT,
+                FUNCTION_NAME,
+                'Status masih DRAFT, mencoba update ke PUBLISHED',
+                { pageId, status: updatedPage.status }
+              )
+              await updatePageStatus(pageId, ModulePageStatus.PUBLISHED)
+              logger.debug(
+                CONTEXT,
+                FUNCTION_NAME,
+                'Status berhasil diupdate ke PUBLISHED'
+              )
+            } catch (statusError) {
+              logger.error(
+                CONTEXT,
+                FUNCTION_NAME,
+                'Gagal mengupdate status ke PUBLISHED',
+                statusError instanceof Error
+                  ? { message: statusError.message, stack: statusError.stack }
+                  : { message: 'Unknown error' }
+              )
+            }
+          }
+        }
+      } catch (validationError) {
+        logger.error(
+          CONTEXT,
+          FUNCTION_NAME,
+          'Error saat validasi status halaman',
+          validationError instanceof Error
+            ? {
+                message: validationError.message,
+                stack: validationError.stack,
+              }
+            : { message: 'Unknown error' }
+        )
+      }
+
+      // Trigger refresh aktivePage dengan forceSync=true
+      refreshActivePage(true)
+    } catch (error) {
+      logger.error(
+        CONTEXT,
+        FUNCTION_NAME,
+        'Error saat membuang draft',
+        error instanceof Error
+          ? { message: error.message, stack: error.stack }
+          : { message: 'Unknown error' }
+      )
+
+      showErrorNotification(
+        error instanceof Error ? error : new Error('Gagal membuang draft')
+      )
+    }
+  }, [
+    pageId,
+    editor,
+    editorMode,
+    refreshActivePage,
+    setEditorMode,
+    updatePageStatus,
+    getPageById,
+    refetch,
+  ])
 
   // Gunakan hook useUnsavedChangesPrompt
   const {
@@ -775,28 +827,15 @@ export function ModuleDraftPageProvider({
   // Implementasi publishDraft dengan pendekatan sederhana
   const publishDraftWithLogging = useCallback(
     async (pageId: string): Promise<ModulePage | null> => {
-      const FUNCTION_NAME = 'publishDraft'
-
       if (!pageId) {
-        logger.warn(CONTEXT, FUNCTION_NAME, 'Tidak ada pageId yang tersedia')
         return null
       }
 
       try {
-        logger.info(CONTEXT, FUNCTION_NAME, 'Memulai proses publikasi draft', {
-          pageId,
-          editorMode,
-        })
-
         // Verifikasi ketersediaan draft
         const hasDraftResult = await modulePageAdapter.hasDraft(pageId)
 
         if (!hasDraftResult) {
-          logger.warn(
-            CONTEXT,
-            FUNCTION_NAME,
-            'Tidak ada draft untuk dipublikasikan'
-          )
           return null
         }
 
@@ -805,11 +844,6 @@ export function ModuleDraftPageProvider({
           try {
             await forceSave()
           } catch {
-            logger.warn(
-              CONTEXT,
-              FUNCTION_NAME,
-              'Gagal menyimpan perubahan terakhir'
-            )
             // Lanjutkan meskipun gagal menyimpan
           }
         }
@@ -820,11 +854,6 @@ export function ModuleDraftPageProvider({
         if (!result) {
           throw new Error('Gagal mempublikasikan draft')
         }
-
-        logger.debug(CONTEXT, FUNCTION_NAME, 'Draft berhasil dipublikasikan', {
-          pageId,
-          status: result.status,
-        })
 
         // Pastikan status halaman sudah PUBLISHED
         if (result.status !== ModulePageStatus.PUBLISHED) {
@@ -843,22 +872,8 @@ export function ModuleDraftPageProvider({
           }
         }
 
-        logger.info(CONTEXT, FUNCTION_NAME, 'Proses publikasi draft selesai', {
-          pageId,
-          status: result.status,
-        })
-
         return result
       } catch (error) {
-        logger.error(
-          CONTEXT,
-          FUNCTION_NAME,
-          'Terjadi error saat mempublikasikan draft',
-          {
-            error: error instanceof Error ? error.message : 'Unknown error',
-          }
-        )
-
         // Re-throw error untuk ditangani oleh caller
         throw error
       }
@@ -897,6 +912,8 @@ export function ModuleDraftPageProvider({
       recoverDraft,
       handleRecoverDraft,
       publishDraft: publishDraftWithLogging,
+      discardDraft: modulePageAdapter.discardDraft,
+      handleDiscardDraft,
       closeRecoveryDialog,
 
       // Unsaved changes prompt
@@ -938,6 +955,7 @@ export function ModuleDraftPageProvider({
       recoverDraft,
       handleRecoverDraft,
       publishDraftWithLogging,
+      handleDiscardDraft,
       closeRecoveryDialog,
       showUnsavedChangesDialog,
       confirmNavigation,

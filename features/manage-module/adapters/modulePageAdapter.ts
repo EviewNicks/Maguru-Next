@@ -11,10 +11,10 @@ import {
   ModulePageStatus,
 } from '../types'
 import { ensureValidEditorContent } from '../lib/dataFormats'
-import { logger } from '../services/logger'
+// import { logger } from '../services/logger'
 
 // Konstanta untuk adapter name (context)
-const ADAPTER = 'ModulePageAdapter'
+// const ADAPTER = 'ModulePageAdapter'
 
 // Interface untuk cache
 interface Cache {
@@ -863,75 +863,31 @@ export const modulePageAdapter: IModulePageAdapter = {
    * @returns Promise dengan detail halaman yang dipublikasikan atau null
    */
   publishDraft: async (pageId: string): Promise<ModulePage | null> => {
-    const FUNCTION_NAME = 'publishDraft'
+    // const FUNCTION_NAME = 'publishDraft'
 
     try {
-      // Validasi input
-      logger.debug(ADAPTER, FUNCTION_NAME, 'Validasi pageId', { pageId })
       modulePageAdapter.validatePageId(pageId)
 
-      // Dapatkan modul ID dari cache atau dari request GET
-      logger.debug(ADAPTER, FUNCTION_NAME, 'Mencari moduleId dari cache', {
-        pageId,
-      })
       let moduleId: string | undefined
       const pageData = modulePageAdapter._cache.page[pageId]?.data
       if (pageData) {
         moduleId = pageData.moduleId
-        logger.debug(ADAPTER, FUNCTION_NAME, 'ModuleId ditemukan di cache', {
-          pageId,
-          moduleId,
-          pageStatus: pageData.status,
-          hasDraft: !!pageData.draftData,
-          hasUnpublishedChanges: pageData.hasUnpublishedChanges,
-        })
       }
 
       // Jika tidak ada di cache, coba dapatkan dari API
       if (!moduleId) {
-        logger.info(
-          ADAPTER,
-          FUNCTION_NAME,
-          'ModuleId tidak ditemukan di cache, mengambil dari API',
-          { pageId }
-        )
         const page = await modulePageAdapter.getPage(pageId)
         moduleId = page?.moduleId
 
         if (page) {
-          logger.debug(
-            ADAPTER,
-            FUNCTION_NAME,
-            'Data halaman berhasil diambil dari API',
-            {
-              pageId,
-              moduleId: page.moduleId,
-              pageStatus: page.status,
-              hasDraft: !!page.draftData,
-              hasUnpublishedChanges: page.hasUnpublishedChanges,
-            }
-          )
         }
       }
 
       if (!moduleId) {
-        logger.error(ADAPTER, FUNCTION_NAME, 'ModuleId tidak ditemukan', {
-          pageId,
-        })
         return null
       }
 
       // Panggil API endpoint draft dengan PATCH untuk publish
-      logger.info(
-        ADAPTER,
-        FUNCTION_NAME,
-        'Memanggil API endpoint untuk publish draft',
-        {
-          pageId,
-          moduleId,
-          endpoint: `/api/module/${moduleId}/pages/${pageId}/draft`,
-        }
-      )
 
       const response = await fetch(
         `/api/module/${moduleId}/pages/${pageId}/draft`,
@@ -943,30 +899,13 @@ export const modulePageAdapter: IModulePageAdapter = {
         }
       )
 
-      logger.debug(ADAPTER, FUNCTION_NAME, 'Respons API diterima', {
-        pageId,
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-      })
-
       if (response.status === 404) {
-        logger.warn(
-          ADAPTER,
-          FUNCTION_NAME,
-          'Halaman atau draft tidak ditemukan (404)',
-          { pageId, moduleId }
-        )
         return null
       }
 
       if (!response.ok) {
         const errorData = await response.json()
-        logger.error(ADAPTER, FUNCTION_NAME, 'Respons API tidak ok', {
-          pageId,
-          status: response.status,
-          error: errorData.error || 'Unknown error',
-        })
+
         throw new Error(
           errorData.error || `Failed to publish draft for page ${pageId}`
         )
@@ -974,61 +913,20 @@ export const modulePageAdapter: IModulePageAdapter = {
 
       const result = (await response.json()) as ApiEntityResponse<ModulePage>
 
-      logger.debug(ADAPTER, FUNCTION_NAME, 'Parsing respons API', {
-        pageId,
-        success: result.success,
-        hasData: !!result.data,
-        dataType: result.data ? typeof result.data : 'null',
-      })
-
       if (result.success && result.data) {
         // Log data halaman yang diterima
-        logger.debug(ADAPTER, FUNCTION_NAME, 'Data halaman diterima dari API', {
-          pageId: result.data.id,
-          moduleId: result.data.moduleId,
-          status: result.data.status,
-          version: result.data.version,
-          hasDraftData: !!result.data.draftData,
-          isDraft: result.data.isDraft,
-          hasUnpublishedChanges: result.data.hasUnpublishedChanges,
-        })
 
         // Invalidate cache karena konten halaman telah berubah
-        logger.info(ADAPTER, FUNCTION_NAME, 'Invalidating cache', {
-          pageId,
-          moduleId: result.data.moduleId,
-        })
 
         modulePageAdapter.invalidatePageCache(pageId)
         modulePageAdapter.invalidateDraftCache(pageId)
         modulePageAdapter.invalidateModuleCache(result.data.moduleId)
 
-        logger.info(ADAPTER, FUNCTION_NAME, 'Draft berhasil dipublikasikan', {
-          pageId,
-          moduleId: result.data.moduleId,
-          newStatus: result.data.status,
-        })
-
         return result.data
       }
 
-      logger.warn(
-        ADAPTER,
-        FUNCTION_NAME,
-        'Respons API sukses tapi tidak ada data',
-        {
-          pageId,
-          success: result.success,
-        }
-      )
       return null
     } catch (error) {
-      logger.error(
-        ADAPTER,
-        FUNCTION_NAME,
-        'Error saat mempublikasikan draft',
-        error instanceof Error ? error : new Error('Unknown error')
-      )
       throw error
     }
   },
@@ -1036,9 +934,11 @@ export const modulePageAdapter: IModulePageAdapter = {
   /**
    * Membuang draft dan kembali ke versi published
    * @param pageId - ID halaman
-   * @returns Promise dengan boolean yang menunjukkan keberhasilan
+   * @returns Promise dengan detail halaman yang telah diupdate setelah draft dibuang
    */
-  discardDraft: async (pageId: string): Promise<boolean> => {
+  discardDraft: async (
+    pageId: string
+  ): Promise<ApiEntityResponse<ModulePage> | null> => {
     try {
       // Validasi input
       modulePageAdapter.validatePageId(pageId)
@@ -1057,7 +957,7 @@ export const modulePageAdapter: IModulePageAdapter = {
       }
 
       if (!moduleId) {
-        return false
+        return null
       }
 
       // Panggil API endpoint draft dengan DELETE untuk discard
@@ -1072,7 +972,7 @@ export const modulePageAdapter: IModulePageAdapter = {
       )
 
       if (response.status === 404) {
-        return false
+        return null
       }
 
       if (!response.ok) {
@@ -1082,17 +982,17 @@ export const modulePageAdapter: IModulePageAdapter = {
         )
       }
 
-      const result = await response.json()
+      const result = (await response.json()) as ApiEntityResponse<ModulePage>
 
       if (result.success) {
         // Invalidate cache
         modulePageAdapter.invalidateDraftCache(pageId)
         modulePageAdapter.invalidatePageCache(pageId)
 
-        return true
+        return result
       }
 
-      return false
+      return null
     } catch (error) {
       throw error
     }

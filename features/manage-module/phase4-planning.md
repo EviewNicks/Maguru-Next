@@ -1,131 +1,223 @@
-# Phase 4: Implementasi Mode View dan Edit pada RichTextEditor
+# Fase 4: Perencanaan Mode View dan Edit (Update 2)
 
-## Ringkasan
+## Pendekatan Baru
 
-Phase 4 berfokus pada pengembangan fungsionalitas mode view dan edit pada komponen `RichTextEditor.tsx` yang terinspirasi dari Confluence. Ini akan memungkinkan pengguna untuk beralih antara mode view (hanya baca) dan mode edit (dengan auto-save) tanpa perlu komponen terpisah.
+Setelah evaluasi, kita memutuskan untuk mengadopsi pendekatan Confluence dalam implementasi mode view dan edit. Alih-alih mencoba mengubah state editor yang sudah ada, kita akan menggunakan pendekatan yang lebih bersih dengan memisahkan komponen dan memanfaatkan routing.
 
-## Tujuan
+## Masalah yang Dihadapi dengan Implementasi Sebelumnya
 
-1. Mengimplementasikan mode view dan edit dalam satu komponen `RichTextEditor.tsx`
-2. Menyediakan transisi yang mulus antara kedua mode
-3. Mengintegrasikan fitur draft auto-save yang sudah ada dengan mode edit
-4. Menambahkan trigger untuk beralih antar mode (tombol, double-click, keyboard shortcut)
-5. Menyesuaikan UI berdasarkan mode yang aktif
+1. **Warning dan Error pada TipTap Editor**:
 
-## Analisis Implementasi
+   - Upaya mengubah mode editor secara dinamis menyebabkan warning
+   - TipTap tidak dirancang untuk beralih mode secara dinamis pada instance yang sama
 
-### 1. Pendekatan Context API untuk State Management
+2. **State Management yang Kompleks**:
 
-Alih-alih menggunakan props drilling, kita mengimplementasikan state management untuk mode view/edit di `ModuleDraftPageContext.tsx`. Ini memungkinkan komponen-komponen yang membutuhkan informasi mode editor untuk mengaksesnya langsung dari context tanpa perlu passing props melalui komponen parent.
+   - Perlu mengelola banyak state untuk transisi mode
+   - Potensi race condition saat mengubah state editor
 
-Keuntungan pendekatan ini:
+3. **Performa Suboptimal**:
+   - Re-render berlebihan saat beralih mode
+   - Overhead performa karena editor tetap aktif di background saat mode view
 
-- Mengurangi props drilling
-- Memudahkan akses ke state mode dari berbagai komponen
-- Konsistensi mode di seluruh aplikasi
-- Memudahkan penambahan fitur terkait mode di masa depan
+## Pendekatan Confluence
 
-### 2. Komponen yang Perlu Diperbarui
+Setelah mempelajari dokumentasi Confluence, kita menemukan bahwa mereka menggunakan pendekatan yang berbeda:
 
-#### ModuleDraftPageContext.tsx
+1. **URL Berbeda untuk Mode Berbeda**:
 
-- Menambahkan state `editorMode: 'view' | 'edit'`
-- Menambahkan handler `setEditorMode` dan `toggleEditorMode`
-- Mengintegrasikan mode dengan fitur draft yang ada
+   - Mode view: `/pages/123?mode=view` (default)
+   - Mode edit: `/pages/123?mode=edit`
 
-#### RichTextEditor.tsx
+2. **Komponen Terpisah**:
 
-- Menggunakan `editorMode` dari context untuk menentukan apakah editor dalam mode readOnly
-- Memperbarui `editor.setEditable()` saat mode berubah
-- Menampilkan toolbar dan menu hanya dalam mode edit
-- Styling berbeda untuk mode view dan edit
+   - Komponen khusus untuk mode view (ringan, tanpa editor aktif)
+   - Komponen khusus untuk mode edit (dengan editor TipTap aktif)
 
-#### ModulePageEditor.tsx
+3. **Transisi Halaman**:
 
-- Menambahkan event handler untuk double-click pada container editor
-- Menambahkan keyboard shortcut handler untuk toggle mode (e untuk edit, Escape untuk view)
-- Memperbarui className pada container editor berdasarkan mode
+   - Navigasi penuh saat beralih mode, bukan hanya perubahan state
+   - Memungkinkan browser menyimpan history (back/forward)
 
-#### DocumentHeader.tsx
+4. **Persistensi Data**:
+   - Auto-save sebelum beralih dari mode edit ke view
+   - Reload data segar saat masuk ke mode edit
 
-- Menambahkan tombol Edit/Selesai berdasarkan mode
-- Menampilkan UI yang berbeda berdasarkan mode
-- Mengintegrasikan dengan fitur draft yang ada
+## Evaluasi Kode yang Perlu Dibersihkan
 
-### 3. Styling dan UX
+Setelah menganalisis kode, berikut adalah komponen yang perlu dibersihkan untuk menghapus implementasi toggle mode lama:
 
-- CSS classes berbeda untuk mode view dan edit
-- Transisi mulus antar mode
-- Feedback visual saat beralih mode
-- Cursor styles yang sesuai (pointer untuk view mode, text untuk edit mode)
+1. **DocumentHeader.tsx**:
 
-## Langkah Implementasi
+   - Menghapus logika toggle mode
+   - Menghapus dependensi pada ModuleDraftPageContext untuk mode
+   - Membuat dua komponen header terpisah: ViewHeader dan EditHeader
 
-### 1. Update ModuleDraftPageContext.tsx
+2. **RichTextEditor.tsx**:
 
-- [x] Menambahkan state `editorMode: 'view' | 'edit'`
-- [x] Menambahkan handler `setEditorMode` dan `toggleEditorMode`
-- [x] Mengintegrasikan mode dengan fitur draft yang ada
+   - Menghapus dependensi pada ModuleDraftPageContext
+   - Menyederhanakan dengan menerima prop readOnly langsung
+   - Menghapus logika perubahan mode dinamis
 
-### 2. Update RichTextEditor.tsx
+3. **ModuleDraftPageContext.tsx**:
 
-- [x] Menggunakan `editorMode` dari context
-- [x] Memperbarui `editor.setEditable()` saat mode berubah
-- [x] Menampilkan toolbar dan menu hanya dalam mode edit
-- [x] Styling berbeda untuk mode view dan edit
+   - Menghapus state dan handler terkait editorMode
+   - Fokus pada fungsionalitas draft saja
 
-### 3. Update ModulePageEditor.tsx
+4. **ModulePageCRUDContext.tsx**:
+   - Menghapus referensi ke mode editor
+   - Fokus pada operasi CRUD
 
-- [x] Menambahkan event handler untuk double-click
-- [x] Menambahkan keyboard shortcut handler (e untuk edit, Escape untuk view)
-- [x] Memperbarui className pada container editor
+## Implementasi Baru (Update 2)
 
-### 4. Update DocumentHeader.tsx
+Berikut adalah komponen baru yang telah dibuat:
 
-- [x] Menambahkan tombol Edit/Selesai
-- [x] Menampilkan UI yang berbeda berdasarkan mode
-- [x] Mengintegrasikan dengan fitur draft yang ada
+1. **RichTextViewer.tsx**:
 
-### 5. Update CSS Styling
+   - Komponen khusus untuk rendering konten dalam mode view
+   - Implementasi ringan tanpa inisialisasi editor TipTap
+   - Mengubah konten JSON ke HTML statis
 
-- [x] Menambahkan classes untuk mode view dan edit
-- [x] Styling untuk transisi antar mode
-- [x] Cursor styles yang sesuai
+2. **ViewHeader.tsx**:
 
-## Pengujian
+   - Header khusus untuk mode view
+   - Tombol edit untuk beralih ke mode edit
 
-### Test Cases
+3. **EditHeader.tsx**:
 
-1. **Toggle Mode**
+   - Header khusus untuk mode edit
+   - Input untuk mengedit judul
+   - Tombol view untuk beralih ke mode view
+   - Tombol publikasi dan discard draft
 
-   - Pengguna dapat beralih dari mode view ke edit dengan:
-     - Mengklik tombol Edit
-     - Double-click pada area konten
-     - Menekan tombol 'e' pada keyboard
-   - Pengguna dapat beralih dari mode edit ke view dengan:
-     - Mengklik tombol Selesai
-     - Menekan tombol Escape
+4. **ModulePageView.tsx**:
 
-2. **Behavior dalam Mode View**
+   - Komponen wrapper untuk mode view
+   - Menggunakan ViewHeader dan RichTextViewer langsung
+   - Tidak ada inisialisasi TipTap editor sama sekali
 
-   - Konten tidak dapat diedit
-   - Toolbar dan floating menu tidak ditampilkan
-   - Tombol Edit ditampilkan
-   - Cursor menunjukkan mode dapat diklik
+5. **ModulePageEdit.tsx**:
 
-3. **Behavior dalam Mode Edit**
+   - Komponen wrapper untuk mode edit
+   - Menggunakan EditHeader dan RichTextEditor langsung
 
-   - Konten dapat diedit
-   - Toolbar dan floating menu ditampilkan
-   - Tombol Selesai ditampilkan
-   - Auto-save berfungsi
-   - Draft status indicator ditampilkan
+6. **app/(admin)/manage-module/[moduleId]/page.tsx**:
+   - Diperbarui untuk merender ModulePageView atau ModulePageEdit berdasarkan parameter mode
+   - Menggantikan implementasi lama yang menggunakan ModulePageEditor dengan prop readOnly
 
-4. **Integrasi dengan Fitur Draft**
-   - Auto-save hanya aktif dalam mode edit
-   - Publikasi draft mengubah mode ke view
-   - Membuang draft mengubah mode ke view
+## Keuntungan Pendekatan Baru (Update 2)
+
+1. **Performa Jauh Lebih Baik**:
+
+   - Tidak ada editor TipTap sama sekali dalam mode view (sebelumnya menggunakan TipTap dalam mode readOnly)
+   - Rendering statis untuk mode view yang sangat ringan
+   - Struktur komponen yang lebih sederhana dengan lapisan yang lebih sedikit
+
+2. **Kode Lebih Bersih**:
+
+   - Pemisahan concern yang jelas
+   - Tidak ada logika kompleks untuk toggle mode
+   - Memisahkan kepentingan view dan edit sepenuhnya
+   - Menghapus lapisan komponen yang tidak perlu (ViewMode dan EditMode)
+
+3. **UX Lebih Baik**:
+
+   - Konsisten dengan pengalaman Confluence yang familiar
+   - Mendukung navigasi browser (back/forward)
+   - Transisi lebih mulus antara mode
+
+4. **Maintainability**:
+   - Lebih mudah menambahkan fitur baru ke masing-masing mode
+   - Lebih mudah men-debug masalah spesifik mode
+   - Struktur folder lebih konsisten dengan standar industri
+   - Hierarki komponen yang lebih sederhana dan mudah dipahami
+
+## Struktur Routing
+
+Struktur routing yang benar menggunakan app directory Next.js 13:
+
+```
+app/
+├── (admin)/
+│   └── manage-module/
+│       ├── layout.tsx              # Layout untuk seluruh halaman manajemen modul
+│       ├── page.tsx                # Halaman daftar modul (tabel modul)
+│       └── [moduleId]/
+│           ├── layout.tsx          # Layout khusus untuk editor halaman modul
+│           └── page.tsx            # Halaman editor modul (view/edit berdasarkan query param)
+└── manage-module/                  # Struktur lama (untuk kompatibilitas)
+    └── [id]/
+        └── page.tsx                # Redirect ke struktur baru
+```
+
+## Visualisasi Implementasi Baru
+
+```mermaid
+graph TD
+subgraph "Sebelum Refactoring"
+A1[DocumentHeader.tsx] --> B1[ModuleDraftPageContext.tsx]
+C1[RichTextEditor.tsx] --> B1
+B1 --> D1[Editor Instance]
+B1 --> E1["editorMode (view/edit)"]
+end
+
+    subgraph "Setelah Refactoring (Awal)"
+        A2["ViewHeader.tsx\n(mode view)"] --> B2["ModulePageView.tsx"]
+        A3["EditHeader.tsx\n(mode edit)"] --> B3["ModulePageEdit.tsx"]
+
+        B2 --> C2["ViewMode.tsx"]
+        B3 --> C3["EditMode.tsx"]
+
+        C2 --> D2["RichTextViewer\n(tanpa editor)"]
+        C3 --> D3["RichTextEditor\n(editor aktif)"]
+
+        B2 --> E2["URL ?mode=view"]
+        B3 --> E3["URL ?mode=edit"]
+
+        F["app/(admin)/manage-module/[moduleId]/page.tsx"] --> B2
+        F --> B3
+    end
+
+    subgraph "Setelah Refactoring (Update)"
+        G2["ViewHeader.tsx\n(mode view)"] --> H2["ModulePageView.tsx"]
+        G3["EditHeader.tsx\n(mode edit)"] --> H3["ModulePageEdit.tsx"]
+
+        H2 --> I2["RichTextViewer\n(tanpa editor)"]
+        H3 --> I3["RichTextEditor\n(editor aktif)"]
+
+        H2 --> J2["URL ?mode=view"]
+        H3 --> J3["URL ?mode=edit"]
+
+        K["app/(admin)/manage-module/[moduleId]/page.tsx"] --> H2
+        K --> H3
+    end
+```
+
+## Langkah Selanjutnya
+
+1. **Testing**:
+
+   - Unit test untuk RichTextViewer
+   - Unit test untuk komponen baru lainnya
+   - Integration test untuk alur kerja mode view/edit
+   - E2E test untuk simulasi user flow
+
+2. **Refining**:
+
+   - Optimasi performa RichTextViewer
+   - Memperbaiki rendering konten statis agar lebih akurat
+   - Animasi transisi
+   - Penyempurnaan UI
+
+3. **Fitur Tambahan**:
+   - Notifikasi perubahan belum disimpan
+   - Konfirmasi saat meninggalkan halaman dengan perubahan
+   - Integrasi dengan sistem riwayat versi
 
 ## Kesimpulan
 
-Implementasi mode view dan edit menggunakan Context API memungkinkan pengalaman pengguna yang lebih baik dengan transisi mulus antar mode dan konsistensi UI di seluruh aplikasi. Pendekatan ini juga memudahkan pengembangan fitur terkait mode di masa depan.
+Dengan mengadopsi pendekatan Confluence untuk mode view dan edit, kita telah mengatasi masalah dengan implementasi sebelumnya dan menciptakan solusi yang lebih bersih, lebih performa, dan lebih mudah dipelihara. Pendekatan ini juga memberikan pengalaman pengguna yang lebih baik dengan transisi yang mulus antara mode dan dukungan untuk navigasi browser.
+
+Perbaikan utama dari versi sebelumnya adalah kita telah memisahkan sepenuhnya RichTextEditor dari mode view dengan membuat komponen RichTextViewer yang ringan, yang hanya merender konten tanpa menginisialisasi editor TipTap sama sekali. Ini memberikan peningkatan performa yang signifikan untuk mode view.
+
+Selain itu, kita telah menyederhanakan struktur komponen dengan menghapus lapisan ViewMode dan EditMode yang tidak perlu, sehingga ModulePageView dan ModulePageEdit langsung menggunakan komponen yang mereka butuhkan. Ini membuat kode lebih mudah dipahami dan dipelihara.

@@ -3,7 +3,7 @@
  * Berisi fungsi-fungsi untuk mendeteksi, memformat, dan menangani event keyboard.
  */
 
-import { ShortcutDefinition } from '../constants/shortcuts'
+import { ShortcutDefinition } from '../types/shortcuts'
 
 /**
  * Check if a keyboard event matches a shortcut key combination.

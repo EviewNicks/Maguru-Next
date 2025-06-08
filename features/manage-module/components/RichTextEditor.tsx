@@ -1,7 +1,6 @@
 'use client'
 import '@/styles/tiptap.css'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
-import { useModuleDraftPageContext } from '../context/ModuleDraftPageContext'
 import { StandardEditorContent } from '../types'
 
 //components implementasion
@@ -25,7 +24,6 @@ import { FloatingToolbar } from '@/features/manage-module/components/ModulePageE
 import { EditorToolbar } from '@/features/manage-module/components/ModulePageEditor/toolbars/EditorToolbar'
 import Placeholder from '@tiptap/extension-placeholder'
 import { defaultContentJSON } from '@/features/manage-module/lib/content'
-
 import { useCallback, useEffect, useState, useRef } from 'react'
 import { AlertTriangle, RefreshCw, Loader2 } from 'lucide-react'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -101,16 +99,6 @@ export function RichTextEditor({
   // Gunakan context untuk mengakses data dan handler
   const { activePage, handleEditorChange } = useModulePageCRUDContext()
 
-  // Gunakan ModuleDraftPageContext untuk mengakses mode editor
-  const {
-    editorMode,
-    setEditor: setContextEditor,
-    getDraftOrPublishedContent,
-  } = useModuleDraftPageContext()
-
-  // Derive readOnly dari editorMode
-  const readOnly = editorMode === 'view'
-
   // Ref untuk menangani cleanup saat unmount
   const unmountingRef = useRef(false)
 
@@ -126,7 +114,7 @@ export function RichTextEditor({
       ? JSON.parse(initialContent)
       : initialContent
     : activePage
-      ? getDraftOrPublishedContent(activePage)
+      ? activePage.content
       : defaultContentJSON
 
   // Gunakan JSON.parse untuk mendapatkan konten yang sudah diparse oleh komponen parent
@@ -155,12 +143,12 @@ export function RichTextEditor({
         onChange(editorContent)
       }
 
-      // Gunakan handleEditorChange dari context untuk autosave HANYA jika dalam mode edit
-      if (pageId && editorMode === 'edit') {
+      // Gunakan handleEditorChange dari context untuk autosave
+      if (pageId) {
         handleEditorChange(typedContent, pageId)
       }
     },
-    [onChange, handleEditorChange, pageId, editorMode]
+    [onChange, handleEditorChange, pageId]
   )
 
   // Initialize editor when component mounts
@@ -204,7 +192,7 @@ export function RichTextEditor({
         extensions,
         content: parsedContent,
         autofocus: false,
-        editable: !readOnly, // Set editable berdasarkan mode
+        editable: true,
         onUpdate: ({ editor }) => {
           try {
             if (editor) {
@@ -219,9 +207,6 @@ export function RichTextEditor({
       // Set editor instance ke state
       setEditor(newEditor)
 
-      // Set editor ke context untuk digunakan oleh komponen lain
-      setContextEditor(newEditor)
-
       // Panggil callback onEditorReady jika disediakan
       if (onEditorReady) {
         onEditorReady(newEditor)
@@ -229,31 +214,12 @@ export function RichTextEditor({
     } catch {
       // ignore
     }
-  }, [
-    editor,
-    getParsedContent,
-    handleChange,
-    onEditorReady,
-    readOnly,
-    setContextEditor,
-  ])
+  }, [editor, getParsedContent, handleChange, onEditorReady])
 
   // Create editor on mount
   useEffect(() => {
     createEditor()
   }, [createEditor])
-
-  // Simplified event handlers for mode changes
-  useEffect(() => {
-    // State dari mode editor sekarang ditangani secara langsung oleh ModuleDraftPageContext
-    // dan menu/toolbar akan muncul/hilang secara otomatis melalui conditional rendering
-    // Tidak perlu lagi event listener yang kompleks atau perubahan DOM secara manual
-
-    // Jika editorMode berubah, update editor.setEditable
-    if (editor) {
-      editor.setEditable(editorMode === 'edit')
-    }
-  }, [editor, editorMode])
 
   // Render editor
   return (
@@ -279,29 +245,15 @@ export function RichTextEditor({
         </div>
       }
     >
-      <div
-        className={cn(
-          'flex flex-col h-full',
-          className,
-          readOnly ? 'rich-text-view-mode' : 'rich-text-edit-mode'
-        )}
-      >
-        {/* Tampilkan toolbar hanya jika dalam mode edit */}
-        {editor && !readOnly && <EditorToolbar editor={editor} />}
+      <div className={cn('flex flex-col h-full', className)}>
+        {/* Toolbar editor */}
+        {editor && <EditorToolbar editor={editor} />}
 
-        <div
-          className={cn(
-            'flex-1 overflow-auto prose prose-slate max-w-full',
-            readOnly ? 'view-content' : 'edit-content'
-          )}
-        >
+        <div className="flex-1 overflow-auto prose prose-slate max-w-full edit-content">
           {editor ? (
             <EditorContent
               editor={editor}
-              className={cn(
-                'min-h-[50vh] p-4 focus:outline-none',
-                readOnly ? 'cursor-default' : ''
-              )}
+              className="min-h-[50vh] p-4 focus:outline-none"
             />
           ) : (
             <div className="flex justify-center items-center h-full">
@@ -310,8 +262,8 @@ export function RichTextEditor({
           )}
         </div>
 
-        {/* Tampilkan floating menu dan toolbar hanya jika dalam mode edit - simple conditional rendering */}
-        {editor && editorMode === 'edit' && (
+        {/* Floating menu dan toolbar */}
+        {editor && (
           <ErrorBoundary name="RichTextEditor-FloatingUI">
             <>
               <TipTapFloatingMenu editor={editor} />

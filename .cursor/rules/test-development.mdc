@@ -1,0 +1,187 @@
+---
+description: Jika kita akan membuat test TDD dan BDD patuhi rules ini
+globs: 
+alwaysApply: false
+---
+---
+
+name: drivent-testing-behavior
+description: >-
+Combined Rules untuk Test-Driven Development (TDD), Behavior-Driven Development (BDD),
+dan End-to-End (E2E) testing pada proyek Next.js dengan TypeScript.
+globs:
+
+* "src/\*\*/\*.{ts,tsx}"
+  alwaysApply: true
+  agentRequested: false
+
+---
+
+# 1. Test-Driven Development (TDD)
+
+* **Siklus**: Red – Green – Refactor.
+* **Struktur**: AAA (Arrange, Act, Assert).
+* **Penamaan**: gunakan suffix `.test.tsx` dan simpan test dekat dengan kode.
+* **Mocking**:
+
+  * Gunakan `jest.mock(...)` atau `jest.spyOn(...)` untuk mock API atau fungsi utilitas.
+  * Gunakan `msw` (Mock Service Worker) untuk mock HTTP API.
+
+    * Setup di `src/mocks/handlers.ts` dan `src/mocks/server.ts`.
+    * Inisialisasi MSW dalam setup test `jest.setup.ts`:
+
+      ```ts
+      import { server } from './src/mocks/server';
+      beforeAll(() => server.listen());
+      afterEach(() => server.resetHandlers());
+      afterAll(() => server.close());
+      ```
+* **Coverage**: threshold ≥80% di `jest.config.ts`:
+
+  ```ts
+  coverageThreshold: { global: { branches: 0.8, functions: 0.8, lines: 0.8, statements: 0.8 } }
+  ```
+* **Lint**: pasang `eslint-plugin-jest` dan `eslint-plugin-testing-library`.
+
+# 2. Behavior-Driven Development (BDD)
+
+* **Prinsip**: fokus pada perilaku user, format Given–When–Then.
+* **Deskriptif**: nama test mencerminkan skenario; hindari nama teknis.
+* **Struktur**:
+
+  ```ts
+  describe('Feature X', () => {
+    it('should do Y when Z', async () => {
+      // Given
+      // When
+      // Then
+    });
+  });
+  ```
+* **Tools** (opsional): `jest-cucumber` atau `@cucumber/cucumber` untuk Gherkin (`*.feature`).
+* **Folder**:
+
+  ```
+  src/
+  └── features/
+      ├── login.feature
+      └── steps/login.steps.ts
+  ```
+
+# 3. End-to-End Testing (E2E)
+
+* **Framework**: Playwright.
+* **Lokasi**: tes E2E di folder `e2e/` di root proyek.
+* **Naming**: file `.spec.ts` untuk setiap skenario.
+* **Konfigurasi**: `playwright.config.ts` dengan baseURL `http://localhost:3000`.
+* **Struktur**:
+
+  ```
+  e2e/
+  ├── login.spec.ts
+  └── checkout.spec.ts
+  ```
+* **Best Practices**:
+
+  * Jalankan server dev sebelum test (`npm run dev`).
+  * Gunakan Page Object Model untuk reusability.
+  * Parallel test diaktifkan, batasi state sharing.
+
+# 4. Integrasi & Dokumentasi
+
+* **setelah membuat test yang perlu di ujisilahkan perbarui script** di `package.json`:
+
+  ```json
+  "scripts": {
+    // test:custom gabungan test yang dibuat untuk satu fitur
+    "test:custom": "jest app/api/module --verbose",
+    // test:unit digunakan untuk unit test yang dibuat untuk satu fitur
+    "test:unit": "jest features/manage-module/services/modulePageService.test.ts --verbose",
+    //test:ietgration digunakan untuk integration test uang dibuat untuk satu fitur
+    "test:integration": " jest features/manage-module/__tests__/integration/module-page --verbose",
+  }
+  ```
+* **CI**: jalankan `yarn test` dan `yarn test:custom` di pipeline.
+* **Dokumentasi**: tambahkan badge untuk coverage dan E2E di `README.md`.
+
+# 5. Format File
+- **Unit Test**: `ComponentName.test.tsx` (FE) / `ServiceName.test.ts` (BE).
+- **Integration Test**: `FeatureName.integration.test.ts`.
+- **E2E Test**: `FeatureName.spec.ts`.
+
+# 6. Tools
+- **Unit**: Jest + React Testing Library (FE) / Jest (BE). 
+- **Integration**: Jest + MSW (FE)
+- **E2E**: Playwright.
+
+
+# 7.location file test (fitur)
+ 
+## Unit test menerapkan Co-location Testing (Test Berdampingan dengan Kode)
+
+### Prinsip Co-location
+- **File test ditempatkan berdampingan dengan file kode sumber** yang diuji, bukan di direktori `__tests__` terpisah
+- Contoh pendekatan co-location:
+  ```
+  app/api/webhooks/clerk/
+  ├── route.ts
+  └── route.test.ts
+  ```
+
+#### Aturan Implementasi
+- **Penamaan**: File test harus memiliki nama yang sama dengan file yang diuji dengan extension `.test.ts` atau `.test.tsx`
+- **Struktur Import**: Gunakan relative import (`import { Component } from './Component'`) untuk kode yang diuji
+- **Excludes pada Bundler**: Pastikan file test di-exclude dari proses bundling untuk produksi
+- **Konsisten per Modul**: Gunakan pendekatan co-location secara konsisten untuk satu modul/fitur
+- **Prioritas API dan Services**: Prioritaskan pendekatan co-location untuk API endpoints dan services
+
+## **End-to-End Tests**
+ Tetap disimpan di `__tests__/e2e/`
+##  **Integration Tests**
+ Jika melibatkan banyak modul, simpan di `__tests__/integration/`
+##  **Mocks Global**: 
+Simpan mocks yang digunakan oleh banyak test di `__tests__/__mocks__/`
+
+---
+
+# 5. Contoh Kode
+
+* **TDD** (`MyComponent.test.tsx`):
+
+  ```ts
+  import { render, screen } from '@testing-library/react';
+  test('renders title', () => {
+    render(<MyComponent title="Hi" />);
+    expect(screen.getByText(/hi/i)).toBeInTheDocument();
+  });
+  ```
+
+* **BDD** (`Login.behavior.test.tsx`):
+
+  ```ts
+  describe('User Login Flow', () => {
+    it('should redirect to dashboard after login', async () => {
+      render(<LoginPage />);
+      userEvent.type(screen.getByLabelText(/email/i), 'a@b.com');
+      userEvent.click(screen.getByRole('button', { name: /login/i }));
+      expect(await screen.findByText(/welcome/i)).toBeVisible();
+    });
+  });
+  ```
+
+* **E2E** (`e2e/login.spec.ts`):
+
+  ```ts
+  import { test, expect } from '@playwright/test';
+  test('login and see dashboard', async ({ page }) => {
+    await page.goto('/login');
+    await page.fill('input[name="email"]', 'a@b.com');
+    await page.click('button:has-text("Login")');
+    await expect(page).toHaveURL('/dashboard');
+  });
+  ```
+
+---
+
+*Catatan*: Pisahkan rules jika perlu ke file `.mdc` terpisah untuk maintainability dan scope yang lebih halus.
+
