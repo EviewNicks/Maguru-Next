@@ -131,7 +131,7 @@
     "sentry-node": "^2.3.2",
     "sonner": "^2.0.3",
     "svix": "^1.63.1",
-    "tailwind-merge": "^3.1.0",
+    "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.19.3",
     "use-debounce": "^10.0.4",
