@@ -102,7 +102,7 @@ export function RichTextViewer({
  * Untuk implementasi lengkap, kita perlu parser yang lebih canggih
  * yang mendukung semua node dan mark Tiptap.
  */
-function renderTiptapContent(content: StandardEditorContent): string {
+export function renderTiptapContent(content: StandardEditorContent): string {
   let html = ''
 
   // Implementasi basic untuk rendering

@@ -1,0 +1,332 @@
+{
+  "summary": {
+    "timestamp": "2025-06-09T05-50-23.156Z",
+    "totalTests": 24,
+    "passedTests": 23,
+    "failedTests": 0,
+    "pendingTests": 1,
+    "skippedTests": 0,
+    "totalTestSuites": 4,
+    "passedTestSuites": 4,
+    "failedTestSuites": 0,
+    "executionTime": "14.46s",
+    "startTime": "2025-06-09T05:50:14.040Z",
+    "endTime": "2025-06-09T05:50:28.500Z",
+    "errorPatterns": {}
+  },
+  "testFiles": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\RichTextEditor.test.tsx",
+      "relativePath": "features\\manage-module\\components\\RichTextEditor.test.tsx",
+      "numFailingTests": 0,
+      "numPassingTests": 6,
+      "numPendingTests": 0,
+      "perfStats": {
+        "runtime": 3063,
+        "slowest": false,
+        "startTime": "2025-06-09T05:50:18.091Z",
+        "endTime": "2025-06-09T05:50:21.154Z"
+      },
+      "testResults": [
+        {
+          "title": "renders loading state when editor is not initialized",
+          "fullName": "RichTextEditor renders loading state when editor is not initialized",
+          "ancestorTitles": [
+            "RichTextEditor"
+          ],
+          "status": "passed",
+          "duration": 120,
+          "failureDetails": null
+        },
+        {
+          "title": "initializes editor with correct content from props",
+          "fullName": "RichTextEditor initializes editor with correct content from props",
+          "ancestorTitles": [
+            "RichTextEditor"
+          ],
+          "status": "passed",
+          "duration": 19,
+          "failureDetails": null
+        },
+        {
+          "title": "calls onChange prop when content changes",
+          "fullName": "RichTextEditor calls onChange prop when content changes",
+          "ancestorTitles": [
+            "RichTextEditor"
+          ],
+          "status": "passed",
+          "duration": 15,
+          "failureDetails": null
+        },
+        {
+          "title": "renders editor UI components when editor is initialized",
+          "fullName": "RichTextEditor renders editor UI components when editor is initialized",
+          "ancestorTitles": [
+            "RichTextEditor"
+          ],
+          "status": "passed",
+          "duration": 16,
+          "failureDetails": null
+        },
+        {
+          "title": "destroys editor on unmount",
+          "fullName": "RichTextEditor destroys editor on unmount",
+          "ancestorTitles": [
+            "RichTextEditor"
+          ],
+          "status": "passed",
+          "duration": 16,
+          "failureDetails": null
+        },
+        {
+          "title": "handles errors gracefully",
+          "fullName": "RichTextEditor handles errors gracefully",
+          "ancestorTitles": [
+            "RichTextEditor"
+          ],
+          "status": "passed",
+          "duration": 7,
+          "failureDetails": null
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\RichTextViewer.test.tsx",
+      "relativePath": "features\\manage-module\\components\\RichTextViewer.test.tsx",
+      "numFailingTests": 0,
+      "numPassingTests": 8,
+      "numPendingTests": 1,
+      "perfStats": {
+        "runtime": 3084,
+        "slowest": false,
+        "startTime": "2025-06-09T05:50:18.141Z",
+        "endTime": "2025-06-09T05:50:21.225Z"
+      },
+      "testResults": [
+        {
+          "title": "renders correctly",
+          "fullName": "RichTextViewer renders correctly",
+          "ancestorTitles": [
+            "RichTextViewer"
+          ],
+          "status": "passed",
+          "duration": 52,
+          "failureDetails": null
+        },
+        {
+          "title": "shows loading state when isLoading is true",
+          "fullName": "RichTextViewer shows loading state when isLoading is true",
+          "ancestorTitles": [
+            "RichTextViewer"
+          ],
+          "status": "passed",
+          "duration": 23,
+          "failureDetails": null
+        },
+        {
+          "title": "shows placeholder when no content is provided",
+          "fullName": "RichTextViewer shows placeholder when no content is provided",
+          "ancestorTitles": [
+            "RichTextViewer"
+          ],
+          "status": "passed",
+          "duration": 11,
+          "failureDetails": null
+        },
+        {
+          "title": "renders paragraph content correctly",
+          "fullName": "RichTextViewer renders paragraph content correctly",
+          "ancestorTitles": [
+            "RichTextViewer"
+          ],
+          "status": "passed",
+          "duration": 44,
+          "failureDetails": null
+        },
+        {
+          "title": "renders heading content correctly",
+          "fullName": "RichTextViewer renders heading content correctly",
+          "ancestorTitles": [
+            "RichTextViewer"
+          ],
+          "status": "passed",
+          "duration": 24,
+          "failureDetails": null
+        },
+        {
+          "title": "renders formatted text correctly",
+          "fullName": "RichTextViewer renders formatted text correctly",
+          "ancestorTitles": [
+            "RichTextViewer"
+          ],
+          "status": "passed",
+          "duration": 4,
+          "failureDetails": null
+        },
+        {
+          "title": "renders lists correctly",
+          "fullName": "RichTextViewer renders lists correctly",
+          "ancestorTitles": [
+            "RichTextViewer"
+          ],
+          "status": "passed",
+          "duration": 3,
+          "failureDetails": null
+        },
+        {
+          "title": "renders links correctly",
+          "fullName": "RichTextViewer renders links correctly",
+          "ancestorTitles": [
+            "RichTextViewer"
+          ],
+          "status": "passed",
+          "duration": 10,
+          "failureDetails": null
+        },
+        {
+          "title": "handles rendering errors gracefully",
+          "fullName": "RichTextViewer handles rendering errors gracefully",
+          "ancestorTitles": [
+            "RichTextViewer"
+          ],
+          "status": "pending",
+          "duration": null,
+          "failureDetails": null
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModulePageEdit.test.tsx",
+      "relativePath": "features\\manage-module\\components\\ModulePageEdit.test.tsx",
+      "numFailingTests": 0,
+      "numPassingTests": 4,
+      "numPendingTests": 0,
+      "perfStats": {
+        "runtime": 3281,
+        "slowest": false,
+        "startTime": "2025-06-09T05:50:18.145Z",
+        "endTime": "2025-06-09T05:50:21.426Z"
+      },
+      "testResults": [
+        {
+          "title": "renders correctly with all components",
+          "fullName": "ModulePageEdit renders correctly with all components",
+          "ancestorTitles": [
+            "ModulePageEdit"
+          ],
+          "status": "passed",
+          "duration": 78,
+          "failureDetails": null
+        },
+        {
+          "title": "saves content and navigates to view mode when save button is clicked",
+          "fullName": "ModulePageEdit saves content and navigates to view mode when save button is clicked",
+          "ancestorTitles": [
+            "ModulePageEdit"
+          ],
+          "status": "passed",
+          "duration": 86,
+          "failureDetails": null
+        },
+        {
+          "title": "handles save errors gracefully",
+          "fullName": "ModulePageEdit handles save errors gracefully",
+          "ancestorTitles": [
+            "ModulePageEdit"
+          ],
+          "status": "passed",
+          "duration": 8,
+          "failureDetails": null
+        },
+        {
+          "title": "navigates even if editor is not available",
+          "fullName": "ModulePageEdit navigates even if editor is not available",
+          "ancestorTitles": [
+            "ModulePageEdit"
+          ],
+          "status": "passed",
+          "duration": 8,
+          "failureDetails": null
+        }
+      ]
+    },
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\components\\ModulePageView.test.tsx",
+      "relativePath": "features\\manage-module\\components\\ModulePageView.test.tsx",
+      "numFailingTests": 0,
+      "numPassingTests": 5,
+      "numPendingTests": 0,
+      "perfStats": {
+        "runtime": 5032,
+        "slowest": true,
+        "startTime": "2025-06-09T05:50:18.043Z",
+        "endTime": "2025-06-09T05:50:23.075Z"
+      },
+      "testResults": [
+        {
+          "title": "renders correctly with all components",
+          "fullName": "ModulePageView renders correctly with all components",
+          "ancestorTitles": [
+            "ModulePageView"
+          ],
+          "status": "passed",
+          "duration": 159,
+          "failureDetails": null
+        },
+        {
+          "title": "navigates to edit mode when edit button is clicked",
+          "fullName": "ModulePageView navigates to edit mode when edit button is clicked",
+          "ancestorTitles": [
+            "ModulePageView"
+          ],
+          "status": "passed",
+          "duration": 31,
+          "failureDetails": null
+        },
+        {
+          "title": "navigates to edit mode when header edit button is clicked",
+          "fullName": "ModulePageView navigates to edit mode when header edit button is clicked",
+          "ancestorTitles": [
+            "ModulePageView"
+          ],
+          "status": "passed",
+          "duration": 6,
+          "failureDetails": null
+        },
+        {
+          "title": "passes correct content to RichTextViewer",
+          "fullName": "ModulePageView passes correct content to RichTextViewer",
+          "ancestorTitles": [
+            "ModulePageView"
+          ],
+          "status": "passed",
+          "duration": 9,
+          "failureDetails": null
+        },
+        {
+          "title": "shows loading state when activePage is not available",
+          "fullName": "ModulePageView shows loading state when activePage is not available",
+          "ancestorTitles": [
+            "ModulePageView"
+          ],
+          "status": "passed",
+          "duration": 4,
+          "failureDetails": null
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "snapshots": {
+    "total": 0,
+    "matched": 0,
+    "added": 0,
+    "updated": 0,
+    "unmatched": 0,
+    "unchecked": 0,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesUnmatched": 0,
+    "filesUpdated": 0
+  }
+}

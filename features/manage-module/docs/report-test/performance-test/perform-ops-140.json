@@ -1,0 +1,87 @@
+{
+  "summary": {
+    "timestamp": "2025-06-10T00-22-40.395Z",
+    "totalTests": 4,
+    "passedTests": 4,
+    "failedTests": 0,
+    "pendingTests": 0,
+    "skippedTests": 0,
+    "totalTestSuites": 1,
+    "passedTestSuites": 1,
+    "failedTestSuites": 0,
+    "executionTime": "1.34s",
+    "startTime": "2025-06-10T00:22:37.598Z",
+    "endTime": "2025-06-10T00:22:38.936Z",
+    "errorPatterns": {}
+  },
+  "testFiles": [
+    {
+      "filePath": "D:\\2-Project\\Data_Project_6\\Maguru\\features\\manage-module\\__tests__\\performance\\ViewerVsEditor.perm.test.tsx",
+      "relativePath": "features\\manage-module\\__tests__\\performance\\ViewerVsEditor.perm.test.tsx",
+      "numFailingTests": 0,
+      "numPassingTests": 4,
+      "numPendingTests": 0,
+      "perfStats": {
+        "runtime": 1338,
+        "slowest": false,
+        "startTime": "2025-06-10T00:22:39.038Z",
+        "endTime": "2025-06-10T00:22:40.376Z"
+      },
+      "testResults": [
+        {
+          "title": "compares rendering performance with small content",
+          "fullName": "Performance: RichTextViewer vs RichTextEditor compares rendering performance with small content",
+          "ancestorTitles": [
+            "Performance: RichTextViewer vs RichTextEditor"
+          ],
+          "status": "passed",
+          "duration": 130,
+          "failureDetails": null
+        },
+        {
+          "title": "compares rendering performance with medium content",
+          "fullName": "Performance: RichTextViewer vs RichTextEditor compares rendering performance with medium content",
+          "ancestorTitles": [
+            "Performance: RichTextViewer vs RichTextEditor"
+          ],
+          "status": "passed",
+          "duration": 64,
+          "failureDetails": null
+        },
+        {
+          "title": "compares rendering performance with large content",
+          "fullName": "Performance: RichTextViewer vs RichTextEditor compares rendering performance with large content",
+          "ancestorTitles": [
+            "Performance: RichTextViewer vs RichTextEditor"
+          ],
+          "status": "passed",
+          "duration": 67,
+          "failureDetails": null
+        },
+        {
+          "title": "compares memory usage",
+          "fullName": "Performance: RichTextViewer vs RichTextEditor compares memory usage",
+          "ancestorTitles": [
+            "Performance: RichTextViewer vs RichTextEditor"
+          ],
+          "status": "passed",
+          "duration": 28,
+          "failureDetails": null
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "snapshots": {
+    "total": 0,
+    "matched": 0,
+    "added": 0,
+    "updated": 0,
+    "unmatched": 0,
+    "unchecked": 0,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesUnmatched": 0,
+    "filesUpdated": 0
+  }
+}

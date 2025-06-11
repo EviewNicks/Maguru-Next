@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ViewHeader } from './ModulePageEditor/document/ViewHeader'
 import { RichTextViewer } from './RichTextViewer'
 import { useModulePageCRUDContext } from '../context/ModulePageCRUDContext'
-import { StandardEditorContent } from '../types'
+import {   StandardEditorContent } from '../types'
 import { Button } from '@/components/ui/button'
 import { Edit } from 'lucide-react'
 

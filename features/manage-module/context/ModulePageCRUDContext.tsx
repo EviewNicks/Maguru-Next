@@ -22,6 +22,7 @@ import { showErrorNotification } from '../components/ErrorNotifier'
 import { useRouter } from 'next/navigation'
 import debounce from 'lodash/debounce'
 import { useQueryClient } from '@tanstack/react-query'
+import { ModuleDraftPageProvider } from './ModuleDraftPageContext'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPromise = Promise<any>

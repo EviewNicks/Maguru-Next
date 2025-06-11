@@ -130,9 +130,29 @@ export function ModuleDraftPageProvider({
   enabled = true,
 }: ModuleDraftPageProviderProps) {
   const pageId = activePage?.id || ''
-  const { user } = useClerk()
-  const userId = user?.id || ''
-  const userName = user?.fullName || user?.username || 'Unknown User'
+
+  // State untuk menyimpan user info
+  const [userId, setUserId] = useState('')
+  const [userName, setUserName] = useState('Test User')
+
+  // Handle Clerk user info
+  let clerkUser = null
+  try {
+    const clerk = useClerk()
+    clerkUser = clerk.user
+  } catch (error) {
+    // Clerk tidak tersedia atau error, gunakan nilai default
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _ = error // Abaikan error
+  }
+
+  // Update user info dari Clerk ketika tersedia
+  useEffect(() => {
+    if (clerkUser) {
+      setUserId(clerkUser.id || '')
+      setUserName(clerkUser.fullName || clerkUser.username || 'Unknown User')
+    }
+  }, [clerkUser])
 
   // Gunakan getPageById dari ModulePageCRUDContext
   const { getPageById, refetch } = useModulePageCRUDContext()
@@ -729,12 +749,12 @@ export function ModuleDraftPageProvider({
   useEffect(() => {
     if (!pageId || !userId) return
 
-    // Register activity saat halaman dibuka
+    // Register active user
     concurrentEditingService.registerActivity(
       pageId,
       userId,
       userName,
-      user?.imageUrl
+      undefined // Tidak menggunakan image URL untuk saat ini
     )
 
     // Setup callback untuk perubahan aktivitas
@@ -765,7 +785,7 @@ export function ModuleDraftPageProvider({
       clearInterval(interval)
       concurrentEditingService.destroy()
     }
-  }, [pageId, userId, userName, user?.imageUrl])
+  }, [pageId, userId, userName])
 
   // Deteksi konflik editing
   useEffect(() => {

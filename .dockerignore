@@ -19,12 +19,30 @@ yarn-error.log
 
 # Testing
 /.nyc_output
+/__tests__
+**/*.test.js
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.js
+**/*.spec.ts
+**/*.spec.tsx
+/playwright
+**/__tests__/
+**/test/
+**/tests/
+**/jest.config.*
+**/jest.setup.*
+**/playwright.config.*
+**/*.stories.*
+**/*.cy.*
+**/*.e2e.*
 
-# Environment variables
+# Environment variables (kecuali .env.example)
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env
 
 # Debug
 npm-debug.log*
@@ -45,48 +63,47 @@ Thumbs.db
 # Docker files
 .dockerignore
 docker-compose*.yml
+!docker-compose.yml
 Dockerfile*
+!Dockerfile
 
-# Folders
+# Folders yang tidak diperlukan untuk build
 .git
 .github
-.next
 out
 .vercel
 coverage
+node_modules/.cache
+.turbo
 
-# Env files (karena akan dipassing melalui env_file di compose)
-# .env*
-
-# Dev files
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.DS_Store
-
-# Ignore Next.js build output
-.next
-
-# Ignore development files
-.git
-.github
-.vscode
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Ignore environment files
-# .env
-# .env.*
-!.env.example
-
-# Ignore test files
-__tests__
-*.test.js
-*.spec.js
-
-# Ignore documentation
+# Dokumentasi
 README.md
-docs 
+docs
+*.md
+!REQUIRED_DOCS.md
+
+# Aset statis yang tidak diperlukan selama build
+public/videos
+public/large-assets
+
+# Development tooling
+.eslintrc*
+.prettierrc*
+.stylelintrc*
+.editorconfig
+.husky/
+.lint-staged*
+.storybook/
+*.config.js
+*.config.ts
+tsconfig.tsbuildinfo
+
+# Jangan abaikan file-file penting
+!package.json
+!yarn.lock
+!next.config.js
+!tsconfig.json
+!prisma/schema.prisma
+!prisma/migrations
+!prisma/seed.ts
+!public/favicon.ico 
