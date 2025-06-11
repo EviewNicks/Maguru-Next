@@ -1,0 +1,833 @@
+openapi: 3.0.0
+info:
+  title: Module Management API
+  version: 1.0.0
+  description: API untuk mengelola modul pembelajaran termasuk CRUD operasi pada modul dan halaman modul.
+servers:
+  - url: http://localhost:3000
+paths:
+  /api/module:
+    get:
+      summary: Mengambil daftar modul
+      description: Mengembalikan daftar modul dengan paginasi, filter status, dan pencarian.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Nomor halaman untuk paginasi.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Jumlah item per halaman.
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [DRAFT, ACTIVE, ARCHIVED]
+          description: Filter berdasarkan status modul.
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Pencarian berdasarkan judul atau deskripsi modul.
+      responses:
+        '200':
+          description: Daftar modul berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Module'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Membuat modul baru
+      description: Membuat modul baru dalam sistem.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  description: Judul modul.
+                description:
+                  type: string
+                  description: Deskripsi modul.
+                status:
+                  type: string
+                  enum: [DRAFT, ACTIVE, ARCHIVED]
+                  default: DRAFT
+                  description: Status modul.
+      responses:
+        '201':
+          description: Modul berhasil dibuat.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Module'
+        '400':
+          description: Data tidak valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/module/{id}:
+    get:
+      summary: Mengambil detail modul
+      description: Mengembalikan detail modul berdasarkan ID modul.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID modul.
+      responses:
+        '200':
+          description: Detail modul berhasil diambil.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Module'
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Modul tidak ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Memperbarui modul
+      description: Memperbarui modul berdasarkan ID modul.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID modul.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Judul modul.
+                description:
+                  type: string
+                  description: Deskripsi modul.
+      responses:
+        '200':
+          description: Modul berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Module'
+        '400':
+          description: Data tidak valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Modul tidak ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Menghapus modul
+      description: Menghapus modul berdasarkan ID modul.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID modul.
+      responses:
+        '200':
+          description: Modul berhasil dihapus.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Modul berhasil dihapus
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Modul tidak ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/module/{id}/status:
+    patch:
+      summary: Memperbarui status modul
+      description: Memperbarui status modul (DRAFT, ACTIVE, ARCHIVED).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID modul.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [DRAFT, ACTIVE, ARCHIVED]
+                  description: Status baru modul.
+      responses:
+        '200':
+          description: Status modul berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Module'
+        '400':
+          description: Data tidak valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Modul tidak ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/module/{id}/pages:
+    get:
+      summary: Mengambil daftar halaman modul
+      description: Mengembalikan daftar halaman untuk modul tertentu.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID modul.
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Nomor halaman untuk paginasi.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Jumlah item per halaman.
+        - in: query
+          name: includeContent
+          schema:
+            type: boolean
+            default: false
+          description: Apakah akan menyertakan konten halaman.
+      responses:
+        '200':
+          description: Daftar halaman modul berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ModulePage'
+                  meta:
+                    type: object
+                    properties:
+                      currentPage:
+                        type: integer
+                      pageSize:
+                        type: integer
+                      totalItems:
+                        type: integer
+                      totalPages:
+                        type: integer
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Membuat halaman baru dalam modul
+      description: Membuat halaman baru dalam modul tertentu.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID modul.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - type
+              properties:
+                title:
+                  type: string
+                  description: Judul halaman.
+                order:
+                  type: integer
+                  description: Urutan halaman dalam modul.
+                type:
+                  type: string
+                  description: Tipe konten halaman.
+                  default: 'content'
+                blocks:
+                  type: array
+                  description: Blok konten halaman.
+                  items:
+                    $ref: '#/components/schemas/ContentBlock'
+      responses:
+        '201':
+          description: Halaman modul berhasil dibuat.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ModulePage'
+        '400':
+          description: Data tidak valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Modul tidak ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/module/{id}/pages/reorder:
+    put:
+      summary: Mengubah urutan halaman dalam modul
+      description: Mengubah urutan halaman dalam modul berdasarkan array ID halaman.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID modul.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pageIds
+              properties:
+                pageIds:
+                  type: array
+                  description: Array ID halaman dalam urutan yang diinginkan.
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Urutan halaman berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: Urutan halaman berhasil diperbarui
+        '400':
+          description: Data tidak valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Modul tidak ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/pages/{id}:
+    get:
+      summary: Mengambil detail halaman modul
+      description: Mengembalikan detail halaman modul berdasarkan ID halaman.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID halaman.
+      responses:
+        '200':
+          description: Detail halaman modul berhasil diambil.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ModulePage'
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Halaman tidak ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Memperbarui halaman modul
+      description: Memperbarui halaman modul berdasarkan ID halaman.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID halaman.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Judul halaman.
+                order:
+                  type: integer
+                  description: Urutan halaman dalam modul.
+                blocks:
+                  type: array
+                  description: Blok konten halaman.
+                  items:
+                    $ref: '#/components/schemas/ContentBlock'
+      responses:
+        '200':
+          description: Halaman modul berhasil diperbarui.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ModulePage'
+        '400':
+          description: Data tidak valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Halaman tidak ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Menghapus halaman modul
+      description: Menghapus halaman modul berdasarkan ID halaman.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID halaman.
+      responses:
+        '200':
+          description: Halaman modul berhasil dihapus.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: Halaman berhasil dihapus
+        '401':
+          description: Tidak terautentikasi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Akses ditolak. Hanya admin yang dapat mengakses.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Halaman tidak ditemukan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Module:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID unik modul.
+        title:
+          type: string
+          description: Judul modul.
+        description:
+          type: string
+          description: Deskripsi modul.
+        status:
+          type: string
+          enum: [DRAFT, ACTIVE, ARCHIVED]
+          description: Status modul.
+        createdAt:
+          type: string
+          format: date-time
+          description: Tanggal pembuatan.
+        updatedAt:
+          type: string
+          format: date-time
+          description: Tanggal pembaruan terakhir.
+        createdBy:
+          type: string
+          description: ID pengguna yang membuat modul.
+        updatedBy:
+          type: string
+          description: ID pengguna yang terakhir memperbarui modul.
+
+    ModulePage:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID unik halaman.
+        moduleId:
+          type: string
+          description: ID modul yang memiliki halaman ini.
+        title:
+          type: string
+          description: Judul halaman.
+        order:
+          type: integer
+          description: Urutan halaman dalam modul.
+        type:
+          type: string
+          description: Tipe konten halaman.
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentBlock'
+          description: Blok konten halaman.
+        createdAt:
+          type: string
+          format: date-time
+          description: Tanggal pembuatan.
+        updatedAt:
+          type: string
+          format: date-time
+          description: Tanggal pembaruan terakhir.
+        version:
+          type: integer
+          description: Versi halaman untuk optimistic locking.
+
+    ContentBlock:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Tipe blok konten.
+          enum: [paragraph, heading, code, image, video, list]
+        content:
+          type: string
+          description: Konten blok.
+        caption:
+          type: string
+          description: Keterangan opsional.
+        language:
+          type: string
+          description: Bahasa untuk blok kode.
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Terjadi kesalahan saat mengambil data modul
+
+    ValidationError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Data tidak valid
+        details:
+          type: object
+          description: Detail validasi yang gagal.

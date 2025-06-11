@@ -1,0 +1,251 @@
+---
+description: Jika kita akan membuat test TDD dan BDD patuhi rules ini
+globs:
+alwaysApply: false
+---
+
+---
+
+name: drivent-testing-behavior
+description: >-
+Combined Rules untuk Test-Driven Development (TDD), Behavior-Driven Development (BDD),
+dan End-to-End (E2E) testing pada proyek Next.js dengan TypeScript.
+globs:
+
+- "src/\*\*/\*.{ts,tsx}"
+  alwaysApply: true
+  agentRequested: false
+
+---
+
+# Pendekatan Testing di Maguru
+
+Dokumen ini menjelaskan standar dan pendekatan testing yang digunakan dalam proyek Maguru, mencakup Unit Testing, Integration Testing, E2E Testing, dan Performance Testing.
+
+## Prinsip Dasar
+
+1. **Test Driven Development (TDD)** untuk unit dan integration testing
+2. **Behavior Driven Development (BDD)** untuk E2E testing
+3. **Performance Testing** melalui E2E dengan Playwright
+
+## Struktur File dan Direktori
+
+```
+project/
+├── features/
+│   └── feature-name/
+│       ├── components/
+│       │   ├── Component.tsx
+│       │   └── Component.test.tsx     # Unit test (co-location)
+│       ├── services/
+│       │   ├── service.ts
+│       │   └── service.test.ts        # Unit test (co-location)
+│       └── __tests__/
+│           └── integration/
+│               └── Feature.integration.test.ts
+├── playwright/
+│   ├── tests/
+│   │   ├── e2e/
+│   │   │   └── Feature.spec.ts
+│   │   └── performance/
+│   │       └── Feature.perf.spec.ts
+│   └── pages/
+│       └── performance-test-page.ts
+├── documentation/
+│   └── task/
+│       └── [feature-name]/
+│           └── report-test/
+│               ├── unit-test-report.md
+│               ├── integration-test-report.md
+│               ├── e2e-test-report.md
+│               └── performance-test-report.md
+└── __tests__/
+    └── __mocks__/
+        └── global-mocks.ts
+```
+
+## 1. Unit Testing (TDD)
+
+### Prinsip
+
+- **Siklus**: Red (gagal) → Green (implementasi minimal) → Refactor (optimasi)
+- **Struktur**: AAA (Arrange, Act, Assert)
+- **Target**: Komponen, fungsi, dan service individual
+
+### Standar
+
+- **Tool**: Jest + React Testing Library
+- **Penamaan**: `Component.test.tsx` / `service.test.ts`
+- **Lokasi**: Co-location (berdampingan dengan file implementasi)
+- **Coverage**: Minimum 80% code coverage
+
+## 2. Integration Testing
+
+### Prinsip
+
+- **Tujuan**: Verifikasi interaksi antar komponen dan layanan
+- **Struktur**: AAA (Arrange, Act, Assert)
+- **Target**: Alur kerja yang melibatkan beberapa komponen/service
+
+### Standar
+
+- **Tool**: Jest + React Testing Library + MSW
+- **Penamaan**: `Feature.integration.test.ts`
+- **Lokasi**: `__tests__/integration/` folder
+
+## 3. E2E Testing (BDD)
+
+### Prinsip
+
+- **Pendekatan**: Behavior-Driven Development
+- **Format**: Given-When-Then
+- **Target**: User flow dan interaksi pengguna end-to-end
+
+### Standar
+
+- **Tool**: Playwright
+- **Penamaan**: `Feature.spec.ts`
+- **Lokasi**: `playwright/tests/e2e/`
+- **Struktur**:
+  ```
+  test.describe('Feature', () => {
+    test('should behave in expected way', async ({ page }) => {
+      // Given
+      // When
+      // Then
+    })
+  })
+  ```
+
+## 4. Performance Testing
+
+### Prinsip
+
+- **Tujuan**: Mengukur kinerja aplikasi dari perspektif pengguna
+- **Environment**: Browser sungguhan, bukan JSDOM
+- **Metrik**: Waktu rendering, penggunaan memori, Web Vitals
+
+### Standar
+
+- **Tool**: Playwright + Web Performance API
+- **Penamaan**: `Feature.perf.spec.ts`
+- **Lokasi**: `playwright/tests/performance/`
+- **Implementasi**:
+  1. Buat halaman khusus untuk performance testing
+  2. Gunakan Performance API untuk pengukuran
+  3. Tetapkan benchmark dan threshold performa
+
+### Best Practices
+
+- Jangan gunakan mock untuk komponen utama dalam performance test
+- Lakukan pengujian di browser sungguhan (Chromium/Firefox/WebKit)
+- Ukur dengan API standar browser (`performance.mark()`, `performance.measure()`)
+- Simpan histori performa untuk memantau regresi
+
+## 5. Scripts Testing
+
+```json
+"scripts": {
+  "test": "jest",
+  "test:unit": "jest --testPathPattern='.*\\.test\\.(ts|tsx)$' --testPathIgnorePatterns='.*\\.integration\\.test\\.(ts|tsx)$'",
+  "test:integration": "jest --testPathPattern='.*\\.integration\\.test\\.(ts|tsx)$'",
+  "test:e2e": "playwright test tests/e2e/",
+  "test:performance": "playwright test tests/performance/",
+  "test:watch": "jest --watch",
+  "test:coverage": "jest --coverage"
+}
+```
+
+## 6. Mocking
+
+### Pendekatan
+
+- **Unit/Integration**: Mock API dan dependencies eksternal
+- **E2E**: Gunakan `page.route()` untuk intercept HTTP request
+- **Performance**: Minimalisir mocking, fokus pada real components
+
+### Lokasi Mock
+
+- **Mock Global**: `__tests__/__mocks__/`
+- **Mock Lokal**: Berdampingan dengan file test
+- **Mock Service Worker**: `src/mocks/handlers.ts`
+
+## 7. Dokumentasi Test
+
+### Standar Dokumentasi
+
+- Setiap feature harus memiliki dokumentasi test di:
+  `documentation/task/[feature-name]/report-test/`
+
+### Konten Dokumentasi
+
+- Skenario pengujian
+- Metrik performa (untuk performance testing)
+- Link ke test report dari CI/CD
+
+## 8. CI/CD Integration
+
+### Standar Pipeline
+
+- Jalankan semua jenis test dalam pipeline CI/CD
+- Blokir merge jika test gagal
+- Archive hasil test sebagai artifacts
+
+### Prioritas Test
+
+1. Unit & Integration (cepat, jalankan selalu)
+2. E2E (lebih lambat, jalankan pada PR)
+3. Performance (paling lambat, jalankan secara berkala)
+
+---
+
+# Pedoman Praktis
+
+## 1. Memulai Project Baru
+
+1. Setup Jest untuk unit/integration testing
+2. Setup Playwright untuk E2E dan performance testing
+3. Tentukan threshold performa awal
+
+## 2. Menulis Test Baru
+
+1. **Unit Test**: Ikuti siklus TDD (Red → Green → Refactor)
+2. **Integration Test**: Fokus pada interaksi antar komponen
+3. **E2E Test**: Gunakan struktur BDD (Given-When-Then)
+4. **Performance Test**: Buat halaman khusus, tetapkan baseline
+
+## 3. Documentasi coment line setiap testing
+
+1. silahkan menuliskan Note testing di bagian atas agra kita tahu fungsi dari setiap desribe, test, it yang di buat
+   example
+   \*Note = ini contoh yang kompleks, buatalaah menadi lebih singkat dan jelas
+
+```
+/**
+ * Performance Test: RichTextViewer vs RichTextEditor
+ *
+ * Test ini bertujuan untuk membandingkan performa antara dua komponen:
+ * 1. RichTextViewer - Komponen ringan khusus untuk menampilkan konten
+ * 2. RichTextEditor - Komponen berat dengan editor Tiptap lengkap
+ *
+ * Hipotesis:
+ * - RichTextViewer seharusnya lebih cepat dan menggunakan lebih sedikit memori
+ * - Perbedaan performa akan semakin signifikan saat konten bertambah besar
+ *
+ * Catatan:
+ * - Dalam environment testing, kita menggunakan mock untuk Tiptap dan komponen editor
+ * - Hasil test dengan mock mungkin tidak merefleksikan performa nyata
+ * - Untuk pengukuran performa nyata, test ini harus dijalankan tanpa mock
+ */
+```
+
+## 3. Menjalankan Test
+
+1. **Lokal**: Gunakan script yang sesuai
+2. **CI/CD**: Otomatisasi dengan GitHub Actions
+
+## 4. Memelihara Test
+
+1. Refactor test bersamaan dengan refactor kode
+2. Update performa baseline saat ada peningkatan signifikan
+3. Dokumentasikan perubahan di report test

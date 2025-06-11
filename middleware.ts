@@ -53,7 +53,11 @@ export default clerkMiddleware(
         // Gunakan getRoleFromClaims dari edge-cache
         const role = getRoleFromClaims(session.sessionClaims)
 
-        if (role !== 'admin') {
+        // Log role untuk debugging
+        console.log('User role from claims:', role, 'User ID:', session.userId)
+
+        // Periksa role dengan case-insensitive
+        if (role?.toLowerCase() !== 'admin') {
           // Redirect ke halaman unauthorized jika bukan admin
           const unauthorizedUrl = new URL('/unauthorized', req.url)
           return NextResponse.redirect(unauthorizedUrl)

@@ -1,31 +1,42 @@
 'use client'
 
-import linksSidebar from '@/config/linksSidebar'
-import Link from 'next/link'
+import { Card, CardContent } from '@/components/ui/card'
 import { usePathname } from 'next/navigation'
-import { Button } from '../ui/button'
+import { NavItem } from '../ui/NavItem'
+import { StatusItem } from '../ui/StatusItem'
+import adminLinks from '@/components/layouts/adminSidebarLinks'
+
 function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="py-4 px-8 bg-muted h-full">
-      {/* <Image src={Logo} alt="logo" className="mx-auto" /> */}
-      <div className="flex flex-col mt-8 gap-y-4">
-        {linksSidebar.map((link) => {
-          return (
-            <Button
-              asChild
+    <Card className="bg-slate-900/50 border-slate-700/50 backdrop-blur-sm h-full">
+      <CardContent className="p-4">
+        <nav className="space-y-2">
+          {adminLinks.map((link) => (
+            <NavItem
               key={link.href}
-              variant={pathname === link.href ? 'default' : 'link'}
-            >
-              <Link href={link.href} className="flex items-center gap-x-2 ">
-                {link.icon} <span className="capitalize">{link.label}</span>
-              </Link>
-            </Button>
-          )
-        })}
-      </div>
-    </aside>
+              icon={link.icon}
+              label={link.label}
+              href={link.href}
+              active={pathname === link.href || link.active}
+            />
+          ))}
+        </nav>
+
+        <div className="mt-8 pt-6 border-t border-slate-700/50">
+          <div className="text-xs text-slate-500 mb-2 font-mono">
+            STATUS SISTEM
+          </div>
+          <div className="space-y-3">
+            <StatusItem label="Core Systems" value={85} color="cyan" />
+            <StatusItem label="Security" value={90} color="blue" />
+            <StatusItem label="Network" value={75} color="green" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
+
 export default Sidebar

@@ -9,26 +9,80 @@ export function withAdminAuth(
   handler: (req: NextRequest) => Promise<NextResponse>
 ) {
   return async (req: NextRequest) => {
+    // PENGEMBANGAN SAJA: Untuk sementara bypass autentikasi
+    // CATATAN: HANYA GUNAKAN DI ENVIRONMENT DEVELOPMENT
+    // Lihat apakah kita dalam mode pengembangan
+    if (process.env.NODE_ENV === 'development') {
+      console.log(
+        '[DEV ONLY] Melewati pemeriksaan autentikasi admin untuk pengembangan'
+      )
+
+      // Tambahkan informasi pengguna dummy untuk development
+      const requestWithUser = new NextRequest(req.url, {
+        headers: req.headers,
+        method: req.method,
+        body: req.body,
+        signal: req.signal,
+      })
+
+      // Set header user dummy untuk development
+      requestWithUser.headers.set('x-user-id', 'dev-user-id')
+      requestWithUser.headers.set('x-user-role', 'admin')
+
+      return handler(requestWithUser)
+    }
+
     const authObject = await auth()
     const userId = authObject.userId
     const sessionClaims = authObject.sessionClaims
 
     // Periksa apakah pengguna terautentikasi
     if (!userId) {
-      return NextResponse.json(
-        { error: 'Tidak terautentikasi' },
-        { status: 401 }
-      )
+      // Untuk API requests, kembalikan JSON error bukan redirect
+      const isApiRequest =
+        req.headers.get('accept')?.includes('application/json') ||
+        req.headers.get('content-type')?.includes('application/json')
+
+      if (isApiRequest) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Tidak terautentikasi',
+            message: 'Silakan login terlebih dahulu untuk mengakses API ini',
+          },
+          {
+            status: 401,
+            headers: {
+              'WWW-Authenticate': 'Bearer realm="Maguru API"',
+            },
+          }
+        )
+      }
+
+      // Untuk non-API requests, redirect ke halaman login dengan URL redirect
+      const redirectUrl = new URL('/sign-in', req.url)
+      redirectUrl.searchParams.set('redirect_url', req.url)
+      return NextResponse.redirect(redirectUrl)
     }
 
     // Periksa apakah pengguna memiliki role admin
     // Catatan: Ini bergantung pada bagaimana role disimpan di Clerk
     // Mungkin perlu disesuaikan berdasarkan implementasi sebenarnya
-    const userRole = sessionClaims?.role as string
+    let userRole = ''
+    if (sessionClaims && sessionClaims.metadata) {
+      const metadata = sessionClaims.metadata as Record<string, unknown>
+      userRole = (metadata.role as string) || ''
+    }
+    console.log('API middleware role check:', userRole)
 
-    if (userRole !== 'ADMIN') {
+    // Periksa role case insensitive
+    if (userRole.toLowerCase() !== 'admin') {
       return NextResponse.json(
-        { error: 'Akses ditolak. Hanya admin yang dapat mengakses fitur ini.' },
+        {
+          success: false,
+          error: 'Akses ditolak. Hanya admin yang dapat mengakses fitur ini.',
+          message: 'Anda tidak memiliki hak akses untuk mengakses API ini',
+        },
         { status: 403 }
       )
     }
@@ -43,7 +97,7 @@ export function withAdminAuth(
 
     // Simpan informasi pengguna di headers internal
     requestWithUser.headers.set('x-user-id', userId)
-    requestWithUser.headers.set('x-user-role', userRole)
+    requestWithUser.headers.set('x-user-role', userRole || 'unknown')
 
     // Jalankan handler jika pengguna adalah admin
     return handler(requestWithUser)

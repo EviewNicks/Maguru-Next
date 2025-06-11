@@ -21,6 +21,15 @@ export function getRoleFromClaims(
 ): string {
   if (!sessionClaims) return 'mahasiswa'
 
-  const role = sessionClaims.metadata?.role
-  return typeof role === 'string' ? role : 'mahasiswa'
+  // Coba dapatkan role dari metadata (Clerk menyimpan di sini)
+  const role = sessionClaims?.metadata?.role
+  console.log(
+    'Role from claims:',
+    role,
+    'Full claims:',
+    JSON.stringify(sessionClaims)
+  )
+
+  // Normalize role ke lowercase untuk konsistensi
+  return typeof role === 'string' ? role.toLowerCase() : 'mahasiswa'
 }

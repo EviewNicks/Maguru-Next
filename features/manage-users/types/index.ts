@@ -5,6 +5,7 @@ export interface NavItemProps {
   icon: LucideIcon
   label: string
   active?: boolean
+  href?: string
 }
 
 // Tipe untuk StatusItem

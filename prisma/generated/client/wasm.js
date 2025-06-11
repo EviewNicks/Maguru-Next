@@ -122,9 +122,9 @@ exports.Prisma.UserScalarFieldEnum = {
   clerkUserId: 'clerkUserId',
   email: 'email',
   name: 'name',
-  role: 'role',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
+  role: 'role',
   status: 'status'
 };
 
@@ -145,15 +145,31 @@ exports.Prisma.ModulePageScalarFieldEnum = {
   order: 'order',
   type: 'type',
   content: 'content',
-  language: 'language',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  version: 'version'
+  version: 'version',
+  title: 'title',
+  status: 'status',
+  authorId: 'authorId',
+  lastEditBy: 'lastEditBy',
+  draftData: 'draftData',
+  draftSavedAt: 'draftSavedAt',
+  isDraft: 'isDraft',
+  hasUnpublishedChanges: 'hasUnpublishedChanges'
 };
 
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
+};
+
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
 };
 
 exports.Prisma.QueryMode = {
@@ -164,6 +180,12 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 exports.UserRole = exports.$Enums.UserRole = {
   mahasiswa: 'mahasiswa',
@@ -179,6 +201,12 @@ exports.UserStatus = exports.$Enums.UserStatus = {
 exports.ModuleStatus = exports.$Enums.ModuleStatus = {
   DRAFT: 'DRAFT',
   ACTIVE: 'ACTIVE',
+  ARCHIVED: 'ARCHIVED'
+};
+
+exports.ModulePageStatus = exports.$Enums.ModulePageStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
   ARCHIVED: 'ARCHIVED'
 };
 

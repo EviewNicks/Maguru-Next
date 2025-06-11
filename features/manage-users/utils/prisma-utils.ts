@@ -144,14 +144,19 @@ export async function getOptimizedUsers(options: {
  * Update Prisma client untuk mendeteksi dan mencatat query lambat
  */
 export function setupPrismaMiddleware() {
+  // Tentukan threshold berdasarkan environment
+  // Di development, kita toleransi waktu yang lebih lama
+  // Di production, kita lebih ketat
+  const slowQueryThreshold = process.env.NODE_ENV === 'production' ? 500 : 1000
+
   prisma.$use(async (params, next) => {
     const startTime = Date.now()
     const result = await next(params)
     const endTime = Date.now()
     const duration = endTime - startTime
 
-    // Log query yang memakan waktu lebih dari 500ms
-    if (duration > 500) {
+    // Log query yang memakan waktu lebih dari threshold
+    if (duration > slowQueryThreshold) {
       console.warn(
         `Query lambat terdeteksi (${duration}ms): ${params.model}.${params.action}`
       )

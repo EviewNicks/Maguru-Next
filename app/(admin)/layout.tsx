@@ -1,9 +1,4 @@
-import { ClientSidebar } from '@/features/manage-users/components/dashboard/ClientSidebar'
-import {
-  // ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from '@/components/ui/resizable'
+import { ClientSidebar } from '@/components/layouts/ClientSidebar'
 import { createUserIfNotExists } from '@/lib/auth'
 import { PropsWithChildren } from 'react'
 
@@ -14,24 +9,13 @@ async function layout({ children }: PropsWithChildren) {
     <main className="w-full">
       {/* TAMPILKAN HANYA UNTUK LG KE ATAS */}
       <div className="hidden lg:flex h-full w-full">
-        <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-          {/* Sidebar */}
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-            <div className="h-full my-2 ml-2">
-              <ClientSidebar />
-            </div>
-          </ResizablePanel>
-          {/* Main Content */}
-          <ResizablePanel defaultSize={80} minSize={70}>
-            <div className="h-full w-full">{children}</div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        {/* Sidebar */}
+        <div className="h-full my-2">
+          <ClientSidebar />
+        </div>
+        {/* Main Content */}
+        <div className="h-full w-full">{children}</div>
       </div>
-
-      {/* TAMPILKAN SAAT MD KE BAWAH */}
-      {/* <div className="block lg:hidden h-full w-full">
-        <div className="h-full w-full p-4 sm:p-8 lg:p-16">{children}</div>
-      </div> */}
     </main>
   )
 }

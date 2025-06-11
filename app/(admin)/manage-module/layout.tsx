@@ -1,4 +1,5 @@
-import { ReactNode } from 'react'
+import { createUserIfNotExists } from '@/lib/auth'
+import { PropsWithChildren } from 'react'
 
 /**
  * Layout untuk halaman Manajemen Modul
@@ -9,10 +10,16 @@ import { ReactNode } from 'react'
  * @param {Object} props - Component props
  * @param {ReactNode} props.children - Child components
  */
-export default function ModuleManagementLayout({
-  children,
-}: Readonly<{
-  children: ReactNode
-}>) {
-  return <section className="h-full w-full">{children}</section>
+export default async function layout({ children }: PropsWithChildren) {
+  await createUserIfNotExists()
+
+  return (
+    <main className="w-full">
+      <div className="hidden lg:flex h-full w-full">
+        {/* Sidebar */}
+        <div className="h-full my-2">{/* <ClientSidebar /> */}</div>
+        <div className="h-full w-full">{children}</div>
+      </div>
+    </main>
+  )
 }

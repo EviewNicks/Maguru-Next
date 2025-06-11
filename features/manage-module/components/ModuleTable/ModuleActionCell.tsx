@@ -1,13 +1,21 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Module } from '@/features/manage-module/types/index'
-import { PencilIcon, TrashIcon } from 'lucide-react'
-import { useState } from 'react'
-import ModuleFormModal from '@/features/manage-module/components/ModuleFormModal'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from '@/components/ui/dialog'
-import { ModuleStatus } from '@/features/manage-module/types'
-import { useModuleMutation } from '../../hooks/useModuleMutation'
+import { Module } from '@/features/manage-module/types'
+import { Edit, Trash2, BookOpen } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import ModuleFormModal from './ModuleFormModal'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { useModuleCRUD } from '@/features/manage-module/context/ModuleCRUDContext'
+import { showErrorNotification } from '../ErrorNotifier'
+import { useRouter } from 'next/navigation'
 
 interface ModuleActionCellProps {
   module: Module
@@ -16,9 +24,18 @@ interface ModuleActionCellProps {
 export default function ModuleActionCell({ module }: ModuleActionCellProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter()
 
-  // Gunakan hook useModuleMutation
-  const { deleteModuleMutation } = useModuleMutation()
+  // Gunakan context ModuleCRUD
+  const { deleteModule, error } = useModuleCRUD()
+
+  // Tangani error jika ada
+  useEffect(() => {
+    if (error) {
+      showErrorNotification(error)
+    }
+  }, [error])
 
   const handleEdit = () => {
     setIsEditModalOpen(true)
@@ -28,82 +45,96 @@ export default function ModuleActionCell({ module }: ModuleActionCellProps) {
     setIsDeleteModalOpen(true)
   }
 
-  const handleDeleteConfirm = () => {
-    // Gunakan mutation delete dari useModuleMutation
-    deleteModuleMutation.mutate(module.id)
-    setIsDeleteModalOpen(false)
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true)
+    try {
+      await deleteModule(module.id)
+      setIsDeleteModalOpen(false)
+    } catch (err) {
+      // Error akan ditangani oleh context
+      console.error('Error saat menghapus modul:', err)
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
-  // Konversi Module dari types/module.ts ke Module dari types/index.ts
-  const moduleData = {
-    id: module.id,
-    title: module.title,
-    description: module.description,
-    status: module.status === ModuleStatus.DRAFT 
-      ? ModuleStatus.DRAFT 
-      : module.status === ModuleStatus.ACTIVE 
-        ? ModuleStatus.ACTIVE 
-        : ModuleStatus.ARCHIVED,
-    createdAt: new Date(module.createdAt),
-    updatedAt: new Date(module.updatedAt),
-    createdBy: 'system', // Default value
-    updatedBy: 'system', // Default value
+  // Navigasi ke halaman editor konten modul
+  const handleManagePages = () => {
+    // Menggunakan format URL baru yang mengikuti pola path parameter
+    router.push(`/manage-module/${module.id}`)
   }
 
   return (
     <>
       <div className="flex justify-center space-x-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleEdit}
-          className="h-8 w-8 p-0"
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleManagePages}
+          className="h-8 w-8 p-0 text-green-400 hover:bg-green-600/20 hover:text-green-300"
+          title="Kelola Halaman"
         >
-          <PencilIcon className="h-4 w-4" />
+          <BookOpen className="h-4 w-4" />
+          <span className="sr-only">Kelola Halaman</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleEdit}
+          className="h-8 w-8 p-0 text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300"
+          title="Edit Modul"
+        >
+          <Edit className="h-4 w-4" />
           <span className="sr-only">Edit</span>
         </Button>
-        <Button 
-          variant="destructive" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={handleDelete}
-          className="h-8 w-8 p-0"
-          disabled={deleteModuleMutation.isPending}
+          className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+          disabled={isDeleting}
+          title="Hapus Modul"
         >
-          <TrashIcon className="h-4 w-4" />
+          <Trash2 className="h-4 w-4" />
           <span className="sr-only">Hapus</span>
         </Button>
       </div>
 
       {/* Modal Edit */}
-      <ModuleFormModal 
+      <ModuleFormModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         mode="edit"
-        module={moduleData}
+        module={module}
       />
 
       {/* Modal Konfirmasi Hapus */}
-      <Dialog 
-        open={isDeleteModalOpen} 
-        onOpenChange={setIsDeleteModalOpen}
-      >
-        <DialogContent>
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent className="bg-slate-900 border-slate-700/50 text-slate-100">
           <DialogHeader>
             <DialogTitle>Konfirmasi Hapus Modul</DialogTitle>
-            <DialogDescription>
-              Apakah Anda yakin ingin menghapus modul &ldquo;{module.title}&rdquo;?
+            <DialogDescription className="text-slate-400">
+              Apakah Anda yakin ingin menghapus modul &ldquo;{module.title}
+              &rdquo;?
+              <br />
+              Tindakan ini tidak dapat dibatalkan.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Batal</Button>
-            </DialogClose>
-            <Button 
-              variant="destructive" 
-              onClick={handleDeleteConfirm}
-              disabled={deleteModuleMutation.isPending}
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteModalOpen(false)}
+              className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-slate-100"
             >
-              Hapus
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Menghapus...' : 'Hapus'}
             </Button>
           </DialogFooter>
         </DialogContent>

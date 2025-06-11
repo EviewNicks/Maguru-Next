@@ -1,10 +1,5 @@
 import { MetricCardProps } from '../../types'
 import { BarChart3, LineChart } from 'lucide-react'
-// import {
-//   getColorBorder,
-//   getColorGradient,
-//   getColorTextClass,
-// } from '../../utils/formatters'
 
 /**
  * Komponen MetricCard untuk menampilkan metrik dengan ikon dan tren

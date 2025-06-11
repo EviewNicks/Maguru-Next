@@ -1,10 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { moduleService } from '../../../../features/manage-module/services/moduleService';
-import { updateModuleSchema } from '../../../../features/manage-module/utils/moduleValidation';
-import { withAdminAuth, withAuditTrail, withValidation, composeMiddlewares } from '../middleware';
+import { NextRequest, NextResponse } from 'next/server'
+import { moduleService } from '../../../../features/manage-module/services/moduleService'
+import { updateModuleSchema } from '../../../../features/manage-module/utils/moduleValidation'
+import {
+  withAdminAuth,
+  withAuditTrail,
+  withValidation,
+  composeMiddlewares,
+} from '../middleware'
+import { auth } from '@clerk/nextjs/server'
 
 // Tipe untuk params dari route dynamic
-type RouteParams = { params: { id: string } };
+type RouteParams = { params: { id: string } }
 
 /**
  * Handler untuk GET request
@@ -12,59 +18,63 @@ type RouteParams = { params: { id: string } };
  */
 async function getModuleHandler(request: NextRequest, context: RouteParams) {
   try {
-    const moduleId = context.params.id;
-    const moduleData = await moduleService.getModuleById(moduleId);
-    
+    const moduleId = context.params.id
+    const moduleData = await moduleService.getModuleById(moduleId)
+
     if (!moduleData) {
       return NextResponse.json(
-        { error: 'Modul tidak ditemukan' }, 
+        { error: 'Modul tidak ditemukan' },
         { status: 404 }
-      );
+      )
     }
-    
-    return NextResponse.json(moduleData, { status: 200 });
+
+    return NextResponse.json(moduleData, { status: 200 })
   } catch (error) {
-    console.error('Error fetching module:', error);
+    console.error('Error fetching module:', error)
     return NextResponse.json(
-      { error: 'Terjadi kesalahan saat mengambil data modul' }, 
+      { error: 'Terjadi kesalahan saat mengambil data modul' },
       { status: 500 }
-    );
+    )
   }
 }
 
 /**
- * Handler untuk PUT request
+ * Handler untuk PATCH request
  * Mengupdate modul berdasarkan ID
  */
 async function updateModuleHandler(request: NextRequest, context: RouteParams) {
   try {
-    const moduleId = context.params.id;
-    const userId = request.headers.get('x-user-id');
-    
+    const moduleId = context.params.id
+    const { userId } = await auth()
+
     if (!userId) {
       return NextResponse.json(
-        { error: 'User ID tidak ditemukan' }, 
+        { error: 'User ID tidak ditemukan' },
         { status: 401 }
-      );
+      )
     }
-    
-    const body = await request.json();
-    const updatedModule = await moduleService.updateModule(moduleId, body, userId);
-    
+
+    const body = await request.json()
+    const updatedModule = await moduleService.updateModule(
+      moduleId,
+      body,
+      userId
+    )
+
     if (!updatedModule) {
       return NextResponse.json(
-        { error: 'Modul tidak ditemukan' }, 
+        { error: 'Modul tidak ditemukan' },
         { status: 404 }
-      );
+      )
     }
-    
-    return NextResponse.json(updatedModule, { status: 200 });
+
+    return NextResponse.json(updatedModule, { status: 200 })
   } catch (error) {
-    console.error('Error updating module:', error);
+    console.error('Error updating module:', error)
     return NextResponse.json(
-      { error: 'Terjadi kesalahan saat mengupdate modul' }, 
+      { error: 'Terjadi kesalahan saat mengupdate modul' },
       { status: 500 }
-    );
+    )
   }
 }
 
@@ -74,68 +84,77 @@ async function updateModuleHandler(request: NextRequest, context: RouteParams) {
  */
 async function deleteModuleHandler(request: NextRequest, context: RouteParams) {
   try {
-    const moduleId = context.params.id;
-    const userId = request.headers.get('x-user-id');
-    
+    const moduleId = context.params.id
+    const { userId } = await auth()
+
     if (!userId) {
       return NextResponse.json(
-        { error: 'User ID tidak ditemukan' }, 
+        { error: 'User ID tidak ditemukan' },
         { status: 401 }
-      );
+      )
     }
-    
-    const deletedModule = await moduleService.deleteModule(moduleId);
-    
+
+    const deletedModule = await moduleService.deleteModule(moduleId)
+
     if (!deletedModule) {
       return NextResponse.json(
-        { error: 'Modul tidak ditemukan' }, 
+        { error: 'Modul tidak ditemukan' },
         { status: 404 }
-      );
+      )
     }
-    
+
     return NextResponse.json(
-      { message: 'Modul berhasil dihapus' }, 
+      { message: 'Modul berhasil dihapus' },
       { status: 200 }
-    );
+    )
   } catch (error) {
-    console.error('Error deleting module:', error);
+    console.error('Error deleting module:', error)
     return NextResponse.json(
-      { error: 'Terjadi kesalahan saat menghapus modul' }, 
+      { error: 'Terjadi kesalahan saat menghapus modul' },
       { status: 500 }
-    );
+    )
   }
 }
 
 // Wrapper untuk menangani params dari dynamic route
-function createRouteHandler(handler: (req: NextRequest, context: RouteParams) => Promise<NextResponse>) {
+function createRouteHandler(
+  handler: (req: NextRequest, context: RouteParams) => Promise<NextResponse>
+) {
   return (req: NextRequest) => {
     // Ekstrak ID dari URL
-    const url = new URL(req.url);
-    const pathParts = url.pathname.split('/');
-    const id = pathParts[pathParts.length - 1];
-    
+    const url = new URL(req.url)
+    const pathParts = url.pathname.split('/')
+    const id = pathParts[pathParts.length - 1]
+
     // Buat context dengan params
-    const context: RouteParams = { params: { id } };
-    
+    const context: RouteParams = { params: { id } }
+
     // Panggil handler dengan context
-    return handler(req, context);
-  };
+    return handler(req, context)
+  }
 }
 
 // Gunakan middleware untuk GET request
 export const GET = composeMiddlewares(
   [withAdminAuth, withAuditTrail],
   createRouteHandler(getModuleHandler)
-);
+)
 
-// Gunakan middleware untuk PUT request
-export const PUT = composeMiddlewares(
-  [withAdminAuth, withAuditTrail, (handler) => withValidation(updateModuleSchema, handler)],
+// Gunakan middleware untuk PATCH request
+export const PATCH = composeMiddlewares(
+  [
+    withAdminAuth,
+    withAuditTrail,
+    (handler) => withValidation(updateModuleSchema, handler),
+  ],
   createRouteHandler(updateModuleHandler)
-);
+)
+
+// Gunakan middleware untuk PUT request (alias ke PATCH untuk backward compatibility)
+export const PUT = PATCH
 
 // Gunakan middleware untuk DELETE request
 export const DELETE = composeMiddlewares(
   [withAdminAuth, withAuditTrail],
   createRouteHandler(deleteModuleHandler)
-);
+)

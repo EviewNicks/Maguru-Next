@@ -57,7 +57,7 @@ const customJestConfig = {
   // Sementara nonaktifkan custom reporter
   reporters: [
     'default', // Reporter default Jest
-    '<rootDir>/services/simpleJsonReporter.js', // Custom reporter
+    '<rootDir>/services/detailedJsonReporter.js'
   ],
 }
 
