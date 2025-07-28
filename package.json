@@ -102,7 +102,7 @@
     "@tiptap/starter-kit": "^2.12.0",
     "@types/express": "^5.0.1",
     "@types/lodash.debounce": "^4.0.9",
-    "axios": "^1.8.4",
+    "axios": "^1.11.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
