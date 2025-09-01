@@ -184,7 +184,7 @@
     "path-browserify": "^1.0.1",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
-    "prisma": "^6.6.0",
+    "prisma": "^6.15.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.6.1",
     "stream-browserify": "^3.0.0",
