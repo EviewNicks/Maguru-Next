@@ -2363,10 +2363,10 @@
   resolved "https://registry.npmjs.org/@popperjs/core/-/core-2.11.8.tgz"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
 
-"@prisma/client@^6.6.0":
-  version "6.6.0"
-  resolved "https://registry.npmjs.org/@prisma/client/-/client-6.6.0.tgz"
-  integrity sha512-vfp73YT/BHsWWOAuthKQ/1lBgESSqYqAWZEYyTdGXyFAHpmewwWL2Iz6ErIzkj4aHbuc6/cGSsE6ZY+pBO04Cg==
+"@prisma/client@^6.18.0":
+  version "6.18.0"
+  resolved "https://registry.yarnpkg.com/@prisma/client/-/client-6.18.0.tgz#95f0efe03b5827d9bf5c80b6b7298e46094b5fbf"
+  integrity sha512-jnL2I9gDnPnw4A+4h5SuNn8Gc+1mL1Z79U/3I9eE2gbxJG1oSA+62ByPW4xkeDgwE0fqMzzpAZ7IHxYnLZ4iQA==
 
 "@prisma/config@6.6.0":
   version "6.6.0"
