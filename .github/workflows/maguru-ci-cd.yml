@@ -92,7 +92,7 @@ jobs:
 
       # Upload hasil test coverage untuk analisis
       - name: Upload Coverage Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-report
           path: coverage/
@@ -127,7 +127,7 @@ jobs:
       # Menyimpan hasil test jika gagal
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: playwright-results
           path: test-results/
@@ -163,7 +163,7 @@ jobs:
 
       # Upload build artifacts
       - name: Upload Build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: build-files
           path: .next/
